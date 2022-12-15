@@ -25,7 +25,7 @@ class Account extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   password: FieldTextDefinition;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "Role", multiple: false })
+  @fieldDecorator(FieldTypes.RELATION, { ref: "roles", multiple: false })
   role: FieldRelationDefinition<{
     model: Role;
     multiple: false;

@@ -18,7 +18,7 @@ class DataModel extends Model {
   slug: FieldTextDefinition;
 
   @fieldDecorator(FieldTypes.JSON)
-  schema: FieldJSONDefinition;
+  fields: FieldJSONDefinition;
 }
 
 export default DataModel;

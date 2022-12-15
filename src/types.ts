@@ -2,10 +2,10 @@ import Model from "./lib/Model";
 import PromiseModel from "./lib/PromiseModel";
 import PromiseModelList from "./lib/PromiseModelList";
 import ModelList from "./lib/ModelList";
-import { InputModelPayload } from "./lib/Model";
 import Field from "./lib/Field";
 import SerializerFormat from "./enums/serializer-format";
 import FieldTypes from "./enums/field-types";
+import DataModel from "./models/DataModel";
 
 export type FieldIdDefinition = string;
 
@@ -95,7 +95,7 @@ export type JSONQuery = {
 
 export type ModelAdapterFetcher<T extends typeof Model> = {
   count: (query?: string | JSONQuery) => Promise<number | null>;
-  get: (query?: string | JSONQuery) => Promise<InstanceType<T>>;
+  get: (query?: string | JSONQuery) => Promise<InstanceType<T> | null>;
   getList: (query?: JSONQuery) => Promise<ModelList<InstanceType<T>>>;
   createOne: (payload: InputModelPayload<T>) => Promise<InstanceType<T>>;
   createMultiple: (
@@ -111,7 +111,9 @@ export type ModelAdapterFetcher<T extends typeof Model> = {
   ) => Promise<Array<InstanceType<T>>>;
   deleteOne: (query: string | JSONQuery) => Promise<boolean>;
   deleteMultiple: (query: JSONQuery) => Promise<string[]>;
-  loadSchema: () => Promise<any>;
+  getFields: () => Promise<
+    { type: FieldTypes; label: string; slug: string; options: any }[]
+  >;
 };
 
 export type ModelAdapterSerializerField<
@@ -147,3 +149,8 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
       default?: number;
     }
   : never;
+
+export type InputModelPayload<M extends typeof Model> = Omit<
+  Partial<InstanceType<M>>,
+  "_id"
+>;

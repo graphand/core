@@ -19,7 +19,10 @@ class Project extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "Organization", multiple: false })
+  @fieldDecorator(FieldTypes.RELATION, {
+    ref: "organizations",
+    multiple: false,
+  })
   organization: FieldRelationDefinition<{
     model: Organization;
     multiple: false;

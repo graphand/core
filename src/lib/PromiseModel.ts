@@ -1,12 +1,12 @@
 import Model from "./Model";
 import { JSONQuery } from "../types";
 
-class PromiseModel<T extends Model> extends Promise<T> {
+class PromiseModel<T extends Model> extends Promise<T | null> {
   __model: typeof Model;
   __query: string | JSONQuery;
 
   constructor(
-    promiseParams: ConstructorParameters<typeof Promise<T>>,
+    promiseParams: ConstructorParameters<typeof Promise<T | null>>,
     model: typeof Model,
     query: string | JSONQuery
   ) {

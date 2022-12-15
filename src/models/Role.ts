@@ -21,7 +21,7 @@ class Role extends Model {
   admin;
 
   @fieldDecorator(FieldTypes.RELATION, {
-    ref: "Role",
+    ref: "roles",
     multiple: false,
   })
   inherits: FieldRelationDefinition<{

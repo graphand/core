@@ -29,21 +29,29 @@ const defaultSerializer: ModelAdapterSerializer<typeof Model> = {
   [FieldTypes.RELATION]: {
     serialize: (value, format, field, from) => {
       const _serializeJSON = () => {
-        const canGetIds = "getIds" in value;
+        const canGetIds = typeof value === "object" && "getIds" in value;
 
         if (field.options.multiple) {
-          const arrValue = canGetIds ? value.getIds() : [value._id];
+          const arrValue = canGetIds
+            ? value.getIds()
+            : typeof value === "string"
+            ? [value]
+            : [value._id?.toString() ?? value?.toString()].filter(Boolean);
 
-          return arrValue.map(String);
+          return arrValue.map((i) => i?.toString());
         }
 
-        return canGetIds ? String(value.getIds()[0]) : String(value._id);
+        return canGetIds
+          ? value.getIds()[0]?.toString()
+          : typeof value === "string"
+          ? value
+          : value._id?.toString() ?? value?.toString();
       };
 
       const _serializeObject = () => {
         // get the referenced model with the same adapter as from parameter
         const adapter = from.model.getAdapter();
-        const model = Model.getFromScope(field.options.ref).withAdapter(
+        const model = Model.getFromSlug(field.options.ref).withAdapter(
           adapter.toConstructor()
         );
 

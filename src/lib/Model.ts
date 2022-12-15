@@ -6,8 +6,9 @@ import PromiseModelList from "./PromiseModelList";
 import { fieldDecorator } from "./fieldDecorator";
 import { models } from "../index";
 import FieldTypes from "../enums/field-types";
-import { FieldDateDefinition, FieldIdDefinition, JSONQuery } from "../types";
+import { FieldDateDefinition, InputModelPayload, JSONQuery } from "../types";
 import SerializerFormat from "../enums/serializer-format";
+import field from "./Field";
 
 class Model {
   static extendable: boolean = false;
@@ -26,13 +27,13 @@ class Model {
   @fieldDecorator(FieldTypes.DATE)
   createdAt: FieldDateDefinition;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "Account", multiple: false })
+  @fieldDecorator(FieldTypes.RELATION, { ref: "accounts", multiple: false })
   createdBy;
 
   @fieldDecorator(FieldTypes.DATE)
   updatedAt: FieldDateDefinition;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "Account", multiple: false })
+  @fieldDecorator(FieldTypes.RELATION, { ref: "accounts", multiple: false })
   updatedBy;
 
   constructor(doc: any = {}) {
@@ -71,8 +72,18 @@ class Model {
   static async initialize() {
     const model = this;
 
-    this.__initPromise ??= new Promise(async (resolve) => {
-      const schema = await model.getAdapter().fetcher.loadSchema();
+    this.__initPromise ??= new Promise(async (resolve, reject) => {
+      if (model.extendable) {
+        try {
+          const fields = await model.getAdapter().fetcher.getFields();
+          fields.forEach((f) => {
+            this.__fields.set(f.slug, new Field(f.type, f.options));
+          });
+        } catch (e) {
+          reject(e);
+        }
+      }
+
       resolve();
     });
 
@@ -128,8 +139,8 @@ class Model {
     }
   }
 
-  static getFromScope(scope: string): typeof Model {
-    return models[scope];
+  static getFromSlug(slug: string): typeof Model {
+    return Object.values(models).find((m) => m.slug === slug);
   }
 
   /**
@@ -243,7 +254,7 @@ class Model {
   static get<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {}
-  ): PromiseModel<InstanceType<T> | null> {
+  ): PromiseModel<InstanceType<T>> {
     const model = this;
     model.verifyAdapter();
 
@@ -365,10 +376,5 @@ class Model {
     return await this.getAdapter().fetcher.deleteMultiple(query);
   }
 }
-
-export type InputModelPayload<M extends typeof Model> = Omit<
-  Partial<InstanceType<M>>,
-  "_id"
->;
 
 export default Model;
