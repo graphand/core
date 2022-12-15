@@ -1,9 +1,9 @@
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
-import { FieldTextDefinition } from "../lib/fields/FieldText";
-import { FieldRelationDefinition } from "../lib/fields/FieldRelation";
 import { modelDecorator } from "../lib/modelDecorator";
+import FieldTypes from "../enums/field-types";
+import { FieldRelationDefinition, FieldTextDefinition } from "../types";
 
 @modelDecorator()
 class Role extends Model {
@@ -11,16 +11,16 @@ class Role extends Model {
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   description: FieldTextDefinition;
 
-  @fieldDecorator("Boolean")
+  @fieldDecorator(FieldTypes.BOOLEAN)
   admin;
 
-  @fieldDecorator("Relation", {
+  @fieldDecorator(FieldTypes.RELATION, {
     ref: "Role",
     multiple: false,
   })

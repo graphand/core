@@ -1,6 +1,6 @@
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
-import { modelDecorator } from "../lib/modelDecorator";
+import {modelDecorator} from "../lib/modelDecorator";
 
 @modelDecorator()
 class User extends Model {

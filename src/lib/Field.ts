@@ -1,28 +1,15 @@
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
+import { FieldOptions, ModelAdapterSerializerField } from "../types";
+import SerializerFormat from "../enums/serializer-format";
+import defaultSerializer from "./defaultSerializer";
 
-export type FieldOptions<T extends string | FieldTypes> = T extends
-  | FieldTypes.TEXT
-  | "Text"
-  ? {
-      default?: string;
-      multiple?: boolean;
-    }
-  : T extends FieldTypes.RELATION | "Relation"
-  ? {
-      ref: string;
-      multiple?: boolean;
-    }
-  : T extends FieldTypes.NUMBER | "Number"
-  ? {
-      default?: number;
-    }
-  : never;
-
-class Field<T extends string | FieldTypes = string | FieldTypes> {
+class Field<T extends FieldTypes = FieldTypes> {
+  private __type: T;
   private __options: FieldOptions<T>;
 
-  constructor(options: FieldOptions<T> = {} as any) {
+  constructor(type: T, options: FieldOptions<T> = {} as any) {
+    this.__type = type;
     this.__options = options;
   }
 
@@ -30,16 +17,23 @@ class Field<T extends string | FieldTypes = string | FieldTypes> {
     return this.__options;
   }
 
-  isSerialized(value): boolean {
-    return false;
+  getSerializer<M extends typeof Model>(
+    from: InstanceType<M>
+  ): ModelAdapterSerializerField<M, Field<T>> {
+    return (
+      from.model.getAdapter().serializer?.[this.__type] ||
+      defaultSerializer[this.__type]
+    );
   }
 
-  serialize(decodedValue: any, from: Model) {
-    return decodedValue;
-  }
+  serialize(value: any, format: SerializerFormat, from: Model) {
+    if (value === undefined || value === null) {
+      return value;
+    }
 
-  deserialize(encodedValue: any, from: Model) {
-    return encodedValue;
+    return (
+      this.getSerializer(from)?.serialize?.(value, format, this, from) ?? value
+    );
   }
 }
 

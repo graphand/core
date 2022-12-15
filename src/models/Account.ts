@@ -1,10 +1,10 @@
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
-import { FieldTextDefinition } from "../lib/fields/FieldText";
-import { FieldRelationDefinition } from "../lib/fields/FieldRelation";
 import Role from "./Role";
 import { modelDecorator } from "../lib/modelDecorator";
+import FieldTypes from "../enums/field-types";
+import { FieldRelationDefinition, FieldTextDefinition } from "../types";
 
 @modelDecorator()
 class Account extends Model {
@@ -13,19 +13,19 @@ class Account extends Model {
   static slug = "accounts";
   static scope = ModelEnvScopes.ENV;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   firstname: FieldTextDefinition;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   lastname: FieldTextDefinition;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   email: FieldTextDefinition;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   password: FieldTextDefinition;
 
-  @fieldDecorator("Relation", { ref: "Role", multiple: false })
+  @fieldDecorator(FieldTypes.RELATION, { ref: "Role", multiple: false })
   role: FieldRelationDefinition<{
     model: Role;
     multiple: false;

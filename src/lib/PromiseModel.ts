@@ -1,14 +1,14 @@
 import Model from "./Model";
-import { ModelAdapterQuery } from "./ModelAdapter";
+import { JSONQuery } from "../types";
 
 class PromiseModel<T extends Model> extends Promise<T> {
   __model: typeof Model;
-  __query: string | ModelAdapterQuery;
+  __query: string | JSONQuery;
 
   constructor(
     promiseParams: ConstructorParameters<typeof Promise<T>>,
     model: typeof Model,
-    query: string | ModelAdapterQuery
+    query: string | JSONQuery
   ) {
     if (!Array.isArray(promiseParams)) {
       // @ts-ignore

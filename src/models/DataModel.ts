@@ -1,9 +1,9 @@
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
-import { FieldTextDefinition } from "../lib/fields/FieldText";
-import { FieldJSONDefinition } from "../lib/fields/FieldJSON";
 import { modelDecorator } from "../lib/modelDecorator";
+import { FieldJSONDefinition, FieldTextDefinition } from "../types";
+import FieldTypes from "../enums/field-types";
 
 @modelDecorator()
 class DataModel extends Model {
@@ -11,13 +11,13 @@ class DataModel extends Model {
   static slug = "datamodels";
   static scope = ModelEnvScopes.ENV;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   slug: FieldTextDefinition;
 
-  @fieldDecorator("JSON")
+  @fieldDecorator(FieldTypes.JSON)
   schema: FieldJSONDefinition;
 }
 

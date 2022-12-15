@@ -1,14 +1,13 @@
 import ModelEnvScopes from "../enums/model-env-scopes";
 import Field from "./Field";
-import ModelAdapter, { ModelAdapterQuery } from "./ModelAdapter";
-import { FieldIdDefinition } from "./fields/FieldId";
+import ModelAdapter from "./ModelAdapter";
 import PromiseModel from "./PromiseModel";
 import PromiseModelList from "./PromiseModelList";
 import { fieldDecorator } from "./fieldDecorator";
 import { models } from "../index";
-import { FieldRelationDefinition } from "./fields/FieldRelation";
-import Account from "../models/Account";
-import { FieldDateDefinition } from "./fields/FieldDate";
+import FieldTypes from "../enums/field-types";
+import { FieldDateDefinition, FieldIdDefinition, JSONQuery } from "../types";
+import SerializerFormat from "../enums/serializer-format";
 
 class Model {
   static extendable: boolean = false;
@@ -21,20 +20,20 @@ class Model {
 
   private __doc: any;
 
-  @fieldDecorator("Id")
-  _id: FieldIdDefinition;
+  @fieldDecorator(FieldTypes.ID)
+  _id;
 
-  @fieldDecorator("Date")
+  @fieldDecorator(FieldTypes.DATE)
   createdAt: FieldDateDefinition;
 
-  @fieldDecorator("Relation", { ref: "Account", multiple: false })
-  createdBy: FieldRelationDefinition<{ model: Account; multiple: false }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: "Account", multiple: false })
+  createdBy;
 
-  @fieldDecorator("Date")
+  @fieldDecorator(FieldTypes.DATE)
   updatedAt: FieldDateDefinition;
 
-  @fieldDecorator("Relation", { ref: "Account", multiple: false })
-  updatedBy: FieldRelationDefinition<{ model: Account; multiple: false }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: "Account", multiple: false })
+  updatedBy;
 
   constructor(doc: any = {}) {
     this.setDoc(doc);
@@ -73,7 +72,7 @@ class Model {
     const model = this;
 
     this.__initPromise ??= new Promise(async (resolve) => {
-      const schema = await model.getAdapter().loadSchema();
+      const schema = await model.getAdapter().fetcher.loadSchema();
       resolve();
     });
 
@@ -136,9 +135,9 @@ class Model {
   /**
    * Model instance getter. Returns the value for the specified key
    * @param slug {string} - The key (field slug) to get
-   * @param raw {boolean=} - Default false. Get raw value
+   * @param format {json|object|document} - Serializer format
    */
-  get(slug, raw = false) {
+  get(slug, format = SerializerFormat.OBJECT) {
     const field = this.model.getRecursiveFields().get(slug) as Field<any>;
     if (!field) {
       return undefined;
@@ -146,15 +145,11 @@ class Model {
 
     let value = this.__doc[slug];
 
-    if (!raw) {
-      if (value === undefined && "default" in field.options) {
-        value = field.options.default;
-      }
-
-      if (field.isSerialized(value)) {
-        value = field.deserialize(value, this);
-      }
+    if (value === undefined && "default" in field.options) {
+      value = field.options.default;
     }
+
+    value = field.serialize(value, format, this);
 
     return value;
   }
@@ -177,9 +172,7 @@ class Model {
       return;
     }
 
-    if (!field.isSerialized(value)) {
-      value = field.serialize(value, this);
-    }
+    value = field.serialize(value, SerializerFormat.DOCUMENT, this);
 
     upsert ??= ![
       "_id",
@@ -199,24 +192,24 @@ class Model {
     return new PromiseModel([(resolve) => resolve(i)], this.model, this._id);
   }
 
-  toJSON() {
+  to(format: SerializerFormat) {
     const fields = this.model.getRecursiveFields();
 
-    let json = {};
+    let obj = {};
 
     for (let fieldKey of fields.keys()) {
-      const field = fields.get(fieldKey);
-      if (field) {
-        let value = this.__doc[fieldKey];
-        if (!field.isSerialized(value)) {
-          value = field.serialize(value, this);
-        }
-
-        json[fieldKey] = value;
-      }
+      obj[fieldKey] = this.get(fieldKey, format);
     }
 
-    return json;
+    return obj;
+  }
+
+  toJSON() {
+    return this.to(SerializerFormat.JSON);
+  }
+
+  toObject() {
+    return this.to(SerializerFormat.OBJECT);
   }
 
   toString() {
@@ -238,18 +231,18 @@ class Model {
 
   static async count<T extends typeof Model>(
     this: T,
-    query: string | ModelAdapterQuery = {}
+    query: string | JSONQuery = {}
   ): Promise<number> {
     this.verifyAdapter();
 
     await this.initialize();
 
-    return this.getAdapter().count(query);
+    return this.getAdapter().fetcher.count(query);
   }
 
   static get<T extends typeof Model>(
     this: T,
-    query: string | ModelAdapterQuery = {}
+    query: string | JSONQuery = {}
   ): PromiseModel<InstanceType<T> | null> {
     const model = this;
     model.verifyAdapter();
@@ -260,7 +253,7 @@ class Model {
           try {
             await model.initialize();
 
-            const i = await this.getAdapter().get(query);
+            const i = await this.getAdapter().fetcher.get(query);
             resolve(i);
           } catch (e) {
             reject(e);
@@ -274,7 +267,7 @@ class Model {
 
   static getList<T extends typeof Model>(
     this: T,
-    query: ModelAdapterQuery = {}
+    query: JSONQuery = {}
   ): PromiseModelList<InstanceType<T>> {
     const model = this;
     model.verifyAdapter();
@@ -285,7 +278,7 @@ class Model {
           try {
             await model.initialize();
 
-            const list = await this.getAdapter().getList(query);
+            const list = await this.getAdapter().fetcher.getList(query);
             resolve(list);
           } catch (e) {
             reject(e);
@@ -304,7 +297,7 @@ class Model {
     this.verifyAdapter();
     await this.initialize();
 
-    return await this.getAdapter().createOne(payload);
+    return await this.getAdapter().fetcher.createOne(payload);
   }
 
   static async createMultiple<T extends typeof Model>(
@@ -314,13 +307,15 @@ class Model {
     this.verifyAdapter();
     await this.initialize();
 
-    return await this.getAdapter().createMultiple(payload);
+    return await this.getAdapter().fetcher.createMultiple(payload);
   }
 
   async update(update: any): Promise<this> {
     this.model.verifyAdapter();
 
-    const res = await this.model.getAdapter().updateOne(this._id, update);
+    const res = await this.model
+      .getAdapter()
+      .fetcher.updateOne(this._id, update);
 
     this.setDoc(res.__doc);
 
@@ -329,45 +324,45 @@ class Model {
 
   static async update<T extends typeof Model>(
     this: T,
-    query: string | ModelAdapterQuery = {},
+    query: string | JSONQuery = {},
     update: any
   ): Promise<Array<InstanceType<T>>> {
     this.verifyAdapter();
     await this.initialize();
 
     if (typeof query === "string") {
-      const updated = await this.getAdapter().updateOne(query, update);
+      const updated = await this.getAdapter().fetcher.updateOne(query, update);
       return [updated];
     }
 
-    return await this.getAdapter().updateMultiple(query, update);
+    return await this.getAdapter().fetcher.updateMultiple(query, update);
   }
 
   async delete(): Promise<this> {
     this.model.verifyAdapter();
 
-    await this.model.getAdapter().deleteOne(this._id);
+    await this.model.getAdapter().fetcher.deleteOne(this._id);
 
     return this;
   }
 
   static async delete<T extends typeof Model>(
     this: T,
-    query: string | ModelAdapterQuery = {}
-  ): Promise<number> {
+    query: string | JSONQuery = {}
+  ): Promise<string[]> {
     this.verifyAdapter();
     await this.initialize();
 
     if (typeof query === "string") {
-      const deleted = await this.getAdapter().deleteOne(query);
+      const deleted = await this.getAdapter().fetcher.deleteOne(query);
       if (deleted) {
-        return 1;
+        return [query];
       }
 
-      return 0;
+      return [];
     }
 
-    return await this.getAdapter().deleteMultiple(query);
+    return await this.getAdapter().fetcher.deleteMultiple(query);
   }
 }
 

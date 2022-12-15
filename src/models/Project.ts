@@ -1,9 +1,13 @@
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
-import { FieldTextDefinition } from "../lib/fields/FieldText";
 import { modelDecorator } from "../lib/modelDecorator";
-import { FieldRelationDefinition } from "../lib/fields/FieldRelation";
+import FieldTypes from "../enums/field-types";
+import {
+  FieldNumberDefinition,
+  FieldRelationDefinition,
+  FieldTextDefinition,
+} from "../types";
 import Organization from "./Organization";
 
 @modelDecorator()
@@ -12,20 +16,20 @@ class Project extends Model {
   static slug = "projects";
   static scope = ModelEnvScopes.GLOBAL;
 
-  @fieldDecorator("Text")
+  @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;
 
-  @fieldDecorator("Relation", { ref: "Organization", multiple: false })
+  @fieldDecorator(FieldTypes.RELATION, { ref: "Organization", multiple: false })
   organization: FieldRelationDefinition<{
     model: Organization;
     multiple: false;
   }>;
 
-  @fieldDecorator("Number", { default: 86400 })
-  accessTokenLifetime;
+  @fieldDecorator(FieldTypes.NUMBER, { default: 86400 })
+  accessTokenLifetime: FieldNumberDefinition;
 
-  @fieldDecorator("Number", { default: 2592000 })
-  refreshTokenLifetime;
+  @fieldDecorator(FieldTypes.NUMBER, { default: 2592000 })
+  refreshTokenLifetime: FieldNumberDefinition;
 }
 
 export default Project;
