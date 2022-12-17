@@ -5,9 +5,12 @@ import ModelList from "./lib/ModelList";
 import Field from "./lib/Field";
 import SerializerFormat from "./enums/serializer-format";
 import FieldTypes from "./enums/field-types";
-import DataModel from "./models/DataModel";
+
+export type ParseableFieldDefinition<Def extends any> = Def | any;
 
 export type FieldIdDefinition = string;
+
+export type FieldBooleanDefinition = boolean;
 
 export type FieldDateDefinition<
   D extends {
@@ -122,7 +125,7 @@ export type ModelAdapterSerializerField<
 > = {
   serialize: (
     value: any,
-    format: SerializerFormat | string,
+    format: SerializerFormat,
     field: F,
     from: InstanceType<T>
   ) => any;
@@ -132,12 +135,19 @@ export type ModelAdapterSerializer<T extends typeof Model> = {
   [key in FieldTypes]?: ModelAdapterSerializerField<T, Field<key>>;
 };
 
+export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
+  slug: string;
+  type: T;
+  options?: FieldOptions<T>;
+};
+
 export type FieldOptions<T extends string | FieldTypes> = T extends
   | FieldTypes.TEXT
   | "Text"
   ? {
       default?: string;
       multiple?: boolean;
+      options?: string[];
     }
   : T extends FieldTypes.RELATION | "Relation"
   ? {
@@ -148,9 +158,47 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
   ? {
       default?: number;
     }
+  : T extends FieldTypes.JSON | "JSON"
+  ? {
+      default?: number;
+      multiple?: boolean;
+      fields?: FieldDefinition[];
+      strict?: boolean;
+    }
   : never;
 
-export type InputModelPayload<M extends typeof Model> = Omit<
-  Partial<InstanceType<M>>,
-  "_id"
+export type InputModelPayload<M extends typeof Model> = Partial<
+  Omit<ModelDocument<InstanceType<M>>, ModelDocumentBaseFields>
 >;
+
+export type ModelDocumentBaseFields =
+  | "_id"
+  | "createdAt"
+  | "createdBy"
+  | "updatedAt"
+  | "updatedBy";
+
+export type ModelDocument<M extends Model> = Record<keyof M, any>;
+
+export type HookPhase = "before" | "after";
+
+export type HookCallbackArgs<
+  P extends HookPhase,
+  E extends keyof ModelAdapterFetcher<any>,
+  M extends typeof Model
+> = P extends "before"
+  ? { args: Parameters<ModelAdapterFetcher<M>[E]> }
+  : HookCallbackArgs<"before", E, M> & {
+      res?: ReturnType<ModelAdapterFetcher<M>[E]>;
+      err?: Error;
+    };
+
+export type Hook<
+  P extends HookPhase,
+  A extends keyof ModelAdapterFetcher<any>,
+  M extends typeof Model = typeof Model
+> = {
+  phase: P;
+  action: A;
+  fn: (args: HookCallbackArgs<P, A, M>) => void;
+};

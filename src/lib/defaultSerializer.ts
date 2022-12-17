@@ -2,6 +2,7 @@ import { ModelAdapterSerializer } from "../types";
 import Model from "../lib/Model";
 import FieldTypes from "../enums/field-types";
 import SerializerFormat from "../enums/serializer-format";
+import Field from "./Field";
 
 const defaultSerializer: ModelAdapterSerializer<typeof Model> = {
   [FieldTypes.ID]: {
@@ -72,6 +73,45 @@ const defaultSerializer: ModelAdapterSerializer<typeof Model> = {
         default:
           return _serializeObject();
       }
+    },
+  },
+  [FieldTypes.JSON]: {
+    serialize: (value, format, field, from) => {
+      let __fields: Map<string, Field> = new Map();
+
+      if (field.options.fields) {
+        field.options.fields.forEach((f) => {
+          __fields.set(f.slug, Field.fromDefinition(f));
+        });
+      }
+
+      const _format = (obj: object) => {
+        const formatted = Array.from(__fields.keys()).reduce((final, key) => {
+          const field = __fields.get(key);
+
+          let value = obj[key];
+
+          if (value === undefined && "default" in field.options) {
+            value = field.options.default;
+          }
+
+          value = field.serialize(value, format, from);
+
+          return Object.assign(final, { [key]: value });
+        }, {});
+
+        if (field.options.strict) {
+          return formatted;
+        }
+
+        return { ...obj, ...formatted };
+      };
+
+      if (field.options.multiple) {
+        return Object.values(value).map(_format);
+      }
+
+      return _format(value);
     },
   },
 };

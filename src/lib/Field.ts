@@ -1,6 +1,10 @@
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
-import { FieldOptions, ModelAdapterSerializerField } from "../types";
+import {
+  FieldDefinition,
+  FieldOptions,
+  ModelAdapterSerializerField,
+} from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import defaultSerializer from "./defaultSerializer";
 
@@ -11,6 +15,10 @@ class Field<T extends FieldTypes = FieldTypes> {
   constructor(type: T, options: FieldOptions<T> = {} as any) {
     this.__type = type;
     this.__options = options;
+  }
+
+  static fromDefinition(def: FieldDefinition) {
+    return new Field(def.type, def.options);
   }
 
   get options() {

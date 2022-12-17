@@ -14,6 +14,7 @@ import PromiseModel from "./lib/PromiseModel";
 import PromiseModelList from "./lib/PromiseModelList";
 import Data from "./lib/Data";
 import SerializerFormat from "./enums/serializer-format";
+import RuleActions from "./enums/rule-actions";
 import {
   InputModelPayload,
   ModelAdapterFetcher,
@@ -51,4 +52,5 @@ export {
   PromiseModel,
   PromiseModelList,
   SerializerFormat,
+  RuleActions,
 };

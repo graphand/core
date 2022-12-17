@@ -4,11 +4,16 @@ import ModelAdapter from "./ModelAdapter";
 import PromiseModel from "./PromiseModel";
 import PromiseModelList from "./PromiseModelList";
 import { fieldDecorator } from "./fieldDecorator";
-import { models } from "../index";
+import { InputModelPayload, ModelAdapterFetcher, models } from "../index";
 import FieldTypes from "../enums/field-types";
-import { FieldDateDefinition, InputModelPayload, JSONQuery } from "../types";
+import {
+  FieldDateDefinition,
+  Hook,
+  HookPhase,
+  JSONQuery,
+  ModelDocument,
+} from "../types";
 import SerializerFormat from "../enums/serializer-format";
-import field from "./Field";
 
 class Model {
   static extendable: boolean = false;
@@ -18,6 +23,7 @@ class Model {
   static __fields: Map<string, Field>;
   static __initPromise: Promise<void>;
   static __adapter: ModelAdapter;
+  static __hooks: Set<Hook<any, any>>;
 
   private __doc: any;
 
@@ -75,9 +81,9 @@ class Model {
     this.__initPromise ??= new Promise(async (resolve, reject) => {
       if (model.extendable) {
         try {
-          const fields = await model.getAdapter().fetcher.getFields();
+          const fields = await model.execute("getFields");
           fields.forEach((f) => {
-            this.__fields.set(f.slug, new Field(f.type, f.options));
+            this.__fields.set(f.slug, Field.fromDefinition(f));
           });
         } catch (e) {
           reject(e);
@@ -95,7 +101,7 @@ class Model {
 
     let model = this;
     do {
-      if (model.__fields) {
+      if (model.hasOwnProperty("__fields")) {
         Array.from(model.__fields.keys()).forEach((key) => {
           fields.set(key, model.__fields.get(key));
         });
@@ -106,6 +112,29 @@ class Model {
     } while (model);
 
     return fields;
+  }
+
+  static getRecursiveHooks<A extends keyof ModelAdapterFetcher<any>>(
+    action: A
+  ): Array<Hook<any, A, any>> {
+    let _hooks = [];
+
+    let model = this;
+    do {
+      if (model.hasOwnProperty("__hooks")) {
+        const _modelHooks = Array.from(model.__hooks || []).filter(
+          (hook) => hook.action === action
+        );
+        if (_modelHooks?.length) {
+          _hooks = _hooks.concat(_modelHooks);
+        }
+      }
+
+      // @ts-ignore
+      model = model.__proto__;
+    } while (model);
+
+    return _hooks;
   }
 
   defineFieldsProperties() {
@@ -171,10 +200,10 @@ class Model {
    * @param value {*}
    * @param upsert {boolean=} - Define if the setter will trigger a store upsert action
    */
-  set<T extends Model, S extends keyof T>(
+  set<T extends Model, S extends keyof T | string>(
     this: T,
     slug: S,
-    value: T[S],
+    value: S extends keyof T ? T[S] | any : any,
     upsert?: boolean
   ) {
     const field = this.model.getRecursiveFields().get(String(slug));
@@ -248,7 +277,7 @@ class Model {
 
     await this.initialize();
 
-    return this.getAdapter().fetcher.count(query);
+    return this.execute("count", query);
   }
 
   static get<T extends typeof Model>(
@@ -264,7 +293,7 @@ class Model {
           try {
             await model.initialize();
 
-            const i = await this.getAdapter().fetcher.get(query);
+            const i = await this.execute("get", query);
             resolve(i);
           } catch (e) {
             reject(e);
@@ -289,7 +318,7 @@ class Model {
           try {
             await model.initialize();
 
-            const list = await this.getAdapter().fetcher.getList(query);
+            const list = await this.execute("getList", query);
             resolve(list);
           } catch (e) {
             reject(e);
@@ -308,7 +337,7 @@ class Model {
     this.verifyAdapter();
     await this.initialize();
 
-    return await this.getAdapter().fetcher.createOne(payload);
+    return await this.execute("createOne", payload);
   }
 
   static async createMultiple<T extends typeof Model>(
@@ -318,15 +347,13 @@ class Model {
     this.verifyAdapter();
     await this.initialize();
 
-    return await this.getAdapter().fetcher.createMultiple(payload);
+    return await this.execute("createMultiple", payload);
   }
 
   async update(update: any): Promise<this> {
     this.model.verifyAdapter();
 
-    const res = await this.model
-      .getAdapter()
-      .fetcher.updateOne(this._id, update);
+    const res = await this.model.execute("updateOne", this._id, update);
 
     this.setDoc(res.__doc);
 
@@ -342,17 +369,17 @@ class Model {
     await this.initialize();
 
     if (typeof query === "string") {
-      const updated = await this.getAdapter().fetcher.updateOne(query, update);
+      const updated = await this.execute("updateOne", query, update);
       return [updated];
     }
 
-    return await this.getAdapter().fetcher.updateMultiple(query, update);
+    return await this.execute("updateMultiple", query, update);
   }
 
   async delete(): Promise<this> {
     this.model.verifyAdapter();
 
-    await this.model.getAdapter().fetcher.deleteOne(this._id);
+    await this.model.execute("deleteOne", this._id);
 
     return this;
   }
@@ -365,7 +392,7 @@ class Model {
     await this.initialize();
 
     if (typeof query === "string") {
-      const deleted = await this.getAdapter().fetcher.deleteOne(query);
+      const deleted = await this.execute("deleteOne", query);
       if (deleted) {
         return [query];
       }
@@ -373,7 +400,46 @@ class Model {
       return [];
     }
 
-    return await this.getAdapter().fetcher.deleteMultiple(query);
+    return await this.execute("deleteMultiple", query);
+  }
+
+  static hook<
+    M extends typeof Model,
+    P extends HookPhase,
+    A extends keyof ModelAdapterFetcher<M>
+  >(this: M, phase: P, action: A, fn: Hook<P, A, M>["fn"]) {
+    if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
+      this.__hooks = new Set();
+    }
+
+    this.__hooks.add({ phase, action, fn });
+  }
+
+  static async execute<
+    M extends typeof Model,
+    A extends keyof ModelAdapterFetcher<M>,
+    Args extends Parameters<ModelAdapterFetcher<M>[A]>
+  >(
+    this: M,
+    action: A,
+    ...args: Args
+  ): Promise<ReturnType<ModelAdapterFetcher<M>[A]>> {
+    const fn = this.getAdapter().fetcher[action];
+    const hooks = this.getRecursiveHooks(action);
+    const hooksBefore = hooks.filter((hook) => hook.phase === "before");
+    const hooksAfter = hooks.filter((hook) => hook.phase === "after");
+
+    await Promise.all(hooksBefore.map((hook) => hook.fn({ args })));
+    let res;
+    try {
+      res = await fn.apply(fn, args);
+      await Promise.all(hooksAfter.map((hook) => hook.fn({ args, res })));
+    } catch (err) {
+      await Promise.all(hooksAfter.map((hook) => hook.fn({ args, res, err })));
+      throw err;
+    }
+
+    return res as ReturnType<ModelAdapterFetcher<M>[A]>;
   }
 }
 
