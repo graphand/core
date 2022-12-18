@@ -1,10 +1,11 @@
-import { ModelAdapterSerializer } from "../types";
 import Model from "../lib/Model";
 import FieldTypes from "../enums/field-types";
 import SerializerFormat from "../enums/serializer-format";
 import Field from "./Field";
+import { AdapterSerializer } from "../types";
+import Adapter from "./Adapter";
 
-const defaultSerializer: ModelAdapterSerializer<typeof Model> = {
+const defaultSerializer: AdapterSerializer<typeof Model> = {
   [FieldTypes.ID]: {
     serialize: (value) => (typeof value === "string" ? value : String(value)),
   },
@@ -51,10 +52,8 @@ const defaultSerializer: ModelAdapterSerializer<typeof Model> = {
 
       const _serializeObject = () => {
         // get the referenced model with the same adapter as from parameter
-        const adapter = from.model.getAdapter();
-        const model = Model.getFromSlug(field.options.ref).withAdapter(
-          adapter.toConstructor()
-        );
+        const adapter = from.model.__adapter.constructor as typeof Adapter;
+        const model = Model.getFromSlug(field.options.ref).withAdapter(adapter);
 
         if (field.options.multiple) {
           const ids = Array.isArray(value) ? value : [value];

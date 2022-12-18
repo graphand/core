@@ -1,12 +1,13 @@
 import Model from "./lib/Model";
 import DataModel from "./models/DataModel";
-import ModelAdapter from "./lib/ModelAdapter";
 import Account from "./models/Account";
 import Media from "./models/Media";
 import Project from "./models/Project";
 import User from "./models/User";
 import Role from "./models/Role";
 import Organization from "./models/Organization";
+import Token from "./models/Token";
+import Environment from "./models/Environment";
 import ModelList from "./lib/ModelList";
 import ModelEnvScopes from "./enums/model-env-scopes";
 import FieldTypes from "./enums/field-types";
@@ -15,10 +16,14 @@ import PromiseModelList from "./lib/PromiseModelList";
 import Data from "./lib/Data";
 import SerializerFormat from "./enums/serializer-format";
 import RuleActions from "./enums/rule-actions";
+import Adapter from "./lib/Adapter";
 import {
+  Module,
   InputModelPayload,
-  ModelAdapterFetcher,
-  ModelAdapterSerializer,
+  AdapterFetcher,
+  AdapterSerializer,
+  Rule,
+  FieldsRestriction,
 } from "./types";
 
 const models = {
@@ -29,28 +34,35 @@ const models = {
   User,
   Organization,
   Role,
+  Token,
+  Environment,
 };
 
 export {
   Model,
   ModelList,
-  ModelAdapter,
+  Adapter,
   Account,
   Data,
   Media,
   Project,
   User,
   Organization,
+  Token,
+  Environment,
   Role,
   DataModel,
   models,
   ModelEnvScopes,
   FieldTypes,
-  InputModelPayload,
-  ModelAdapterFetcher,
-  ModelAdapterSerializer,
   PromiseModel,
   PromiseModelList,
   SerializerFormat,
   RuleActions,
+  InputModelPayload,
+  AdapterFetcher,
+  AdapterSerializer,
+  Rule,
+  FieldsRestriction,
+  Module,
 };

@@ -7,6 +7,7 @@ enum RuleActions {
   LOGIN = "login", // auth
   REGISTER = "register", // auth
   EXECUTE = "execute", // aggregations / elasticsearch
+  ALL = "all", // generic
 }
 
 export default RuleActions;

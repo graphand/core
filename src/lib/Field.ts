@@ -1,9 +1,9 @@
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
 import {
+  AdapterSerializerField,
   FieldDefinition,
   FieldOptions,
-  ModelAdapterSerializerField,
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import defaultSerializer from "./defaultSerializer";
@@ -27,9 +27,9 @@ class Field<T extends FieldTypes = FieldTypes> {
 
   getSerializer<M extends typeof Model>(
     from: InstanceType<M>
-  ): ModelAdapterSerializerField<M, Field<T>> {
+  ): AdapterSerializerField<M, Field<T>> {
     return (
-      from.model.getAdapter().serializer?.[this.__type] ||
+      from.model.__adapter.serializer?.[this.__type] ||
       defaultSerializer[this.__type]
     );
   }

@@ -1,29 +1,31 @@
 import ModelEnvScopes from "../enums/model-env-scopes";
 import Field from "./Field";
-import ModelAdapter from "./ModelAdapter";
 import PromiseModel from "./PromiseModel";
 import PromiseModelList from "./PromiseModelList";
 import { fieldDecorator } from "./fieldDecorator";
-import { InputModelPayload, ModelAdapterFetcher, models } from "../index";
+import { InputModelPayload, models } from "../index";
 import FieldTypes from "../enums/field-types";
 import {
+  AdapterFetcher,
   FieldDateDefinition,
   Hook,
   HookPhase,
   JSONQuery,
-  ModelDocument,
+  Module,
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
+import Adapter from "./Adapter";
 
 class Model {
   static extendable: boolean = false;
-  static __name: string;
   static slug: string;
   static scope: ModelEnvScopes;
+
+  static __name: string;
   static __fields: Map<string, Field>;
   static __initPromise: Promise<void>;
-  static __adapter: ModelAdapter;
   static __hooks: Set<Hook<any, any>>;
+  static __adapter: Adapter;
 
   private __doc: any;
 
@@ -52,25 +54,19 @@ class Model {
     return this.constructor as typeof Model;
   }
 
-  static getAdapter<T extends typeof Model>(this: T): ModelAdapter<T> {
-    return this.__adapter as ModelAdapter<T>;
-  }
-
   static withAdapter<T extends typeof Model>(
     this: T,
-    adapter: typeof ModelAdapter<any>
+    adapterClass: typeof Adapter,
+    modules?: Array<Module>
   ): T {
-    const model = this;
-    const adapterInstance = new adapter();
-
     // @ts-ignore
-    const modelWithAdapter = class extends model {
-      static __adapter = adapterInstance;
-    };
+    const modelWithAdapter = class extends this {};
 
-    adapterInstance.initWithModel(modelWithAdapter);
+    Object.defineProperty(modelWithAdapter, "name", { value: this.__name });
 
-    Object.defineProperty(modelWithAdapter, "name", { value: model.__name });
+    modelWithAdapter.__adapter = new adapterClass(modelWithAdapter);
+
+    modules?.forEach((module) => module(modelWithAdapter));
 
     return modelWithAdapter;
   }
@@ -114,9 +110,9 @@ class Model {
     return fields;
   }
 
-  static getRecursiveHooks<A extends keyof ModelAdapterFetcher<any>>(
+  static getRecursiveHooks<A extends keyof AdapterFetcher>(
     action: A
-  ): Array<Hook<any, A, any>> {
+  ): Array<Hook<any, A>> {
     let _hooks = [];
 
     let model = this;
@@ -163,8 +159,8 @@ class Model {
   }
 
   static verifyAdapter() {
-    if (!this.__adapter || !(this.__adapter instanceof ModelAdapter)) {
-      throw new Error("INVALID_MODEL_ADAPTER");
+    if (!this.__adapter || !(this.__adapter instanceof Adapter)) {
+      throw new Error("INVALID_ADAPTER");
     }
   }
 
@@ -403,11 +399,11 @@ class Model {
     return await this.execute("deleteMultiple", query);
   }
 
-  static hook<
-    M extends typeof Model,
-    P extends HookPhase,
-    A extends keyof ModelAdapterFetcher<M>
-  >(this: M, phase: P, action: A, fn: Hook<P, A, M>["fn"]) {
+  static hook<P extends HookPhase, A extends keyof AdapterFetcher>(
+    phase: P,
+    action: A,
+    fn: Hook<P, A>["fn"]
+  ) {
     if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
       this.__hooks = new Set();
     }
@@ -417,29 +413,39 @@ class Model {
 
   static async execute<
     M extends typeof Model,
-    A extends keyof ModelAdapterFetcher<M>,
-    Args extends Parameters<ModelAdapterFetcher<M>[A]>
+    A extends keyof AdapterFetcher<M>,
+    Args extends Parameters<AdapterFetcher[A]>
   >(
     this: M,
     action: A,
     ...args: Args
-  ): Promise<ReturnType<ModelAdapterFetcher<M>[A]>> {
-    const fn = this.getAdapter().fetcher[action];
+  ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
+    const fn = this.__adapter.fetcher[action];
     const hooks = this.getRecursiveHooks(action);
     const hooksBefore = hooks.filter((hook) => hook.phase === "before");
     const hooksAfter = hooks.filter((hook) => hook.phase === "after");
 
-    await Promise.all(hooksBefore.map((hook) => hook.fn({ args })));
-    let res;
+    const hookPayload: any = { args };
+
+    await Promise.all(
+      hooksBefore.map((hook) => hook.fn.call(this, hookPayload))
+    );
+
     try {
-      res = await fn.apply(fn, args);
-      await Promise.all(hooksAfter.map((hook) => hook.fn({ args, res })));
+      hookPayload.res = await fn.apply(fn, hookPayload.args);
     } catch (err) {
-      await Promise.all(hooksAfter.map((hook) => hook.fn({ args, res, err })));
-      throw err;
+      hookPayload.err = err;
     }
 
-    return res as ReturnType<ModelAdapterFetcher<M>[A]>;
+    await Promise.all(
+      hooksAfter.map((hook) => hook.fn.call(this, hookPayload))
+    );
+
+    if (hookPayload.err) {
+      throw hookPayload.err;
+    }
+
+    return hookPayload.res as ReturnType<AdapterFetcher<M>[A]>;
   }
 }
 

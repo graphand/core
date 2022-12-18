@@ -5,6 +5,7 @@ import ModelList from "./lib/ModelList";
 import Field from "./lib/Field";
 import SerializerFormat from "./enums/serializer-format";
 import FieldTypes from "./enums/field-types";
+import RuleActions from "./enums/rule-actions";
 
 export type ParseableFieldDefinition<Def extends any> = Def | any;
 
@@ -96,7 +97,7 @@ export type JSONQuery = {
   pageSize?: number;
 };
 
-export type ModelAdapterFetcher<T extends typeof Model> = {
+export type AdapterFetcher<T extends typeof Model = any> = {
   count: (query?: string | JSONQuery) => Promise<number | null>;
   get: (query?: string | JSONQuery) => Promise<InstanceType<T> | null>;
   getList: (query?: JSONQuery) => Promise<ModelList<InstanceType<T>>>;
@@ -119,10 +120,7 @@ export type ModelAdapterFetcher<T extends typeof Model> = {
   >;
 };
 
-export type ModelAdapterSerializerField<
-  T extends typeof Model,
-  F extends Field
-> = {
+export type AdapterSerializerField<T extends typeof Model, F extends Field> = {
   serialize: (
     value: any,
     format: SerializerFormat,
@@ -131,11 +129,13 @@ export type ModelAdapterSerializerField<
   ) => any;
 };
 
-export type ModelAdapterSerializer<T extends typeof Model> = {
-  [key in FieldTypes]?: ModelAdapterSerializerField<T, Field<key>>;
+export type AdapterSerializer<T extends typeof Model = any> = {
+  [key in FieldTypes]?: AdapterSerializerField<T, Field<key>>;
 };
 
-export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
+export type Module<T extends typeof Model = any> = (model: T) => void;
+
+export type FieldDefinition<T extends FieldTypes = any> = {
   slug: string;
   type: T;
   options?: FieldOptions<T>;
@@ -184,21 +184,30 @@ export type HookPhase = "before" | "after";
 
 export type HookCallbackArgs<
   P extends HookPhase,
-  E extends keyof ModelAdapterFetcher<any>,
-  M extends typeof Model
+  E extends keyof AdapterFetcher
 > = P extends "before"
-  ? { args: Parameters<ModelAdapterFetcher<M>[E]> }
-  : HookCallbackArgs<"before", E, M> & {
-      res?: ReturnType<ModelAdapterFetcher<M>[E]>;
+  ? { args: Parameters<AdapterFetcher[E]> }
+  : HookCallbackArgs<"before", E> & {
+      res?: ReturnType<AdapterFetcher[E]>;
       err?: Error;
     };
 
-export type Hook<
-  P extends HookPhase,
-  A extends keyof ModelAdapterFetcher<any>,
-  M extends typeof Model = typeof Model
-> = {
+export type Hook<P extends HookPhase, A extends keyof AdapterFetcher> = {
   phase: P;
   action: A;
-  fn: (args: HookCallbackArgs<P, A, M>) => void;
+  fn: (args: HookCallbackArgs<P, A>) => void;
+};
+
+export type Rule = {
+  ref: string;
+  actions?: RuleActions[];
+  filter?: object;
+  prohibition?: boolean;
+};
+
+export type FieldsRestriction = {
+  ref?: string;
+  actions?: RuleActions[];
+  filter?: object;
+  fields: string[];
 };

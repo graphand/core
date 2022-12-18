@@ -4,7 +4,6 @@ enum FieldTypes {
   NUMBER = "Number",
   BOOLEAN = "Boolean",
   RELATION = "Relation",
-  COLOR = "Color",
   DATE = "Date",
   JSON = "JSON",
 }
