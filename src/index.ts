@@ -24,6 +24,7 @@ import {
   AdapterSerializer,
   Rule,
   FieldsRestriction,
+  HookPhase,
 } from "./types";
 
 const models = {
@@ -65,4 +66,5 @@ export {
   Rule,
   FieldsRestriction,
   Module,
+  HookPhase,
 };

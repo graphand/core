@@ -184,12 +184,12 @@ export type HookPhase = "before" | "after";
 
 export type HookCallbackArgs<
   P extends HookPhase,
-  E extends keyof AdapterFetcher
+  A extends keyof AdapterFetcher
 > = P extends "before"
-  ? { args: Parameters<AdapterFetcher[E]> }
-  : HookCallbackArgs<"before", E> & {
-      res?: ReturnType<AdapterFetcher[E]>;
-      err?: Error;
+  ? { args: Parameters<AdapterFetcher[A]> }
+  : HookCallbackArgs<"before", A> & {
+      res?: ReturnType<AdapterFetcher[A]>;
+      err?: Error[];
     };
 
 export type Hook<P extends HookPhase, A extends keyof AdapterFetcher> = {

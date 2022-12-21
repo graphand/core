@@ -9,6 +9,7 @@ import {
   AdapterFetcher,
   FieldDateDefinition,
   Hook,
+  HookCallbackArgs,
   HookPhase,
   JSONQuery,
   Module,
@@ -111,7 +112,8 @@ class Model {
   }
 
   static getRecursiveHooks<A extends keyof AdapterFetcher>(
-    action: A
+    action: A,
+    phase: HookPhase
   ): Array<Hook<any, A>> {
     let _hooks = [];
 
@@ -119,7 +121,7 @@ class Model {
     do {
       if (model.hasOwnProperty("__hooks")) {
         const _modelHooks = Array.from(model.__hooks || []).filter(
-          (hook) => hook.action === action
+          (hook) => hook.action === action && hook.phase === phase
         );
         if (_modelHooks?.length) {
           _hooks = _hooks.concat(_modelHooks);
@@ -402,13 +404,27 @@ class Model {
   static hook<P extends HookPhase, A extends keyof AdapterFetcher>(
     phase: P,
     action: A,
-    fn: Hook<P, A>["fn"]
+    fn: Hook<P, A>["fn"],
+    execOnce?: boolean
   ) {
     if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
       this.__hooks = new Set();
     }
 
-    this.__hooks.add({ phase, action, fn });
+    const hook = { phase, action, fn };
+
+    if (execOnce) {
+      const fn = hook.fn;
+      hook.fn = (...args) => {
+        const res = fn.apply(fn, args);
+        if (res === true) {
+          this.__hooks.delete(hook);
+        }
+        return res;
+      };
+    }
+
+    this.__hooks.add(hook);
   }
 
   static async execute<
@@ -421,31 +437,49 @@ class Model {
     ...args: Args
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const fn = this.__adapter.fetcher[action];
-    const hooks = this.getRecursiveHooks(action);
-    const hooksBefore = hooks.filter((hook) => hook.phase === "before");
-    const hooksAfter = hooks.filter((hook) => hook.phase === "after");
+    const hooksBefore = this.getRecursiveHooks(action, "before");
 
-    const hookPayload: any = { args };
+    const hookPayloadBefore: HookCallbackArgs<"before", A> = { args };
 
-    await Promise.all(
-      hooksBefore.map((hook) => hook.fn.call(this, hookPayload))
-    );
+    const beforeErr = [];
+    await hooksBefore.reduceRight(async (p, hook) => {
+      await p;
+      try {
+        await hook.fn.call(this, hookPayloadBefore);
+      } catch (err) {
+        beforeErr.push(err);
+      }
+    }, Promise.resolve());
+
+    if (beforeErr.length) {
+      throw beforeErr;
+    }
+
+    const hookPayloadAfter = hookPayloadBefore as HookCallbackArgs<"after", A>;
 
     try {
-      hookPayload.res = await fn.apply(fn, hookPayload.args);
+      hookPayloadAfter.res = await fn.apply(fn, hookPayloadAfter.args);
     } catch (err) {
-      hookPayload.err = err;
+      hookPayloadAfter.err = [err];
     }
 
-    await Promise.all(
-      hooksAfter.map((hook) => hook.fn.call(this, hookPayload))
-    );
+    const hooksAfter = this.getRecursiveHooks(action, "after");
 
-    if (hookPayload.err) {
-      throw hookPayload.err;
+    await hooksAfter.reduceRight(async (p, hook) => {
+      await p;
+      try {
+        await hook.fn.call(this, hookPayloadAfter);
+      } catch (err) {
+        hookPayloadAfter.err ??= [];
+        hookPayloadAfter.err.push(err);
+      }
+    }, Promise.resolve());
+
+    if (hookPayloadAfter.err?.length) {
+      throw hookPayloadAfter.err;
     }
 
-    return hookPayload.res as ReturnType<AdapterFetcher<M>[A]>;
+    return hookPayloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
   }
 }
 
