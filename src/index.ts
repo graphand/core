@@ -17,6 +17,7 @@ import Data from "./lib/Data";
 import SerializerFormat from "./enums/serializer-format";
 import RuleActions from "./enums/rule-actions";
 import Adapter from "./lib/Adapter";
+import Field from "./lib/Field";
 import {
   Module,
   InputModelPayload,
@@ -60,6 +61,7 @@ export {
   PromiseModelList,
   SerializerFormat,
   RuleActions,
+  Field,
   InputModelPayload,
   AdapterFetcher,
   AdapterSerializer,

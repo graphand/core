@@ -21,6 +21,10 @@ class Field<T extends FieldTypes = FieldTypes> {
     return new Field(def.type, def.options);
   }
 
+  get type() {
+    return this.__type;
+  }
+
   get options() {
     return this.__options;
   }
