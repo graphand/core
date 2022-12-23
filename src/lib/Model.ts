@@ -78,9 +78,13 @@ class Model {
     this.__initPromise ??= new Promise(async (resolve, reject) => {
       if (model.extendable) {
         try {
+          if (!model.hasOwnProperty("__fields") || !model.__fields) {
+            model.__fields = new Map();
+          }
+
           const fields = await model.execute("getFields");
           fields.forEach((f) => {
-            this.__fields.set(f.slug, Field.fromDefinition(f));
+            model.__fields.set(f.slug, Field.fromDefinition(f));
           });
         } catch (e) {
           reject(e);
