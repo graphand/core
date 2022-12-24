@@ -33,7 +33,7 @@ class Field<T extends FieldTypes = FieldTypes> {
     from: InstanceType<M>
   ): AdapterSerializerField<M, Field<T>> {
     return (
-      from.model.__adapter.serializer?.[this.__type] ||
+      from.model.__adapter?.serializer?.[this.__type] ||
       defaultSerializer[this.__type]
     );
   }

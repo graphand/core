@@ -26,6 +26,11 @@ import {
   Rule,
   FieldsRestriction,
   HookPhase,
+  FieldTextDefinition,
+  FieldBooleanDefinition,
+  FieldNumberDefinition,
+  FieldDateDefinition,
+  FieldRelationDefinition,
 } from "./types";
 
 const models = {
@@ -69,4 +74,9 @@ export {
   FieldsRestriction,
   Module,
   HookPhase,
+  FieldTextDefinition,
+  FieldBooleanDefinition,
+  FieldNumberDefinition,
+  FieldDateDefinition,
+  FieldRelationDefinition,
 };
