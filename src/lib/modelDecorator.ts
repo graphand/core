@@ -4,8 +4,8 @@ export const modelDecorator = () => {
   return <T extends typeof Model>(model: T): T => {
     // @ts-ignore
     return class extends model {
-      constructor(props) {
-        super(props);
+      constructor(doc) {
+        super(doc);
 
         this.defineFieldsProperties();
       }

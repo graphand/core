@@ -116,7 +116,7 @@ export type AdapterFetcher<T extends typeof Model = any> = {
   deleteOne: (query: string | JSONQuery) => Promise<boolean>;
   deleteMultiple: (query: JSONQuery) => Promise<string[]>;
   getFields: () => Promise<
-    { type: FieldTypes; label: string; slug: string; options: any }[]
+    { type: FieldTypes; label: string; slug: string; options?: any }[]
   >;
 };
 

@@ -90,10 +90,6 @@ const defaultSerializer: AdapterSerializer<typeof Model> = {
 
           let value = obj[key];
 
-          if (value === undefined && "default" in field.options) {
-            value = field.options.default;
-          }
-
           value = field.serialize(value, format, from);
 
           return Object.assign(final, { [key]: value });

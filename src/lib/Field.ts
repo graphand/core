@@ -39,6 +39,10 @@ class Field<T extends FieldTypes = FieldTypes> {
   }
 
   serialize(value: any, format: SerializerFormat, from: Model) {
+    if (value === undefined && "default" in this.options) {
+      value = this.options.default;
+    }
+
     if (value === undefined || value === null) {
       return value;
     }

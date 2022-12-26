@@ -4,7 +4,7 @@ class ModelList<T extends Model> extends Array<T> {
   private __model: typeof Model;
   private __count: number;
 
-  constructor(model: typeof Model, list: Array<T>, count?: number) {
+  constructor(model: typeof Model, list: Array<T> = [], count?: number) {
     super(...list);
 
     this.__model = model;

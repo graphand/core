@@ -3,7 +3,6 @@ import Field from "./Field";
 import PromiseModel from "./PromiseModel";
 import PromiseModelList from "./PromiseModelList";
 import { fieldDecorator } from "./fieldDecorator";
-import { InputModelPayload, models } from "../index";
 import FieldTypes from "../enums/field-types";
 import {
   AdapterFetcher,
@@ -13,6 +12,7 @@ import {
   HookPhase,
   JSONQuery,
   Module,
+  InputModelPayload,
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
@@ -28,7 +28,7 @@ class Model {
   static __hooks: Set<Hook<any, any>>;
   static __adapter: Adapter;
 
-  private __doc: any;
+  __doc: any;
 
   @fieldDecorator(FieldTypes.ID)
   _id;
@@ -171,6 +171,9 @@ class Model {
   }
 
   static getFromSlug(slug: string): typeof Model {
+    const models = require("../index").models as {
+      [name: string]: typeof Model;
+    };
     return Object.values(models).find((m) => m.slug === slug);
   }
 
@@ -185,15 +188,7 @@ class Model {
       return undefined;
     }
 
-    let value = this.__doc[slug];
-
-    if (value === undefined && "default" in field.options) {
-      value = field.options.default;
-    }
-
-    value = field.serialize(value, format, this);
-
-    return value;
+    return field.serialize(this.__doc[slug], format, this);
   }
 
   /**
@@ -464,11 +459,11 @@ class Model {
     try {
       hookPayloadAfter.res = await fn.apply(fn, hookPayloadAfter.args);
     } catch (err) {
+      console.error(err);
       hookPayloadAfter.err = [err];
     }
 
     const hooksAfter = this.getRecursiveHooks(action, "after");
-
     await hooksAfter.reduceRight(async (p, hook) => {
       await p;
       try {
