@@ -46,6 +46,10 @@ class Model {
   updatedBy;
 
   constructor(doc: any = {}) {
+    if (!doc._id) {
+      doc._id = "";
+    }
+
     this.setDoc(doc);
 
     Object.defineProperty(this, "__doc", { enumerable: false });
@@ -53,6 +57,11 @@ class Model {
 
   get model() {
     return this.constructor as typeof Model;
+  }
+
+  clone() {
+    const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
+    return new this.model(clonedDoc);
   }
 
   static withAdapter<T extends typeof Model>(
@@ -174,7 +183,17 @@ class Model {
     const models = require("../index").models as {
       [name: string]: typeof Model;
     };
-    return Object.values(models).find((m) => m.slug === slug);
+    const model = Object.values(models).find((m) => m.slug === slug);
+    if (!model) {
+      return null;
+    }
+
+    if (!this.__adapter) {
+      return model;
+    }
+
+    const adapter = this.__adapter.constructor as typeof Adapter;
+    return model.withAdapter(adapter);
   }
 
   /**
