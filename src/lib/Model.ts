@@ -448,16 +448,19 @@ class Model {
   static async execute<
     M extends typeof Model,
     A extends keyof AdapterFetcher<M>,
-    Args extends Parameters<AdapterFetcher[A]>
+    Args extends Parameters<AdapterFetcher[A]>[0]
   >(
     this: M,
     action: A,
     ...args: Args
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
-    const fn = this.__adapter.fetcher[action];
+    const adapter = this.__adapter;
+    const fn = adapter.fetcher[action];
     const hooksBefore = this.getRecursiveHooks(action, "before");
 
-    const hookPayloadBefore: HookCallbackArgs<"before", A> = { args };
+    const ctx = { adapter, fn };
+
+    const hookPayloadBefore: HookCallbackArgs<"before", A> = { args, ctx };
 
     const beforeErr = [];
     await hooksBefore.reduceRight(async (p, hook) => {
@@ -473,14 +476,16 @@ class Model {
       throw beforeErr;
     }
 
-    const hookPayloadAfter = hookPayloadBefore as HookCallbackArgs<"after", A>;
+    let res;
+    let err;
 
     try {
-      hookPayloadAfter.res = await fn.apply(fn, hookPayloadAfter.args);
-    } catch (err) {
-      console.error(err);
-      hookPayloadAfter.err = [err];
+      res = await fn.apply(fn, [hookPayloadBefore.args, hookPayloadBefore.ctx]);
+    } catch (e) {
+      err = [e];
     }
+
+    const hookPayloadAfter = { ...hookPayloadBefore, res, err };
 
     const hooksAfter = this.getRecursiveHooks(action, "after");
     await hooksAfter.reduceRight(async (p, hook) => {

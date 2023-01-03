@@ -98,24 +98,40 @@ export type JSONQuery = {
 };
 
 export type AdapterFetcher<T extends typeof Model = any> = {
-  count: (query?: string | JSONQuery) => Promise<number | null>;
-  get: (query?: string | JSONQuery) => Promise<InstanceType<T> | null>;
-  getList: (query?: JSONQuery) => Promise<ModelList<InstanceType<T>>>;
-  createOne: (payload: InputModelPayload<T>) => Promise<InstanceType<T>>;
+  count: (
+    args: [query: string | JSONQuery],
+    ctx: any
+  ) => Promise<number | null>;
+  get: (
+    args: [query: string | JSONQuery],
+    ctx: any
+  ) => Promise<InstanceType<T> | null>;
+  getList: (
+    args: [query: JSONQuery],
+    ctx: any
+  ) => Promise<ModelList<InstanceType<T>>>;
+  createOne: (
+    args: [payload: InputModelPayload<T>],
+    ctx: any
+  ) => Promise<InstanceType<T>>;
   createMultiple: (
-    payload: Array<InputModelPayload<T>>
+    args: [payload: Array<InputModelPayload<T>>],
+    ctx: any
   ) => Promise<Array<InstanceType<T>>>;
   updateOne: (
-    query: string | JSONQuery,
-    update: any
+    args: [query: string | JSONQuery, update: any],
+    ctx: any
   ) => Promise<InstanceType<T>>;
   updateMultiple: (
-    query: JSONQuery,
-    update: any
+    args: [query: JSONQuery, update: any],
+    ctx: any
   ) => Promise<Array<InstanceType<T>>>;
-  deleteOne: (query: string | JSONQuery) => Promise<boolean>;
-  deleteMultiple: (query: JSONQuery) => Promise<string[]>;
-  getFields: () => Promise<
+  deleteOne: (args: [query: string | JSONQuery], ctx: any) => Promise<boolean>;
+  deleteMultiple: (args: [query: JSONQuery], ctx: any) => Promise<string[]>;
+  getFields: (
+    args: never,
+    ctx: any
+  ) => Promise<
     { type: FieldTypes; label: string; slug: string; options?: any }[]
   >;
 };
@@ -165,6 +181,10 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
       fields?: FieldDefinition[];
       strict?: boolean;
     }
+  : T extends FieldTypes.BOOLEAN | "Boolean"
+  ? {
+      default?: boolean;
+    }
   : never;
 
 export type InputModelPayload<M extends typeof Model> = Partial<
@@ -186,7 +206,7 @@ export type HookCallbackArgs<
   P extends HookPhase,
   A extends keyof AdapterFetcher
 > = P extends "before"
-  ? { args: Parameters<AdapterFetcher[A]> }
+  ? { args: Parameters<AdapterFetcher[A]>[0]; ctx: any }
   : HookCallbackArgs<"before", A> & {
       res?: ReturnType<AdapterFetcher[A]>;
       err?: Error[];

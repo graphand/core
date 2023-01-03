@@ -3,6 +3,7 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import {
+  FieldBooleanDefinition,
   FieldDefinition,
   FieldJSONDefinition,
   FieldTextDefinition,
@@ -32,7 +33,6 @@ class DataModel extends Model {
         slug: "type",
         type: FieldTypes.TEXT,
         options: {
-          multiple: true,
           options: Object.values(FieldTypes),
         },
       },
@@ -43,6 +43,9 @@ class DataModel extends Model {
     ],
   })
   fields: FieldJSONDefinition<FieldDefinition[]>;
+
+  @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
+  isPage: FieldBooleanDefinition;
 }
 
 export default DataModel;
