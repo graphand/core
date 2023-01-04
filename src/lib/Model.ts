@@ -145,7 +145,7 @@ class Model {
       model = model.__proto__;
     } while (model);
 
-    return _hooks;
+    return _hooks.sort((a, b) => a.priority - b.priority);
   }
 
   defineFieldsProperties() {
@@ -423,24 +423,13 @@ class Model {
     phase: P,
     action: A,
     fn: Hook<P, A>["fn"],
-    execOnce?: boolean
+    priority: number = 0
   ) {
     if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
       this.__hooks = new Set();
     }
 
-    const hook = { phase, action, fn };
-
-    if (execOnce) {
-      const fn = hook.fn;
-      hook.fn = (...args) => {
-        const res = fn.apply(fn, args);
-        if (res === true) {
-          this.__hooks.delete(hook);
-        }
-        return res;
-      };
-    }
+    const hook = { phase, action, fn, priority };
 
     this.__hooks.add(hook);
   }
@@ -463,7 +452,7 @@ class Model {
     const hookPayloadBefore: HookCallbackArgs<"before", A> = { args, ctx };
 
     const beforeErr = [];
-    await hooksBefore.reduceRight(async (p, hook) => {
+    await hooksBefore.reduce(async (p, hook) => {
       await p;
       try {
         await hook.fn.call(this, hookPayloadBefore);
@@ -488,7 +477,7 @@ class Model {
     const hookPayloadAfter = { ...hookPayloadBefore, res, err };
 
     const hooksAfter = this.getRecursiveHooks(action, "after");
-    await hooksAfter.reduceRight(async (p, hook) => {
+    await hooksAfter.reduce(async (p, hook) => {
       await p;
       try {
         await hook.fn.call(this, hookPayloadAfter);

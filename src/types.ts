@@ -216,6 +216,7 @@ export type Hook<P extends HookPhase, A extends keyof AdapterFetcher> = {
   phase: P;
   action: A;
   fn: (args: HookCallbackArgs<P, A>) => void;
+  priority?: number;
 };
 
 export type Rule = {
