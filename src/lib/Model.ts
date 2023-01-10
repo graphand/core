@@ -145,7 +145,7 @@ class Model {
       model = model.__proto__;
     } while (model);
 
-    return _hooks.sort((a, b) => a.priority - b.priority);
+    return _hooks.sort((a, b) => a.order - b.order);
   }
 
   defineFieldsProperties() {
@@ -369,7 +369,7 @@ class Model {
   async update(update: any): Promise<this> {
     this.model.verifyAdapter();
 
-    const res = await this.model.execute("updateOne", this._id, update);
+    const res = await this.model.execute("updateOne", String(this._id), update);
 
     this.setDoc(res.__doc);
 
@@ -395,7 +395,7 @@ class Model {
   async delete(): Promise<this> {
     this.model.verifyAdapter();
 
-    await this.model.execute("deleteOne", this._id);
+    await this.model.execute("deleteOne", String(this._id));
 
     return this;
   }
@@ -423,13 +423,13 @@ class Model {
     phase: P,
     action: A,
     fn: Hook<P, A>["fn"],
-    priority: number = 0
+    order: number = 0
   ) {
     if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
       this.__hooks = new Set();
     }
 
-    const hook = { phase, action, fn, priority };
+    const hook: Hook<P, A> = { phase, action, fn, order };
 
     this.__hooks.add(hook);
   }
