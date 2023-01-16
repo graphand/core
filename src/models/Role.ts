@@ -3,15 +3,14 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
+import { FieldsRestriction, Rule } from "../types";
+import RuleActions from "../enums/rule-actions";
 import {
   FieldBooleanDefinition,
   FieldJSONDefinition,
   FieldRelationDefinition,
-  FieldsRestriction,
   FieldTextDefinition,
-  Rule,
-} from "../types";
-import RuleActions from "../enums/rule-actions";
+} from "../fields";
 
 @modelDecorator()
 class Role extends Model {

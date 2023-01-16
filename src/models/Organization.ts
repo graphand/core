@@ -3,7 +3,7 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { FieldTextDefinition } from "../types";
+import { FieldTextDefinition } from "../fields";
 
 @modelDecorator()
 class Organization extends Model {

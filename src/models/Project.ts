@@ -3,12 +3,12 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
+import Organization from "./Organization";
 import {
   FieldNumberDefinition,
   FieldRelationDefinition,
   FieldTextDefinition,
-} from "../types";
-import Organization from "./Organization";
+} from "../fields";
 
 @modelDecorator()
 class Project extends Model {

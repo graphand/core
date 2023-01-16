@@ -3,12 +3,12 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
+import Role from "./Role";
 import {
   FieldDateDefinition,
   FieldRelationDefinition,
   FieldTextDefinition,
-} from "../types";
-import Role from "./Role";
+} from "../fields";
 
 @modelDecorator()
 class Token extends Model {

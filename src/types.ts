@@ -1,88 +1,43 @@
 import Model from "./lib/Model";
-import PromiseModel from "./lib/PromiseModel";
-import PromiseModelList from "./lib/PromiseModelList";
 import ModelList from "./lib/ModelList";
 import Field from "./lib/Field";
 import SerializerFormat from "./enums/serializer-format";
 import FieldTypes from "./enums/field-types";
 import RuleActions from "./enums/rule-actions";
+import ValidatorTypes from "./enums/validator-types";
+import Validator from "./lib/Validator";
 
-export type ParseableFieldDefinition<Def extends any> = Def | any;
+// export type FieldIdDefinition = any;
+// export type FieldTextDefinition = any;
+// export type FieldBooleanDefinition = any;
+// export type FieldNumberDefinition = any;
+// export type FieldDateDefinition = any;
+// export type FieldJSONDefinition = any;
+// export type FieldRelationDefinition = any;
 
-export type FieldIdDefinition = string;
+export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
+  T extends FieldTypes.TEXT
+    ? {
+        multiple: false;
+        creatable: true;
+      }
+    : {};
 
-export type FieldBooleanDefinition = boolean;
-
-export type FieldDateDefinition<
-  D extends {
-    required?: boolean;
-  } = { required: false },
-  Required extends boolean = false
-> = Required extends true
-  ? Date
-  : D["required"] extends true
-  ? FieldDateDefinition<D, true>
-  : FieldDateDefinition<D, true> | undefined;
-
-export type FieldJSONDefinition<T extends { [key: string]: any } = any> =
-  | T
-  | undefined;
-
-export type FieldNumberDefinition<
-  D extends {
-    required?: boolean;
-  } = { required: false },
-  Required extends boolean = false
-> = Required extends true
-  ? number
-  : D["required"] extends true
-  ? FieldNumberDefinition<D, true>
-  : FieldNumberDefinition<D, true> | undefined;
-
-type PromiseModelOn<T extends Model> = PromiseModel<T> & {};
-
-export type FieldRelationDefinition<
-  D extends {
-    model: Model;
-    multiple?: boolean;
-    required?: boolean;
-  },
-  Required extends boolean = false
-> = Required extends true
-  ? D["multiple"] extends true
-    ? ModelList<D["model"]> | PromiseModelList<D["model"]>
-    : D["model"] | PromiseModelOn<D["model"]>
-  : D["required"] extends true
-  ? FieldRelationDefinition<D, true>
-  : FieldRelationDefinition<D, true> | undefined;
-
-type string_ = string & Partial<any>;
-
-type FieldTextDefinitionSingleType<
-  Options extends string[],
-  Creatable extends boolean = true,
-  DefaultType extends any = string_
-> = Options extends string[]
-  ? Creatable extends false
-    ? Options[number]
-    : FieldTextDefinitionSingleType<Options, false> | DefaultType
-  : FieldTextDefinitionSingleType<[], Creatable, string>;
-
-export type FieldTextDefinition<
-  D extends {
-    required?: boolean;
-    options?: string[];
-    multiple?: boolean;
-    creatable?: boolean;
-  } = { multiple: false; required: false; creatable: true },
-  Required extends boolean = false
-> = Required extends true
-  ? D["multiple"] extends true
-    ? FieldTextDefinitionSingleType<D["options"], D["creatable"]>[]
-    : FieldTextDefinitionSingleType<D["options"], D["creatable"]>
-  : D["required"] extends true
-  ? FieldTextDefinition<D, true>
-  : FieldTextDefinition<D, true> | undefined;
+export type FieldDefinitionOptions<T extends FieldTypes> =
+  T extends FieldTypes.TEXT
+    ? {
+        options?: string[];
+        multiple?: boolean;
+        creatable?: boolean;
+      }
+    : T extends FieldTypes.RELATION
+    ? {
+        model: Model;
+        multiple?: boolean;
+      }
+    : T extends FieldTypes.JSON
+    ? { [key: string]: any }
+    : {};
 
 export type JSONQuery = {
   filter?: any;
@@ -97,7 +52,14 @@ export type JSONQuery = {
   pageSize?: number;
 };
 
-export type AdapterFetcher<T extends typeof Model = any> = {
+export type AdapterFetcherModelDefinition<
+  T extends typeof Model = typeof Model
+> = {
+  fields: FieldDefinition[];
+  validators: ValidatorDefinition[];
+};
+
+export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (
     args: [query: string | JSONQuery],
     ctx: any
@@ -128,12 +90,10 @@ export type AdapterFetcher<T extends typeof Model = any> = {
   ) => Promise<Array<InstanceType<T>>>;
   deleteOne: (args: [query: string | JSONQuery], ctx: any) => Promise<boolean>;
   deleteMultiple: (args: [query: JSONQuery], ctx: any) => Promise<string[]>;
-  getFields: (
+  getModelDefinition: (
     args: never,
     ctx: any
-  ) => Promise<
-    { type: FieldTypes; label: string; slug: string; options?: any }[]
-  >;
+  ) => Promise<AdapterFetcherModelDefinition<T>>;
 };
 
 export type AdapterSerializerField<T extends typeof Model, F extends Field> = {
@@ -149,13 +109,35 @@ export type AdapterSerializer<T extends typeof Model = any> = {
   [key in FieldTypes]?: AdapterSerializerField<T, Field<key>>;
 };
 
+export type AdapterValidatorItem<
+  T extends typeof Model,
+  V extends Validator
+> = {};
+
+export type AdapterValidator<T extends typeof Model = any> = {
+  [key in ValidatorTypes]?: AdapterValidatorItem<T, Validator<key>>;
+};
+
 export type Module<T extends typeof Model = any> = (model: T) => void;
 
-export type FieldDefinition<T extends FieldTypes = any> = {
+export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> = {
+  type: T;
+  options?: ValidatorOptions<T>;
+};
+
+export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
   slug: string;
   type: T;
   options?: FieldOptions<T>;
 };
+
+export type ValidatorOptions<T extends string | ValidatorTypes> = T extends
+  | ValidatorTypes.REQUIRED
+  | "required"
+  ? { field: string }
+  : T extends ValidatorTypes.UNIQUE | "unique"
+  ? { field: string }
+  : never;
 
 export type FieldOptions<T extends string | FieldTypes> = T extends
   | FieldTypes.TEXT
@@ -204,18 +186,23 @@ export type HookPhase = "before" | "after";
 
 export type HookCallbackArgs<
   P extends HookPhase,
-  A extends keyof AdapterFetcher
+  A extends keyof AdapterFetcher<T>,
+  T extends typeof Model
 > = P extends "before"
-  ? { args: Parameters<AdapterFetcher[A]>[0]; ctx: any }
-  : HookCallbackArgs<"before", A> & {
-      res?: ReturnType<AdapterFetcher[A]>;
+  ? { args: Parameters<AdapterFetcher<T>[A]>[0]; ctx: any }
+  : HookCallbackArgs<"before", A, T> & {
+      res?: ReturnType<AdapterFetcher<T>[A]>;
       err?: Error[];
     };
 
-export type Hook<P extends HookPhase, A extends keyof AdapterFetcher> = {
+export type Hook<
+  P extends HookPhase,
+  A extends keyof AdapterFetcher<T>,
+  T extends typeof Model
+> = {
   phase: P;
   action: A;
-  fn: (args: HookCallbackArgs<P, A>) => void;
+  fn: (args: HookCallbackArgs<P, A, T>) => void;
   order?: number;
 };
 

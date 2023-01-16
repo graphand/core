@@ -77,15 +77,18 @@ export const mockAdapter = () => {
         this.thisCache.clear();
         return Promise.resolve(ids);
       }),
-      getFields: jest.fn(() => {
-        return Promise.resolve([
-          {
-            slug: "title",
-            label: "Title",
-            type: FieldTypes.TEXT,
-            options: { default: "test" },
-          },
-        ]);
+      getModelDefinition: jest.fn(() => {
+        return Promise.resolve({
+          fields: [
+            {
+              slug: "title",
+              label: "Title",
+              type: FieldTypes.TEXT,
+              options: { default: "test" },
+            },
+          ],
+          validators: [],
+        });
       }),
     };
   }

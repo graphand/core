@@ -6,7 +6,6 @@ import { fieldDecorator } from "./fieldDecorator";
 import FieldTypes from "../enums/field-types";
 import {
   AdapterFetcher,
-  FieldDateDefinition,
   Hook,
   HookCallbackArgs,
   HookPhase,
@@ -16,6 +15,8 @@ import {
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
+import Validator from "./Validator";
+import { FieldIdDefinition, FieldDateDefinition } from "../fields";
 
 class Model {
   static extendable: boolean = false;
@@ -25,13 +26,14 @@ class Model {
   static __name: string;
   static __fields: Map<string, Field>;
   static __initPromise: Promise<void>;
-  static __hooks: Set<Hook<any, any>>;
+  static __hooks: Set<Hook<any, any, any>>;
   static __adapter: Adapter;
+  static __validators: Set<Validator<any>>;
 
   __doc: any;
 
   @fieldDecorator(FieldTypes.ID)
-  _id;
+  _id: FieldIdDefinition;
 
   @fieldDecorator(FieldTypes.DATE)
   createdAt: FieldDateDefinition;
@@ -91,10 +93,22 @@ class Model {
             model.__fields = new Map();
           }
 
-          const fields = await model.execute("getFields");
+          if (!model.hasOwnProperty("__validators") || !model.__validators) {
+            model.__validators = new Set();
+          }
+
+          const modelDefinition = await model.execute("getModelDefinition");
+
+          const fields = modelDefinition?.fields || [];
           fields.forEach((f) => {
             model.__fields.set(f.slug, Field.fromDefinition(f));
           });
+
+          const validators = modelDefinition?.validators || [];
+          model.__validators = new Set<Validator<any>>([
+            ...model.__validators,
+            ...validators.map((def) => Validator.fromDefinition(def)),
+          ]);
         } catch (e) {
           reject(e);
         }
@@ -124,10 +138,26 @@ class Model {
     return fields;
   }
 
-  static getRecursiveHooks<A extends keyof AdapterFetcher>(
-    action: A,
-    phase: HookPhase
-  ): Array<Hook<any, A>> {
+  static getRecursiveValidators(): Set<Validator<any>> {
+    let validators = new Set<Validator<any>>();
+
+    let model = this;
+    do {
+      if (model.hasOwnProperty("__validators")) {
+        validators = new Set([...validators, ...model.__validators]);
+      }
+
+      // @ts-ignore
+      model = model.__proto__;
+    } while (model);
+
+    return validators;
+  }
+
+  static getRecursiveHooks<
+    A extends keyof AdapterFetcher,
+    T extends typeof Model
+  >(this: T, action: A, phase: HookPhase): Array<Hook<any, A, T>> {
     let _hooks = [];
 
     let model = this;
@@ -419,17 +449,16 @@ class Model {
     return await this.execute("deleteMultiple", query);
   }
 
-  static hook<P extends HookPhase, A extends keyof AdapterFetcher>(
-    phase: P,
-    action: A,
-    fn: Hook<P, A>["fn"],
-    order: number = 0
-  ) {
+  static hook<
+    P extends HookPhase,
+    A extends keyof AdapterFetcher,
+    T extends typeof Model
+  >(this: T, phase: P, action: A, fn: Hook<P, A, T>["fn"], order: number = 0) {
     if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
       this.__hooks = new Set();
     }
 
-    const hook: Hook<P, A> = { phase, action, fn, order };
+    const hook: Hook<P, A, T> = { phase, action, fn, order };
 
     this.__hooks.add(hook);
   }
@@ -449,7 +478,7 @@ class Model {
 
     const ctx = { adapter, fn };
 
-    const hookPayloadBefore: HookCallbackArgs<"before", A> = { args, ctx };
+    const hookPayloadBefore: HookCallbackArgs<"before", A, M> = { args, ctx };
 
     const beforeErr = [];
     await hooksBefore.reduce(async (p, hook) => {

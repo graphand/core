@@ -3,8 +3,8 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { FieldRelationDefinition, FieldTextDefinition } from "../types";
 import EnvironmentStatus from "../enums/environment-status";
+import { FieldRelationDefinition, FieldTextDefinition } from "../fields";
 
 const optionStatuses = Object.values(EnvironmentStatus) as [
   "ready",

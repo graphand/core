@@ -18,20 +18,7 @@ import SerializerFormat from "./enums/serializer-format";
 import RuleActions from "./enums/rule-actions";
 import Adapter from "./lib/Adapter";
 import Field from "./lib/Field";
-import {
-  Module,
-  InputModelPayload,
-  AdapterFetcher,
-  AdapterSerializer,
-  Rule,
-  FieldsRestriction,
-  HookPhase,
-  FieldTextDefinition,
-  FieldBooleanDefinition,
-  FieldNumberDefinition,
-  FieldDateDefinition,
-  FieldRelationDefinition,
-} from "./types";
+import ValidatorTypes from "./enums/validator-types";
 
 const models = {
   Account,
@@ -67,16 +54,8 @@ export {
   SerializerFormat,
   RuleActions,
   Field,
-  InputModelPayload,
-  AdapterFetcher,
-  AdapterSerializer,
-  Rule,
-  FieldsRestriction,
-  Module,
-  HookPhase,
-  FieldTextDefinition,
-  FieldBooleanDefinition,
-  FieldNumberDefinition,
-  FieldDateDefinition,
-  FieldRelationDefinition,
+  ValidatorTypes,
 };
+
+export * from "./types";
+export * from "./default-fields";
