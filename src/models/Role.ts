@@ -38,56 +38,50 @@ class Role extends Model {
 
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
-    fields: [
-      {
-        slug: "ref",
+    fields: {
+      ref: {
         type: FieldTypes.TEXT,
       },
-      {
-        slug: "actions",
+      actions: {
         type: FieldTypes.TEXT,
         options: {
           multiple: true,
           options: Object.values(RuleActions),
         },
       },
-      {
-        slug: "filter",
+      filter: {
         type: FieldTypes.JSON,
       },
-      {
-        slug: "prohibition",
+      prohibition: {
         type: FieldTypes.BOOLEAN,
       },
-    ],
+    },
   })
   rules: FieldJSONDefinition<Array<Rule>>;
 
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
-    fields: [
-      {
-        slug: "ref",
+    fields: {
+      ref: {
         type: FieldTypes.TEXT,
       },
-      {
-        slug: "actions",
+      actions: {
         type: FieldTypes.TEXT,
         options: {
           multiple: true,
           options: Object.values(RuleActions),
         },
       },
-      {
-        slug: "filter",
+      filter: {
         type: FieldTypes.JSON,
       },
-      {
-        slug: "fields",
+      fields: {
         type: FieldTypes.TEXT,
-        options: { multiple: true },
+        options: {
+          multiple: true,
+        },
       },
-    ],
+    },
   })
   fieldsRestrictions: FieldJSONDefinition<Array<FieldsRestriction>>;
 

@@ -12,23 +12,36 @@ import {
   JSONQuery,
   Module,
   InputModelPayload,
+  ValidatorsDefinition,
+  FieldsDefinition,
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
 import Validator from "./Validator";
 import { FieldIdDefinition, FieldDateDefinition } from "../fields";
+import {
+  createFieldFromDefinition,
+  createValidatorFromDefinition,
+  getRecursiveFieldsFromModel,
+  getRecursiveHooksFromModel,
+  getRecursiveValidatorsFromModel,
+} from "../utils";
 
 class Model {
   static extendable: boolean = false;
   static slug: string;
   static scope: ModelEnvScopes;
+  static fields: FieldsDefinition;
+  static validators: ValidatorsDefinition;
 
   static __name: string;
-  static __fields: Map<string, Field>;
-  static __initPromise: Promise<void>;
   static __hooks: Set<Hook<any, any, any>>;
+  static __initPromise: Promise<void>;
   static __adapter: Adapter;
-  static __validators: Set<Validator<any>>;
+  static __fieldsMap: Map<string, Field>;
+  static __validatorsSet: Set<Validator>;
+  static __fieldsKeys: string[];
+  static __fieldsProperties: any;
 
   __doc: any;
 
@@ -48,10 +61,7 @@ class Model {
   updatedBy;
 
   constructor(doc: any = {}) {
-    if (!doc._id) {
-      doc._id = "";
-    }
-
+    doc._id ??= "";
     this.setDoc(doc);
 
     Object.defineProperty(this, "__doc", { enumerable: false });
@@ -87,31 +97,12 @@ class Model {
     const model = this;
 
     this.__initPromise ??= new Promise(async (resolve, reject) => {
-      if (model.extendable) {
-        try {
-          if (!model.hasOwnProperty("__fields") || !model.__fields) {
-            model.__fields = new Map();
-          }
-
-          if (!model.hasOwnProperty("__validators") || !model.__validators) {
-            model.__validators = new Set();
-          }
-
-          const modelDefinition = await model.execute("getModelDefinition");
-
-          const fields = modelDefinition?.fields || [];
-          fields.forEach((f) => {
-            model.__fields.set(f.slug, Field.fromDefinition(f));
-          });
-
-          const validators = modelDefinition?.validators || [];
-          model.__validators = new Set<Validator<any>>([
-            ...model.__validators,
-            ...validators.map((def) => Validator.fromDefinition(def)),
-          ]);
-        } catch (e) {
-          reject(e);
+      try {
+        if (model.extendable) {
+          await model.reloadModel();
         }
+      } catch (e) {
+        reject(e);
       }
 
       resolve();
@@ -120,83 +111,85 @@ class Model {
     await this.__initPromise;
   }
 
-  static getRecursiveFields(): Map<string, Field> {
-    let fields = new Map<string, Field>();
+  static async reloadModel() {
+    if (!this.extendable) {
+      return;
+    }
 
-    let model = this;
-    do {
-      if (model.hasOwnProperty("__fields")) {
-        Array.from(model.__fields.keys()).forEach((key) => {
-          fields.set(key, model.__fields.get(key));
-        });
-      }
+    let modelFields = getRecursiveFieldsFromModel(this);
+    let modelValidators = getRecursiveValidatorsFromModel(this);
 
-      // @ts-ignore
-      model = model.__proto__;
-    } while (model);
+    const modelDefinition = await this.execute("getModelDefinition");
 
-    return fields;
+    const fields = modelDefinition?.fields || {};
+    modelFields = { ...modelFields, ...fields };
+
+    const validators = modelDefinition?.validators || [];
+    modelValidators = [...modelValidators, ...validators];
+
+    const fieldsEntries: Array<[string, Field]> = Object.entries(
+      modelFields
+    ).map(([slug, def]) => {
+      return [slug, createFieldFromDefinition(def, this)];
+    });
+
+    const validatorsEntries: Array<Validator> = modelValidators.map((def) => {
+      return createValidatorFromDefinition(def, this);
+    });
+
+    this.__fieldsMap = new Map(fieldsEntries);
+    this.__validatorsSet = new Set(validatorsEntries);
+
+    delete this.__fieldsProperties;
+    delete this.__fieldsKeys;
   }
 
-  static getRecursiveValidators(): Set<Validator<any>> {
-    let validators = new Set<Validator<any>>();
+  static get fieldsMap() {
+    if (!this.__fieldsMap) {
+      let modelFields = getRecursiveFieldsFromModel(this);
 
-    let model = this;
-    do {
-      if (model.hasOwnProperty("__validators")) {
-        validators = new Set([...validators, ...model.__validators]);
-      }
+      const fieldsEntries: Array<[string, Field]> = Object.entries(
+        modelFields
+      ).map(([slug, def]) => {
+        return [slug, createFieldFromDefinition(def, this)];
+      });
 
-      // @ts-ignore
-      model = model.__proto__;
-    } while (model);
+      this.__fieldsMap = new Map(fieldsEntries);
+    }
 
-    return validators;
+    return this.__fieldsMap;
   }
 
-  static getRecursiveHooks<
-    A extends keyof AdapterFetcher,
-    T extends typeof Model
-  >(this: T, action: A, phase: HookPhase): Array<Hook<any, A, T>> {
-    let _hooks = [];
+  static get fieldsKeys() {
+    if (!this.__fieldsKeys) {
+      this.__fieldsKeys = Array.from(this.fieldsMap.keys());
+    }
 
-    let model = this;
-    do {
-      if (model.hasOwnProperty("__hooks")) {
-        const _modelHooks = Array.from(model.__hooks || []).filter(
-          (hook) => hook.action === action && hook.phase === phase
-        );
-        if (_modelHooks?.length) {
-          _hooks = _hooks.concat(_modelHooks);
-        }
-      }
-
-      // @ts-ignore
-      model = model.__proto__;
-    } while (model);
-
-    return _hooks.sort((a, b) => a.order - b.order);
+    return this.__fieldsKeys;
   }
 
   defineFieldsProperties() {
-    const fields = this.model.getRecursiveFields();
+    if (!this.model.__fieldsProperties) {
+      const propEntries = this.model.fieldsKeys.map((slug) => {
+        return [
+          slug,
+          {
+            enumerable: true,
+            configurable: true,
+            get: function () {
+              return this.get(slug);
+            },
+            set(v) {
+              return this.set(slug, v);
+            },
+          },
+        ];
+      });
 
-    const properties = Array.from(fields.keys()).reduce((f: any, slug) => {
-      f[slug] = {
-        enumerable: true,
-        configurable: true,
-        get: function () {
-          return this.get(slug);
-        },
-        set(v) {
-          return this.set(slug, v);
-        },
-      };
+      this.model.__fieldsProperties = Object.fromEntries(propEntries);
+    }
 
-      return f;
-    }, {});
-
-    Object.defineProperties(this, properties);
+    Object.defineProperties(this, this.model.__fieldsProperties);
   }
 
   setDoc(doc: any) {
@@ -232,12 +225,22 @@ class Model {
    * @param format {json|object|document} - Serializer format
    */
   get(slug, format = SerializerFormat.OBJECT) {
-    const field = this.model.getRecursiveFields().get(slug) as Field<any>;
+    const field = this.model.fieldsMap.get(slug) as Field;
     if (!field) {
       return undefined;
     }
 
-    return field.serialize(this.__doc[slug], format, this);
+    let value = this.__doc[slug];
+
+    if (value === undefined && "default" in field.options) {
+      value = field.options.default as typeof value;
+    }
+
+    if (value !== undefined && value !== null) {
+      value = field.serialize(value, format, this);
+    }
+
+    return value;
   }
 
   /**
@@ -252,13 +255,19 @@ class Model {
     value: S extends keyof T ? T[S] | any : any,
     upsert?: boolean
   ) {
-    const field = this.model.getRecursiveFields().get(String(slug));
+    const field = this.model.fieldsMap.get(String(slug));
 
     if (!field) {
       return;
     }
 
-    value = field.serialize(value, SerializerFormat.DOCUMENT, this);
+    if (value === undefined && "default" in field.options) {
+      value = field.options.default as typeof value;
+    }
+
+    if (value !== undefined && value !== null) {
+      value = field.serialize(value, SerializerFormat.DOCUMENT, this);
+    }
 
     upsert ??= ![
       "_id",
@@ -279,15 +288,13 @@ class Model {
   }
 
   to(format: SerializerFormat) {
-    const fields = this.model.getRecursiveFields();
+    this.defineFieldsProperties();
 
-    let obj = {};
+    const entries = this.model.fieldsKeys.map((slug) => {
+      return [slug, this.get(slug, format)];
+    });
 
-    for (let fieldKey of fields.keys()) {
-      obj[fieldKey] = this.get(fieldKey, format);
-    }
-
-    return obj;
+    return Object.fromEntries(entries);
   }
 
   toJSON() {
@@ -302,17 +309,24 @@ class Model {
     return JSON.stringify(this.__doc);
   }
 
-  static fromString<T extends typeof Model>(this: T, str: string) {
+  static fromString<T extends typeof Model>(
+    this: T,
+    str: string,
+    cleanPayload = true
+  ) {
     const model = this;
-    const i = new model();
-    const fields = i.model.getRecursiveFields();
     const parsed = JSON.parse(str);
+    let payload = parsed;
 
-    Array.from(fields.keys()).forEach((key) => {
-      i.set(key as any, parsed[key]);
-    });
+    if (cleanPayload) {
+      const payloadEntries = this.fieldsKeys.map((slug) => {
+        return [slug, parsed[slug]];
+      });
 
-    return i;
+      payload = Object.fromEntries(payloadEntries);
+    }
+
+    return new model(payload);
   }
 
   static async count<T extends typeof Model>(
@@ -474,7 +488,7 @@ class Model {
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const adapter = this.__adapter;
     const fn = adapter.fetcher[action];
-    const hooksBefore = this.getRecursiveHooks(action, "before");
+    const hooksBefore = getRecursiveHooksFromModel(this, action, "before");
 
     const ctx = { adapter, fn };
 
@@ -505,7 +519,7 @@ class Model {
 
     const hookPayloadAfter = { ...hookPayloadBefore, res, err };
 
-    const hooksAfter = this.getRecursiveHooks(action, "after");
+    const hooksAfter = getRecursiveHooksFromModel(this, action, "after");
     await hooksAfter.reduce(async (p, hook) => {
       await p;
       try {

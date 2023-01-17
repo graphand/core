@@ -31,7 +31,7 @@ describe("Test Model", () => {
   it("Model should load fields from adapter", async () => {
     const TestModel = BaseModel.withAdapter(adapter);
     const created = await TestModel.create({});
-    const fields = created.model.getRecursiveFields();
+    const fields = created.model.getRecursiveFieldsMap();
     expect(fields.get("title")).toBeInstanceOf(Field);
   });
 

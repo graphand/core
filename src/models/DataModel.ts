@@ -2,7 +2,7 @@ import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
-import { FieldDefinition, ValidatorDefinition } from "../types";
+import { FieldsDefinition, ValidatorsDefinition } from "../types";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import {
@@ -25,43 +25,39 @@ class DataModel extends Model {
 
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
-    fields: [
-      {
-        slug: "slug",
+    fields: {
+      slug: {
         type: FieldTypes.TEXT,
+        options: {},
       },
-      {
-        slug: "type",
+      type: {
         type: FieldTypes.TEXT,
         options: {
           options: Object.values(FieldTypes),
         },
       },
-      {
-        slug: "options",
+      options: {
         type: FieldTypes.JSON,
       },
-    ],
+    },
   })
-  fields: FieldJSONDefinition<FieldDefinition[]>;
+  fields: FieldJSONDefinition<FieldsDefinition>;
 
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
-    fields: [
-      {
-        slug: "type",
+    fields: {
+      type: {
         type: FieldTypes.TEXT,
         options: {
           options: Object.values(ValidatorTypes),
         },
       },
-      {
-        slug: "options",
+      options: {
         type: FieldTypes.JSON,
       },
-    ],
+    },
   })
-  validators: FieldJSONDefinition<ValidatorDefinition[]>;
+  validators: FieldJSONDefinition<ValidatorsDefinition>;
 
   @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
   isPage: FieldBooleanDefinition;

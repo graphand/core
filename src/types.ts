@@ -1,19 +1,8 @@
 import Model from "./lib/Model";
 import ModelList from "./lib/ModelList";
-import Field from "./lib/Field";
-import SerializerFormat from "./enums/serializer-format";
 import FieldTypes from "./enums/field-types";
 import RuleActions from "./enums/rule-actions";
 import ValidatorTypes from "./enums/validator-types";
-import Validator from "./lib/Validator";
-
-// export type FieldIdDefinition = any;
-// export type FieldTextDefinition = any;
-// export type FieldBooleanDefinition = any;
-// export type FieldNumberDefinition = any;
-// export type FieldDateDefinition = any;
-// export type FieldJSONDefinition = any;
-// export type FieldRelationDefinition = any;
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -55,8 +44,8 @@ export type JSONQuery = {
 export type AdapterFetcherModelDefinition<
   T extends typeof Model = typeof Model
 > = {
-  fields: FieldDefinition[];
-  validators: ValidatorDefinition[];
+  fields: FieldsDefinition;
+  validators: ValidatorsDefinition;
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
@@ -96,28 +85,6 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   ) => Promise<AdapterFetcherModelDefinition<T>>;
 };
 
-export type AdapterSerializerField<T extends typeof Model, F extends Field> = {
-  serialize: (
-    value: any,
-    format: SerializerFormat,
-    field: F,
-    from: InstanceType<T>
-  ) => any;
-};
-
-export type AdapterSerializer<T extends typeof Model = any> = {
-  [key in FieldTypes]?: AdapterSerializerField<T, Field<key>>;
-};
-
-export type AdapterValidatorItem<
-  T extends typeof Model,
-  V extends Validator
-> = {};
-
-export type AdapterValidator<T extends typeof Model = any> = {
-  [key in ValidatorTypes]?: AdapterValidatorItem<T, Validator<key>>;
-};
-
 export type Module<T extends typeof Model = any> = (model: T) => void;
 
 export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> = {
@@ -126,10 +93,15 @@ export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> = {
 };
 
 export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
-  slug: string;
   type: T;
   options?: FieldOptions<T>;
 };
+
+export type FieldsDefinition = {
+  [slug: string]: FieldDefinition;
+};
+
+export type ValidatorsDefinition = ValidatorDefinition[];
 
 export type ValidatorOptions<T extends string | ValidatorTypes> = T extends
   | ValidatorTypes.REQUIRED
@@ -160,7 +132,7 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
   ? {
       default?: number;
       multiple?: boolean;
-      fields?: FieldDefinition[];
+      fields?: FieldsDefinition;
       strict?: boolean;
     }
   : T extends FieldTypes.BOOLEAN | "Boolean"

@@ -79,14 +79,13 @@ export const mockAdapter = () => {
       }),
       getModelDefinition: jest.fn(() => {
         return Promise.resolve({
-          fields: [
-            {
-              slug: "title",
+          fields: {
+            title: {
               label: "Title",
               type: FieldTypes.TEXT,
               options: { default: "test" },
             },
-          ],
+          },
           validators: [],
         });
       }),
