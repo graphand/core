@@ -1,20 +1,27 @@
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
-import { FieldOptions } from "../types";
+import { FieldDefinition, FieldOptions } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 
-class Field<T extends FieldTypes = FieldTypes> {
-  private __options: FieldOptions<T>;
+class Field<
+  T extends FieldTypes = FieldTypes,
+  M extends typeof Model = typeof Model
+> {
+  private __definition: FieldDefinition<T>;
 
-  constructor(options: FieldOptions<T> = {} as any) {
-    this.__options = options;
+  constructor(definition: FieldDefinition<T>) {
+    this.__definition = definition;
   }
 
-  get options() {
-    return this.__options;
+  get type(): T {
+    return this.__definition.type;
   }
 
-  serialize(value: any, format: SerializerFormat, from: Model) {
+  get options(): FieldOptions<T> {
+    return this.__definition.options ?? ({} as FieldOptions<T>);
+  }
+
+  serialize(value: any, format: SerializerFormat, from: InstanceType<M>) {
     if (value === undefined && "default" in this.options) {
       value = this.options.default;
     }

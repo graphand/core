@@ -39,7 +39,7 @@ class Model {
   static __initPromise: Promise<void>;
   static __adapter: Adapter;
   static __fieldsMap: Map<string, Field>;
-  static __validatorsSet: Set<Validator>;
+  static __validatorsArray: Array<Validator>;
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
 
@@ -133,12 +133,12 @@ class Model {
       return [slug, createFieldFromDefinition(def, this)];
     });
 
-    const validatorsEntries: Array<Validator> = modelValidators.map((def) => {
+    const validatorsArray: Array<Validator> = modelValidators.map((def) => {
       return createValidatorFromDefinition(def, this);
     });
 
     this.__fieldsMap = new Map(fieldsEntries);
-    this.__validatorsSet = new Set(validatorsEntries);
+    this.__validatorsArray = validatorsArray;
 
     delete this.__fieldsProperties;
     delete this.__fieldsKeys;
@@ -158,6 +158,18 @@ class Model {
     }
 
     return this.__fieldsMap;
+  }
+
+  static get validatorsArray() {
+    if (!this.__validatorsArray) {
+      let modelValidators = getRecursiveValidatorsFromModel(this);
+
+      this.__validatorsArray = modelValidators.map((def) =>
+        createValidatorFromDefinition(def, this)
+      );
+    }
+
+    return this.__validatorsArray;
   }
 
   static get fieldsKeys() {
@@ -395,6 +407,7 @@ class Model {
     payload: InputModelPayload<T>
   ): Promise<InstanceType<T>> {
     this.verifyAdapter();
+
     await this.initialize();
 
     return await this.execute("createOne", payload);
@@ -405,6 +418,7 @@ class Model {
     payload: Array<InputModelPayload<T>>
   ): Promise<Array<InstanceType<T>>> {
     this.verifyAdapter();
+
     await this.initialize();
 
     return await this.execute("createMultiple", payload);
@@ -426,6 +440,7 @@ class Model {
     update: any
   ): Promise<Array<InstanceType<T>>> {
     this.verifyAdapter();
+
     await this.initialize();
 
     if (typeof query === "string") {
@@ -449,6 +464,7 @@ class Model {
     query: string | JSONQuery = {}
   ): Promise<string[]> {
     this.verifyAdapter();
+
     await this.initialize();
 
     if (typeof query === "string") {
@@ -475,6 +491,32 @@ class Model {
     const hook: Hook<P, A, T> = { phase, action, fn, order };
 
     this.__hooks.add(hook);
+  }
+
+  static async validate(ids: string[], ctx: any) {
+    const errorsSet = new Set();
+
+    await Promise.all(
+      this.validatorsArray.map(async (validator) => {
+        try {
+          const validated = await validator.validate(ids, this, ctx);
+          if (!validated) {
+            throw new Error();
+          }
+        } catch (err) {
+          const e = new Error(
+            `VALIDATION_FAILED_${validator.type.toUpperCase()}`
+          );
+          errorsSet.add(e);
+        }
+      })
+    );
+
+    if (errorsSet.size) {
+      throw Array.from(errorsSet);
+    }
+
+    return true;
   }
 
   static async execute<
@@ -537,5 +579,59 @@ class Model {
     return hookPayloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
   }
 }
+
+Model.hook(
+  "after",
+  "createOne",
+  async function (payload) {
+    const res = await payload.res;
+
+    if (res) {
+      await this.validate([res._id], payload.ctx);
+    }
+  },
+  -1
+);
+
+Model.hook(
+  "after",
+  "createMultiple",
+  async function (payload) {
+    const res = await payload.res;
+
+    if (res) {
+      const ids = res.map((r) => r._id);
+      await this.validate(ids, payload.ctx);
+    }
+  },
+  -1
+);
+
+Model.hook(
+  "after",
+  "updateOne",
+  async function (payload) {
+    const res = await payload.res;
+
+    if (res) {
+      await this.validate([res._id], payload.ctx);
+    }
+  },
+  -1
+);
+
+Model.hook(
+  "after",
+  "updateMultiple",
+  async function (payload) {
+    const res = await payload.res;
+
+    if (res) {
+      const ids = res.map((r) => r._id);
+      await this.validate(ids, payload.ctx);
+    }
+  },
+  -1
+);
 
 export default Model;

@@ -1,19 +1,33 @@
 import ValidatorTypes from "../enums/validator-types";
-import { ValidatorOptions } from "../types";
+import {
+  FieldOptions,
+  ValidatorDefinition,
+  ValidatorHook,
+  ValidatorOptions,
+} from "../types";
 import Model from "./Model";
 
-class Validator<T extends ValidatorTypes = ValidatorTypes> {
-  private __options: ValidatorOptions<T>;
+class Validator<
+  T extends ValidatorTypes = ValidatorTypes,
+  M extends typeof Model = typeof Model
+> {
+  private __definition: ValidatorDefinition<T>;
 
-  constructor(options: ValidatorOptions<T> = {} as any) {
-    this.__options = options;
+  hooks: Array<ValidatorHook>;
+
+  constructor(definition: ValidatorDefinition<T>) {
+    this.__definition = definition;
   }
 
-  get options() {
-    return this.__options;
+  get type(): T {
+    return this.__definition.type;
   }
 
-  async validate(ids: string[], from: Model) {
+  get options(): ValidatorOptions<T> {
+    return this.__definition.options ?? ({} as ValidatorOptions<T>);
+  }
+
+  async validate(ids: string[], model: M, ctx: any) {
     return true;
   }
 }

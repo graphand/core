@@ -6,6 +6,7 @@ import {
   Hook,
   HookPhase,
   ValidatorDefinition,
+  ValidatorHook,
   ValidatorsDefinition,
 } from "./types";
 import FieldTypes from "./enums/field-types";
@@ -74,11 +75,46 @@ export const getRecursiveHooksFromModel = <
       }
     }
 
+    if (model.hasOwnProperty("__validatorsArray") && model.__validatorsArray) {
+      const _validatorsHooks = model.__validatorsArray
+        .map((validator) => {
+          return validator.hooks
+            ?.filter((hook) => hook[1] === action && hook[0] === phase)
+            .map((hook) => parseValidatorHook(hook, validator));
+        })
+        .flat()
+        .filter(Boolean);
+
+      if (_validatorsHooks?.length) {
+        _hooks = _hooks.concat(_validatorsHooks);
+      }
+    }
+
     // @ts-ignore
     model = model.__proto__;
   } while (model);
 
   return _hooks.sort((a, b) => a.order - b.order);
+};
+
+export const parseValidatorHook = (
+  hook: ValidatorHook,
+  validator: Validator
+): Hook<any, any, any> => {
+  const [phase, action, executor] = hook;
+
+  const fn = async function () {
+    try {
+      const validated = await executor.apply(this, arguments);
+      if (!validated) {
+        throw new Error();
+      }
+    } catch (err) {
+      throw new Error(`VALIDATION_FAILED_${validator.type.toUpperCase()}`);
+    }
+  };
+
+  return { phase, action, fn };
 };
 
 export const createFieldFromDefinition = <T extends FieldTypes>(
@@ -95,7 +131,7 @@ export const createFieldFromDefinition = <T extends FieldTypes>(
     FieldClass = Field;
   }
 
-  return new FieldClass(def.options);
+  return new FieldClass(def);
 };
 
 export const createValidatorFromDefinition = <T extends ValidatorTypes>(
@@ -112,5 +148,5 @@ export const createValidatorFromDefinition = <T extends ValidatorTypes>(
     ValidatorClass = Validator;
   }
 
-  return new ValidatorClass(def.options);
+  return new ValidatorClass(def);
 };

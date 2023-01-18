@@ -178,6 +178,12 @@ export type Hook<
   order?: number;
 };
 
+export type ValidatorHook<
+  P extends HookPhase = HookPhase,
+  A extends keyof AdapterFetcher<T> = keyof AdapterFetcher<typeof Model>,
+  T extends typeof Model = typeof Model
+> = [P, A, (args: HookCallbackArgs<P, A, T>) => boolean];
+
 export type Rule = {
   ref: string;
   actions?: RuleActions[];
