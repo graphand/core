@@ -34,30 +34,28 @@ class DataModel extends Model {
 
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
-    fields: {
-      __default__: {
-        type: FieldTypes.JSON,
-        options: {
-          fields: {
-            type: {
-              type: FieldTypes.TEXT,
-              options: {
-                options: Object.values(ValidatorTypes),
-              },
-            },
+    defaultField: {
+      type: FieldTypes.JSON,
+      options: {
+        fields: {
+          type: {
+            type: FieldTypes.TEXT,
             options: {
-              type: FieldTypes.JSON,
+              options: Object.values(ValidatorTypes),
             },
           },
-          validators: [
-            {
-              type: ValidatorTypes.REQUIRED,
-              options: {
-                field: "type",
-              },
-            },
-          ],
+          options: {
+            type: FieldTypes.JSON,
+          },
         },
+        validators: [
+          {
+            type: ValidatorTypes.REQUIRED,
+            options: {
+              field: "type",
+            },
+          },
+        ],
       },
     },
   })

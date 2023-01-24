@@ -137,6 +137,7 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
   ? {
       default?: number;
       multiple?: boolean;
+      defaultField?: FieldDefinition;
       fields?: FieldsDefinition;
       strict?: boolean;
       validators?: ValidatorsDefinition;

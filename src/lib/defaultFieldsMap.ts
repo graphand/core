@@ -108,13 +108,11 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
 
     const fieldsEntries: Array<[string, Field<FieldTypes>]> = Object.entries(
       this.options.fields ?? {}
-    )
-      .filter(([slug]) => slug !== "__default__")
-      .map(([slug, def]) => {
-        const field = createFieldFromDefinition(def, model.__adapter);
+    ).map(([slug, def]) => {
+      const field = createFieldFromDefinition(def, model.__adapter);
 
-        return [slug, field];
-      });
+      return [slug, field];
+    });
 
     const fieldsJSONPath = Array.prototype.concat.apply(
       ctx.fieldsJSONPath ?? [],
@@ -123,17 +121,18 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
 
     const arrValue = Array.isArray(value) ? value : [value];
 
-    if (this.options.fields && "__default__" in this.options.fields) {
+    if (this.options.defaultField) {
       const defaultField = createFieldFromDefinition(
-        this.options.fields["__default__"],
+        this.options.defaultField,
         model.__adapter
       );
 
       const defaultEntries = arrValue
         .map((v) =>
-          Object.entries(v).filter(([slug]) => !this.options.fields[slug])
+          Object.entries(v).filter(([slug]) => !this.options.fields?.[slug])
         )
         .flat();
+
       const errorsSet = new Set();
 
       if (defaultEntries?.length) {
@@ -198,14 +197,14 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
         }
       );
 
-      if (this.options.fields && "__default__" in this.options.fields) {
+      if (this.options.defaultField) {
         const defaultField = createFieldFromDefinition(
-          this.options.fields["__default__"],
+          this.options.defaultField,
           from.model.__adapter
         );
 
         const defaultEntries = Object.keys(obj)
-          .filter((key) => !this.options.fields[key])
+          .filter((key) => !this.options.fields?.[key])
           .map((slug) => {
             let value = obj[slug];
 
