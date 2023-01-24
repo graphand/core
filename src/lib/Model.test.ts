@@ -1,7 +1,6 @@
 import { mockAdapter, mockModel } from "../test-utils";
 import Field from "./Field";
 import Model from "./Model";
-import { getRecursiveFieldsFromModel } from "../utils";
 
 describe("Test Model", () => {
   let adapter;
