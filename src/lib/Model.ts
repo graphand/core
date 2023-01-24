@@ -498,7 +498,7 @@ class Model {
   static async validate<T extends typeof Model>(
     this: T,
     instances: InstanceType<T>[],
-    ctx: any
+    ctx: any = {}
   ) {
     const docs = instances.map((i) => i.__doc);
 

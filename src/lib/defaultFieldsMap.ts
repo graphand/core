@@ -9,7 +9,6 @@ import {
   isGraphandError,
   validateDocs,
 } from "../utils";
-import { DocumentDefinition, FieldDefinition } from "../types";
 import Validator from "./Validator";
 
 class DefaultFieldId extends Field<FieldTypes.ID> {
@@ -37,13 +36,40 @@ class DefaultFieldDate extends Field<FieldTypes.DATE> {
 }
 
 class DefaultFieldText extends Field<FieldTypes.TEXT> {
+  async validate(value) {
+    if (this.options.options?.length && !this.options.creatable) {
+      if (Array.isArray(value)) {
+        return value.every((i) => this.options.options.includes(i));
+      }
+
+      return this.options.options.includes(value);
+    }
+
+    return true;
+  }
   serialize(value: any, format: SerializerFormat, from: Model): any {
     if (this.options.multiple) {
       const arrValue = value && !Array.isArray(value) ? [value] : value;
-      return arrValue.map(String);
+      const res = arrValue.map(String);
+      if (this.options?.options?.length && !this.options.creatable) {
+        return res.filter((i) => this.options.options.includes(i));
+      }
+
+      return res;
     }
 
-    return value && Array.isArray(value) ? String(value[0]) : String(value);
+    const res =
+      value && Array.isArray(value) ? String(value[0]) : String(value);
+
+    if (
+      this.options.options?.length &&
+      !this.options.creatable &&
+      !this.options.options.includes(res)
+    ) {
+      return undefined;
+    }
+
+    return res;
   }
 }
 

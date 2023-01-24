@@ -2,6 +2,7 @@ import FieldTypes from "../enums/field-types";
 import Model from "./Model";
 import { FieldDefinition, FieldOptions, ValidateCtx } from "../types";
 import SerializerFormat from "../enums/serializer-format";
+import { getDefaultFieldOptions } from "../utils";
 
 class Field<T extends FieldTypes = FieldTypes> {
   private __definition: FieldDefinition<T>;
@@ -15,7 +16,13 @@ class Field<T extends FieldTypes = FieldTypes> {
   }
 
   get options(): FieldOptions<T> {
-    return this.__definition.options ?? ({} as FieldOptions<T>);
+    const defaults = getDefaultFieldOptions(this.type);
+
+    return Object.assign(
+      {},
+      defaults,
+      this.__definition.options ?? {}
+    ) as FieldOptions<T>;
   }
 
   async isValidDefinition() {

@@ -3,6 +3,7 @@ import {
   AdapterFetcher,
   DocumentDefinition,
   FieldDefinition,
+  FieldOptions,
   FieldsDefinition,
   Hook,
   HookPhase,
@@ -169,10 +170,10 @@ export const validateDocs = async (
   if (fieldsEntries?.length) {
     await Promise.all(
       fieldsEntries.map(async ([slug, field]) => {
+        const values = Array.from(new Set(docs.map((doc) => doc[slug])));
         await Promise.all(
-          docs.map(async (doc) => {
+          values.map(async (value) => {
             try {
-              const value = doc[slug];
               const validated = await field.validate(value, ctx, slug);
               if (!validated) {
                 throw new Error();
@@ -228,4 +229,23 @@ export const validateDocs = async (
   }
 
   return true;
+};
+
+export const getDefaultFieldOptions = <T extends FieldTypes>(
+  type: T
+): FieldOptions<T> => {
+  let options = {};
+
+  switch (type) {
+    case FieldTypes.TEXT:
+      options = {
+        creatable: true,
+        multiple: false,
+      };
+      break;
+    default:
+      break;
+  }
+
+  return options as FieldOptions<T>;
 };
