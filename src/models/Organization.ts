@@ -8,6 +8,7 @@ import { FieldTextDefinition } from "../fields";
 @modelDecorator()
 class Organization extends Model {
   static __name = "Organization";
+
   static slug = "organizations";
   static scope = ModelEnvScopes.GLOBAL;
 

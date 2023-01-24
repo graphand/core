@@ -13,6 +13,7 @@ import {
 @modelDecorator()
 class Project extends Model {
   static __name = "Project";
+
   static slug = "projects";
   static scope = ModelEnvScopes.GLOBAL;
 

@@ -14,8 +14,17 @@ import {
 @modelDecorator()
 class DataModel extends Model {
   static __name = "DataModel";
+
   static slug = "datamodels";
   static scope = ModelEnvScopes.ENV;
+  static validators = [
+    {
+      type: ValidatorTypes.REQUIRED,
+      options: {
+        field: "slug",
+      },
+    },
+  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;
@@ -26,18 +35,29 @@ class DataModel extends Model {
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
     fields: {
-      slug: {
-        type: FieldTypes.TEXT,
-        options: {},
-      },
-      type: {
-        type: FieldTypes.TEXT,
-        options: {
-          options: Object.values(FieldTypes),
-        },
-      },
-      options: {
+      __default__: {
         type: FieldTypes.JSON,
+        options: {
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                options: Object.values(ValidatorTypes),
+              },
+            },
+            options: {
+              type: FieldTypes.JSON,
+            },
+          },
+          validators: [
+            {
+              type: ValidatorTypes.REQUIRED,
+              options: {
+                field: "type",
+              },
+            },
+          ],
+        },
       },
     },
   })
@@ -56,6 +76,14 @@ class DataModel extends Model {
         type: FieldTypes.JSON,
       },
     },
+    validators: [
+      {
+        type: ValidatorTypes.REQUIRED,
+        options: {
+          field: "type",
+        },
+      },
+    ],
   })
   validators: FieldJSONDefinition<ValidatorsDefinition>;
 

@@ -15,6 +15,7 @@ import {
 @modelDecorator()
 class Role extends Model {
   static __name = "Role";
+
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
 

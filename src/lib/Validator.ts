@@ -1,16 +1,13 @@
 import ValidatorTypes from "../enums/validator-types";
 import {
-  FieldOptions,
+  DocumentDefinition,
+  ValidateCtx,
   ValidatorDefinition,
   ValidatorHook,
   ValidatorOptions,
 } from "../types";
-import Model from "./Model";
 
-class Validator<
-  T extends ValidatorTypes = ValidatorTypes,
-  M extends typeof Model = typeof Model
-> {
+class Validator<T extends ValidatorTypes = ValidatorTypes> {
   private __definition: ValidatorDefinition<T>;
 
   hooks: Array<ValidatorHook>;
@@ -27,7 +24,11 @@ class Validator<
     return this.__definition.options ?? ({} as ValidatorOptions<T>);
   }
 
-  async validate(ids: string[], model: M, ctx: any) {
+  async isValidDefinition() {
+    return true;
+  }
+
+  async validate(docs: DocumentDefinition[], ctx: ValidateCtx) {
     return true;
   }
 }

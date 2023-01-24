@@ -1,10 +1,12 @@
 import Model from "./lib/Model";
 import {
   AdapterFetcher,
+  DocumentDefinition,
   FieldDefinition,
   FieldsDefinition,
   Hook,
   HookPhase,
+  ValidateCtx,
   ValidatorDefinition,
   ValidatorHook,
   ValidatorsDefinition,
@@ -15,6 +17,7 @@ import Field from "./lib/Field";
 import ValidatorTypes from "./enums/validator-types";
 import defaultValidatorsMap from "./lib/defaultValidatorsMap";
 import Validator from "./lib/Validator";
+import Adapter from "./lib/Adapter";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -119,9 +122,9 @@ export const parseValidatorHook = (
 
 export const createFieldFromDefinition = <T extends FieldTypes>(
   def: FieldDefinition<T>,
-  model: typeof Model
+  adapter: Adapter
 ) => {
-  let FieldClass = model.__adapter?.fieldsMap?.[def.type];
+  let FieldClass = adapter?.fieldsMap?.[def.type];
 
   if (!FieldClass) {
     FieldClass = defaultFieldsMap[def.type];
@@ -136,9 +139,9 @@ export const createFieldFromDefinition = <T extends FieldTypes>(
 
 export const createValidatorFromDefinition = <T extends ValidatorTypes>(
   def: ValidatorDefinition<T>,
-  model: typeof Model
+  adapter: Adapter
 ) => {
-  let ValidatorClass = model.__adapter?.validatorsMap?.[def.type];
+  let ValidatorClass = adapter?.validatorsMap?.[def.type];
 
   if (!ValidatorClass) {
     ValidatorClass = defaultValidatorsMap[def.type];
@@ -149,4 +152,80 @@ export const createValidatorFromDefinition = <T extends ValidatorTypes>(
   }
 
   return new ValidatorClass(def);
+};
+
+export const isGraphandError = (err: any): boolean => {
+  return Array.isArray(err);
+};
+
+export const validateDocs = async (
+  docs: Array<DocumentDefinition>,
+  ctx: ValidateCtx = {},
+  validators: Array<Validator>,
+  fieldsEntries?: Array<[string, Field<FieldTypes>]>
+) => {
+  const errorsSet = new Set();
+
+  if (fieldsEntries?.length) {
+    await Promise.all(
+      fieldsEntries.map(async ([slug, field]) => {
+        await Promise.all(
+          docs.map(async (doc) => {
+            try {
+              const value = doc[slug];
+              const validated = await field.validate(value, ctx, slug);
+              if (!validated) {
+                throw new Error();
+              }
+            } catch (err) {
+              if (isGraphandError(err)) {
+                const errs = Array.isArray(err) ? err : [err];
+                errs.forEach((nestedErr) => {
+                  const e = new Error(
+                    `FIELD_VALIDATION_FAILED_${field.type.toUpperCase()}:${slug}:${
+                      nestedErr.message
+                    }`
+                  );
+                  errorsSet.add(e);
+                });
+              } else {
+                const e = new Error(
+                  `FIELD_VALIDATION_FAILED_${field.type.toUpperCase()}:${slug}`
+                );
+                errorsSet.add(e);
+              }
+            }
+          })
+        );
+      })
+    );
+
+    if (errorsSet.size) {
+      throw Array.from(errorsSet);
+    }
+  }
+
+  await Promise.all(
+    validators.map(async (validator) => {
+      try {
+        const validated = await validator.validate(docs, ctx);
+        if (!validated) {
+          throw new Error();
+        }
+      } catch (err) {
+        const e = new Error(
+          `VALIDATOR_VALIDATION_FAILED_${validator.type.toUpperCase()}:${JSON.stringify(
+            validator.options
+          )}}`
+        );
+        errorsSet.add(e);
+      }
+    })
+  );
+
+  if (errorsSet.size) {
+    throw Array.from(errorsSet);
+  }
+
+  return true;
 };

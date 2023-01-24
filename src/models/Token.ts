@@ -13,6 +13,7 @@ import {
 @modelDecorator()
 class Token extends Model {
   static __name = "Token";
+
   static slug = "tokens";
   static scope = ModelEnvScopes.GLOBAL;
 

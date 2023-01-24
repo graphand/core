@@ -9,16 +9,17 @@ import { FieldRelationDefinition, FieldTextDefinition } from "../fields";
 
 @modelDecorator()
 class Account extends Model {
-  static extendable = true;
   static __name = "Account";
+
+  static extendable = true;
   static slug = "accounts";
   static scope = ModelEnvScopes.ENV;
-  static __validators = new Set([
+  static validators = [
     { type: ValidatorTypes.REQUIRED, options: { field: "email" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "password" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
     { type: ValidatorTypes.UNIQUE, options: { field: "email" } },
-  ]);
+  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   firstname: FieldTextDefinition;

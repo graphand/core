@@ -15,6 +15,7 @@ const optionStatuses = Object.values(EnvironmentStatus) as [
 @modelDecorator()
 class Environment extends Model {
   static __name = "Environment";
+
   static slug = "environments";
   static scope = ModelEnvScopes.PROJECT;
 

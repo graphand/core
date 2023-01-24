@@ -3,6 +3,8 @@ import ModelList from "./lib/ModelList";
 import FieldTypes from "./enums/field-types";
 import RuleActions from "./enums/rule-actions";
 import ValidatorTypes from "./enums/validator-types";
+import Adapter from "./lib/Adapter";
+import Field from "./lib/Field";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -89,7 +91,7 @@ export type Module<T extends typeof Model = any> = (model: T) => void;
 
 export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> = {
   type: T;
-  options?: ValidatorOptions<T>;
+  options: ValidatorOptions<T>;
 };
 
 export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
@@ -100,6 +102,8 @@ export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
 export type FieldsDefinition = {
   [slug: string]: FieldDefinition;
 };
+
+export type DocumentDefinition = { [key: string]: any };
 
 export type ValidatorsDefinition = ValidatorDefinition[];
 
@@ -118,6 +122,7 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
       default?: string;
       multiple?: boolean;
       options?: string[];
+      creatable?: boolean;
     }
   : T extends FieldTypes.RELATION | "Relation"
   ? {
@@ -134,6 +139,7 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
       multiple?: boolean;
       fields?: FieldsDefinition;
       strict?: boolean;
+      validators?: ValidatorsDefinition;
     }
   : T extends FieldTypes.BOOLEAN | "Boolean"
   ? {
@@ -197,3 +203,8 @@ export type FieldsRestriction = {
   filter?: object;
   fields: string[];
 };
+
+export type ValidateCtx = {
+  model: typeof Model;
+  fieldsJSONPath?: Array<{ slug: string; field: Field }>;
+} & any;

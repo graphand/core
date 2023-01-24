@@ -14,6 +14,7 @@ import {
   InputModelPayload,
   ValidatorsDefinition,
   FieldsDefinition,
+  DocumentDefinition,
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
@@ -25,6 +26,7 @@ import {
   getRecursiveFieldsFromModel,
   getRecursiveHooksFromModel,
   getRecursiveValidatorsFromModel,
+  validateDocs,
 } from "../utils";
 
 class Model {
@@ -43,7 +45,7 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
 
-  __doc: any;
+  __doc: DocumentDefinition;
 
   @fieldDecorator(FieldTypes.ID)
   _id: FieldIdDefinition;
@@ -130,11 +132,11 @@ class Model {
     const fieldsEntries: Array<[string, Field]> = Object.entries(
       modelFields
     ).map(([slug, def]) => {
-      return [slug, createFieldFromDefinition(def, this)];
+      return [slug, createFieldFromDefinition(def, this.__adapter)];
     });
 
     const validatorsArray: Array<Validator> = modelValidators.map((def) => {
-      return createValidatorFromDefinition(def, this);
+      return createValidatorFromDefinition(def, this.__adapter);
     });
 
     this.__fieldsMap = new Map(fieldsEntries);
@@ -151,7 +153,7 @@ class Model {
       const fieldsEntries: Array<[string, Field]> = Object.entries(
         modelFields
       ).map(([slug, def]) => {
-        return [slug, createFieldFromDefinition(def, this)];
+        return [slug, createFieldFromDefinition(def, this.__adapter)];
       });
 
       this.__fieldsMap = new Map(fieldsEntries);
@@ -165,7 +167,7 @@ class Model {
       let modelValidators = getRecursiveValidatorsFromModel(this);
 
       this.__validatorsArray = modelValidators.map((def) =>
-        createValidatorFromDefinition(def, this)
+        createValidatorFromDefinition(def, this.__adapter)
       );
     }
 
@@ -289,7 +291,7 @@ class Model {
       "updatedBy",
     ].includes(String(slug));
 
-    this.__doc[slug] = value;
+    this.__doc[slug as keyof DocumentDefinition] = value;
 
     return this;
   }
@@ -493,30 +495,19 @@ class Model {
     this.__hooks.add(hook);
   }
 
-  static async validate(ids: string[], ctx: any) {
-    const errorsSet = new Set();
+  static async validate<T extends typeof Model>(
+    this: T,
+    instances: InstanceType<T>[],
+    ctx: any
+  ) {
+    const docs = instances.map((i) => i.__doc);
 
-    await Promise.all(
-      this.validatorsArray.map(async (validator) => {
-        try {
-          const validated = await validator.validate(ids, this, ctx);
-          if (!validated) {
-            throw new Error();
-          }
-        } catch (err) {
-          const e = new Error(
-            `VALIDATION_FAILED_${validator.type.toUpperCase()}`
-          );
-          errorsSet.add(e);
-        }
-      })
+    return await validateDocs(
+      docs,
+      { ...ctx, model: this },
+      this.validatorsArray,
+      Array.from(this.fieldsMap.entries())
     );
-
-    if (errorsSet.size) {
-      throw Array.from(errorsSet);
-    }
-
-    return true;
   }
 
   static async execute<
@@ -536,17 +527,17 @@ class Model {
 
     const hookPayloadBefore: HookCallbackArgs<"before", A, M> = { args, ctx };
 
-    const beforeErr = [];
+    let beforeErr;
     await hooksBefore.reduce(async (p, hook) => {
       await p;
       try {
         await hook.fn.call(this, hookPayloadBefore);
       } catch (err) {
-        beforeErr.push(err);
+        beforeErr = Array.prototype.concat.apply(beforeErr ?? [], [err]);
       }
     }, Promise.resolve());
 
-    if (beforeErr.length) {
+    if (beforeErr?.length) {
       throw beforeErr;
     }
 
@@ -567,8 +558,10 @@ class Model {
       try {
         await hook.fn.call(this, hookPayloadAfter);
       } catch (err) {
-        hookPayloadAfter.err ??= [];
-        hookPayloadAfter.err.push(err);
+        hookPayloadAfter.err = Array.prototype.concat.apply(
+          hookPayloadAfter.err ?? [],
+          [err]
+        );
       }
     }, Promise.resolve());
 
@@ -587,7 +580,7 @@ Model.hook(
     const res = await payload.res;
 
     if (res) {
-      await this.validate([res._id], payload.ctx);
+      await this.validate([res], payload.ctx);
     }
   },
   -1
@@ -600,8 +593,7 @@ Model.hook(
     const res = await payload.res;
 
     if (res) {
-      const ids = res.map((r) => r._id);
-      await this.validate(ids, payload.ctx);
+      await this.validate(res, payload.ctx);
     }
   },
   -1
@@ -614,7 +606,7 @@ Model.hook(
     const res = await payload.res;
 
     if (res) {
-      await this.validate([res._id], payload.ctx);
+      await this.validate([res], payload.ctx);
     }
   },
   -1
@@ -627,8 +619,7 @@ Model.hook(
     const res = await payload.res;
 
     if (res) {
-      const ids = res.map((r) => r._id);
-      await this.validate(ids, payload.ctx);
+      await this.validate(res, payload.ctx);
     }
   },
   -1
