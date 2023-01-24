@@ -3,7 +3,6 @@ import ModelList from "./lib/ModelList";
 import FieldTypes from "./enums/field-types";
 import RuleActions from "./enums/rule-actions";
 import ValidatorTypes from "./enums/validator-types";
-import Adapter from "./lib/Adapter";
 import Field from "./lib/Field";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
@@ -135,7 +134,7 @@ export type FieldOptions<T extends string | FieldTypes> = T extends
     }
   : T extends FieldTypes.JSON | "JSON"
   ? {
-      default?: number;
+      default?: { [key: string]: any };
       multiple?: boolean;
       defaultField?: FieldDefinition;
       fields?: FieldsDefinition;

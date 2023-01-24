@@ -12,7 +12,6 @@ import Model from "./lib/Model";
 import ValidatorTypes from "./enums/validator-types";
 import defaultFieldsMap from "./lib/defaultFieldsMap";
 import defaultValidatorsMap from "./lib/defaultValidatorsMap";
-import Validator from "./lib/Validator";
 
 export const mockAdapter = ({
   fieldsMap = defaultFieldsMap,
@@ -146,7 +145,7 @@ export const mockModel = ({
       this.defineFieldsProperties();
     }
 
-    title: any;
+    [slug: string]: any;
   }
 
   return Test;

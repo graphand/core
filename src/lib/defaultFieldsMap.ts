@@ -121,12 +121,18 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 }
 
 class DefaultFieldJSON extends Field<FieldTypes.JSON> {
-  async validate(value = [], ctx, slug) {
+  async validate(value, ctx, slug) {
+    if (value === undefined) {
+      return true;
+    }
+
     const model = ctx.model;
 
     if (!model) {
       throw new Error(`FIELD_VALIDATE_CTX_NO_MODEL`);
     }
+
+    const arrValue = Array.isArray(value) ? value : [value];
 
     const validators: Array<Validator> = (this.options.validators ?? []).map(
       (def) => createValidatorFromDefinition(def, model.__adapter)
@@ -144,8 +150,6 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       ctx.fieldsJSONPath ?? [],
       [{ slug, field: this }]
     );
-
-    const arrValue = Array.isArray(value) ? value : [value];
 
     if (this.options.defaultField) {
       const defaultField = createFieldFromDefinition(
@@ -258,6 +262,10 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
     };
 
     if (this.options.multiple) {
+      if (!Array.isArray(value)) {
+        return [_format(value)];
+      }
+
       return Object.values(value).map(_format);
     }
 

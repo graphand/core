@@ -243,6 +243,11 @@ export const getDefaultFieldOptions = <T extends FieldTypes>(
         multiple: false,
       };
       break;
+    case FieldTypes.JSON:
+      options = {
+        multiple: false,
+      };
+      break;
     default:
       break;
   }
