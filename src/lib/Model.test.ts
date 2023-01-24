@@ -1,6 +1,7 @@
 import { mockAdapter, mockModel } from "../test-utils";
 import Field from "./Field";
 import Model from "./Model";
+import { getRecursiveFieldsFromModel } from "../utils";
 
 describe("Test Model", () => {
   let adapter;
@@ -31,8 +32,7 @@ describe("Test Model", () => {
   it("Model should load fields from adapter", async () => {
     const TestModel = BaseModel.withAdapter(adapter);
     const created = await TestModel.create({});
-    const fields = created.model.getRecursiveFieldsMap();
-    expect(fields.get("title")).toBeInstanceOf(Field);
+    expect(created.model.fieldsMap.get("title")).toBeInstanceOf(Field);
   });
 
   it("Model should returns field default value if undefined", async () => {
