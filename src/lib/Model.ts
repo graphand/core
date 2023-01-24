@@ -537,17 +537,18 @@ class Model {
       }
     }, Promise.resolve());
 
-    if (beforeErr?.length) {
-      throw beforeErr;
-    }
-
     let res;
-    let err;
+    let err = beforeErr;
 
-    try {
-      res = await fn.apply(fn, [hookPayloadBefore.args, hookPayloadBefore.ctx]);
-    } catch (e) {
-      err = [e];
+    if (!err?.length) {
+      try {
+        res = await fn.apply(fn, [
+          hookPayloadBefore.args,
+          hookPayloadBefore.ctx,
+        ]);
+      } catch (e) {
+        err = [e];
+      }
     }
 
     const hookPayloadAfter = { ...hookPayloadBefore, res, err };
