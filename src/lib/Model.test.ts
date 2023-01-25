@@ -109,13 +109,13 @@ describe("Test Model", () => {
     it("Model should validate with validator from adapter", async () => {
       const testValidate = jest.fn(() => Promise.resolve(true));
 
-      class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
+      class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
         validate = testValidate;
       }
 
       const _adapter = mockAdapter({
         validatorsMap: {
-          [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+          [ValidatorTypes.SAMPLE]: TestValidatorSample,
         },
       });
 
@@ -132,13 +132,13 @@ describe("Test Model", () => {
     it("Model should throw error with validator returning false", async () => {
       const testValidate = jest.fn(() => Promise.resolve(false));
 
-      class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
+      class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
         validate = testValidate;
       }
 
       const _adapter = mockAdapter({
         validatorsMap: {
-          [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+          [ValidatorTypes.SAMPLE]: TestValidatorSample,
         },
       });
 
@@ -212,7 +212,7 @@ describe("Test Model", () => {
         validate = testValidateField;
       }
 
-      class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
+      class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
         validate = testValidateValidator;
       }
 
@@ -221,7 +221,7 @@ describe("Test Model", () => {
           [FieldTypes.TEXT]: TestFieldText,
         },
         validatorsMap: {
-          [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+          [ValidatorTypes.SAMPLE]: TestValidatorSample,
         },
       });
 
@@ -244,7 +244,7 @@ describe("Test Model", () => {
         validate = testValidateField;
       }
 
-      class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
+      class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
         validate = testValidateValidator;
       }
 
@@ -253,7 +253,7 @@ describe("Test Model", () => {
           [FieldTypes.TEXT]: TestFieldText,
         },
         validatorsMap: {
-          [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+          [ValidatorTypes.SAMPLE]: TestValidatorSample,
         },
       });
 
@@ -276,7 +276,7 @@ describe("Test Model", () => {
         validate = testValidateField;
       }
 
-      class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
+      class TestValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
         validate = testValidateValidator;
       }
 
@@ -285,7 +285,7 @@ describe("Test Model", () => {
           [FieldTypes.TEXT]: TestFieldText,
         },
         validatorsMap: {
-          [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+          [ValidatorTypes.SAMPLE]: TestValidatorSample,
         },
       });
 

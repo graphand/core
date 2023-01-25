@@ -25,7 +25,7 @@ export const mockAdapter = ({
     },
     validators: [
       {
-        type: ValidatorTypes.REQUIRED,
+        type: ValidatorTypes.SAMPLE,
         options: {
           field: "title",
         },
@@ -39,6 +39,7 @@ export const mockAdapter = ({
 } = {}) => {
   class MockAdapter extends Adapter {
     __cache: Set<any>;
+    runValidators = true;
 
     get thisCache(): Set<any> {
       if (!this.hasOwnProperty("__cache") || !this.__cache) {

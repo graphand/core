@@ -571,7 +571,7 @@ class Model {
     }, Promise.resolve());
 
     if (hookPayloadAfter.err?.length) {
-      throw hookPayloadAfter.err;
+      throw hookPayloadAfter.err[0];
     }
 
     return hookPayloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
@@ -582,10 +582,12 @@ Model.hook(
   "after",
   "createOne",
   async function (payload) {
-    const res = await payload.res;
+    if (this.__adapter.runValidators) {
+      const res = await payload.res;
 
-    if (res) {
-      await this.validate([res], payload.ctx);
+      if (res) {
+        await this.validate([res], payload.ctx);
+      }
     }
   },
   -1
@@ -595,10 +597,12 @@ Model.hook(
   "after",
   "createMultiple",
   async function (payload) {
-    const res = await payload.res;
+    if (this.__adapter.runValidators) {
+      const res = await payload.res;
 
-    if (res) {
-      await this.validate(res, payload.ctx);
+      if (res) {
+        await this.validate(res, payload.ctx);
+      }
     }
   },
   -1
@@ -608,10 +612,12 @@ Model.hook(
   "after",
   "updateOne",
   async function (payload) {
-    const res = await payload.res;
+    if (this.__adapter.runValidators) {
+      const res = await payload.res;
 
-    if (res) {
-      await this.validate([res], payload.ctx);
+      if (res) {
+        await this.validate([res], payload.ctx);
+      }
     }
   },
   -1
@@ -621,10 +627,12 @@ Model.hook(
   "after",
   "updateMultiple",
   async function (payload) {
-    const res = await payload.res;
+    if (this.__adapter.runValidators) {
+      const res = await payload.res;
 
-    if (res) {
-      await this.validate(res, payload.ctx);
+      if (res) {
+        await this.validate(res, payload.ctx);
+      }
     }
   },
   -1

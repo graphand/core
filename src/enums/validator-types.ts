@@ -4,6 +4,7 @@ enum ValidatorTypes {
   BOUNDARIES = "boundaries",
   LENGTH = "length",
   REGEX = "regex",
+  SAMPLE = "sample",
 }
 
 export default ValidatorTypes;

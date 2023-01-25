@@ -10,6 +10,7 @@ class Adapter {
   fieldsMap: { [T in FieldTypes]?: typeof Field<T> };
   validatorsMap: { [T in ValidatorTypes]?: typeof Validator<T> };
   model: typeof Model;
+  runValidators: boolean;
 
   constructor(model: typeof Model) {
     this.model = model;
