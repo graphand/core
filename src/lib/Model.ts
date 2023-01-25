@@ -525,9 +525,10 @@ class Model {
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const adapter = this.__adapter;
     const fn = adapter.fetcher[action];
+    const retryToken = Symbol();
     const hooksBefore = getRecursiveHooksFromModel(this, action, "before");
 
-    const ctx = { adapter, fn };
+    const ctx = { adapter, fn, retryToken };
 
     const hookPayloadBefore: HookCallbackArgs<"before", A, M> = { args, ctx };
 
@@ -551,8 +552,13 @@ class Model {
           hookPayloadBefore.ctx,
         ]);
       } catch (e) {
-        err = [e];
+        err ??= [];
+        err.push(e);
       }
+    }
+
+    if (err?.includes(retryToken)) {
+      return await this.execute(action, ...args);
     }
 
     const hookPayloadAfter = { ...hookPayloadBefore, res, err };
@@ -571,6 +577,10 @@ class Model {
     }, Promise.resolve());
 
     if (hookPayloadAfter.err?.length) {
+      if (hookPayloadAfter.err.includes(retryToken)) {
+        return await this.execute(action, ...args);
+      }
+
       throw hookPayloadAfter.err[0];
     }
 
