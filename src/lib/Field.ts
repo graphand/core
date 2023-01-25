@@ -9,6 +9,8 @@ class Field<T extends FieldTypes = FieldTypes> {
 
   constructor(definition: FieldDefinition<T>) {
     this.__definition = definition;
+
+    Object.defineProperty(this, "__definition", { enumerable: false });
   }
 
   get type() {

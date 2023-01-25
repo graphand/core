@@ -13,6 +13,9 @@ class CoreError extends Error {
     }
 
     this.__definition = definition;
+
+    Object.defineProperty(this, "__definition", { enumerable: false });
+    Object.defineProperty(this, "code", { enumerable: true });
   }
 
   get code() {

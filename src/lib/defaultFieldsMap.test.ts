@@ -630,7 +630,7 @@ describe("test fieldsMap", () => {
 
         const i = new model({ obj });
 
-        expect.assertions(4);
+        expect.assertions(7);
 
         try {
           await model.validate([i]);
@@ -639,6 +639,19 @@ describe("test fieldsMap", () => {
           expect(e.fieldsPaths.includes("obj")).toBeTruthy();
           expect(e.fieldsPaths.includes("obj.nested")).toBeTruthy();
           expect(e.fieldsPaths.includes("obj.nested.title")).toBeTruthy();
+
+          const objError = e.fields.find(
+            (e) => e.slug === "obj"
+          )?.validationError;
+
+          expect(objError?.fieldsPaths.includes("nested")).toBeTruthy();
+          expect(objError?.fieldsPaths.includes("nested.title")).toBeTruthy();
+
+          const objNestedError = objError.fields.find(
+            (e) => e.slug === "nested"
+          )?.validationError;
+
+          expect(objNestedError?.fieldsPaths.includes("title")).toBeTruthy();
         }
       });
     });

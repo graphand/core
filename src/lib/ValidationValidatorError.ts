@@ -5,6 +5,12 @@ class ValidationValidatorError {
 
   constructor(definition: ValidationValidatorErrorDefinition) {
     this.__definition = definition;
+
+    Object.defineProperty(this, "__definition", { enumerable: false });
+  }
+
+  get validator() {
+    return this.__definition.validator;
   }
 }
 

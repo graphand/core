@@ -14,6 +14,8 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
 
   constructor(definition: ValidatorDefinition<T>) {
     this.__definition = definition;
+
+    Object.defineProperty(this, "__definition", { enumerable: false });
   }
 
   get type(): T {
