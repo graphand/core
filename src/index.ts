@@ -20,6 +20,8 @@ import Adapter from "./lib/Adapter";
 import Field from "./lib/Field";
 import Validator from "./lib/Validator";
 import ValidatorTypes from "./enums/validator-types";
+import CoreError from "./lib/CoreError";
+import ValidationError from "./lib/ValidationError";
 
 const models = {
   Account,
@@ -57,6 +59,8 @@ export {
   Field,
   Validator,
   ValidatorTypes,
+  CoreError,
+  ValidationError,
 };
 
 export * from "./types";
