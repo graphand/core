@@ -82,6 +82,17 @@ export const mockAdapter = ({
         }
 
         const [first] = this.thisCache;
+
+        if (update.$set) {
+          Object.assign(first.__doc, update.$set);
+        }
+
+        if (update.$unset) {
+          Object.keys(update.$unset).forEach((key) => {
+            delete first.__doc[key];
+          });
+        }
+
         return Promise.resolve(first);
       }),
       updateMultiple: jest.fn(([query, update]) => {
@@ -89,7 +100,21 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
-        return Promise.resolve(Array.from(this.thisCache));
+        const list = Array.from(this.thisCache);
+
+        if (update.$set) {
+          list.forEach((i) => Object.assign(i.__doc, update.$set));
+        }
+
+        if (update.$unset) {
+          list.forEach((i) => {
+            Object.keys(update.$unset).forEach((key) => {
+              delete i.__doc[key];
+            });
+          });
+        }
+
+        return Promise.resolve(list);
       }),
       deleteOne: jest.fn(([query]) => {
         if (!query) {

@@ -65,7 +65,7 @@ class Model {
   updatedBy;
 
   constructor(doc: any = {}) {
-    doc._id ??= "";
+    doc._id ??= Date.now();
     this.setDoc(doc);
 
     Object.defineProperty(this, "__doc", { enumerable: false });
@@ -501,10 +501,10 @@ class Model {
 
   static async validate<T extends typeof Model>(
     this: T,
-    instances: InstanceType<T>[],
+    input: Array<InstanceType<T> | DocumentDefinition>,
     ctx: any = {}
   ) {
-    const docs = instances.map((i) => i.__doc);
+    const docs = input.map((i) => (i instanceof Model ? i.__doc : i));
 
     return await validateDocs(
       docs,

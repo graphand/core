@@ -11,7 +11,7 @@ describe("test fieldsMap", () => {
     modelDefinition: { fields: {}, validators: [] },
   });
 
-  describe("test FieldText", () => {
+  describe("TEXT field", () => {
     it("Should returns default value if undefined", async () => {
       const defaultText = faker.lorem.word();
 
@@ -316,7 +316,7 @@ describe("test fieldsMap", () => {
     });
   });
 
-  describe("test FieldJSON", () => {
+  describe("JSON field", () => {
     it("Should returns default value if undefined", async () => {
       const defaultJSON = { default: true };
 
