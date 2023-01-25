@@ -6,20 +6,20 @@ import { fieldDecorator } from "./fieldDecorator";
 import FieldTypes from "../enums/field-types";
 import {
   AdapterFetcher,
+  DocumentDefinition,
+  FieldsDefinition,
   Hook,
   HookCallbackArgs,
   HookPhase,
+  InputModelPayload,
   JSONQuery,
   Module,
-  InputModelPayload,
   ValidatorsDefinition,
-  FieldsDefinition,
-  DocumentDefinition,
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
 import Validator from "./Validator";
-import { FieldIdDefinition, FieldDateDefinition } from "../fields";
+import { FieldDateDefinition, FieldIdDefinition } from "../fields";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
@@ -28,6 +28,8 @@ import {
   getRecursiveValidatorsFromModel,
   validateDocs,
 } from "../utils";
+import CoreError from "./CoreError";
+import ErrorCodes from "../enums/error-codes";
 
 class Model {
   static extendable: boolean = false;
@@ -212,7 +214,9 @@ class Model {
 
   static verifyAdapter() {
     if (!this.__adapter || !(this.__adapter instanceof Adapter)) {
-      throw new Error("INVALID_ADAPTER");
+      throw new CoreError({
+        code: ErrorCodes.INVALID_ADAPTER,
+      });
     }
   }
 

@@ -6,10 +6,12 @@ import Adapter from "./Adapter";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
-  isGraphandError,
   validateDocs,
 } from "../utils";
 import Validator from "./Validator";
+import CoreError from "./CoreError";
+import ValidationFieldError from "./ValidationFieldError";
+import ValidationError from "./ValidationError";
 
 class DefaultFieldId extends Field<FieldTypes.ID> {
   serialize(value: any): any {
@@ -129,7 +131,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
     const model = ctx.model;
 
     if (!model) {
-      throw new Error(`FIELD_VALIDATE_CTX_NO_MODEL`);
+      throw new CoreError();
     }
 
     const arrValue = Array.isArray(value) ? value : [value];
@@ -163,7 +165,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
         )
         .flat();
 
-      const errorsSet = new Set();
+      const errorsFieldsSet = new Set<ValidationFieldError>();
 
       if (defaultEntries?.length) {
         await Promise.all(
@@ -171,32 +173,25 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
             try {
               const validated = await defaultField.validate(value, ctx, _slug);
               if (!validated) {
-                throw new Error();
+                throw null;
               }
             } catch (err) {
-              if (isGraphandError(err)) {
-                const errs = Array.isArray(err) ? err : [err];
-                errs.forEach((nestedErr) => {
-                  const e = new Error(
-                    `FIELD_VALIDATION_FAILED_${defaultField.type.toUpperCase()}:${_slug}:${
-                      nestedErr.message
-                    }`
-                  );
-                  errorsSet.add(e);
-                });
-              } else {
-                const e = new Error(
-                  `FIELD_VALIDATION_FAILED_${defaultField.type.toUpperCase()}:${_slug}`
-                );
-                errorsSet.add(e);
-              }
+              const e = new ValidationFieldError({
+                slug: _slug,
+                field: defaultField,
+                validationError: err instanceof ValidationError ? err : null,
+              });
+
+              errorsFieldsSet.add(e);
             }
           })
         );
       }
 
-      if (errorsSet.size) {
-        throw Array.from(errorsSet);
+      if (errorsFieldsSet.size) {
+        throw new ValidationError({
+          fields: Array.from(errorsFieldsSet),
+        });
       }
     }
 

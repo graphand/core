@@ -4,6 +4,9 @@ import FieldTypes from "./enums/field-types";
 import RuleActions from "./enums/rule-actions";
 import ValidatorTypes from "./enums/validator-types";
 import Field from "./lib/Field";
+import ErrorCodes from "./enums/error-codes";
+import Validator from "./lib/Validator";
+import ValidationError from "./lib/ValidationError";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -208,3 +211,18 @@ export type ValidateCtx = {
   model: typeof Model;
   fieldsJSONPath?: Array<{ slug: string; field: Field }>;
 } & any;
+
+export type CoreErrorDefinition = {
+  message?: string;
+  code?: ErrorCodes;
+};
+
+export type ValidationFieldErrorDefinition = {
+  slug: string;
+  field: Field;
+  validationError?: ValidationError;
+};
+
+export type ValidationValidatorErrorDefinition = {
+  validator: Validator;
+};

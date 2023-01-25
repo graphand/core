@@ -4,6 +4,7 @@ import { faker } from "@faker-js/faker";
 import Field from "./Field";
 import Validator from "./Validator";
 import ValidatorTypes from "../enums/validator-types";
+import ValidationError from "./ValidationError";
 
 describe("test fieldsMap", () => {
   const adapter = mockAdapter({
@@ -239,12 +240,13 @@ describe("test fieldsMap", () => {
 
         const i = new model({ title });
 
-        expect.assertions(1);
+        expect.assertions(2);
 
         try {
           await model.validate([i]);
         } catch (e) {
-          expect(e).toBeDefined();
+          expect(e).toBeInstanceOf(ValidationError);
+          expect(e.fieldsPaths.includes("title")).toBeTruthy();
         }
       });
 
@@ -269,16 +271,17 @@ describe("test fieldsMap", () => {
         }).withAdapter(adapter);
         await model.initialize();
 
-        const title = [options[0], faker.lorem.word()];
+        const title = [options[0], "notInOptions"];
 
         const i = new model({ title });
 
-        expect.assertions(1);
+        expect.assertions(2);
 
         try {
           await model.validate([i]);
         } catch (e) {
-          expect(e).toBeDefined();
+          expect(e).toBeInstanceOf(ValidationError);
+          expect(e.fieldsPaths.includes("title")).toBeTruthy();
         }
       });
 
@@ -627,13 +630,15 @@ describe("test fieldsMap", () => {
 
         const i = new model({ obj });
 
-        expect.assertions(2);
+        expect.assertions(4);
 
         try {
           await model.validate([i]);
         } catch (e) {
-          expect(e).toBeDefined();
-          expect(e).toBeInstanceOf(Array);
+          expect(e).toBeInstanceOf(ValidationError);
+          expect(e.fieldsPaths.includes("obj")).toBeTruthy();
+          expect(e.fieldsPaths.includes("obj.nested")).toBeTruthy();
+          expect(e.fieldsPaths.includes("obj.nested.title")).toBeTruthy();
         }
       });
     });

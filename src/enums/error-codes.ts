@@ -1,0 +1,7 @@
+enum ErrorCodes {
+  UNKNOWN = "UNKNOWN",
+  INVALID_ADAPTER = "INVALID_ADAPTER",
+  VALIDATION_FAILED = "VALIDATION_FAILED",
+}
+
+export default ErrorCodes;

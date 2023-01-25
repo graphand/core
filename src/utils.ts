@@ -19,6 +19,9 @@ import ValidatorTypes from "./enums/validator-types";
 import defaultValidatorsMap from "./lib/defaultValidatorsMap";
 import Validator from "./lib/Validator";
 import Adapter from "./lib/Adapter";
+import ValidationFieldError from "./lib/ValidationFieldError";
+import ValidationValidatorError from "./lib/ValidationValidatorError";
+import ValidationError from "./lib/ValidationError";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -111,10 +114,10 @@ export const parseValidatorHook = (
     try {
       const validated = await executor.apply(this, arguments);
       if (!validated) {
-        throw new Error();
+        throw null;
       }
     } catch (err) {
-      throw new Error(`VALIDATION_FAILED_${validator.type.toUpperCase()}`);
+      throw new ValidationValidatorError({ validator });
     }
   };
 
@@ -155,17 +158,14 @@ export const createValidatorFromDefinition = <T extends ValidatorTypes>(
   return new ValidatorClass(def);
 };
 
-export const isGraphandError = (err: any): boolean => {
-  return Array.isArray(err);
-};
-
 export const validateDocs = async (
   docs: Array<DocumentDefinition>,
   ctx: ValidateCtx = {},
   validators: Array<Validator>,
   fieldsEntries?: Array<[string, Field<FieldTypes>]>
 ) => {
-  const errorsSet = new Set();
+  const errorsFieldsSet = new Set<ValidationFieldError>();
+  const errorsValidatorsSet = new Set<ValidationValidatorError>();
 
   if (fieldsEntries?.length) {
     await Promise.all(
@@ -176,34 +176,21 @@ export const validateDocs = async (
             try {
               const validated = await field.validate(value, ctx, slug);
               if (!validated) {
-                throw new Error();
+                throw null;
               }
             } catch (err) {
-              if (isGraphandError(err)) {
-                const errs = Array.isArray(err) ? err : [err];
-                errs.forEach((nestedErr) => {
-                  const e = new Error(
-                    `FIELD_VALIDATION_FAILED_${field.type.toUpperCase()}:${slug}:${
-                      nestedErr.message
-                    }`
-                  );
-                  errorsSet.add(e);
-                });
-              } else {
-                const e = new Error(
-                  `FIELD_VALIDATION_FAILED_${field.type.toUpperCase()}:${slug}`
-                );
-                errorsSet.add(e);
-              }
+              const e = new ValidationFieldError({
+                slug,
+                field,
+                validationError: err instanceof ValidationError ? err : null,
+              });
+
+              errorsFieldsSet.add(e);
             }
           })
         );
       })
     );
-
-    if (errorsSet.size) {
-      throw Array.from(errorsSet);
-    }
   }
 
   await Promise.all(
@@ -211,21 +198,21 @@ export const validateDocs = async (
       try {
         const validated = await validator.validate(docs, ctx);
         if (!validated) {
-          throw new Error();
+          throw null;
         }
       } catch (err) {
-        const e = new Error(
-          `VALIDATOR_VALIDATION_FAILED_${validator.type.toUpperCase()}:${JSON.stringify(
-            validator.options
-          )}}`
-        );
-        errorsSet.add(e);
+        const e = new ValidationValidatorError({ validator });
+
+        errorsValidatorsSet.add(e);
       }
     })
   );
 
-  if (errorsSet.size) {
-    throw Array.from(errorsSet);
+  if (errorsFieldsSet.size || errorsValidatorsSet.size) {
+    throw new ValidationError({
+      fields: Array.from(errorsFieldsSet),
+      validators: Array.from(errorsValidatorsSet),
+    });
   }
 
   return true;
