@@ -4,6 +4,7 @@ import ValidationError from "./ValidationError";
 import { faker } from "@faker-js/faker";
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
+import Validator from "./Validator";
 
 describe("test validatorsMap", () => {
   const adapter = mockAdapter({
@@ -34,7 +35,8 @@ describe("test validatorsMap", () => {
     const _containsValidator = (e: ValidationError) => {
       return e.validators.some(
         ({ validator: v }) =>
-          v.type === ValidatorTypes.REQUIRED && v.options.field === "title"
+          v.type === ValidatorTypes.REQUIRED &&
+          (v as Validator<ValidatorTypes.REQUIRED>).options.field === "title"
       );
     };
 

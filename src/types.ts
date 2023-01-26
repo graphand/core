@@ -91,12 +91,17 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
 
 export type Module<T extends typeof Model = any> = (model: T) => void;
 
-export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> = {
+type ValidatorTypesString = `${ValidatorTypes}`;
+type FieldTypesString = `${FieldTypes}`;
+
+export type ValidatorDefinition<
+  T extends ValidatorTypes | ValidatorTypesString = any
+> = {
   type: T;
   options: ValidatorOptions<T>;
 };
 
-export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
+export type FieldDefinition<T extends FieldTypes | FieldTypesString = any> = {
   type: T;
   options?: FieldOptions<T>;
 };
@@ -109,15 +114,16 @@ export type DocumentDefinition = { [key: string]: any };
 
 export type ValidatorsDefinition = ValidatorDefinition[];
 
-export type ValidatorOptions<T extends string | ValidatorTypes> = T extends
-  | ValidatorTypes.REQUIRED
-  | "required"
-  ? { field: string }
-  : T extends ValidatorTypes.UNIQUE | "unique"
-  ? { field: string }
-  : never;
+export type ValidatorOptions<T extends ValidatorTypes | ValidatorTypesString> =
+  T extends ValidatorTypes.REQUIRED | "required"
+    ? { field: string }
+    : T extends ValidatorTypes.UNIQUE | "unique"
+    ? { field: string }
+    : T extends ValidatorTypes.LENGTH | "length"
+    ? { min?: number; max?: number }
+    : never;
 
-export type FieldOptions<T extends string | FieldTypes> = T extends
+export type FieldOptions<T extends FieldTypes | FieldTypesString> = T extends
   | FieldTypes.TEXT
   | "Text"
   ? {
