@@ -33,7 +33,6 @@ class DataModel extends Model {
   slug: FieldTextDefinition;
 
   @fieldDecorator(FieldTypes.JSON, {
-    multiple: true,
     defaultField: {
       type: FieldTypes.JSON,
       options: {
