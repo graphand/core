@@ -17,6 +17,7 @@ class DataModel extends Model {
 
   static slug = "datamodels";
   static scope = ModelEnvScopes.ENV;
+  static configKey = "slug";
   static validators = [
     {
       type: ValidatorTypes.REQUIRED,

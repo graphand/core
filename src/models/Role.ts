@@ -18,6 +18,7 @@ class Role extends Model {
 
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
+  static configKey = "name";
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;

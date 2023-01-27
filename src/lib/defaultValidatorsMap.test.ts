@@ -33,11 +33,12 @@ describe("test validatorsMap", () => {
     });
 
     const _containsValidator = (e: ValidationError) => {
-      return e.validators.some(
-        ({ validator: v }) =>
-          v.type === ValidatorTypes.REQUIRED &&
-          (v as Validator<ValidatorTypes.REQUIRED>).options.field === "title"
-      );
+      return e.validators.some((err) => {
+        const v = err.validator as Validator<ValidatorTypes.REQUIRED>;
+        return (
+          v.type === ValidatorTypes.REQUIRED && v.options.field === "title"
+        );
+      });
     };
 
     describe("create", () => {

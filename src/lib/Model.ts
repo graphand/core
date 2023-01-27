@@ -37,6 +37,7 @@ class Model {
   static scope: ModelEnvScopes;
   static fields: FieldsDefinition;
   static validators: ValidatorsDefinition;
+  static configKey?: string;
 
   static __name: string;
   static __hooks: Set<Hook<any, any, any>>;
