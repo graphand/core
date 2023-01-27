@@ -911,7 +911,7 @@ describe("test fieldsMap", () => {
         }).withAdapter(_adapter);
         await model.initialize();
 
-        const fakerNumber = faker.random.numeric();
+        const fakerNumber = parseFloat(faker.random.numeric());
         const i = new model({ obj: { title: "test", test: fakerNumber } });
 
         expect(i.obj).toBeInstanceOf(Object);

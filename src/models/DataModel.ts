@@ -87,6 +87,9 @@ class DataModel extends Model {
 
   @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
   isPage: FieldBooleanDefinition;
+
+  @fieldDecorator(FieldTypes.TEXT)
+  configKey: FieldTextDefinition;
 }
 
 export default DataModel;
