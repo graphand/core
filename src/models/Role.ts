@@ -18,10 +18,11 @@ class Role extends Model {
 
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
-  static configKey = "name";
+  static configKey = "slug";
+  static validators = [{ type: "required", options: { field: "slug" } }];
 
   @fieldDecorator(FieldTypes.TEXT)
-  name: FieldTextDefinition;
+  slug: FieldTextDefinition;
 
   @fieldDecorator(FieldTypes.TEXT)
   description: FieldTextDefinition;

@@ -21,7 +21,7 @@ class DefaultFieldId extends Field<FieldTypes.ID> {
 
 class DefaultFieldNumber extends Field<FieldTypes.NUMBER> {
   serialize(value: any): any {
-    return typeof value === "string" ? value : String(value);
+    return parseFloat(value);
   }
 }
 
