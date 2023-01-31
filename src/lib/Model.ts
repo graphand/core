@@ -116,7 +116,7 @@ class Model {
     await this.__initPromise;
   }
 
-  static async reloadModel() {
+  static async reloadModel(ctx?: any) {
     if (!this.extendable) {
       return;
     }
@@ -124,7 +124,11 @@ class Model {
     let modelFields = getRecursiveFieldsFromModel(this);
     let modelValidators = getRecursiveValidatorsFromModel(this);
 
-    const modelDefinition = await this.execute("getModelDefinition");
+    const modelDefinition = await this.execute(
+      "getModelDefinition",
+      undefined as never,
+      ctx
+    );
 
     const fields = modelDefinition?.fields || {};
     modelFields = { ...modelFields, ...fields };
@@ -353,18 +357,20 @@ class Model {
 
   static async count<T extends typeof Model>(
     this: T,
-    query: string | JSONQuery = {}
+    query: string | JSONQuery = {},
+    ctx?: any
   ): Promise<number> {
     this.verifyAdapter();
 
     await this.initialize();
 
-    return this.execute("count", query);
+    return this.execute("count", [query], ctx);
   }
 
   static get<T extends typeof Model>(
     this: T,
-    query: string | JSONQuery = {}
+    query: string | JSONQuery = {},
+    ctx?: any
   ): PromiseModel<InstanceType<T>> {
     const model = this;
     model.verifyAdapter();
@@ -375,7 +381,7 @@ class Model {
           try {
             await model.initialize();
 
-            const i = await this.execute("get", query);
+            const i = await this.execute("get", [query], ctx);
             resolve(i);
           } catch (e) {
             reject(e);
@@ -389,7 +395,8 @@ class Model {
 
   static getList<T extends typeof Model>(
     this: T,
-    query: JSONQuery = {}
+    query: JSONQuery = {},
+    ctx?: any
   ): PromiseModelList<InstanceType<T>> {
     const model = this;
     model.verifyAdapter();
@@ -400,7 +407,7 @@ class Model {
           try {
             await model.initialize();
 
-            const list = await this.execute("getList", query);
+            const list = await this.execute("getList", [query], ctx);
             resolve(list);
           } catch (e) {
             reject(e);
@@ -414,30 +421,36 @@ class Model {
 
   static async create<T extends typeof Model>(
     this: T,
-    payload: InputModelPayload<T>
+    payload: InputModelPayload<T>,
+    ctx?: any
   ): Promise<InstanceType<T>> {
     this.verifyAdapter();
 
     await this.initialize();
 
-    return await this.execute("createOne", payload);
+    return await this.execute("createOne", [payload], ctx);
   }
 
   static async createMultiple<T extends typeof Model>(
     this: T,
-    payload: Array<InputModelPayload<T>>
+    payload: Array<InputModelPayload<T>>,
+    ctx?: any
   ): Promise<Array<InstanceType<T>>> {
     this.verifyAdapter();
 
     await this.initialize();
 
-    return await this.execute("createMultiple", payload);
+    return await this.execute("createMultiple", [payload], ctx);
   }
 
-  async update(update: any): Promise<this> {
+  async update(update: any, ctx?: any): Promise<this> {
     this.model.verifyAdapter();
 
-    const res = await this.model.execute("updateOne", String(this._id), update);
+    const res = await this.model.execute(
+      "updateOne",
+      [String(this._id), update],
+      ctx
+    );
 
     this.setDoc(res.__doc);
 
@@ -447,38 +460,40 @@ class Model {
   static async update<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    update: any
+    update: any,
+    ctx?: any
   ): Promise<Array<InstanceType<T>>> {
     this.verifyAdapter();
 
     await this.initialize();
 
     if (typeof query === "string") {
-      const updated = await this.execute("updateOne", query, update);
+      const updated = await this.execute("updateOne", [query, update], ctx);
       return [updated];
     }
 
-    return await this.execute("updateMultiple", query, update);
+    return await this.execute("updateMultiple", [query, update], ctx);
   }
 
-  async delete(): Promise<this> {
+  async delete(ctx?: any): Promise<this> {
     this.model.verifyAdapter();
 
-    await this.model.execute("deleteOne", String(this._id));
+    await this.model.execute("deleteOne", [String(this._id)], ctx);
 
     return this;
   }
 
   static async delete<T extends typeof Model>(
     this: T,
-    query: string | JSONQuery = {}
+    query: string | JSONQuery = {},
+    ctx?: any
   ): Promise<string[]> {
     this.verifyAdapter();
 
     await this.initialize();
 
     if (typeof query === "string") {
-      const deleted = await this.execute("deleteOne", query);
+      const deleted = await this.execute("deleteOne", [query], ctx);
       if (deleted) {
         return [query];
       }
@@ -486,7 +501,7 @@ class Model {
       return [];
     }
 
-    return await this.execute("deleteMultiple", query);
+    return await this.execute("deleteMultiple", [query], ctx);
   }
 
   static hook<
@@ -525,7 +540,8 @@ class Model {
   >(
     this: M,
     action: A,
-    ...args: Args
+    args: Args,
+    bindCtx?: any
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const adapter = this.__adapter;
     const fn = adapter.fetcher[action];
@@ -533,6 +549,7 @@ class Model {
     const hooksBefore = getRecursiveHooksFromModel(this, action, "before");
 
     const ctx = { adapter, fn, retryToken };
+    Object.assign(ctx, bindCtx);
 
     const hookPayloadBefore: HookCallbackArgs<"before", A, M> = { args, ctx };
 
@@ -562,7 +579,7 @@ class Model {
     }
 
     if (err?.includes(retryToken)) {
-      return await this.execute(action, ...args);
+      return await this.execute(action, args, bindCtx);
     }
 
     const hookPayloadAfter = { ...hookPayloadBefore, res, err };
@@ -582,7 +599,7 @@ class Model {
 
     if (hookPayloadAfter.err?.length) {
       if (hookPayloadAfter.err.includes(retryToken)) {
-        return await this.execute(action, ...args);
+        return await this.execute(action, args, bindCtx);
       }
 
       throw hookPayloadAfter.err[0];
@@ -596,7 +613,7 @@ Model.hook(
   "after",
   "createOne",
   async function (payload) {
-    if (this.__adapter.runValidators) {
+    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {
@@ -611,7 +628,7 @@ Model.hook(
   "after",
   "createMultiple",
   async function (payload) {
-    if (this.__adapter.runValidators) {
+    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {
@@ -626,7 +643,7 @@ Model.hook(
   "after",
   "updateOne",
   async function (payload) {
-    if (this.__adapter.runValidators) {
+    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {
@@ -641,7 +658,7 @@ Model.hook(
   "after",
   "updateMultiple",
   async function (payload) {
-    if (this.__adapter.runValidators) {
+    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {

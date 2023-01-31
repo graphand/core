@@ -33,7 +33,7 @@ class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
 
     const found = await Promise.all(
       values.map(async (value) => {
-        const found = await model.count({ filter: { [path]: value } });
+        const found = await model.count({ filter: { [path]: value } }, ctx);
         return [value, found];
       })
     );

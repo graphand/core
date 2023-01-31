@@ -197,6 +197,7 @@ export const validateDocs = async (
     validators.map(async (validator) => {
       try {
         const validated = await validator.validate(docs, ctx);
+
         if (!validated) {
           throw null;
         }
