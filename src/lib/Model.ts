@@ -98,13 +98,17 @@ class Model {
     return modelWithAdapter;
   }
 
-  static async initialize() {
+  static async initialize(force: boolean = false, ctx?: any) {
     const model = this;
+
+    if (force) {
+      this.__initPromise = undefined;
+    }
 
     this.__initPromise ??= new Promise(async (resolve, reject) => {
       try {
         if (model.extendable) {
-          await model.reloadModel();
+          await model.reloadModel(ctx);
         }
       } catch (e) {
         reject(e);
