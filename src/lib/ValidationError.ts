@@ -27,7 +27,7 @@ class ValidationError extends CoreError {
   }
 
   get fieldsPaths(): Array<string> {
-    const paths: Array<Array<string>> = this.fields.map((err) => {
+    const _fieldsPaths: Array<Array<string>> = this.fields.map((err) => {
       if (err.validationError) {
         const nestedPaths = err.validationError.fieldsPaths.map(
           (path) => `${err.slug}.${path}`
@@ -39,7 +39,17 @@ class ValidationError extends CoreError {
       return [err.slug];
     });
 
-    return paths.flat();
+    const _validatorsPaths: Array<string | null> = this.validators.map(
+      (err) => {
+        if ("field" in err.validator.options) {
+          return err.validator.options.field as string;
+        }
+
+        return null;
+      }
+    );
+
+    return [..._validatorsPaths, ..._fieldsPaths.flat()].filter(Boolean);
   }
 
   get message() {

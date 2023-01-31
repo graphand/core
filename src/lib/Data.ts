@@ -16,7 +16,7 @@ class Data extends Model {
 
       static slug = datamodel.slug;
       static fields = datamodel.fields;
-      static validators = datamodel.validators;
+      static validators = [];
       static configKey = datamodel.configKey;
     };
 
@@ -24,6 +24,16 @@ class Data extends Model {
 
     const adapter = datamodel.model.__adapter.constructor as typeof Adapter;
     return model.withAdapter(adapter);
+  }
+
+  static getFromSlug(slug: string) {
+    const model = class extends Data {
+      static __name = `Data<${slug}>`;
+
+      static slug = slug;
+    };
+
+    return model;
   }
 
   [prop: string]: any;

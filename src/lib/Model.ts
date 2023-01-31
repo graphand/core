@@ -222,12 +222,11 @@ class Model {
   }
 
   static getFromSlug(slug: string): typeof Model {
-    const models = require("../index").models as {
-      [name: string]: typeof Model;
-    };
-    const model = Object.values(models).find((m) => m.slug === slug);
+    const models = require("../index").models as Record<string, typeof Model>;
+    let model = Object.values(models).find((m) => m.slug === slug);
     if (!model) {
-      return null;
+      const Data = require("./Data").default;
+      model = Data.getFromSlug(slug);
     }
 
     if (!this.__adapter) {
@@ -322,6 +321,10 @@ class Model {
 
   toObject() {
     return this.to(SerializerFormat.OBJECT);
+  }
+
+  toDocument() {
+    return this.to(SerializerFormat.DOCUMENT);
   }
 
   toString() {

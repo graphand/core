@@ -22,6 +22,10 @@ import Validator from "./lib/Validator";
 import ValidatorTypes from "./enums/validator-types";
 import CoreError from "./lib/CoreError";
 import ValidationError from "./lib/ValidationError";
+import {
+  createFieldFromDefinition,
+  createValidatorFromDefinition,
+} from "./utils";
 
 const models = {
   Account,
@@ -61,6 +65,8 @@ export {
   ValidatorTypes,
   CoreError,
   ValidationError,
+  createFieldFromDefinition,
+  createValidatorFromDefinition,
 };
 
 export * from "./types";

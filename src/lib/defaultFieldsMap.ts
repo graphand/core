@@ -80,13 +80,18 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     const canGetIds = typeof value === "object" && "getIds" in value;
 
     if (this.options.multiple) {
-      const arrValue = canGetIds
-        ? value.getIds()
-        : typeof value === "string"
-        ? [value]
-        : [value._id?.toString() ?? value?.toString()].filter(Boolean);
+      let ids;
 
-      return arrValue.map((i) => i?.toString());
+      if (canGetIds) {
+        ids = value.getIds();
+      } else {
+        const arrValue = Array.isArray(value) ? value : [value];
+        ids = arrValue
+          .map((v) => (typeof v === "object" && "_id" in v ? v._id : v))
+          .filter(Boolean);
+      }
+
+      return ids.map((i) => i?.toString());
     }
 
     return canGetIds
@@ -99,7 +104,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   _serializeObject = (value: any, format: SerializerFormat, from: Model) => {
     // get the referenced model with the same adapter as from parameter
     const adapter = from.model.__adapter.constructor as typeof Adapter;
-    const model = Model.getFromSlug(this.options.ref).withAdapter(adapter);
+    let model = Model.getFromSlug(this.options.ref).withAdapter(adapter);
 
     if (this.options.multiple) {
       const ids = Array.isArray(value) ? value : [value];
