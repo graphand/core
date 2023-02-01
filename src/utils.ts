@@ -45,7 +45,14 @@ export const getRecursiveFieldsFromModel = (
 export const getRecursiveValidatorsFromModel = (
   model: typeof Model
 ): ValidatorsDefinition => {
-  let validators = [];
+  let validators: ValidatorsDefinition = [];
+
+  if (model.hasOwnProperty("configKey") && model.configKey) {
+    validators.push({
+      type: ValidatorTypes.CONFIG_KEY,
+      options: { field: model.configKey },
+    });
+  }
 
   do {
     if (model.hasOwnProperty("validators")) {

@@ -15,7 +15,10 @@ import defaultValidatorsMap from "./lib/defaultValidatorsMap";
 
 export const mockAdapter = ({
   fieldsMap = defaultFieldsMap,
-  validatorsMap = defaultValidatorsMap,
+  validatorsMap = {
+    ...defaultValidatorsMap,
+    [ValidatorTypes.UNIQUE]: null,
+  },
   modelDefinition = {
     fields: {
       title: {

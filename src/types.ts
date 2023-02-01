@@ -119,8 +119,16 @@ export type ValidatorOptions<T extends ValidatorTypes | ValidatorTypesString> =
     ? { field: string }
     : T extends ValidatorTypes.UNIQUE | "unique"
     ? { field: string }
+    : T extends ValidatorTypes.CONFIG_KEY | "configKey"
+    ? { field: string }
     : T extends ValidatorTypes.LENGTH | "length"
     ? { min?: number; max?: number }
+    : T extends ValidatorTypes.REGEX | "regex"
+    ? {
+        field: string;
+        pattern: string;
+        options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
+      }
     : never;
 
 export type FieldOptions<T extends FieldTypes | FieldTypesString> = T extends

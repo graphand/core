@@ -5,6 +5,8 @@ import { faker } from "@faker-js/faker";
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
 import Validator from "./Validator";
+import { ValidatorOptions } from "../types";
+import { models } from "../index";
 
 describe("test validatorsMap", () => {
   const adapter = mockAdapter({
@@ -254,6 +256,182 @@ describe("test validatorsMap", () => {
         const validated = await model.validate([{ title }]);
         expect(validated).toBeTruthy();
       });
+    });
+  });
+
+  describe("regex validator", () => {
+    const _mockModelWithRegexValidator = async (
+      options: Partial<ValidatorOptions<ValidatorTypes.REGEX>> = {}
+    ) => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.REGEX,
+            options: {
+              field: "title",
+              ...options,
+            },
+          },
+        ],
+      }).withAdapter(adapter);
+
+      await model.initialize();
+
+      return model;
+    };
+
+    describe("email regex", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({
+          pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+        });
+      });
+
+      it("create with valid email should not throw error", async () => {
+        const i = await model.create({ title: faker.internet.email() });
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with undefined email should not throw error", async () => {
+        const i = await model.create({});
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with null email should not throw error", async () => {
+        const i = await model.create({ title: null });
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with invalid email should throw error", async () => {
+        const invalidPromise = model.create({ title: "invalidEmail" });
+
+        await expect(invalidPromise).rejects.toBeInstanceOf(ValidationError);
+      });
+    });
+  });
+
+  describe("configKey validator", () => {
+    const model = mockModel({
+      fields: {
+        title: {
+          type: FieldTypes.TEXT,
+        },
+      },
+      validators: [
+        {
+          type: ValidatorTypes.CONFIG_KEY,
+          options: {
+            field: "title",
+          },
+        },
+      ],
+    }).withAdapter(adapter);
+
+    beforeAll(async () => {
+      await model.initialize();
+    });
+
+    it("create with no configKey should throw error", async () => {
+      await expect(model.create({})).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("create with valid configKey should not throw error", async () => {
+      const i = await model.create({ title: "validKey" });
+      expect(i).toBeInstanceOf(model);
+    });
+  });
+
+  describe("datamodelConfigKey validator", () => {
+    const DataModel = models.DataModel.withAdapter(adapter);
+
+    it("datamodel without configKey should not throw error", async () => {
+      const datamodel = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      await expect(datamodel).resolves.toBeInstanceOf(DataModel);
+    });
+
+    it("datamodel with configKey and valid configKey field should not throw error", async () => {
+      const datamodel = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        configKey: "title",
+      });
+
+      await expect(datamodel).resolves.toBeInstanceOf(DataModel);
+    });
+
+    it("datamodel with configKey and not existing field should throw error", async () => {
+      const datamodel = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        configKey: "title",
+      });
+
+      await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("datamodel with configKey and invalid configKey field should throw error", async () => {
+      const datamodel1 = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              multiple: true,
+            },
+          },
+        },
+        configKey: "title",
+      });
+
+      await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
+
+      const datamodel2 = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "default",
+            },
+          },
+        },
+        configKey: "title",
+      });
+
+      await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
+
+      const datamodel3 = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.NUMBER,
+          },
+        },
+        configKey: "title",
+      });
+
+      await expect(datamodel3).rejects.toBeInstanceOf(ValidationError);
     });
   });
 });

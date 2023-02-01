@@ -25,6 +25,10 @@ class DataModel extends Model {
         field: "slug",
       },
     },
+    {
+      type: ValidatorTypes.DATAMODEL_CONFIG_KEY,
+      options: {} as never,
+    },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
