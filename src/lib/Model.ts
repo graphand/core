@@ -229,9 +229,9 @@ class Model {
     }
   }
 
-  static getFromSlug(slug: string): typeof Model {
+  static getFromSlug<M extends typeof Model = typeof Model>(slug: string): M {
     const models = require("../index").models as Record<string, typeof Model>;
-    let model = Object.values(models).find((m) => m.slug === slug);
+    let model: M = Object.values(models).find((m) => m.slug === slug) as M;
     if (!model) {
       const Data = require("./Data").default;
       model = Data.getFromSlug(slug);
