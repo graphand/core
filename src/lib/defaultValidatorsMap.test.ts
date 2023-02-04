@@ -585,4 +585,116 @@ describe("test validatorsMap", () => {
       });
     });
   });
+
+  describe("boundaries validator", () => {
+    const _mockModelWithRegexValidator = async (
+      options: Partial<ValidatorOptions<ValidatorTypes.BOUNDARIES>> = {}
+    ) => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.BOUNDARIES,
+            options: {
+              field: "title",
+              ...options,
+            },
+          },
+        ],
+      }).withAdapter(adapter);
+
+      await model.initialize();
+
+      return model;
+    };
+
+    it("create without validator config should not throw error", async () => {
+      const model = await _mockModelWithRegexValidator();
+
+      await expect(model.create({})).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: -10 })).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: 100 })).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: 0 })).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: 0.1 })).resolves.toBeInstanceOf(model);
+    });
+
+    describe("min", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({ min: 2 });
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ title: 1 })).rejects.toThrow(
+          ValidationError
+        );
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ title: 2 })).resolves.toBeInstanceOf(model);
+        await expect(model.create({ title: 3 })).resolves.toBeInstanceOf(model);
+      });
+    });
+
+    describe("max", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({ max: 5 });
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ title: 6 })).rejects.toThrow(
+          ValidationError
+        );
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ title: 2 })).resolves.toBeInstanceOf(model);
+        await expect(model.create({ title: 3 })).resolves.toBeInstanceOf(model);
+      });
+    });
+
+    describe("min and max", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({ min: 2, max: 5 });
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ title: -Infinity })).rejects.toThrow(
+          ValidationError
+        );
+        await expect(model.create({ title: -1 })).rejects.toThrow(
+          ValidationError
+        );
+        await expect(model.create({ title: 1 })).rejects.toThrow(
+          ValidationError
+        );
+        await expect(model.create({ title: 1.99999999999 })).rejects.toThrow(
+          ValidationError
+        );
+        await expect(model.create({ title: 5.000000001 })).rejects.toThrow(
+          ValidationError
+        );
+        await expect(model.create({ title: 6 })).rejects.toThrow(
+          ValidationError
+        );
+        await expect(model.create({ title: Infinity })).rejects.toThrow(
+          ValidationError
+        );
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ title: 2 })).resolves.toBeInstanceOf(model);
+        await expect(model.create({ title: 3 })).resolves.toBeInstanceOf(model);
+      });
+    });
+  });
 });

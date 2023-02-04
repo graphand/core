@@ -527,7 +527,7 @@ class Model {
     input: Array<InstanceType<T> | DocumentDefinition>,
     ctx: any = {}
   ) {
-    const docs = input.map((i) => (i instanceof Model ? i.toJSON() : i));
+    const docs = input.map((i) => (i instanceof Model ? i.__doc : i));
 
     return await validateDocs(
       docs,

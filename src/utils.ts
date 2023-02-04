@@ -23,6 +23,7 @@ import Adapter from "./lib/Adapter";
 import ValidationFieldError from "./lib/ValidationFieldError";
 import ValidationValidatorError from "./lib/ValidationValidatorError";
 import ValidationError from "./lib/ValidationError";
+import SerializerFormat from "./enums/serializer-format";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -166,11 +167,12 @@ export const createValidatorFromDefinition = <T extends ValidatorTypes>(
   return new ValidatorClass(def);
 };
 
-export const validateDocs = async (
+export const validateDocs = async <T extends typeof Model = typeof Model>(
   docs: Array<DocumentDefinition>,
   ctx: ValidateCtx = {},
   validators: Array<Validator>,
-  fieldsEntries?: Array<[string, Field<FieldTypes>]>
+  fieldsEntries?: Array<[string, Field<FieldTypes>]>,
+  bindDuplicatesValues = true
 ) => {
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
@@ -178,11 +180,16 @@ export const validateDocs = async (
   if (fieldsEntries?.length) {
     await Promise.all(
       fieldsEntries.map(async ([slug, field]) => {
-        const values = Array.from(new Set(docs.map((doc) => doc[slug])));
+        let list = docs.map((doc) => doc[slug]);
+
+        if (bindDuplicatesValues) {
+          list = Array.from(new Set(list));
+        }
+
         await Promise.all(
-          values.map(async (value) => {
+          list.map(async (values) => {
             try {
-              const validated = await field.validate(value, ctx, slug);
+              const validated = await field.validate(values, ctx, slug);
               if (!validated) {
                 throw null;
               }

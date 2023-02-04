@@ -49,6 +49,7 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 
     return true;
   }
+
   serialize(value: any, format: SerializerFormat, from: Model): any {
     if (this.options.multiple) {
       const arrValue = value && !Array.isArray(value) ? [value] : value;
@@ -129,7 +130,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 
 class DefaultFieldJSON extends Field<FieldTypes.JSON> {
   async validate(value, ctx, slug) {
-    if (value === undefined) {
+    if (value === null || value === undefined) {
       return true;
     }
 
