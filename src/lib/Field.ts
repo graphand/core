@@ -27,10 +27,6 @@ class Field<T extends FieldTypes = FieldTypes> {
     ) as FieldOptions<T>;
   }
 
-  async isValidDefinition() {
-    return true;
-  }
-
   async validate(value: any, ctx: ValidateCtx, slug: string) {
     return true;
   }

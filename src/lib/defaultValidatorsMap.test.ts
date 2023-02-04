@@ -434,4 +434,155 @@ describe("test validatorsMap", () => {
       await expect(datamodel3).rejects.toBeInstanceOf(ValidationError);
     });
   });
+
+  describe("length validator", () => {
+    const _mockModelWithRegexValidator = async (
+      options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}
+    ) => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.LENGTH,
+            options: {
+              field: "title",
+              ...options,
+            },
+          },
+        ],
+      }).withAdapter(adapter);
+
+      await model.initialize();
+
+      return model;
+    };
+
+    it("create without validator config should not throw error", async () => {
+      const model = await _mockModelWithRegexValidator();
+
+      await expect(model.create({})).resolves.toBeInstanceOf(model);
+
+      await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(
+        model
+      );
+
+      await expect(model.create({ title: "" })).resolves.toBeInstanceOf(model);
+
+      await expect(
+        model.create({ title: faker.lorem.paragraph() })
+      ).resolves.toBeInstanceOf(model);
+    });
+
+    describe("min", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({ min: 2 });
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ title: "" })).rejects.toThrow(
+          ValidationError
+        );
+
+        await expect(model.create({ title: 1 })).rejects.toThrow(
+          ValidationError
+        );
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ title: "ab" })).resolves.toBeInstanceOf(
+          model
+        );
+
+        await expect(
+          model.create({ title: faker.lorem.paragraph() })
+        ).resolves.toBeInstanceOf(model);
+      });
+    });
+
+    describe("max", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({ max: 5 });
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ title: "123456" })).rejects.toThrow(
+          ValidationError
+        );
+
+        await expect(model.create({ title: 123456 })).rejects.toThrow(
+          ValidationError
+        );
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(
+          model
+        );
+
+        await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(
+          model
+        );
+
+        await expect(model.create({ title: 12345 })).resolves.toBeInstanceOf(
+          model
+        );
+      });
+    });
+
+    describe("min and max", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({ min: 2, max: 5 });
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ title: "" })).rejects.toThrow(
+          ValidationError
+        );
+
+        await expect(model.create({ title: 1 })).rejects.toThrow(
+          ValidationError
+        );
+
+        await expect(model.create({ title: "123456" })).rejects.toThrow(
+          ValidationError
+        );
+
+        await expect(model.create({ title: 123456 })).rejects.toThrow(
+          ValidationError
+        );
+
+        await expect(
+          model.create({ title: faker.lorem.paragraph() })
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ title: "ab" })).resolves.toBeInstanceOf(
+          model
+        );
+
+        await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(
+          model
+        );
+
+        await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(
+          model
+        );
+
+        await expect(model.create({ title: 12345 })).resolves.toBeInstanceOf(
+          model
+        );
+      });
+    });
+  });
 });

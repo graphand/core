@@ -6,6 +6,7 @@ import {
   ValidatorHook,
   ValidatorOptions,
 } from "../types";
+import { getDefaultValidatorOptions } from "../utils";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
   private __definition: ValidatorDefinition<T>;
@@ -23,11 +24,13 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   }
 
   get options(): ValidatorOptions<T> {
-    return this.__definition.options ?? ({} as ValidatorOptions<T>);
-  }
+    const defaults = getDefaultValidatorOptions(this.type);
 
-  async isValidDefinition() {
-    return true;
+    return Object.assign(
+      {},
+      defaults,
+      this.__definition.options ?? {}
+    ) as ValidatorOptions<T>;
   }
 
   async validate(docs: DocumentDefinition[], ctx: ValidateCtx) {

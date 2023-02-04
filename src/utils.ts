@@ -10,6 +10,7 @@ import {
   ValidateCtx,
   ValidatorDefinition,
   ValidatorHook,
+  ValidatorOptions,
   ValidatorsDefinition,
 } from "./types";
 import FieldTypes from "./enums/field-types";
@@ -248,4 +249,29 @@ export const getDefaultFieldOptions = <T extends FieldTypes>(
   }
 
   return options as FieldOptions<T>;
+};
+
+export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
+  type: T
+): ValidatorOptions<T> => {
+  let options = {};
+
+  switch (type) {
+    case ValidatorTypes.LENGTH:
+      options = {
+        min: -Infinity,
+        max: Infinity,
+      };
+      break;
+    case ValidatorTypes.BOUNDARIES:
+      options = {
+        min: -Infinity,
+        max: Infinity,
+      };
+      break;
+    default:
+      break;
+  }
+
+  return options as ValidatorOptions<T>;
 };

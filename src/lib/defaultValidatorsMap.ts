@@ -127,12 +127,54 @@ class DefaultValidatorDatamodelConfigKey extends Validator<ValidatorTypes.DATAMO
   }
 }
 
+class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
+  async validate(data) {
+    const { min, max } = this.options;
+
+    return data.every((i) => {
+      const v = i[this.options.field];
+
+      if (v === undefined || v === null) {
+        return true;
+      }
+
+      let length = v?.length ?? 0;
+
+      if (typeof v === "number") {
+        length = String(v).length;
+      }
+
+      return length >= min && length <= max;
+    });
+  }
+}
+
+class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
+  async validate(data) {
+    const { min, max } = this.options;
+
+    return data.every((i) => {
+      const v = i[this.options.field];
+
+      if (v === undefined || v === null) {
+        return true;
+      }
+
+      const num = parseFloat(v);
+
+      return num >= min && num <= max;
+    });
+  }
+}
+
 const defaultValidatorsMap: Adapter["validatorsMap"] = {
   [ValidatorTypes.REQUIRED]: DefaultValidatorRequired,
   [ValidatorTypes.UNIQUE]: DefaultValidatorUnique,
   [ValidatorTypes.REGEX]: DefaultValidatorRegex,
   [ValidatorTypes.CONFIG_KEY]: DefaultValidatorConfigKey,
   [ValidatorTypes.DATAMODEL_CONFIG_KEY]: DefaultValidatorDatamodelConfigKey,
+  [ValidatorTypes.LENGTH]: DefaultValidatorLength,
+  [ValidatorTypes.BOUNDARIES]: DefaultValidatorBoundaries,
 };
 
 export default defaultValidatorsMap;

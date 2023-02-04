@@ -122,7 +122,9 @@ export type ValidatorOptions<T extends ValidatorTypes | ValidatorTypesString> =
     : T extends ValidatorTypes.CONFIG_KEY | "configKey"
     ? { field: string }
     : T extends ValidatorTypes.LENGTH | "length"
-    ? { min?: number; max?: number }
+    ? { field: string; min?: number; max?: number }
+    : T extends ValidatorTypes.BOUNDARIES | "boundaries"
+    ? { field: string; min?: number; max?: number }
     : T extends ValidatorTypes.REGEX | "regex"
     ? {
         field: string;
