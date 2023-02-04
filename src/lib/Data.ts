@@ -36,7 +36,7 @@ class Data extends Model {
         if (!this.__datamodel) {
           const datamodel = await DataModel.withAdapter(
             this.__adapter.constructor as typeof Adapter
-          ).get({ filter: { slug } });
+          ).get({ filter: { slug } }, ctx);
 
           if (datamodel) {
             this.__datamodel = datamodel;
