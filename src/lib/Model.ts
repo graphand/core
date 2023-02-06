@@ -134,6 +134,8 @@ class Model {
       ctx
     );
 
+    this.configKey = modelDefinition?.configKey ?? this.configKey;
+
     const fields = modelDefinition?.fields || {};
     modelFields = { ...modelFields, ...fields };
 
