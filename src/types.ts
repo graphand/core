@@ -50,6 +50,7 @@ export type AdapterFetcherModelDefinition<
 > = {
   fields: FieldsDefinition;
   validators: ValidatorsDefinition;
+  configKey?: string;
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
@@ -91,17 +92,16 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
 
 export type Module<T extends typeof Model = any> = (model: T) => void;
 
-type ValidatorTypesString = `${ValidatorTypes}`;
-type FieldTypesString = `${FieldTypes}`;
-
 export type ValidatorDefinition<
-  T extends ValidatorTypes | ValidatorTypesString = any
+  T extends keyof ValidatorOptionsMap = keyof ValidatorOptionsMap
 > = {
   type: T;
   options: ValidatorOptions<T>;
 };
 
-export type FieldDefinition<T extends FieldTypes | FieldTypesString = any> = {
+export type FieldDefinition<
+  T extends keyof FieldOptionsMap = keyof FieldOptionsMap
+> = {
   type: T;
   options?: FieldOptions<T>;
 };
@@ -114,57 +114,53 @@ export type DocumentDefinition = { [key: string]: any };
 
 export type ValidatorsDefinition = ValidatorDefinition[];
 
-export type ValidatorOptions<T extends ValidatorTypes | ValidatorTypesString> =
-  T extends ValidatorTypes.REQUIRED | "required"
-    ? { field: string }
-    : T extends ValidatorTypes.UNIQUE | "unique"
-    ? { field: string }
-    : T extends ValidatorTypes.CONFIG_KEY | "configKey"
-    ? { field: string }
-    : T extends ValidatorTypes.LENGTH | "length"
-    ? { field: string; min?: number; max?: number }
-    : T extends ValidatorTypes.BOUNDARIES | "boundaries"
-    ? { field: string; min?: number; max?: number }
-    : T extends ValidatorTypes.REGEX | "regex"
-    ? {
-        field: string;
-        pattern: string;
-        options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
-      }
-    : never;
+export type ValidatorOptionsMap = {
+  [ValidatorTypes.REQUIRED]: { field: string };
+  [ValidatorTypes.UNIQUE]: { field: string };
+  [ValidatorTypes.CONFIG_KEY]: { field: string };
+  [ValidatorTypes.LENGTH]: { field: string; min?: number; max?: number };
+  [ValidatorTypes.BOUNDARIES]: { field: string; min?: number; max?: number };
+  [ValidatorTypes.REGEX]: {
+    field: string;
+    pattern: string;
+    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
+  };
+  [ValidatorTypes.DATAMODEL_CONFIG_KEY]: never;
+  [ValidatorTypes.SAMPLE]: never;
+};
 
-export type FieldOptions<T extends FieldTypes | FieldTypesString> = T extends
-  | FieldTypes.TEXT
-  | "Text"
-  ? {
-      default?: string;
-      multiple?: boolean;
-      options?: string[];
-      creatable?: boolean;
-    }
-  : T extends FieldTypes.RELATION | "Relation"
-  ? {
-      ref: string;
-      multiple?: boolean;
-    }
-  : T extends FieldTypes.NUMBER | "Number"
-  ? {
-      default?: number;
-    }
-  : T extends FieldTypes.JSON | "JSON"
-  ? {
-      default?: { [key: string]: any };
-      multiple?: boolean;
-      defaultField?: FieldDefinition;
-      fields?: FieldsDefinition;
-      strict?: boolean;
-      validators?: ValidatorsDefinition;
-    }
-  : T extends FieldTypes.BOOLEAN | "Boolean"
-  ? {
-      default?: boolean;
-    }
-  : never;
+export type ValidatorOptions<T extends ValidatorTypes> = ValidatorOptionsMap[T];
+
+export type FieldOptionsMap = {
+  [FieldTypes.TEXT]: {
+    default?: string;
+    multiple?: boolean;
+    options?: string[];
+    creatable?: boolean;
+  };
+  [FieldTypes.RELATION]: {
+    ref: string;
+    multiple?: boolean;
+  };
+  [FieldTypes.NUMBER]: {
+    default?: number;
+  };
+  [FieldTypes.JSON]: {
+    default?: { [key: string]: any };
+    multiple?: boolean;
+    defaultField?: FieldDefinition;
+    fields?: FieldsDefinition;
+    strict?: boolean;
+    validators?: ValidatorsDefinition;
+  };
+  [FieldTypes.BOOLEAN]: {
+    default?: boolean;
+  };
+  [FieldTypes.DATE]: never;
+  [FieldTypes.ID]: never;
+};
+
+export type FieldOptions<T extends FieldTypes> = FieldOptionsMap[T];
 
 export type InputModelPayload<M extends typeof Model> = Partial<
   Omit<ModelDocument<InstanceType<M>>, ModelDocumentBaseFields>
@@ -241,4 +237,10 @@ export type ValidationFieldErrorDefinition = {
 
 export type ValidationValidatorErrorDefinition = {
   validator: Validator;
+};
+
+export type ControllerDefinition = {
+  path: string;
+  methods: Array<"GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS">;
+  scope: "global" | "project";
 };

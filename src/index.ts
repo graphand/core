@@ -22,6 +22,7 @@ import Validator from "./lib/Validator";
 import ValidatorTypes from "./enums/validator-types";
 import CoreError from "./lib/CoreError";
 import ValidationError from "./lib/ValidationError";
+import controllersMap from "./lib/controllersMap";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
@@ -67,6 +68,7 @@ export {
   ValidationError,
   createFieldFromDefinition,
   createValidatorFromDefinition,
+  controllersMap,
 };
 
 export * from "./types";
