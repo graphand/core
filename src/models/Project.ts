@@ -9,6 +9,7 @@ import {
   FieldRelationDefinition,
   FieldTextDefinition,
 } from "../fields";
+import Account from "./Account";
 
 @modelDecorator()
 class Project extends Model {
@@ -34,6 +35,15 @@ class Project extends Model {
 
   @fieldDecorator(FieldTypes.NUMBER, { default: 2592000 })
   refreshTokenLifetime: FieldNumberDefinition;
+
+  @fieldDecorator(FieldTypes.RELATION, {
+    ref: "accounts",
+    multiple: false,
+  })
+  owner: FieldRelationDefinition<{
+    model: Account;
+    multiple: false;
+  }>;
 }
 
 export default Project;

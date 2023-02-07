@@ -58,7 +58,9 @@ class ValidationError extends CoreError {
       message += ` on fields ${this.fieldsPaths.join(", ")}`;
     }
     if (this.validators.length) {
-      message += ` with ${this.validators.length} validators`;
+      message += ` with ${this.validators.length} validators (${this.validators
+        .map((v) => v.validator.type)
+        .join(", ")})`;
     }
 
     return message;

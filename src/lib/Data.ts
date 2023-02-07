@@ -9,48 +9,59 @@ class Data extends Model {
   static extendable = true;
   static scope = ModelEnvScopes.ENV;
   static __datamodel: DataModel;
+  static __modelsMap: Map<string, typeof Data> = new Map();
 
   static getFromDatamodel(datamodel: DataModel): typeof Data {
-    const model = class extends Data {
-      static __name = datamodel.name;
+    let model = Data.__modelsMap.get(datamodel.slug);
+    if (!model) {
+      model = class extends Data {
+        static __name = datamodel.name;
 
-      static slug = datamodel.slug;
-      static fields = datamodel.fields;
-      static validators = [];
-      static configKey = datamodel.configKey;
-    };
+        static slug = datamodel.slug;
+        static fields = datamodel.fields;
+        static validators = [];
+        static configKey = datamodel.configKey;
+      };
 
-    model.__datamodel = datamodel;
+      model.__datamodel = datamodel;
+
+      Data.__modelsMap.set(datamodel.slug, model);
+    }
 
     const adapter = datamodel.model.__adapter.constructor as typeof Adapter;
     return model.withAdapter(adapter);
   }
 
   static getFromSlug<M extends typeof Model = typeof Data>(slug: string): M {
-    const model = class extends Data {
-      static __name = `Data<${slug}>`;
+    let model = Data.__modelsMap.get(slug);
+    if (!model) {
+      model = class extends Data {
+        static __name = `Data<${slug}>`;
 
-      static slug = slug;
+        static slug = slug;
 
-      static async reloadModel(ctx?: any) {
-        if (!this.__datamodel) {
-          const datamodel = await DataModel.withAdapter(
-            this.__adapter.constructor as typeof Adapter
-          ).get({ filter: { slug } }, ctx);
+        static async reloadModel(ctx?: any) {
+          if (!this.__datamodel) {
+            const datamodel = await DataModel.withAdapter(
+              this.__adapter.constructor as typeof Adapter
+            ).get({ filter: { slug } }, ctx);
 
-          if (datamodel) {
-            this.__datamodel = datamodel;
+            if (datamodel) {
+              this.__datamodel = datamodel;
 
-            this.slug = datamodel.slug;
-            this.fields = datamodel.fields;
-            this.validators = [];
-            this.configKey = datamodel.configKey;
+              this.slug = datamodel.slug;
+              this.fields = datamodel.fields;
+              this.validators = [];
+              this.configKey = datamodel.configKey;
+            }
           }
-        }
 
-        return Model.reloadModel.apply(this, [ctx]);
-      }
-    };
+          return Model.reloadModel.apply(this, [ctx]);
+        }
+      };
+
+      Data.__modelsMap.set(slug, model);
+    }
 
     return model as any as M;
   }
