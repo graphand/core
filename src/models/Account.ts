@@ -6,6 +6,7 @@ import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import { FieldRelationDefinition, FieldTextDefinition } from "../fields";
+import User from "./User";
 
 @modelDecorator()
 class Account extends Model {
@@ -16,7 +17,6 @@ class Account extends Model {
   static scope = ModelEnvScopes.ENV;
   static validators = [
     { type: ValidatorTypes.REQUIRED, options: { field: "email" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "password" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
     { type: ValidatorTypes.UNIQUE, options: { field: "email" } },
   ];
@@ -36,6 +36,12 @@ class Account extends Model {
   @fieldDecorator(FieldTypes.RELATION, { ref: "roles", multiple: false })
   role: FieldRelationDefinition<{
     model: Role;
+    multiple: false;
+  }>;
+
+  @fieldDecorator(FieldTypes.RELATION, { ref: "users", multiple: false })
+  user: FieldRelationDefinition<{
+    model: User;
     multiple: false;
   }>;
 }

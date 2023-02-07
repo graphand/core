@@ -242,5 +242,6 @@ export type ValidationValidatorErrorDefinition = {
 export type ControllerDefinition = {
   path: string;
   methods: Array<"GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS">;
-  scope: "global" | "project";
+  scope: "global" | "project" | ((args: any) => "global" | "project");
+  secured: boolean;
 };

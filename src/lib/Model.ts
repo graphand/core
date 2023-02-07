@@ -231,10 +231,13 @@ class Model {
     }
   }
 
-  static getFromSlug<M extends typeof Model = typeof Model>(slug: string): M {
+  static getFromSlug<M extends typeof Model = typeof Model>(
+    slug: string,
+    fallbackData = true
+  ): M {
     const models = require("../index").models as Record<string, typeof Model>;
     let model: M = Object.values(models).find((m) => m.slug === slug) as M;
-    if (!model) {
+    if (!model && fallbackData) {
       const Data = require("./Data").default;
       model = Data.getFromSlug(slug);
     }
