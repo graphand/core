@@ -7,6 +7,7 @@ import Field from "./lib/Field";
 import ErrorCodes from "./enums/error-codes";
 import Validator from "./lib/Validator";
 import ValidationError from "./lib/ValidationError";
+import { ExecutorCtx } from "./global";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -56,37 +57,43 @@ export type AdapterFetcherModelDefinition<
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (
     args: [query: string | JSONQuery],
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<number | null>;
   get: (
     args: [query: string | JSONQuery],
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<InstanceType<T> | null>;
   getList: (
     args: [query: JSONQuery],
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<ModelList<InstanceType<T>>>;
   createOne: (
     args: [payload: InputModelPayload<T>],
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<InstanceType<T>>;
   createMultiple: (
     args: [payload: Array<InputModelPayload<T>>],
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<Array<InstanceType<T>>>;
   updateOne: (
     args: [query: string | JSONQuery, update: any],
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<InstanceType<T>>;
   updateMultiple: (
     args: [query: JSONQuery, update: any],
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<Array<InstanceType<T>>>;
-  deleteOne: (args: [query: string | JSONQuery], ctx: any) => Promise<boolean>;
-  deleteMultiple: (args: [query: JSONQuery], ctx: any) => Promise<string[]>;
+  deleteOne: (
+    args: [query: string | JSONQuery],
+    ctx: ExecutorCtx
+  ) => Promise<boolean>;
+  deleteMultiple: (
+    args: [query: JSONQuery],
+    ctx: ExecutorCtx
+  ) => Promise<string[]>;
   getModelDefinition: (
     args: never,
-    ctx: any
+    ctx: ExecutorCtx
   ) => Promise<AdapterFetcherModelDefinition<T>>;
 };
 
@@ -182,7 +189,7 @@ export type HookCallbackArgs<
   A extends keyof AdapterFetcher<T>,
   T extends typeof Model
 > = P extends "before"
-  ? { args: Parameters<AdapterFetcher<T>[A]>[0]; ctx: any }
+  ? { args: Parameters<AdapterFetcher<T>[A]>[0]; ctx: ExecutorCtx }
   : HookCallbackArgs<"before", A, T> & {
       res?: ReturnType<AdapterFetcher<T>[A]>;
       err?: Error[];

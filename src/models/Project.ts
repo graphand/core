@@ -21,6 +21,9 @@ class Project extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;
 
+  @fieldDecorator(FieldTypes.TEXT)
+  slug: FieldTextDefinition;
+
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "organizations",
     multiple: false,

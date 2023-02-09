@@ -30,6 +30,7 @@ import {
 } from "../utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
+import { ExecutorCtx } from "../global";
 
 class Model {
   static extendable: boolean = false;
@@ -98,7 +99,7 @@ class Model {
     return modelWithAdapter;
   }
 
-  static async initialize(force: boolean = false, ctx?: any) {
+  static async initialize(force: boolean = false, ctx?: ExecutorCtx) {
     const model = this;
 
     if (force) {
@@ -120,7 +121,7 @@ class Model {
     await this.__initPromise;
   }
 
-  static async reloadModel(ctx?: any) {
+  static async reloadModel(ctx?: ExecutorCtx) {
     if (!this.extendable) {
       return;
     }
@@ -367,7 +368,7 @@ class Model {
   static async count<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: any
+    ctx?: ExecutorCtx
   ): Promise<number> {
     this.verifyAdapter();
 
@@ -379,7 +380,7 @@ class Model {
   static get<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: any
+    ctx?: ExecutorCtx
   ): PromiseModel<InstanceType<T>> {
     const model = this;
     model.verifyAdapter();
@@ -405,7 +406,7 @@ class Model {
   static getList<T extends typeof Model>(
     this: T,
     query: JSONQuery = {},
-    ctx?: any
+    ctx?: ExecutorCtx
   ): PromiseModelList<InstanceType<T>> {
     const model = this;
     model.verifyAdapter();
@@ -431,7 +432,7 @@ class Model {
   static async create<T extends typeof Model>(
     this: T,
     payload: InputModelPayload<T>,
-    ctx?: any
+    ctx?: ExecutorCtx
   ): Promise<InstanceType<T>> {
     this.verifyAdapter();
 
@@ -443,7 +444,7 @@ class Model {
   static async createMultiple<T extends typeof Model>(
     this: T,
     payload: Array<InputModelPayload<T>>,
-    ctx?: any
+    ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
     this.verifyAdapter();
 
@@ -452,7 +453,7 @@ class Model {
     return await this.execute("createMultiple", [payload], ctx);
   }
 
-  async update(update: any, ctx?: any): Promise<this> {
+  async update(update: any, ctx?: ExecutorCtx): Promise<this> {
     this.model.verifyAdapter();
 
     const res = await this.model.execute(
@@ -470,7 +471,7 @@ class Model {
     this: T,
     query: string | JSONQuery = {},
     update: any,
-    ctx?: any
+    ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
     this.verifyAdapter();
 
@@ -484,7 +485,7 @@ class Model {
     return await this.execute("updateMultiple", [query, update], ctx);
   }
 
-  async delete(ctx?: any): Promise<this> {
+  async delete(ctx?: ExecutorCtx): Promise<this> {
     this.model.verifyAdapter();
 
     await this.model.execute("deleteOne", [String(this._id)], ctx);
@@ -495,7 +496,7 @@ class Model {
   static async delete<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: any
+    ctx?: ExecutorCtx
   ): Promise<string[]> {
     this.verifyAdapter();
 
@@ -530,7 +531,7 @@ class Model {
   static async validate<T extends typeof Model>(
     this: T,
     input: Array<InstanceType<T> | DocumentDefinition>,
-    ctx: any = {}
+    ctx: ExecutorCtx = {}
   ) {
     const docs = input.map((i) => (i instanceof Model ? i.__doc : i));
 
@@ -550,15 +551,14 @@ class Model {
     this: M,
     action: A,
     args: Args,
-    bindCtx?: any
+    bindCtx?: ExecutorCtx
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const adapter = this.__adapter;
     const fn = adapter.fetcher[action];
     const retryToken = Symbol();
     const hooksBefore = getRecursiveHooksFromModel(this, action, "before");
 
-    const ctx = { adapter, fn, retryToken };
-    Object.assign(ctx, bindCtx);
+    const ctx: ExecutorCtx = { ...(bindCtx || {}), adapter, fn, retryToken };
 
     const hookPayloadBefore: HookCallbackArgs<"before", A, M> = { args, ctx };
 

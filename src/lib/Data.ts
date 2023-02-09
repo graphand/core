@@ -3,6 +3,7 @@ import { modelDecorator } from "./modelDecorator";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import DataModel from "../models/DataModel";
 import Adapter from "./Adapter";
+import { ExecutorCtx } from "../global";
 
 @modelDecorator()
 class Data extends Model {
@@ -40,7 +41,7 @@ class Data extends Model {
 
         static slug = slug;
 
-        static async reloadModel(ctx?: any) {
+        static async reloadModel(ctx?: ExecutorCtx) {
           if (!this.__datamodel) {
             const datamodel = await DataModel.withAdapter(
               this.__adapter.constructor as typeof Adapter
