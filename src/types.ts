@@ -233,7 +233,7 @@ export type ValidateCtx = {
 
 export type CoreErrorDefinition = {
   message?: string;
-  code?: ErrorCodes;
+  code?: ErrorCodes | string;
 };
 
 export type ValidationFieldErrorDefinition = {

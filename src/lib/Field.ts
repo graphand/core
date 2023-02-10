@@ -34,6 +34,13 @@ class Field<T extends FieldTypes = FieldTypes> {
   serialize(value: any, format: SerializerFormat, from: Model) {
     return value;
   }
+
+  toJSON() {
+    return {
+      type: this.type,
+      options: this.options,
+    };
+  }
 }
 
 export default Field;

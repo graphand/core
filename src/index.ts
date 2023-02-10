@@ -23,9 +23,12 @@ import ValidatorTypes from "./enums/validator-types";
 import CoreError from "./lib/CoreError";
 import ValidationError from "./lib/ValidationError";
 import controllersMap from "./lib/controllersMap";
+import ValidationFieldError from "./lib/ValidationFieldError";
+import ValidationValidatorError from "./lib/ValidationValidatorError";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
+  validateDocs,
 } from "./utils";
 
 const models = {
@@ -68,7 +71,10 @@ export {
   ValidationError,
   createFieldFromDefinition,
   createValidatorFromDefinition,
+  ValidationFieldError,
+  ValidationValidatorError,
   controllersMap,
+  validateDocs,
 };
 
 export * from "./types";

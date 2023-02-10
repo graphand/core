@@ -20,6 +20,11 @@ class ValidationError extends CoreError {
 
     this.fields = fields ?? [];
     this.validators = validators ?? [];
+
+    Object.defineProperty(this, "fieldsPaths", {
+      enumerable: true,
+      value: this.fieldsPaths,
+    });
   }
 
   get code() {
@@ -54,16 +59,58 @@ class ValidationError extends CoreError {
 
   get message() {
     let message = `Validation failed`;
+
+    const reasons = [];
     if (this.fields.length) {
-      message += ` on fields ${this.fieldsPaths.join(", ")}`;
+      reasons.push(
+        `${this.fields.length} field${
+          this.fields.length > 1 ? "s" : ""
+        } validation (${this.fields.map((v) => v.slug).join(", ")})`
+      );
     }
     if (this.validators.length) {
-      message += ` with ${this.validators.length} validators (${this.validators
-        .map((v) => v.validator.type)
-        .join(", ")})`;
+      reasons.push(
+        `${this.validators.length} model validator${
+          this.validators.length > 1 ? "s" : ""
+        } (${this.validators.map((v) => v.validator.type).join(", ")})`
+      );
+    }
+
+    if (reasons.length) {
+      message += ` with ${reasons.join(" and ")}`;
+    }
+
+    if (this.fieldsPaths?.length) {
+      message += ` on path${
+        this.fieldsPaths.length > 1 ? "s" : ""
+      } ${this.fieldsPaths.join(", ")}`;
     }
 
     return message;
+  }
+
+  toJSON() {
+    const json = {
+      ...super.toJSON(),
+      type: "ValidationError",
+      fieldsPaths: this.fieldsPaths,
+      reason: {
+        fields: this.fields.map((f) => f.toJSON()),
+        validators: this.validators.map((v) => v.toJSON()),
+      },
+    };
+
+    delete json.code;
+
+    return json;
+  }
+
+  toLog() {
+    return {
+      message: this.message,
+      fields: this.fields.map((f) => f.toJSON()),
+      validators: this.validators.map((v) => v.toJSON()),
+    };
   }
 }
 

@@ -16,7 +16,12 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   constructor(definition: ValidatorDefinition<T>) {
     this.__definition = definition;
 
+    Object.defineProperty(this, "hooks", { enumerable: false });
     Object.defineProperty(this, "__definition", { enumerable: false });
+    Object.defineProperty(this, "__json", {
+      enumerable: true,
+      value: this.toJSON(),
+    });
   }
 
   get type(): T {
@@ -35,6 +40,13 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
 
   async validate(docs: DocumentDefinition[], ctx: ValidateCtx) {
     return true;
+  }
+
+  toJSON() {
+    return {
+      type: this.type,
+      options: this.options,
+    };
   }
 }
 

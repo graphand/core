@@ -15,7 +15,6 @@ class CoreError extends Error {
     this.__definition = definition;
 
     Object.defineProperty(this, "__definition", { enumerable: false });
-    Object.defineProperty(this, "code", { enumerable: true });
   }
 
   get code() {
@@ -24,6 +23,14 @@ class CoreError extends Error {
 
   get message() {
     return this.__definition.message ?? "Unknown error";
+  }
+
+  toJSON() {
+    return {
+      type: "CoreError",
+      code: this.code,
+      message: this.message,
+    };
   }
 }
 
