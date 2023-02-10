@@ -240,7 +240,7 @@ class Model {
     let model: M = Object.values(models).find((m) => m.slug === slug) as M;
     if (!model && fallbackData) {
       const Data = require("./Data").default;
-      model = Data.getFromSlug(slug);
+      model = Data.__getFromSlug(slug);
     }
 
     if (!this.__adapter) {

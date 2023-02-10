@@ -33,7 +33,7 @@ class Data extends Model {
     return model.withAdapter(adapter);
   }
 
-  static getFromSlug<M extends typeof Model = typeof Data>(slug: string): M {
+  static __getFromSlug<M extends typeof Model = typeof Data>(slug: string): M {
     let model = Data.__modelsMap.get(slug);
     if (!model) {
       model = class extends Data {
