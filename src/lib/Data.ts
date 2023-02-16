@@ -4,6 +4,8 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import DataModel from "../models/DataModel";
 import Adapter from "./Adapter";
 import { ExecutorCtx } from "../global";
+import CoreError from "./CoreError";
+import ErrorCodes from "../enums/error-codes";
 
 @modelDecorator()
 class Data extends Model {
@@ -29,8 +31,13 @@ class Data extends Model {
       Data.__modelsMap.set(datamodel.slug, model);
     }
 
-    const adapter = datamodel.model.__adapter.constructor as typeof Adapter;
-    return model.withAdapter(adapter);
+    const adapter = datamodel.model.__adapter?.constructor as typeof Adapter;
+
+    if (adapter) {
+      return model.withAdapter(adapter);
+    }
+
+    return model;
   }
 
   static __getFromSlug<M extends typeof Model = typeof Data>(slug: string): M {
@@ -43,18 +50,30 @@ class Data extends Model {
 
         static async reloadModel(ctx?: ExecutorCtx) {
           if (!this.__datamodel) {
+            if (!this.__adapter) {
+              throw new CoreError({
+                code: ErrorCodes.INVALID_MODEL_ADAPTER,
+                message: `model ${this.slug} is initialized without adapter`,
+              });
+            }
+
             const datamodel = await DataModel.withAdapter(
               this.__adapter.constructor as typeof Adapter
             ).get({ filter: { slug } }, ctx);
 
-            if (datamodel) {
-              this.__datamodel = datamodel;
-
-              this.slug = datamodel.slug;
-              this.fields = datamodel.fields;
-              this.validators = [];
-              this.configKey = datamodel.configKey;
+            if (!datamodel) {
+              throw new CoreError({
+                code: ErrorCodes.INVALID_MODEL_SLUG,
+                message: `model with slug ${slug} does no exist`,
+              });
             }
+
+            this.__datamodel = datamodel;
+
+            this.slug = datamodel.slug;
+            this.fields = datamodel.fields;
+            this.validators = [];
+            this.configKey = datamodel.configKey;
           }
 
           return Model.reloadModel.apply(this, [ctx]);

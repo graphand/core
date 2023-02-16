@@ -13,6 +13,8 @@ import ValidatorTypes from "./enums/validator-types";
 import defaultFieldsMap from "./lib/defaultFieldsMap";
 import defaultValidatorsMap from "./lib/defaultValidatorsMap";
 
+const cache: Map<typeof Model, Set<any>> = new Map();
+
 export const mockAdapter = ({
   fieldsMap = defaultFieldsMap,
   validatorsMap = {
@@ -41,18 +43,23 @@ export const mockAdapter = ({
   modelDefinition?: AdapterFetcherModelDefinition;
 } = {}) => {
   class MockAdapter extends Adapter {
-    __cache: Set<any>;
     runValidators = true;
 
     get thisCache(): Set<any> {
-      if (!this.hasOwnProperty("__cache") || !this.__cache) {
-        const instances = Array(5)
-          .fill(null)
-          .map(() => new this.model());
-        this.__cache = new Set(instances);
+      const cacheKey = this.model.getBaseClass();
+
+      let cacheModel = cache.get(cacheKey);
+      if (!cacheModel) {
+        cacheModel = new Set(
+          Array(5)
+            .fill(null)
+            .map(() => new this.model())
+        );
+
+        cache.set(cacheKey, cacheModel);
       }
 
-      return this.__cache;
+      return cacheModel;
     }
     fetcher: AdapterFetcher = {
       count: jest.fn(() => Promise.resolve(this.thisCache.size)),
@@ -61,15 +68,29 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
-        const [first] = this.thisCache;
-        return Promise.resolve(first);
+        const cache = Array.from(this.thisCache);
+
+        if (typeof query === "string") {
+          return cache.find((r) => r._id === query);
+        }
+
+        let found = cache[0];
+
+        if (query.filter) {
+          const filterEntries = Object.entries(query.filter);
+          found = cache.find((r) =>
+            filterEntries.every(([key, value]) => r.__doc[key] === value)
+          );
+        }
+
+        return Promise.resolve(found);
       }),
       getList: jest.fn(([query]) => {
         return Promise.resolve(
           new ModelList(this.model, Array.from(this.thisCache), 1)
         );
       }),
-      createOne: jest.fn(([payload]) => {
+      createOne: jest.fn(async ([payload]) => {
         const i = new this.model(payload);
         this.thisCache.add(i);
         return Promise.resolve(i);

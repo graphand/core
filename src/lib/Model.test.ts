@@ -363,10 +363,27 @@ describe("Test Model", () => {
 
     it("Should be cloneable", async () => {
       const TestModel = BaseModel.withAdapter(adapter);
-      const i = await TestModel.get({});
+      const i = await TestModel.create({});
       const clone = i.clone();
       expect(clone).toBeInstanceOf(TestModel);
       expect(clone._id).toEqual(i._id);
+    });
+  });
+
+  describe("Model baseClass", () => {
+    it("should keep baseClass when withAdapter", () => {
+      let model = BaseModel;
+
+      expect(model.getBaseClass()).toBe(BaseModel);
+
+      Array(5)
+        .fill(null)
+        .forEach(() => {
+          const prevModel = model;
+          model = model.withAdapter(adapter);
+          expect(model).not.toBe(prevModel);
+          expect(model.getBaseClass()).toBe(BaseModel);
+        });
     });
   });
 });

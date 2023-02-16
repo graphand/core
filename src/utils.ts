@@ -23,7 +23,6 @@ import Adapter from "./lib/Adapter";
 import ValidationFieldError from "./lib/ValidationFieldError";
 import ValidationValidatorError from "./lib/ValidationValidatorError";
 import ValidationError from "./lib/ValidationError";
-import SerializerFormat from "./enums/serializer-format";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -31,15 +30,16 @@ export const getRecursiveFieldsFromModel = (
   let fields = {};
 
   do {
-    if (model.hasOwnProperty("fields")) {
-      const _modelFields = model.fields || {};
+    const baseClass = model.getBaseClass();
+    if (baseClass.hasOwnProperty("fields")) {
+      const _modelFields = baseClass.fields || {};
 
       fields = { ...fields, ..._modelFields };
     }
 
     // @ts-ignore
-    model = model.__proto__;
-  } while (model);
+    model = baseClass.__proto__;
+  } while (model?.getBaseClass);
 
   return fields;
 };
@@ -48,24 +48,27 @@ export const getRecursiveValidatorsFromModel = (
   model: typeof Model
 ): ValidatorsDefinition => {
   let validators: ValidatorsDefinition = [];
+  const baseClass = model.getBaseClass();
 
-  if (model.hasOwnProperty("configKey") && model.configKey) {
+  if (baseClass.hasOwnProperty("configKey") && baseClass.configKey) {
     validators.push({
       type: ValidatorTypes.CONFIG_KEY,
-      options: { field: model.configKey },
+      options: { field: baseClass.configKey },
     });
   }
 
   do {
-    if (model.hasOwnProperty("validators")) {
-      const _modelValidators = model.validators || [];
+    const baseClass = model.getBaseClass();
+
+    if (baseClass.hasOwnProperty("validators")) {
+      const _modelValidators = baseClass.validators || [];
 
       validators = [...validators, ..._modelValidators];
     }
 
     // @ts-ignore
-    model = model.__proto__;
-  } while (model);
+    model = baseClass.__proto__;
+  } while (model?.getBaseClass);
 
   return validators;
 };
@@ -79,10 +82,11 @@ export const getRecursiveHooksFromModel = <
   phase: HookPhase
 ): Array<Hook<any, A, T>> => {
   let _hooks = [];
-
   do {
-    if (model.hasOwnProperty("__hooks")) {
-      const _modelHooks = Array.from(model.__hooks || []).filter(
+    const baseClass = model.getBaseClass();
+
+    if (baseClass.hasOwnProperty("__hooks")) {
+      const _modelHooks = Array.from(baseClass.__hooks || []).filter(
         (hook) => hook.action === action && hook.phase === phase
       );
 
@@ -91,8 +95,11 @@ export const getRecursiveHooksFromModel = <
       }
     }
 
-    if (model.hasOwnProperty("__validatorsArray") && model.__validatorsArray) {
-      const _validatorsHooks = model.__validatorsArray
+    if (
+      baseClass.hasOwnProperty("__validatorsArray") &&
+      baseClass.__validatorsArray
+    ) {
+      const _validatorsHooks = baseClass.__validatorsArray
         .map((validator) => {
           return validator.hooks
             ?.filter((hook) => hook[1] === action && hook[0] === phase)
@@ -107,8 +114,8 @@ export const getRecursiveHooksFromModel = <
     }
 
     // @ts-ignore
-    model = model.__proto__;
-  } while (model);
+    model = baseClass.__proto__;
+  } while (model?.getBaseClass);
 
   return _hooks.sort((a, b) => a.order - b.order);
 };

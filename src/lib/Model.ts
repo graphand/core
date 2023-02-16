@@ -48,6 +48,7 @@ class Model {
   static __validatorsArray: Array<Validator>;
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
+  static __baseClass: typeof Model;
 
   __doc: DocumentDefinition;
 
@@ -82,13 +83,25 @@ class Model {
     return new this.model(clonedDoc);
   }
 
+  static getBaseClass() {
+    return this.__baseClass ?? this;
+  }
+
+  static hasAdapter() {
+    return Boolean(this.__adapter);
+  }
+
   static withAdapter<T extends typeof Model>(
     this: T,
     adapterClass: typeof Adapter,
     modules?: Array<Module>
   ): T {
+    const baseClass = this.getBaseClass();
+
     // @ts-ignore
-    const modelWithAdapter = class extends this {};
+    const modelWithAdapter = class extends this {
+      static __baseClass = baseClass;
+    };
 
     Object.defineProperty(modelWithAdapter, "name", { value: this.__name });
 
@@ -124,6 +137,13 @@ class Model {
   static async reloadModel(ctx?: ExecutorCtx) {
     if (!this.extendable) {
       return;
+    }
+
+    if (!this.__adapter) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_MODEL_ADAPTER,
+        message: `model ${this.slug} is initialized without adapter`,
+      });
     }
 
     let modelFields = getRecursiveFieldsFromModel(this);
@@ -519,13 +539,15 @@ class Model {
     A extends keyof AdapterFetcher,
     T extends typeof Model
   >(this: T, phase: P, action: A, fn: Hook<P, A, T>["fn"], order: number = 0) {
-    if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
-      this.__hooks = new Set();
+    const baseClass = this.getBaseClass();
+
+    if (!baseClass.hasOwnProperty("__hooks") || !baseClass.__hooks) {
+      baseClass.__hooks = new Set();
     }
 
     const hook: Hook<P, A, T> = { phase, action, fn, order };
 
-    this.__hooks.add(hook);
+    baseClass.__hooks.add(hook);
   }
 
   static async validate<T extends typeof Model>(

@@ -7,10 +7,12 @@ export const fieldDecorator = <T extends FieldTypes>(
   options?: FieldOptions<T>
 ) => {
   return <M extends Model>(target: M, key: keyof M) => {
-    if (!target.model.hasOwnProperty("fields") || !target.model.fields) {
-      target.model.fields = {};
+    const baseClass = target.model.getBaseClass();
+
+    if (!baseClass.hasOwnProperty("fields") || !baseClass.fields) {
+      baseClass.fields = {};
     }
 
-    target.model.fields[String(key)] = { type, options } as FieldDefinition<T>;
+    baseClass.fields[String(key)] = { type, options } as FieldDefinition<T>;
   };
 };
