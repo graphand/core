@@ -117,6 +117,18 @@ const _controllersMap = {
     scope: "project",
     secured: true,
   },
+  refreshTokenUser: {
+    path: "/auth/refresh",
+    methods: ["POST"],
+    scope: "global",
+    secured: false,
+  },
+  refreshTokenAccount: {
+    path: "/auth/refresh",
+    methods: ["POST"],
+    scope: "project",
+    secured: false,
+  },
 };
 
 const controllersMap = _controllersMap as Record<
