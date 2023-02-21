@@ -6,6 +6,7 @@ enum FieldTypes {
   RELATION = "Relation",
   DATE = "Date",
   JSON = "JSON",
+  IDENTITY = "Identity",
 }
 
 export default FieldTypes;

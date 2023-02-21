@@ -6,6 +6,7 @@ import Adapter from "./Adapter";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
+  isObjectId,
   validateDocs,
 } from "../utils";
 import Validator from "./Validator";
@@ -274,6 +275,24 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
   }
 }
 
+class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
+  async validate(value, ctx, slug) {
+    if (value === null || value === undefined) {
+      return true;
+    }
+
+    const [type, id] = value.split(":");
+
+    const allowedTypes = ["user", "account", "token"];
+
+    return allowedTypes.includes(type) && isObjectId(id);
+  }
+  serialize(value: any, format: SerializerFormat, from: Model): any {
+    const [type, id] = value.split(":");
+    return value;
+  }
+}
+
 const defaultFieldsMap: Adapter["fieldsMap"] = {
   [FieldTypes.ID]: DefaultFieldId,
   [FieldTypes.NUMBER]: DefaultFieldNumber,
@@ -282,6 +301,7 @@ const defaultFieldsMap: Adapter["fieldsMap"] = {
   [FieldTypes.TEXT]: DefaultFieldText,
   [FieldTypes.RELATION]: DefaultFieldRelation,
   [FieldTypes.JSON]: DefaultFieldJSON,
+  [FieldTypes.IDENTITY]: DefaultFieldIdentity,
 };
 
 export default defaultFieldsMap;

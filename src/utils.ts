@@ -289,3 +289,7 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
 
   return options as ValidatorOptions<T>;
 };
+
+export const isObjectId = (input: string) => {
+  return /^[a-f\d]{24}$/i.test(input);
+};

@@ -27,7 +27,7 @@ class Token extends Model {
     ref: "roles",
     multiple: false,
   })
-  inherits: FieldRelationDefinition<{
+  role: FieldRelationDefinition<{
     model: Role;
     multiple: false;
   }>;

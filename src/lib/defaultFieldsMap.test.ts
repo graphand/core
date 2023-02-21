@@ -966,4 +966,40 @@ describe("test fieldsMap", () => {
       });
     });
   });
+
+  describe("Identity field", () => {
+    it("Should throw error if is invalid", async () => {
+      const model = mockModel({
+        fields: {
+          identity: {
+            type: FieldTypes.IDENTITY,
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      await expect(model.create({ identity: "invalid" })).rejects.toThrow(
+        ValidationError
+      );
+
+      await expect(model.create({ identity: "account:test" })).rejects.toThrow(
+        ValidationError
+      );
+    });
+
+    it("Should not throw error if is valid", async () => {
+      const model = mockModel({
+        fields: {
+          identity: {
+            type: FieldTypes.IDENTITY,
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      await expect(
+        model.create({ identity: "account:507f191e810c19729de860ea" })
+      ).resolves.toBeInstanceOf(model);
+    });
+  });
 });

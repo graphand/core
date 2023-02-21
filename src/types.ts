@@ -165,6 +165,7 @@ export type FieldOptionsMap = {
   };
   [FieldTypes.DATE]: never;
   [FieldTypes.ID]: never;
+  [FieldTypes.IDENTITY]: never;
 };
 
 export type FieldOptions<T extends FieldTypes> = FieldOptionsMap[T];
@@ -175,10 +176,10 @@ export type InputModelPayload<M extends typeof Model> = Partial<
 
 export type ModelDocumentBaseFields =
   | "_id"
-  | "createdAt"
-  | "createdBy"
-  | "updatedAt"
-  | "updatedBy";
+  | "_createdAt"
+  | "_createdBy"
+  | "_updatedAt"
+  | "_updatedBy";
 
 export type ModelDocument<M extends Model> = Record<keyof M, any>;
 
@@ -252,3 +253,5 @@ export type ControllerDefinition = {
   scope: "global" | "project" | ((args: any) => "global" | "project");
   secured: boolean;
 };
+
+export type IdentityString = string;

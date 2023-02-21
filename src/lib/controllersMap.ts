@@ -129,6 +129,12 @@ const _controllersMap = {
     scope: "project",
     secured: false,
   },
+  genToken: {
+    path: "/tokens/:id/gen",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
 };
 
 const controllersMap = _controllersMap as Record<

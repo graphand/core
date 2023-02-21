@@ -56,16 +56,16 @@ class Model {
   _id: FieldIdDefinition;
 
   @fieldDecorator(FieldTypes.DATE)
-  createdAt: FieldDateDefinition;
+  _createdAt: FieldDateDefinition;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "accounts", multiple: false })
-  createdBy;
+  @fieldDecorator(FieldTypes.IDENTITY)
+  _createdBy;
 
   @fieldDecorator(FieldTypes.DATE)
-  updatedAt: FieldDateDefinition;
+  _updatedAt: FieldDateDefinition;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "accounts", multiple: false })
-  updatedBy;
+  @fieldDecorator(FieldTypes.IDENTITY)
+  _updatedBy;
 
   constructor(doc: any = {}) {
     doc._id ??= Date.now();
@@ -323,10 +323,10 @@ class Model {
 
     upsert ??= ![
       "_id",
-      "createdAt",
-      "createdBy",
-      "updatedAt",
-      "updatedBy",
+      "_createdAt",
+      "_createdBy",
+      "_updatedAt",
+      "_updatedBy",
     ].includes(String(slug));
 
     this.__doc[slug as keyof DocumentDefinition] = value;
