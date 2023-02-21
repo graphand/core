@@ -135,6 +135,12 @@ const _controllersMap = {
     scope: "project",
     secured: true,
   },
+  registerUser: {
+    path: "/auth/register",
+    methods: ["POST"],
+    scope: "global",
+    secured: false,
+  },
 };
 
 const controllersMap = _controllersMap as Record<
