@@ -87,6 +87,12 @@ const _controllersMap = {
     scope: "project",
     secured: false,
   },
+  deployment: {
+    path: "/deployment",
+    methods: ["GET", "POST"],
+    scope: "project",
+    secured: false,
+  },
   loginAccount: {
     path: "/auth/login",
     methods: ["POST"],
