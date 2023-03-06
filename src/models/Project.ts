@@ -24,6 +24,9 @@ class Project extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldTextDefinition;
 
+  @fieldDecorator(FieldTypes.TEXT, { default: "free" })
+  plan: FieldTextDefinition;
+
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "organizations",
     multiple: false,
