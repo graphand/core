@@ -31,7 +31,7 @@ class Environment extends Model {
     ref: "environments",
     multiple: false,
   })
-  inherits: FieldRelationDefinition<{
+  base: FieldRelationDefinition<{
     model: Environment;
     multiple: false;
   }>;

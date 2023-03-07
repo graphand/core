@@ -15,7 +15,7 @@ class Token extends Model {
   static __name = "Token";
 
   static slug = "tokens";
-  static scope = ModelEnvScopes.GLOBAL;
+  static scope = ModelEnvScopes.PROJECT;
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;
