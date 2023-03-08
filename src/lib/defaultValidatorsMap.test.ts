@@ -275,7 +275,7 @@ describe("test validatorsMap", () => {
             options: {
               field: "title",
               ...options,
-            },
+            } as ValidatorOptions<ValidatorTypes.REGEX>,
           },
         ],
       }).withAdapter(adapter);

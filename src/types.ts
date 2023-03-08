@@ -99,32 +99,11 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
 
 export type Module<T extends typeof Model = any> = (model: T) => void;
 
-export type ValidatorDefinition<
-  T extends keyof ValidatorOptionsMap = keyof ValidatorOptionsMap
-> = {
-  type: T;
-  options: ValidatorOptions<T>;
-};
-
-export type FieldDefinition<
-  T extends keyof FieldOptionsMap = keyof FieldOptionsMap
-> = {
-  type: T;
-  options?: FieldOptions<T>;
-};
-
-export type FieldsDefinition = {
-  [slug: string]: FieldDefinition;
-};
-
-export type DocumentDefinition = { [key: string]: any };
-
-export type ValidatorsDefinition = ValidatorDefinition[];
-
 export type ValidatorOptionsMap = {
   [ValidatorTypes.REQUIRED]: { field: string };
   [ValidatorTypes.UNIQUE]: { field: string };
   [ValidatorTypes.CONFIG_KEY]: { field: string };
+  [ValidatorTypes.SAMPLE]: { field: string };
   [ValidatorTypes.LENGTH]: { field: string; min?: number; max?: number };
   [ValidatorTypes.BOUNDARIES]: { field: string; min?: number; max?: number };
   [ValidatorTypes.REGEX]: {
@@ -132,11 +111,25 @@ export type ValidatorOptionsMap = {
     pattern: string;
     options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
   };
-  [ValidatorTypes.DATAMODEL_CONFIG_KEY]: never;
-  [ValidatorTypes.SAMPLE]: never;
 };
 
-export type ValidatorOptions<T extends ValidatorTypes> = ValidatorOptionsMap[T];
+export type ValidatorOptions<T extends ValidatorTypes = ValidatorTypes> =
+  T extends keyof ValidatorOptionsMap
+    ? ValidatorOptionsMap[T]
+    : Record<string, never>;
+
+export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> =
+  T extends keyof ValidatorOptionsMap
+    ? {
+        type: T;
+        options: ValidatorOptionsMap[T];
+      }
+    : {
+        type: T;
+        options?: Record<string, never>;
+      };
+
+export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
 export type FieldOptionsMap = {
   [FieldTypes.TEXT]: {
@@ -163,12 +156,27 @@ export type FieldOptionsMap = {
   [FieldTypes.BOOLEAN]: {
     default?: boolean;
   };
-  [FieldTypes.DATE]: never;
-  [FieldTypes.ID]: never;
-  [FieldTypes.IDENTITY]: never;
 };
 
-export type FieldOptions<T extends FieldTypes> = FieldOptionsMap[T];
+export type FieldOptions<T extends FieldTypes = FieldTypes> =
+  T extends keyof FieldOptionsMap ? FieldOptionsMap[T] : Record<string, never>;
+
+export type FieldDefinition<T extends FieldTypes = FieldTypes> =
+  T extends keyof FieldOptionsMap
+    ? {
+        type: T;
+        options?: FieldOptionsMap[T];
+      }
+    : {
+        type: T;
+        options?: Record<string, never>;
+      };
+
+export type FieldsDefinition = {
+  [slug: string]: FieldDefinition;
+};
+
+export type DocumentDefinition = { [key: string]: any };
 
 export type InputModelPayload<M extends typeof Model> = Partial<
   Omit<ModelDocument<InstanceType<M>>, ModelDocumentBaseFields>

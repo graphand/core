@@ -25,7 +25,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   }
 
   get type(): T {
-    return this.__definition.type;
+    return this.__definition.type as T;
   }
 
   get options(): ValidatorOptions<T> {

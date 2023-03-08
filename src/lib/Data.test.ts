@@ -1,8 +1,9 @@
 import DataModel from "../models/DataModel";
 import { faker } from "@faker-js/faker";
 import Data from "./Data";
-import { mockAdapter } from "../test-utils";
+import { mockAdapter, mockModel } from "../test-utils";
 import CoreError from "./CoreError";
+import FieldTypes from "../enums/field-types";
 
 describe("Data", () => {
   const adapter = mockAdapter({
@@ -54,4 +55,19 @@ describe("Data", () => {
 
     await expect(model.initialize()).resolves.toBeUndefined();
   });
+
+  it("Should be able to manually define fields", () => {
+    const model = mockModel({
+      fields: {
+        title: {
+          type: FieldTypes.TEXT,
+          options: {},
+        },
+      },
+    }).withAdapter(adapter);
+
+    expect(model.fieldsKeys).toContain("title");
+  });
+
+  it("Test", () => {});
 });

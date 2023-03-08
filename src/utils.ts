@@ -50,7 +50,7 @@ export const getRecursiveValidatorsFromModel = (
   let validators: ValidatorsDefinition = [];
   const baseClass = model.getBaseClass();
 
-  if (baseClass.hasOwnProperty("configKey") && baseClass.configKey) {
+  if (baseClass.configKey) {
     validators.push({
       type: ValidatorTypes.CONFIG_KEY,
       options: { field: baseClass.configKey },
@@ -144,10 +144,12 @@ export const createFieldFromDefinition = <T extends FieldTypes>(
   def: FieldDefinition<T>,
   adapter: Adapter
 ) => {
-  let FieldClass = adapter?.fieldsMap?.[def.type];
+  let FieldClass: typeof Field<T> = adapter?.fieldsMap?.[
+    def.type
+  ] as typeof Field<T>;
 
   if (!FieldClass) {
-    FieldClass = defaultFieldsMap[def.type];
+    FieldClass = defaultFieldsMap[def.type] as typeof Field<T>;
   }
 
   if (!FieldClass) {
@@ -161,10 +163,12 @@ export const createValidatorFromDefinition = <T extends ValidatorTypes>(
   def: ValidatorDefinition<T>,
   adapter: Adapter
 ) => {
-  let ValidatorClass = adapter?.validatorsMap?.[def.type];
+  let ValidatorClass: typeof Validator<T> = adapter?.validatorsMap?.[
+    def.type
+  ] as typeof Validator<T>;
 
   if (!ValidatorClass) {
-    ValidatorClass = defaultValidatorsMap[def.type];
+    ValidatorClass = defaultValidatorsMap[def.type] as typeof Validator<T>;
   }
 
   if (!ValidatorClass) {

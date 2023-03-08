@@ -29,6 +29,7 @@ import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
   validateDocs,
+  getRecursiveFieldsFromModel,
 } from "./utils";
 
 const models = {
@@ -75,6 +76,7 @@ export {
   ValidationValidatorError,
   controllersMap,
   validateDocs,
+  getRecursiveFieldsFromModel,
 };
 
 export * from "./types";

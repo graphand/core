@@ -11,7 +11,6 @@ import {
   FieldRelationDefinition,
   FieldTextDefinition,
 } from "../fields";
-import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Role extends Model {
@@ -20,9 +19,6 @@ class Role extends Model {
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
   static configKey = "slug";
-  static validators = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "slug" } },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldTextDefinition;

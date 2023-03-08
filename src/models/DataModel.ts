@@ -18,17 +18,8 @@ class DataModel extends Model {
   static slug = "datamodels";
   static scope = ModelEnvScopes.ENV;
   static configKey = "slug";
-  static validators = [
-    {
-      type: ValidatorTypes.REQUIRED,
-      options: {
-        field: "slug",
-      },
-    },
-    {
-      type: ValidatorTypes.DATAMODEL_CONFIG_KEY,
-      options: {} as never,
-    },
+  static validators: ValidatorsDefinition = [
+    { type: ValidatorTypes.DATAMODEL_CONFIG_KEY },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)

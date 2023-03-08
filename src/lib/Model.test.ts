@@ -4,6 +4,8 @@ import Model from "./Model";
 import FieldTypes from "../enums/field-types";
 import Validator from "./Validator";
 import ValidatorTypes from "../enums/validator-types";
+import { models } from "../index";
+import { getRecursiveValidatorsFromModel } from "../utils";
 
 describe("Test Model", () => {
   let adapter;
@@ -106,6 +108,26 @@ describe("Test Model", () => {
   });
 
   describe("Model validation", () => {
+    it("Model should have configKey validator if configKey is defined", async () => {
+      const BaseModelWithConfigKey = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        validators: [
+          { type: ValidatorTypes.UNIQUE, options: { field: "title" } },
+        ],
+      });
+      BaseModelWithConfigKey.configKey = "title";
+      const TestModel = BaseModelWithConfigKey.withAdapter(adapter);
+
+      const configKeyValidator = TestModel.validatorsArray.find(
+        (v) => v.type === ValidatorTypes.CONFIG_KEY
+      );
+      expect(configKeyValidator).toBeDefined();
+    });
+
     it("Model should validate with validator from adapter", async () => {
       const testValidate = jest.fn(() => Promise.resolve(true));
 
@@ -367,6 +389,14 @@ describe("Test Model", () => {
       const clone = i.clone();
       expect(clone).toBeInstanceOf(TestModel);
       expect(clone._id).toEqual(i._id);
+    });
+
+    it("getRecursiveValidatorsFromModel should returns configKey validator if model has a configKey", () => {
+      const validators = getRecursiveValidatorsFromModel(models.DataModel);
+      const configKeyValidator = validators.find(
+        (v) => v.type === ValidatorTypes.CONFIG_KEY
+      );
+      expect(configKeyValidator).toBeDefined();
     });
   });
 

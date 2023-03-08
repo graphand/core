@@ -40,7 +40,7 @@ class Model {
   static validators: ValidatorsDefinition;
   static configKey?: string;
 
-  static __name: string;
+  static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
   static __initPromise: Promise<void>;
   static __adapter: Adapter;
@@ -49,6 +49,7 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
+  static __decorated: typeof Model;
 
   __doc: DocumentDefinition;
 
@@ -84,6 +85,10 @@ class Model {
   }
 
   static getBaseClass() {
+    if (!this.hasAdapter()) {
+      return this;
+    }
+
     return this.__baseClass ?? this;
   }
 
