@@ -9,6 +9,8 @@ import {
   FieldRelationDefinition,
   FieldTextDefinition,
 } from "../fields";
+import { ValidatorsDefinition } from "../types";
+import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Token extends Model {
@@ -16,6 +18,10 @@ class Token extends Model {
 
   static slug = "tokens";
   static scope = ModelEnvScopes.PROJECT;
+  static validators: ValidatorsDefinition = [
+    { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
+  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;

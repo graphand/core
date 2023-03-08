@@ -20,6 +20,13 @@ class Account extends Model {
     { type: ValidatorTypes.REQUIRED, options: { field: "email" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
     { type: ValidatorTypes.UNIQUE, options: { field: "email" } },
+    {
+      type: ValidatorTypes.REGEX,
+      options: {
+        field: "email",
+        pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+      },
+    },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)

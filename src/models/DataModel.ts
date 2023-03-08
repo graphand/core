@@ -20,6 +20,10 @@ class DataModel extends Model {
   static configKey = "slug";
   static validators: ValidatorsDefinition = [
     { type: ValidatorTypes.DATAMODEL_CONFIG_KEY },
+    {
+      type: ValidatorTypes.REGEX,
+      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+    },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)

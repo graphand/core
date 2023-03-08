@@ -3,7 +3,7 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { FieldsRestriction, Rule } from "../types";
+import { FieldsRestriction, Rule, ValidatorsDefinition } from "../types";
 import RuleActions from "../enums/rule-actions";
 import {
   FieldBooleanDefinition,
@@ -11,6 +11,7 @@ import {
   FieldRelationDefinition,
   FieldTextDefinition,
 } from "../fields";
+import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Role extends Model {
@@ -19,12 +20,15 @@ class Role extends Model {
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
   static configKey = "slug";
+  static validators: ValidatorsDefinition = [
+    {
+      type: ValidatorTypes.REGEX,
+      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+    },
+  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldTextDefinition;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  description: FieldTextDefinition;
 
   @fieldDecorator(FieldTypes.BOOLEAN)
   admin: FieldBooleanDefinition;

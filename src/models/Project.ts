@@ -10,6 +10,8 @@ import {
   FieldTextDefinition,
 } from "../fields";
 import Account from "./Account";
+import { ValidatorsDefinition } from "../types";
+import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Project extends Model {
@@ -17,6 +19,16 @@ class Project extends Model {
 
   static slug = "projects";
   static scope = ModelEnvScopes.GLOBAL;
+  static validators: ValidatorsDefinition = [
+    { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "slug" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "organization" } },
+    { type: ValidatorTypes.UNIQUE, options: { field: "slug" } },
+    {
+      type: ValidatorTypes.REGEX,
+      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+    },
+  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldTextDefinition;

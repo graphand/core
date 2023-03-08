@@ -17,7 +17,7 @@ class Environment extends Model {
   static validators: ValidatorsDefinition = [
     {
       type: ValidatorTypes.REGEX,
-      options: { field: "name", pattern: "^[a-zA-Z0-9_\\-\\.]+$" },
+      options: { field: "name", pattern: "^[a-zA-Z0-9_\\-]+$" },
     },
     {
       type: ValidatorTypes.REGEX,
