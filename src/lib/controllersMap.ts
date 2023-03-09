@@ -1,5 +1,5 @@
 import { ControllerDefinition } from "../types";
-import DataModel from "../models/DataModel";
+import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 
 const _controllersMap = {
@@ -8,8 +8,8 @@ const _controllersMap = {
     methods: ["GET", "POST"],
     secured: true,
     scope: ({ model }) => {
-      const Model = DataModel.getFromSlug(model);
-      if (Model.scope === ModelEnvScopes.GLOBAL) return "global";
+      const _model = Model.getFromSlug(model);
+      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
       return "project";
     },
   },
@@ -18,8 +18,8 @@ const _controllersMap = {
     methods: ["POST"],
     secured: true,
     scope: ({ model }) => {
-      const Model = DataModel.getFromSlug(model);
-      if (Model.scope === ModelEnvScopes.GLOBAL) return "global";
+      const _model = Model.getFromSlug(model);
+      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
       return "project";
     },
   },
@@ -28,8 +28,8 @@ const _controllersMap = {
     methods: ["DELETE"],
     secured: true,
     scope: ({ model }) => {
-      const Model = DataModel.getFromSlug(model);
-      if (Model.scope === ModelEnvScopes.GLOBAL) return "global";
+      const _model = Model.getFromSlug(model);
+      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
       return "project";
     },
   },
@@ -38,8 +38,8 @@ const _controllersMap = {
     methods: ["GET", "POST"],
     secured: true,
     scope: ({ model }) => {
-      const Model = DataModel.getFromSlug(model);
-      if (Model.scope === ModelEnvScopes.GLOBAL) return "global";
+      const _model = Model.getFromSlug(model);
+      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
       return "project";
     },
   },
@@ -48,8 +48,8 @@ const _controllersMap = {
     methods: ["GET"],
     secured: true,
     scope: ({ model }) => {
-      const Model = DataModel.getFromSlug(model);
-      if (Model.scope === ModelEnvScopes.GLOBAL) return "global";
+      const _model = Model.getFromSlug(model);
+      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
       return "project";
     },
   },
@@ -58,8 +58,8 @@ const _controllersMap = {
     methods: ["PATCH"],
     secured: true,
     scope: ({ model }) => {
-      const Model = DataModel.getFromSlug(model);
-      if (Model.scope === ModelEnvScopes.GLOBAL) return "global";
+      const _model = Model.getFromSlug(model);
+      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
       return "project";
     },
   },

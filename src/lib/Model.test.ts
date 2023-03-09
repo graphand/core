@@ -6,6 +6,7 @@ import Validator from "./Validator";
 import ValidatorTypes from "../enums/validator-types";
 import { models } from "../index";
 import { getRecursiveValidatorsFromModel } from "../utils";
+import Data from "./Data";
 
 describe("Test Model", () => {
   let adapter;
@@ -414,6 +415,131 @@ describe("Test Model", () => {
           expect(model).not.toBe(prevModel);
           expect(model.getBaseClass()).toBe(BaseModel);
         });
+    });
+  });
+
+  describe("Model unicity", () => {
+    it("should get same model from slug with same adapter", () => {
+      const model = Model.getFromSlug("accounts", adapter);
+      const modelBis = Model.getFromSlug("accounts", adapter);
+
+      expect(model).toBe(modelBis);
+    });
+
+    it("should get different models from slug with different adapter", () => {
+      const model = Model.getFromSlug("accounts");
+      const modelBis = Model.getFromSlug("accounts", adapter);
+
+      expect(model).not.toBe(modelBis);
+    });
+
+    it("should returns same model from slug and then adapter", () => {
+      BaseModel = mockModel();
+
+      const model = Model.getFromSlug(BaseModel.slug, adapter);
+      const modelBis = Model.getAdaptedModel(BaseModel, adapter);
+
+      expect(model).toBe(modelBis);
+    });
+
+    it("should returns same model from adapter and then slug", () => {
+      BaseModel = mockModel();
+
+      const model = Model.getAdaptedModel(BaseModel, adapter);
+      const modelBis = Model.getFromSlug(BaseModel.slug, adapter);
+
+      expect(model).toBe(modelBis);
+    });
+
+    it("should returns first cached model", () => {
+      const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
+      const baseAccountFromModel = Model.getAdaptedModel(
+        models.Account,
+        adapter
+      );
+
+      expect(baseAccountFromSlug).toBe(baseAccountFromModel);
+
+      const extendedAccount = class extends models.Account {};
+
+      const extendedAccountFromModel = Model.getAdaptedModel(
+        extendedAccount,
+        adapter
+      );
+
+      expect(extendedAccountFromModel.getBaseClass()).not.toBe(extendedAccount);
+      expect(extendedAccountFromModel.getBaseClass()).toBe(models.Account);
+    });
+
+    it("should be able to override model", () => {
+      const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
+      const baseAccountFromModel = Model.getAdaptedModel(
+        models.Account,
+        adapter
+      );
+
+      expect(baseAccountFromSlug).toBe(baseAccountFromModel);
+
+      const extendedAccount = class extends models.Account {};
+
+      const extendedAccountFromModel = Model.getAdaptedModel(
+        extendedAccount,
+        adapter,
+        true
+      );
+
+      expect(extendedAccountFromModel.getBaseClass()).toBe(extendedAccount);
+    });
+
+    it("Should be able to get adapted model from slug once it has been adapted from model", () => {
+      const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
+      const baseAccountFromModel = Model.getAdaptedModel(
+        models.Account,
+        adapter
+      );
+
+      expect(baseAccountFromSlug).toBe(baseAccountFromModel);
+
+      const extendedAccount = class ExtendedAccount extends models.Account {};
+
+      const extendedAccountFromModel = Model.getAdaptedModel(
+        extendedAccount,
+        adapter,
+        true
+      );
+
+      expect(extendedAccountFromModel.getBaseClass()).toBe(extendedAccount);
+
+      const extendedAccountFromSlug = Model.getFromSlug("accounts", adapter);
+
+      expect(extendedAccountFromSlug.getBaseClass()).toBe(extendedAccount);
+    });
+
+    it("Should be able to get adapted model from slug once it has been adapted from model on data", () => {
+      const slug = "example";
+
+      const ExampleModel = class ExampleModel extends Data {
+        static slug = slug;
+      };
+
+      const baseModelFromSlug = Model.getFromSlug(slug, adapter);
+      const baseModelFromModel = Model.getAdaptedModel(ExampleModel, adapter);
+
+      expect(baseModelFromSlug).toBe(baseModelFromModel);
+      expect(baseModelFromModel.getBaseClass()).not.toBe(ExampleModel);
+
+      const extendedModelFromModel = Model.getAdaptedModel(
+        ExampleModel,
+        adapter,
+        true
+      );
+
+      expect(extendedModelFromModel.getBaseClass()).toBe(ExampleModel);
+
+      const extendedModelFromSlug = Model.getFromSlug(slug, adapter);
+
+      expect(extendedModelFromSlug.getBaseClass()).toBe(ExampleModel);
+      expect(extendedModelFromSlug).toBe(extendedModelFromModel);
     });
   });
 });

@@ -49,7 +49,8 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
-  static __decorated: typeof Model;
+  static __modelsMap: Map<string, Map<typeof Adapter, typeof Model>> =
+    new Map();
 
   __doc: DocumentDefinition;
 
@@ -259,21 +260,64 @@ class Model {
 
   static getFromSlug<M extends typeof Model = typeof Model>(
     slug: string,
-    fallbackData = true
+    adapter?: typeof Adapter,
+    fallbackData: boolean = true
   ): M {
+    if (!adapter) {
+      adapter = this.__adapter?.constructor as typeof Adapter;
+    }
+
+    if (adapter) {
+      adapter.__modelsMap ??= new Map();
+    }
+
     const models = require("../index").models as Record<string, typeof Model>;
     let model: M = Object.values(models).find((m) => m.slug === slug) as M;
-    if (!model && fallbackData) {
+    if (model) {
+      let adaptedModel = adapter?.__modelsMap.get(model.slug) as M;
+      if (!adaptedModel && adapter) {
+        adaptedModel = model.withAdapter(adapter);
+        adapter.__modelsMap.set(model.slug, adaptedModel);
+      }
+
+      model = adaptedModel || model;
+    } else if (fallbackData) {
       const Data = require("./Data").default;
-      model = Data.__getFromSlug(slug);
+      model = Data.__getFromSlug(slug, adapter);
     }
 
-    if (!this.__adapter) {
-      return model;
+    return model;
+  }
+
+  static getAdaptedModel<M extends typeof Model = typeof Model>(
+    model: M,
+    adapter?: typeof Adapter,
+    override?: boolean
+  ): M {
+    if (!adapter) {
+      adapter = this.__adapter?.constructor as typeof Adapter;
     }
 
-    const adapter = this.__adapter.constructor as typeof Adapter;
-    return model.withAdapter(adapter);
+    if (!adapter) {
+      throw new CoreError({
+        message: "Adapter is required in getAdaptedModel method",
+      });
+    }
+
+    adapter.__modelsMap ??= new Map();
+
+    let adaptedModel: M;
+
+    if (!override) {
+      adaptedModel = adapter?.__modelsMap.get(model.slug) as M;
+    }
+
+    if (!adaptedModel) {
+      adaptedModel = model.withAdapter(adapter);
+      adapter.__modelsMap.set(model.slug, adaptedModel);
+    }
+
+    return adaptedModel;
   }
 
   /**

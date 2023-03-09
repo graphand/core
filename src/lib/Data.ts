@@ -12,36 +12,49 @@ class Data extends Model {
   static extendable = true;
   static scope = ModelEnvScopes.ENV;
   static __datamodel: DataModel;
-  static __modelsMap: Map<string, typeof Data> = new Map();
 
-  static getFromDatamodel(datamodel: DataModel): typeof Data {
-    let model = Data.__modelsMap.get(datamodel.slug);
-    if (!model) {
-      model = class extends Data {
-        static __name = datamodel.name;
-
-        static slug = datamodel.slug;
-        static fields = datamodel.fields;
-        static validators = [];
-        static configKey = datamodel.configKey;
-      };
-
-      model.__datamodel = datamodel;
-
-      Data.__modelsMap.set(datamodel.slug, model);
+  static getFromDatamodel(
+    datamodel: DataModel,
+    adapter?: typeof Adapter
+  ): typeof Data {
+    if (!adapter) {
+      adapter = datamodel.model.__adapter?.constructor as typeof Adapter;
     }
-
-    const adapter = datamodel.model.__adapter?.constructor as typeof Adapter;
 
     if (adapter) {
-      return model.withAdapter(adapter);
+      adapter.__modelsMap ??= new Map();
     }
+
+    let model = class extends Data {
+      static __name = datamodel.name;
+
+      static slug = datamodel.slug;
+      static fields = datamodel.fields;
+      static validators = [];
+      static configKey = datamodel.configKey;
+    };
+
+    model.__datamodel = datamodel;
+
+    if (adapter) {
+      model = model.withAdapter(adapter);
+    }
+
+    adapter?.__modelsMap.set(datamodel.slug, model);
 
     return model;
   }
 
-  static __getFromSlug<M extends typeof Model = typeof Data>(slug: string): M {
-    let model = Data.__modelsMap.get(slug);
+  static __getFromSlug<M extends typeof Model = typeof Data>(
+    slug: string,
+    adapter?: typeof Adapter
+  ): M {
+    if (adapter) {
+      adapter.__modelsMap ??= new Map();
+    }
+
+    let model: typeof Data = adapter?.__modelsMap.get(slug) as typeof Data;
+
     if (!model) {
       model = class extends Data {
         static __name = `Data<${slug}>`;
@@ -57,9 +70,11 @@ class Data extends Model {
               });
             }
 
-            const datamodel = await DataModel.withAdapter(
-              this.__adapter.constructor as typeof Adapter
-            ).get({ filter: { slug } }, ctx);
+            const adapter = this.__adapter.constructor as typeof Adapter;
+            const datamodel = await DataModel.withAdapter(adapter).get(
+              { filter: { slug } },
+              ctx
+            );
 
             if (!datamodel) {
               throw new CoreError({
@@ -80,7 +95,11 @@ class Data extends Model {
         }
       };
 
-      Data.__modelsMap.set(slug, model);
+      if (adapter) {
+        model = model.withAdapter(adapter);
+      }
+
+      adapter?.__modelsMap.set(slug, model);
     }
 
     return model as any as M;

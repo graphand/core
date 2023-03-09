@@ -6,6 +6,8 @@ import ValidatorTypes from "../enums/validator-types";
 import Validator from "./Validator";
 
 class Adapter {
+  static __modelsMap: Map<string, typeof Model>;
+
   fetcher: AdapterFetcher;
   fieldsMap: { [T in FieldTypes]?: typeof Field<T> };
   validatorsMap: { [T in ValidatorTypes]?: typeof Validator<T> };

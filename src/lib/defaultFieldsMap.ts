@@ -106,7 +106,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   _serializeObject = (value: any, format: SerializerFormat, from: Model) => {
     // get the referenced model with the same adapter as from parameter
     const adapter = from.model.__adapter.constructor as typeof Adapter;
-    let model = Model.getFromSlug(this.options.ref).withAdapter(adapter);
+    let model = Model.getFromSlug(this.options.ref, adapter);
 
     if (this.options.multiple) {
       const ids = Array.isArray(value) ? value : [value];
