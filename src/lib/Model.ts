@@ -49,8 +49,6 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
-  static __modelsMap: Map<string, Map<typeof Adapter, typeof Model>> =
-    new Map();
 
   __doc: DocumentDefinition;
 

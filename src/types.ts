@@ -262,4 +262,29 @@ export type ControllerDefinition = {
   secured: boolean;
 };
 
+export type ModelCreateEvent = {
+  operation?: "create";
+  model: string;
+  ids: Array<string>;
+  data: Array<any>;
+};
+
+export type ModelUpdateEvent = {
+  operation?: "update";
+  model: string;
+  ids: Array<string>;
+  data: Array<any>;
+};
+
+export type ModelDeleteEvent = {
+  operation?: "delete";
+  model: string;
+  ids: Array<string>;
+};
+
+export type ModelCrudEvent =
+  | ModelCreateEvent
+  | ModelUpdateEvent
+  | ModelDeleteEvent;
+
 export type IdentityString = string;
