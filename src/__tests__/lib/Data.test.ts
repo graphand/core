@@ -1,10 +1,10 @@
-import DataModel from "../models/DataModel";
+import DataModel from "../../models/DataModel";
 import { faker } from "@faker-js/faker";
-import Data from "./Data";
-import { mockAdapter, mockModel } from "../test-utils";
-import CoreError from "./CoreError";
-import FieldTypes from "../enums/field-types";
-import Model from "./Model";
+import Data from "../../lib/Data";
+import { mockAdapter, mockModel } from "../../test-utils";
+import CoreError from "../../lib/CoreError";
+import FieldTypes from "../../enums/field-types";
+import Model from "../../lib/Model";
 
 describe("Data", () => {
   const adapter = mockAdapter({

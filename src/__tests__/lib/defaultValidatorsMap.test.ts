@@ -1,12 +1,12 @@
-import { mockAdapter, mockModel } from "../test-utils";
-import ValidatorTypes from "../enums/validator-types";
-import ValidationError from "./ValidationError";
+import { mockAdapter, mockModel } from "../../test-utils";
+import ValidatorTypes from "../../enums/validator-types";
+import ValidationError from "../../lib/ValidationError";
 import { faker } from "@faker-js/faker";
-import FieldTypes from "../enums/field-types";
-import Model from "./Model";
-import Validator from "./Validator";
-import { ValidatorOptions } from "../types";
-import { models } from "../index";
+import FieldTypes from "../../enums/field-types";
+import Model from "../../lib/Model";
+import Validator from "../../lib/Validator";
+import { ValidatorOptions } from "../../types";
+import { models } from "../../index";
 
 describe("test validatorsMap", () => {
   const adapter = mockAdapter({

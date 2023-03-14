@@ -1,8 +1,8 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  globalSetup: "./src/jest.globalSetup.ts",
-  globalTeardown: "./src/jest.globalTeardown.ts",
+  globalSetup: "./src/__jest__/globalSetup.ts",
+  globalTeardown: "./src/__jest__/globalTeardown.ts",
   clearMocks: true,
   modulePathIgnorePatterns: ["dist"],
 };

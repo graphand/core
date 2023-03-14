@@ -1,4 +1,4 @@
-import { mockAdapter, mockModel } from "../test-utils";
+import { mockAdapter, mockModel } from "../../test-utils";
 
 describe("test ModelList", () => {
   let model;

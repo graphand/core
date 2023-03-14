@@ -1,12 +1,12 @@
-import { mockAdapter, mockModel } from "../test-utils";
-import Field from "./Field";
-import Model from "./Model";
-import FieldTypes from "../enums/field-types";
-import Validator from "./Validator";
-import ValidatorTypes from "../enums/validator-types";
-import { models } from "../index";
-import { getRecursiveValidatorsFromModel } from "../utils";
-import Data from "./Data";
+import { mockAdapter, mockModel } from "../../test-utils";
+import Field from "../../lib/Field";
+import Model from "../../lib/Model";
+import FieldTypes from "../../enums/field-types";
+import Validator from "../../lib/Validator";
+import ValidatorTypes from "../../enums/validator-types";
+import { models } from "../../index";
+import { getRecursiveValidatorsFromModel } from "../../utils";
+import Data from "../../lib/Data";
 
 describe("Test Model", () => {
   let adapter;

@@ -15,6 +15,11 @@ export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
         multiple: false;
         creatable: true;
       }
+    : T extends FieldTypes.RELATION
+    ? {
+        model: null;
+        multiple: true;
+      }
     : {};
 
 export type FieldDefinitionOptions<T extends FieldTypes> =
