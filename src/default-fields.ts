@@ -33,7 +33,7 @@ export type DefaultFieldTextDefinition<
 
 export type DefaultFieldBooleanDefinition<
   D extends FieldDefinitionOptions<FieldTypes.BOOLEAN>
-> = boolean;
+> = boolean | undefined;
 
 export type DefaultFieldNumberDefinition<
   D extends FieldDefinitionOptions<FieldTypes.NUMBER>
