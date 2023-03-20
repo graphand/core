@@ -8,7 +8,7 @@ import {
   createValidatorFromDefinition,
   isObjectId,
   validateDocs,
-} from "../utils";
+} from "./utils";
 import Validator from "./Validator";
 import CoreError from "./CoreError";
 import ValidationFieldError from "./ValidationFieldError";

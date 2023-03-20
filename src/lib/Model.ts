@@ -26,7 +26,7 @@ import {
   getRecursiveHooksFromModel,
   getRecursiveValidatorsFromModel,
   validateDocs,
-} from "../utils";
+} from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
 

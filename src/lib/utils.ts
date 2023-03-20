@@ -1,4 +1,4 @@
-import Model from "./lib/Model";
+import Model from "./Model";
 import {
   AdapterFetcher,
   DocumentDefinition,
@@ -12,17 +12,17 @@ import {
   ValidatorHook,
   ValidatorOptions,
   ValidatorsDefinition,
-} from "./types";
-import FieldTypes from "./enums/field-types";
-import defaultFieldsMap from "./lib/defaultFieldsMap";
-import Field from "./lib/Field";
-import ValidatorTypes from "./enums/validator-types";
-import defaultValidatorsMap from "./lib/defaultValidatorsMap";
-import Validator from "./lib/Validator";
-import Adapter from "./lib/Adapter";
-import ValidationFieldError from "./lib/ValidationFieldError";
-import ValidationValidatorError from "./lib/ValidationValidatorError";
-import ValidationError from "./lib/ValidationError";
+} from "../types";
+import FieldTypes from "../enums/field-types";
+import defaultFieldsMap from "./defaultFieldsMap";
+import Field from "./Field";
+import ValidatorTypes from "../enums/validator-types";
+import defaultValidatorsMap from "./defaultValidatorsMap";
+import Validator from "./Validator";
+import Adapter from "./Adapter";
+import ValidationFieldError from "./ValidationFieldError";
+import ValidationValidatorError from "./ValidationValidatorError";
+import ValidationError from "./ValidationError";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -71,6 +71,43 @@ export const getRecursiveValidatorsFromModel = (
   } while (model?.getBaseClass);
 
   return validators;
+};
+
+export const getFieldFromPath = (model: typeof Model, path: string): Field => {
+  const fullPath = path.split(".");
+
+  const [_, field]: [any, Field] = fullPath.reduce(
+    ([_map, _field]: [Map<string, Field>, Field], key, currentIndex) => {
+      const field = _map?.get(key);
+
+      if (!field) {
+        return [null, null];
+      }
+
+      if (currentIndex === fullPath.length - 1) {
+        return [null, field];
+      }
+
+      let map;
+
+      if (field.type === FieldTypes.JSON) {
+        const _field = field as Field<FieldTypes.JSON>;
+        const subfieldsEntries: Array<[string, Field]> = Object.entries(
+          _field.options.fields ?? {}
+        ).map(([slug, def]) => {
+          const field = createFieldFromDefinition(def, model.__adapter);
+
+          return [slug, field];
+        });
+        map = new Map(subfieldsEntries);
+      }
+
+      return [map, null];
+    },
+    [model.fieldsMap, null]
+  );
+
+  return field;
 };
 
 export const getRecursiveHooksFromModel = <

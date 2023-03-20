@@ -29,7 +29,7 @@ import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
   validateDocs,
-} from "./utils";
+} from "./lib/utils";
 
 const models = {
   Account,

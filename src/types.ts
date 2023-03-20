@@ -118,13 +118,13 @@ export type Sort =
 
 export type Filter = Record<string, any>;
 
-export type PopulatePath =
-  | string
-  | {
-      path: string;
-      filter?: Filter;
-      populate?: Populate;
-    };
+export type PopulateOption = {
+  path: string;
+  filter?: Filter;
+  populate?: Populate;
+};
+
+export type PopulatePath = string | PopulateOption;
 
 export type Populate = PopulatePath | PopulatePath[] | Record<string, any>;
 

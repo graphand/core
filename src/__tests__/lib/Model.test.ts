@@ -5,7 +5,7 @@ import FieldTypes from "../../enums/field-types";
 import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
 import { models } from "../../index";
-import { getRecursiveValidatorsFromModel } from "../../utils";
+import { getRecursiveValidatorsFromModel } from "../../lib/utils";
 import Data from "../../lib/Data";
 
 describe("Test Model", () => {

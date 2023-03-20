@@ -2,7 +2,7 @@ import FieldTypes from "../enums/field-types";
 import Model from "./Model";
 import { FieldDefinition, FieldOptions, ValidateCtx } from "../types";
 import SerializerFormat from "../enums/serializer-format";
-import { getDefaultFieldOptions } from "../utils";
+import { getDefaultFieldOptions } from "./utils";
 
 class Field<T extends FieldTypes = FieldTypes> {
   private __definition: FieldDefinition<T>;

@@ -6,7 +6,7 @@ import {
   ValidatorHook,
   ValidatorOptions,
 } from "../types";
-import { getDefaultValidatorOptions } from "../utils";
+import { getDefaultValidatorOptions } from "./utils";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
   private __definition: ValidatorDefinition<T>;
