@@ -114,7 +114,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     }
 
     const id = Array.isArray(value) ? value[0] : value;
-    return model.get(id);
+    return model.get(String(id));
   };
 
   serialize(value: any, format: SerializerFormat, from: Model): any {

@@ -22,9 +22,12 @@ import Validator from "./Validator";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
+  getFieldFromPath,
   getRecursiveFieldsFromModel,
   getRecursiveHooksFromModel,
   getRecursiveValidatorsFromModel,
+  getValueFromPath,
+  setValueOnPath,
   validateDocs,
 } from "./utils";
 import CoreError from "./CoreError";
@@ -318,16 +321,16 @@ class Model {
 
   /**
    * Model instance getter. Returns the value for the specified key
-   * @param slug {string} - The key (field slug) to get
+   * @param path {string} - The path to the field get
    * @param format {json|object|document} - Serializer format
    */
-  get(slug, format = SerializerFormat.OBJECT) {
-    const field = this.model.fieldsMap.get(slug) as Field;
+  get(path: string, format = SerializerFormat.OBJECT) {
+    const field = getFieldFromPath(this.model, path);
     if (!field) {
       return undefined;
     }
 
-    let value = this.__doc[slug];
+    let value = getValueFromPath(this, path);
 
     if (value === undefined && "default" in field.options) {
       value = field.options.default as typeof value;
@@ -342,18 +345,17 @@ class Model {
 
   /**
    * Model instance setter. Set value for the specified key
-   * @param slug {string} - The key (field slug) to get
+   * @param path {string} - The path to the field get
    * @param value {*}
    * @param upsert {boolean=} - Define if the setter will trigger a store upsert action
    */
   set<T extends Model, S extends keyof T | string>(
     this: T,
-    slug: S,
+    path: S,
     value: S extends keyof T ? T[S] | any : any,
     upsert?: boolean
   ) {
-    const field = this.model.fieldsMap.get(String(slug));
-
+    const field = getFieldFromPath(this.model, String(path));
     if (!field) {
       return;
     }
@@ -372,9 +374,11 @@ class Model {
       "_createdBy",
       "_updatedAt",
       "_updatedBy",
-    ].includes(String(slug));
+    ].includes(String(path));
 
-    this.__doc[slug as keyof DocumentDefinition] = value;
+    setValueOnPath(this, String(path), value);
+
+    // this.__doc[slug as keyof DocumentDefinition] = value;
 
     return this;
   }

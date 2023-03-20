@@ -7,6 +7,7 @@ import ValidatorTypes from "../../enums/validator-types";
 import { models } from "../../index";
 import { getRecursiveValidatorsFromModel } from "../../lib/utils";
 import Data from "../../lib/Data";
+import PromiseModel from "../../lib/PromiseModel";
 
 describe("Test Model", () => {
   let adapter;
@@ -105,6 +106,154 @@ describe("Test Model", () => {
       expect(testSerializer).toHaveBeenCalledTimes(0);
       expect(created.title).toBeDefined();
       expect(testSerializer).toHaveBeenCalledTimes(1);
+    });
+
+    it("Model getter should be able to return value from within json", async () => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+          obj: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                nested: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        title: "title",
+        obj: { nested: "nested" },
+      });
+
+      expect(created.title).toBe("title");
+      expect(created.obj.nested).toBe("nested");
+      expect(created.get("obj.nested")).toBe("nested");
+    });
+
+    it("Model getter should serialize value from within json", async () => {
+      const model1 = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      }).withAdapter(adapter);
+
+      const model2 = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+          obj: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                nested: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: model1.slug,
+                    multiple: false,
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const instance1 = await model1.create({
+        title: "title",
+      });
+
+      const instance2 = await model2.create({
+        title: "title",
+        obj: { nested: instance1._id },
+      });
+
+      const getNested = instance2.obj.nested?.catch?.((e) => null);
+
+      expect(getNested).toBeInstanceOf(PromiseModel);
+    });
+
+    it("Model setter should be able to set value", async () => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({ title: "title" });
+
+      expect(created.title).toBe("title");
+      created.set("title", "title2");
+      expect(created.title).toBe("title2");
+    });
+
+    it("Model setter should be able to set value from within json", async () => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+          obj: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                nested: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        title: "title",
+        obj: { nested: "" },
+      });
+
+      expect(created.title).toBe("title");
+
+      expect(created.get("obj.nested")).toBe("");
+      created.set("obj.nested", "nested");
+      expect(created.get("obj.nested")).toBe("nested");
+    });
+
+    it("Model setter should be able to set value from within json even if object is undefined", async () => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+          obj: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                nested: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({ title: "title" });
+
+      expect(created.get("obj.nested")).toBe(undefined);
+      created.set("obj.nested", "nested");
+      expect(created.get("obj")).toEqual({ nested: "nested" });
+      expect(created.get("obj.nested")).toBe("nested");
     });
   });
 

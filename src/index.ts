@@ -29,6 +29,7 @@ import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
   validateDocs,
+  getFieldFromPath,
 } from "./lib/utils";
 
 const models = {
@@ -75,6 +76,7 @@ export {
   ValidationValidatorError,
   controllersMap,
   validateDocs,
+  getFieldFromPath,
 };
 
 export * from "./types";

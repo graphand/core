@@ -75,39 +75,105 @@ export const getRecursiveValidatorsFromModel = (
 
 export const getFieldFromPath = (model: typeof Model, path: string): Field => {
   const fullPath = path.split(".");
+  let map = model.fieldsMap;
+  let field = null;
 
-  const [_, field]: [any, Field] = fullPath.reduce(
-    ([_map, _field]: [Map<string, Field>, Field], key, currentIndex) => {
-      const field = _map?.get(key);
+  for (let i = 0; i < fullPath.length; i++) {
+    const key = fullPath[i];
+    const nextField = map.get(key);
 
-      if (!field) {
-        return [null, null];
+    if (!nextField) {
+      return null;
+    }
+
+    if (i === fullPath.length - 1) {
+      return nextField;
+    }
+
+    if (nextField.type === FieldTypes.JSON) {
+      const options = nextField.options as FieldOptions<FieldTypes.JSON>;
+      const subfieldsEntries = Object.entries(options.fields ?? {});
+      const subfieldsMap = new Map();
+
+      for (const [slug, def] of subfieldsEntries) {
+        const subfield = createFieldFromDefinition(def, model.__adapter);
+        subfieldsMap.set(slug, subfield);
       }
 
-      if (currentIndex === fullPath.length - 1) {
-        return [null, field];
-      }
-
-      let map;
-
-      if (field.type === FieldTypes.JSON) {
-        const _field = field as Field<FieldTypes.JSON>;
-        const subfieldsEntries: Array<[string, Field]> = Object.entries(
-          _field.options.fields ?? {}
-        ).map(([slug, def]) => {
-          const field = createFieldFromDefinition(def, model.__adapter);
-
-          return [slug, field];
-        });
-        map = new Map(subfieldsEntries);
-      }
-
-      return [map, null];
-    },
-    [model.fieldsMap, null]
-  );
+      map = subfieldsMap;
+    } else {
+      map = null;
+    }
+  }
 
   return field;
+};
+
+export const getValueFromPath = (instance: Model, path: string): any => {
+  const fullPath = path.split(".");
+  let value = instance.__doc;
+
+  for (let i = 0; i < fullPath.length; i++) {
+    const key = fullPath[i];
+
+    if (typeof value !== "object" || value === null) {
+      return value;
+    }
+
+    value = value[key];
+  }
+
+  return value;
+};
+
+export const setValueOnPath = (
+  instance: Model,
+  path: string,
+  value: any
+): void => {
+  const fullPath = path.split(".");
+
+  let assignTo = instance.__doc;
+
+  for (let i = 0; i < fullPath.length; i++) {
+    const key = fullPath[i];
+    let nextField = assignTo[key];
+
+    if (i === fullPath.length - 1) {
+      assignTo[key] = value;
+      return;
+    }
+
+    if (nextField === undefined) {
+      nextField = {};
+      assignTo[key] = nextField;
+    }
+
+    if (typeof nextField !== "object" || nextField === null) {
+      throw new Error(
+        `Cannot set value on path ${path} because ${key} is not an object`
+      );
+    }
+
+    assignTo = nextField;
+  }
+
+  // let _value = instance.__doc;
+  //
+  // for (let i = 0; i < fullPath.length; i++) {
+  //   const key = fullPath[i];
+  //
+  //   if (typeof _value !== "object" || _value === null) {
+  //     return;
+  //   }
+  //
+  //   if (i === fullPath.length - 1) {
+  //     _value[key] = value;
+  //     return;
+  //   }
+  //
+  //   _value = _value[key];
+  // }
 };
 
 export const getRecursiveHooksFromModel = <

@@ -12,6 +12,7 @@ import Model from "./lib/Model";
 import ValidatorTypes from "./enums/validator-types";
 import defaultFieldsMap from "./lib/defaultFieldsMap";
 import defaultValidatorsMap from "./lib/defaultValidatorsMap";
+import Data from "./lib/Data";
 
 const cache: Map<typeof Model, Set<any>> = new Map();
 
@@ -182,7 +183,7 @@ export const mockModel = ({
 } = {}) => {
   const uidSlug = Math.random().toString(36).substring(7);
 
-  class Test extends Model {
+  class Test extends Data {
     static extendable = true;
     static slug = uidSlug;
     static scope = scope;
