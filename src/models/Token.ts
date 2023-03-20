@@ -4,11 +4,6 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import Role from "./Role";
-import {
-  FieldDateDefinition,
-  FieldRelationDefinition,
-  FieldTextDefinition,
-} from "../fields";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 
@@ -25,16 +20,16 @@ class Token extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  name: FieldTextDefinition;
+  name: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.DATE)
-  expiration: FieldDateDefinition;
+  expiration: FieldDefinitionDate;
 
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "roles",
     multiple: false,
   })
-  role: FieldRelationDefinition<{
+  role: FieldDefinitionRelation<{
     model: Role;
     multiple: false;
   }>;

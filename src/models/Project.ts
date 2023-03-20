@@ -4,11 +4,6 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import Organization from "./Organization";
-import {
-  FieldNumberDefinition,
-  FieldRelationDefinition,
-  FieldTextDefinition,
-} from "../fields";
 import Account from "./Account";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
@@ -31,34 +26,34 @@ class Project extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  name: FieldTextDefinition;
+  name: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
-  slug: FieldTextDefinition;
+  slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT, { default: "free" })
-  plan: FieldTextDefinition;
+  plan: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "organizations",
     multiple: false,
   })
-  organization: FieldRelationDefinition<{
+  organization: FieldDefinitionRelation<{
     model: Organization;
     multiple: false;
   }>;
 
   @fieldDecorator(FieldTypes.NUMBER, { default: 86400 })
-  accessTokenLifetime: FieldNumberDefinition;
+  accessTokenLifetime: FieldDefinitionNumber;
 
   @fieldDecorator(FieldTypes.NUMBER, { default: 2592000 })
-  refreshTokenLifetime: FieldNumberDefinition;
+  refreshTokenLifetime: FieldDefinitionNumber;
 
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "accounts",
     multiple: false,
   })
-  owner: FieldRelationDefinition<{
+  owner: FieldDefinitionRelation<{
     model: Account;
     multiple: false;
   }>;

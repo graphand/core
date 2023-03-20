@@ -3,7 +3,6 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { FieldRelationDefinition, FieldTextDefinition } from "../fields";
 import ValidatorTypes from "../enums/validator-types";
 import { ValidatorsDefinition } from "../types";
 
@@ -26,13 +25,13 @@ class Environment extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  name: FieldTextDefinition;
+  name: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "environments",
     multiple: false,
   })
-  base: FieldRelationDefinition<{
+  base: FieldDefinitionRelation<{
     model: Environment;
     multiple: false;
   }>;

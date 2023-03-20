@@ -3,7 +3,6 @@ import { modelDecorator } from "./modelDecorator";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import DataModel from "../models/DataModel";
 import Adapter from "./Adapter";
-import { ExecutorCtx } from "../global";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
 

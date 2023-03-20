@@ -1,9 +1,12 @@
-import { DefaultFieldDefinitionOptions, FieldDefinitionOptions } from "./types";
-import Model from "./lib/Model";
-import PromiseModel from "./lib/PromiseModel";
-import FieldTypes from "./enums/field-types";
-import ModelList from "./lib/ModelList";
-import PromiseModelList from "./lib/PromiseModelList";
+import {
+  DefaultFieldDefinitionOptions,
+  FieldDefinitionOptions,
+} from "./dist/types";
+import Model from "./dist/lib/Model";
+import PromiseModel from "./dist/lib/PromiseModel";
+import FieldTypes from "./dist/enums/field-types";
+import ModelList from "./dist/lib/ModelList";
+import PromiseModelList from "./dist/lib/PromiseModelList";
 
 type PromiseModelOn<T extends Model> = PromiseModel<T> & {};
 

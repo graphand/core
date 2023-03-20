@@ -105,7 +105,7 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
-        const [first] = this.thisCache;
+        const [first] = Array.from(this.thisCache);
 
         if (update.$set) {
           Object.assign(first.__doc, update.$set);
@@ -145,7 +145,7 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
-        const [first] = this.thisCache;
+        const [first] = Array.from(this.thisCache);
         this.thisCache.delete(first);
         return Promise.resolve(true);
       }),

@@ -3,7 +3,6 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { modelDecorator } from "../lib/modelDecorator";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import FieldTypes from "../enums/field-types";
-import { FieldTextDefinition } from "../fields";
 import ValidatorTypes from "../enums/validator-types";
 import { ValidatorsDefinition } from "../types";
 
@@ -28,10 +27,10 @@ class User extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  email: FieldTextDefinition;
+  email: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
-  password: FieldTextDefinition;
+  password: FieldDefinitionText;
 }
 
 export default User;

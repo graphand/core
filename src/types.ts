@@ -7,7 +7,6 @@ import Field from "./lib/Field";
 import ErrorCodes from "./enums/error-codes";
 import Validator from "./lib/Validator";
 import ValidationError from "./lib/ValidationError";
-import { ExecutorCtx } from "./global";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -38,17 +37,55 @@ export type FieldDefinitionOptions<T extends FieldTypes> =
     ? { [key: string]: any }
     : {};
 
+export type SortDirection =
+  | 1
+  | -1
+  | "asc"
+  | "desc"
+  | "ascending"
+  | "descending"
+  | {
+      $meta: string;
+    };
+
+export type Sort =
+  | string
+  | Exclude<
+      SortDirection,
+      {
+        $meta: string;
+      }
+    >
+  | string[]
+  | {
+      [key: string]: SortDirection;
+    }
+  | Map<string, SortDirection>
+  | [string, SortDirection][]
+  | [string, SortDirection];
+
+export type Filter = Record<string, any>;
+
+export type PopulatePath =
+  | string
+  | {
+      path: string;
+      filter?: Filter;
+      populate?: Populate;
+    };
+
+export type Populate = PopulatePath | PopulatePath[] | Record<string, any>;
+
 export type JSONQuery = {
-  filter?: any;
-  populate?: any;
-  sort?: any;
-  socket?: string;
+  filter?: Filter;
+  sort?: Sort;
   count?: boolean;
   ids?: string[];
   limit?: number;
   skip?: number;
   page?: number;
   pageSize?: number;
+  populate?: Populate;
 };
 
 export type AdapterFetcherModelDefinition<

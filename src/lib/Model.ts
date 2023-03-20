@@ -19,7 +19,6 @@ import {
 import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
 import Validator from "./Validator";
-import { FieldDateDefinition, FieldIdDefinition } from "../fields";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
@@ -30,7 +29,6 @@ import {
 } from "../utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
-import { ExecutorCtx } from "../global";
 
 class Model {
   static extendable: boolean = false;
@@ -53,16 +51,16 @@ class Model {
   __doc: DocumentDefinition;
 
   @fieldDecorator(FieldTypes.ID)
-  _id: FieldIdDefinition;
+  _id: FieldDefinitionId;
 
   @fieldDecorator(FieldTypes.DATE)
-  _createdAt: FieldDateDefinition;
+  _createdAt: FieldDefinitionDate;
 
   @fieldDecorator(FieldTypes.IDENTITY)
-  _createdBy;
+  _createdBy: FieldDefinitionRelation;
 
   @fieldDecorator(FieldTypes.DATE)
-  _updatedAt: FieldDateDefinition;
+  _updatedAt: FieldDefinitionDate;
 
   @fieldDecorator(FieldTypes.IDENTITY)
   _updatedBy;
@@ -383,7 +381,11 @@ class Model {
 
   toPromise() {
     const i = this;
-    return new PromiseModel([(resolve) => resolve(i)], this.model, this._id);
+    return new PromiseModel(
+      [(resolve) => resolve(i)],
+      this.model,
+      String(this._id)
+    );
   }
 
   to(format: SerializerFormat) {
@@ -627,7 +629,7 @@ class Model {
     const retryToken = Symbol();
     const hooksBefore = getRecursiveHooksFromModel(this, action, "before");
 
-    const ctx: ExecutorCtx = { ...(bindCtx || {}), adapter, fn, retryToken };
+    const ctx = { ...(bindCtx || {}), adapter, fn, retryToken } as ExecutorCtx;
 
     const hookPayloadBefore: HookCallbackArgs<"before", A, M> = { args, ctx };
 

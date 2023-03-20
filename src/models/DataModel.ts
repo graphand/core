@@ -5,11 +5,6 @@ import { modelDecorator } from "../lib/modelDecorator";
 import { FieldsDefinition, ValidatorsDefinition } from "../types";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
-import {
-  FieldBooleanDefinition,
-  FieldJSONDefinition,
-  FieldTextDefinition,
-} from "../fields";
 
 @modelDecorator()
 class DataModel extends Model {
@@ -27,10 +22,10 @@ class DataModel extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  name: FieldTextDefinition;
+  name: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
-  slug: FieldTextDefinition;
+  slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.JSON, {
     defaultField: {
@@ -58,7 +53,7 @@ class DataModel extends Model {
       },
     },
   })
-  fields: FieldJSONDefinition<FieldsDefinition>;
+  fields: FieldDefinitionJSON<FieldsDefinition>;
 
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
@@ -82,13 +77,13 @@ class DataModel extends Model {
       },
     ],
   })
-  validators: FieldJSONDefinition<ValidatorsDefinition>;
+  validators: FieldDefinitionJSON<ValidatorsDefinition>;
 
   @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
-  isPage: FieldBooleanDefinition;
+  isPage: FieldDefinitionBoolean;
 
   @fieldDecorator(FieldTypes.TEXT)
-  configKey: FieldTextDefinition;
+  configKey: FieldDefinitionText;
 }
 
 export default DataModel;

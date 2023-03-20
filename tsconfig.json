@@ -15,7 +15,8 @@
     "allowJs": true,
     "skipLibCheck": true,
     "preserveConstEnums": true,
-    "declarationDir": "dist/types"
+    "declarationDir": "dist/types",
+    "downlevelIteration": true,
   },
   "include": ["src"],
   "exclude": [

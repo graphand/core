@@ -3,7 +3,6 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { FieldRelationDefinition, FieldTextDefinition } from "../fields";
 import { ValidatorsDefinition } from "../types";
 import User from "./User";
 import ValidatorTypes from "../enums/validator-types";
@@ -25,13 +24,13 @@ class Organization extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  name: FieldTextDefinition;
+  name: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
-  slug: FieldTextDefinition;
+  slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: "users", multiple: true })
-  users: FieldRelationDefinition<{
+  users: FieldDefinitionRelation<{
     model: User;
     multiple: true;
   }>;

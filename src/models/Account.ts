@@ -5,7 +5,6 @@ import Role from "./Role";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
-import { FieldRelationDefinition, FieldTextDefinition } from "../fields";
 import User from "./User";
 import { ValidatorsDefinition } from "../types";
 
@@ -30,25 +29,25 @@ class Account extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  firstname: FieldTextDefinition;
+  firstname: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
-  lastname: FieldTextDefinition;
+  lastname: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
-  email: FieldTextDefinition;
+  email: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
-  password: FieldTextDefinition;
+  password: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: "roles", multiple: false })
-  role: FieldRelationDefinition<{
+  role: FieldDefinitionRelation<{
     model: Role;
     multiple: false;
   }>;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: "users", multiple: false })
-  user: FieldRelationDefinition<{
+  user: FieldDefinitionRelation<{
     model: User;
     multiple: false;
   }>;

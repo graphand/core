@@ -5,12 +5,6 @@ import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import { FieldsRestriction, Rule, ValidatorsDefinition } from "../types";
 import RuleActions from "../enums/rule-actions";
-import {
-  FieldBooleanDefinition,
-  FieldJSONDefinition,
-  FieldRelationDefinition,
-  FieldTextDefinition,
-} from "../fields";
 import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
@@ -28,16 +22,16 @@ class Role extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
-  slug: FieldTextDefinition;
+  slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.BOOLEAN)
-  admin: FieldBooleanDefinition;
+  admin: FieldDefinitionBoolean;
 
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "roles",
     multiple: true,
   })
-  inherits: FieldRelationDefinition<{
+  inherits: FieldDefinitionRelation<{
     model: Role;
     multiple: true;
   }>;
@@ -63,7 +57,7 @@ class Role extends Model {
       },
     },
   })
-  rules: FieldJSONDefinition<Array<Rule>>;
+  rules: FieldDefinitionJSON<Array<Rule>>;
 
   @fieldDecorator(FieldTypes.JSON, {
     multiple: true,
@@ -89,7 +83,7 @@ class Role extends Model {
       },
     },
   })
-  fieldsRestrictions: FieldJSONDefinition<Array<FieldsRestriction>>;
+  fieldsRestrictions: FieldDefinitionJSON<Array<FieldsRestriction>>;
 
   async getRulesInherited(): Promise<Array<Rule>> {
     let rules: Array<Rule> = this.rules || [];
