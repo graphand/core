@@ -7,6 +7,8 @@ import Field from "./lib/Field";
 import ErrorCodes from "./enums/error-codes";
 import Validator from "./lib/Validator";
 import ValidationError from "./lib/ValidationError";
+import PromiseModel from "./lib/PromiseModel";
+import PromiseModelList from "./lib/PromiseModelList";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -36,6 +38,56 @@ export type FieldDefinitionOptions<T extends FieldTypes> =
     : T extends FieldTypes.JSON
     ? { [key: string]: any }
     : {};
+
+type PromiseModelOn<T extends Model> = PromiseModel<T> & {};
+
+type string_ = string & Partial<any>;
+
+type FieldTextDefinitionSingleType<
+  Options extends string[],
+  Creatable extends boolean = true,
+  DefaultType extends any = string_
+> = Options extends string[]
+  ? Creatable extends false
+    ? Options[number]
+    : FieldTextDefinitionSingleType<Options, false> | DefaultType
+  : FieldTextDefinitionSingleType<[], Creatable, string>;
+
+export type DefaultFieldIdDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.ID>
+> = string;
+
+export type DefaultFieldTextDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.TEXT>
+> =
+  | (D["multiple"] extends true
+      ? FieldTextDefinitionSingleType<D["options"], D["creatable"]>[]
+      : FieldTextDefinitionSingleType<D["options"], D["creatable"]>)
+  | undefined;
+
+export type DefaultFieldBooleanDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.BOOLEAN>
+> = boolean | undefined;
+
+export type DefaultFieldNumberDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.NUMBER>
+> = number | undefined;
+
+export type DefaultFieldDateDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.DATE>
+> = Date | undefined;
+
+export type DefaultFieldJSONDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.JSON>
+> = D | any | undefined;
+
+export type DefaultFieldRelationDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.RELATION>
+> =
+  | (D["multiple"] extends true
+      ? ModelList<D["model"]> | PromiseModelList<D["model"]>
+      : D["model"] | PromiseModelOn<D["model"]>)
+  | undefined;
 
 export type SortDirection =
   | 1
