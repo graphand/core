@@ -31,7 +31,12 @@ class Field<T extends FieldTypes = FieldTypes> {
     return true;
   }
 
-  serialize(value: any, format: SerializerFormat, from: Model) {
+  serialize(
+    value: any,
+    format: SerializerFormat,
+    from: Model,
+    populatedData?: any
+  ) {
     return value;
   }
 

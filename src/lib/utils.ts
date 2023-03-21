@@ -109,9 +109,13 @@ export const getFieldFromPath = (model: typeof Model, path: string): Field => {
   return field;
 };
 
-export const getValueFromPath = (instance: Model, path: string): any => {
+export const getValueFromPath = (obj: any, path: string): any => {
+  if (!obj || typeof obj !== "object") {
+    return obj;
+  }
+
   const fullPath = path.split(".");
-  let value = instance.__doc;
+  let value = obj;
 
   for (let i = 0; i < fullPath.length; i++) {
     const key = fullPath[i];

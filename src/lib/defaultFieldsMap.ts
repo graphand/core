@@ -6,6 +6,7 @@ import Adapter from "./Adapter";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
+  getValueFromPath,
   isObjectId,
   validateDocs,
 } from "./utils";
@@ -13,6 +14,7 @@ import Validator from "./Validator";
 import CoreError from "./CoreError";
 import ValidationFieldError from "./ValidationFieldError";
 import ValidationError from "./ValidationError";
+import ModelList from "./ModelList";
 
 class DefaultFieldId extends Field<FieldTypes.ID> {
   serialize(value: any): any {
@@ -78,8 +80,21 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 }
 
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
-  _serializeJSON = (value: any) => {
+  _serializeJSON = (
+    value: any,
+    format: SerializerFormat,
+    from: Model,
+    populatedData: any
+  ) => {
     const canGetIds = typeof value === "object" && "getIds" in value;
+
+    if (populatedData) {
+      if (populatedData instanceof ModelList) {
+        return populatedData?.toJSON?.().rows;
+      }
+
+      return populatedData?.toJSON?.();
+    }
 
     if (this.options.multiple) {
       let ids;
@@ -103,7 +118,12 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
       : value._id?.toString() ?? value?.toString();
   };
 
-  _serializeObject = (value: any, format: SerializerFormat, from: Model) => {
+  _serializeObject = (
+    value: any,
+    format: SerializerFormat,
+    from: Model,
+    populated: boolean
+  ) => {
     // get the referenced model with the same adapter as from parameter
     const adapter = from.model.__adapter.constructor as typeof Adapter;
     let model = Model.getFromSlug(this.options.ref, adapter);
@@ -117,14 +137,19 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     return model.get(String(id));
   };
 
-  serialize(value: any, format: SerializerFormat, from: Model): any {
+  serialize(
+    value: any,
+    format: SerializerFormat,
+    from: Model,
+    populated: boolean
+  ): any {
     switch (format) {
       case SerializerFormat.JSON:
       case SerializerFormat.DOCUMENT:
-        return this._serializeJSON(value);
+        return this._serializeJSON(value, format, from, populated);
       case SerializerFormat.OBJECT:
       default:
-        return this._serializeObject(value, format, from);
+        return this._serializeObject(value, format, from, populated);
     }
   }
 }
@@ -209,7 +234,13 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       fieldsEntries
     );
   }
-  serialize(value: any, format: SerializerFormat, from: Model): any {
+
+  serialize(
+    value: any,
+    format: SerializerFormat,
+    from: Model,
+    populatedData?: any
+  ): any {
     const _format = (obj: object) => {
       let formattedEntries = Object.entries(this.options.fields ?? {}).map(
         ([slug, def]) => {
@@ -222,7 +253,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
           }
 
           if (value !== undefined && value !== null) {
-            value = field.serialize(value, format, from);
+            value = field.serialize(value, format, from, populatedData?.[slug]);
           }
 
           return [slug, value];
@@ -245,7 +276,12 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
             }
 
             if (value !== undefined && value !== null) {
-              value = defaultField.serialize(value, format, from);
+              value = defaultField.serialize(
+                value,
+                format,
+                from,
+                populatedData?.[slug]
+              );
             }
 
             return [slug, value];

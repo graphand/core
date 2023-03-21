@@ -120,7 +120,6 @@ export type Filter = Record<string, any>;
 
 export type PopulateOption = {
   path: string;
-  filter?: Filter;
   populate?: Populate;
 };
 

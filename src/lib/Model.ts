@@ -60,13 +60,15 @@ class Model {
   _createdAt: FieldDefinitionDate;
 
   @fieldDecorator(FieldTypes.IDENTITY)
-  _createdBy: FieldDefinitionRelation;
+  _createdBy;
 
   @fieldDecorator(FieldTypes.DATE)
   _updatedAt: FieldDefinitionDate;
 
   @fieldDecorator(FieldTypes.IDENTITY)
   _updatedBy;
+
+  __populated: Record<string, any>;
 
   constructor(doc: any = {}) {
     doc._id ??= Date.now();
@@ -82,6 +84,31 @@ class Model {
   clone() {
     const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
     return new this.model(clonedDoc);
+  }
+
+  async populate(path: string, value?: any) {
+    this.__populated ??= {};
+
+    value ??= await this.get(path);
+
+    let assignTo = this.__populated;
+    const fullPath = path.split(".");
+    for (let i = 0; i < fullPath.length; i++) {
+      const key = fullPath[i];
+
+      if (i === fullPath.length - 1) {
+        assignTo[key] = value;
+      }
+
+      assignTo[key] ??= {};
+      assignTo = assignTo[key];
+    }
+
+    return value;
+  }
+
+  isPopulated(path: string) {
+    return Boolean(getValueFromPath(this.__populated, path));
   }
 
   static getBaseClass() {
@@ -330,14 +357,15 @@ class Model {
       return undefined;
     }
 
-    let value = getValueFromPath(this, path);
+    let value = getValueFromPath(this.__doc, path);
+    let populatedValue = getValueFromPath(this.__populated, path);
 
     if (value === undefined && "default" in field.options) {
       value = field.options.default as typeof value;
     }
 
-    if (value !== undefined && value !== null) {
-      value = field.serialize(value, format, this);
+    if (populatedValue || (value !== undefined && value !== null)) {
+      value = field.serialize(value, format, this, populatedValue);
     }
 
     return value;

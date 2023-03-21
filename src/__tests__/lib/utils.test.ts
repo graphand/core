@@ -169,8 +169,8 @@ describe("test utils", () => {
         field1: "value1",
         field2: "value2",
       });
-      expect(getValueFromPath(instance, "field1")).toEqual("value1");
-      expect(getValueFromPath(instance, "field2")).toEqual("value2");
+      expect(getValueFromPath(instance.__doc, "field1")).toEqual("value1");
+      expect(getValueFromPath(instance.__doc, "field2")).toEqual("value2");
     });
 
     it("should return the value from the path in nested object", () => {
@@ -203,11 +203,15 @@ describe("test utils", () => {
         },
       });
 
-      expect(getValueFromPath(instance, "field3")).toEqual({
+      expect(getValueFromPath(instance.__doc, "field3")).toEqual({
         field4: "value4",
       });
-      expect(getValueFromPath(instance, "field3").field4).toEqual("value4");
-      expect(getValueFromPath(instance, "field3.field4")).toEqual("value4");
+      expect(getValueFromPath(instance.__doc, "field3").field4).toEqual(
+        "value4"
+      );
+      expect(getValueFromPath(instance.__doc, "field3.field4")).toEqual(
+        "value4"
+      );
     });
   });
 
