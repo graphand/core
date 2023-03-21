@@ -85,8 +85,8 @@ export type DefaultFieldRelationDefinition<
   D extends FieldDefinitionOptions<FieldTypes.RELATION>
 > =
   | (D["multiple"] extends true
-      ? ModelList<D["model"]> | PromiseModelList<D["model"]>
-      : D["model"] | PromiseModelOn<D["model"]>)
+      ? PromiseModelList<D["model"]>
+      : PromiseModelOn<D["model"]>)
   | undefined;
 
 export type SortDirection =
@@ -269,7 +269,7 @@ export type FieldsDefinition = {
   [slug: string]: FieldDefinition;
 };
 
-export type DocumentDefinition = { [key: string]: any };
+export type DocumentDefinition = Record<string, any>;
 
 export type InputModelPayload<M extends typeof Model> = Partial<
   Omit<ModelDocument<InstanceType<M>>, ModelDocumentBaseFields>

@@ -407,20 +407,9 @@ class Model {
       "_updatedBy",
     ].includes(String(path));
 
-    setValueOnPath(this, String(path), value);
-
-    // this.__doc[slug as keyof DocumentDefinition] = value;
+    setValueOnPath(this.__doc, String(path), value);
 
     return this;
-  }
-
-  toPromise() {
-    const i = this;
-    return new PromiseModel(
-      [(resolve) => resolve(i)],
-      this.model,
-      String(this._id)
-    );
   }
 
   to(format: SerializerFormat) {

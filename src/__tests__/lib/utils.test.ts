@@ -242,8 +242,8 @@ describe("test utils", () => {
         field2: "value2",
       });
 
-      setValueOnPath(instance, "field1", "newValue1");
-      setValueOnPath(instance, "field2", "newValue2");
+      setValueOnPath(instance.__doc, "field1", "newValue1");
+      setValueOnPath(instance.__doc, "field2", "newValue2");
 
       expect(instance.get("field1")).toEqual("newValue1");
       expect(instance.get("field2")).toEqual("newValue2");
@@ -290,7 +290,7 @@ describe("test utils", () => {
       });
 
       expect(instance.get("field3.field4")).toEqual("value4");
-      setValueOnPath(instance, "field3.field4", "newValue4");
+      setValueOnPath(instance.__doc, "field3.field4", "newValue4");
       expect(instance.get("field3.field4")).toEqual("newValue4");
     });
   });

@@ -8,8 +8,8 @@ import {
   DefaultFieldDateDefinition,
   DefaultFieldJSONDefinition,
   FieldDefinitionOptions,
+  FieldTypes,
 } from "./dist/types";
-import FieldTypes from "./dist/enums/field-types";
 
 declare global {
   export type ExecutorCtx = any;

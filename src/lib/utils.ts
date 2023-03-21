@@ -109,13 +109,16 @@ export const getFieldFromPath = (model: typeof Model, path: string): Field => {
   return field;
 };
 
-export const getValueFromPath = (obj: any, path: string): any => {
-  if (!obj || typeof obj !== "object") {
-    return obj;
+export const getValueFromPath = (
+  doc: DocumentDefinition,
+  path: string
+): any => {
+  if (!doc || typeof doc !== "object") {
+    return doc;
   }
 
   const fullPath = path.split(".");
-  let value = obj;
+  let value = doc;
 
   for (let i = 0; i < fullPath.length; i++) {
     const key = fullPath[i];
@@ -131,13 +134,13 @@ export const getValueFromPath = (obj: any, path: string): any => {
 };
 
 export const setValueOnPath = (
-  instance: Model,
+  doc: DocumentDefinition,
   path: string,
   value: any
 ): void => {
   const fullPath = path.split(".");
 
-  let assignTo = instance.__doc;
+  let assignTo = doc;
 
   for (let i = 0; i < fullPath.length; i++) {
     const key = fullPath[i];
