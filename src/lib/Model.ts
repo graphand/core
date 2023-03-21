@@ -86,10 +86,12 @@ class Model {
     return new this.model(clonedDoc);
   }
 
-  async populate(path: string, value?: any) {
+  async populate(path: string, value?: any, ctx?: ExecutorCtx) {
     this.__populated ??= {};
 
-    value ??= await this.get(path);
+    if (value === undefined) {
+      value = await this.get(path, SerializerFormat.OBJECT, ctx);
+    }
 
     let assignTo = this.__populated;
     const fullPath = path.split(".");
@@ -350,8 +352,9 @@ class Model {
    * Model instance getter. Returns the value for the specified key
    * @param path {string} - The path to the field get
    * @param format {json|object|document} - Serializer format
+   * @param ctx {ExecutorCtx} - Executor context
    */
-  get(path: string, format = SerializerFormat.OBJECT) {
+  get(path: string, format = SerializerFormat.OBJECT, ctx?: ExecutorCtx) {
     const field = getFieldFromPath(this.model, path);
     if (!field) {
       return undefined;
@@ -365,7 +368,7 @@ class Model {
     }
 
     if (populatedValue || (value !== undefined && value !== null)) {
-      value = field.serialize(value, format, this, populatedValue);
+      value = field.serialize(value, format, this, populatedValue, ctx);
     }
 
     return value;

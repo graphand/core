@@ -35,7 +35,8 @@ class Field<T extends FieldTypes = FieldTypes> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    populatedData?: any
+    populatedData?: any,
+    ctx: ExecutorCtx = {}
   ) {
     return value;
   }

@@ -6,7 +6,6 @@ import Adapter from "./Adapter";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
-  getValueFromPath,
   isObjectId,
   validateDocs,
 } from "./utils";
@@ -84,16 +83,37 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    populatedData: any
+    populatedData?: any
   ) => {
     const canGetIds = typeof value === "object" && "getIds" in value;
 
-    if (populatedData) {
+    if (populatedData !== undefined) {
       if (populatedData instanceof ModelList) {
-        return populatedData?.toJSON?.().rows;
+        // const rows = populatedData?.toJSON?.().rows || [];
+        // let ids: Array<string>;
+        //
+        // if (canGetIds) {
+        //   ids = value.getIds();
+        // } else {
+        //   const arrValue = Array.isArray(value) ? value : [value];
+        //   ids = arrValue
+        //     .map((v) => (typeof v === "object" && "_id" in v ? v._id : v))
+        //     .filter(Boolean);
+        // }
+        //
+        // return ids.map((id) => {
+        //   const row = rows.find((r) => r._id === String(id));
+        //   return row || null;
+        // });
+
+        return populatedData?.toJSON?.().rows || [];
       }
 
-      return populatedData?.toJSON?.();
+      if ("toJSON" in populatedData) {
+        return populatedData.toJSON();
+      }
+
+      return Array.isArray(populatedData) ? populatedData : null;
     }
 
     if (this.options.multiple) {
@@ -122,7 +142,8 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    populated: boolean
+    populatedData?: any,
+    ctx: ExecutorCtx = {}
   ) => {
     // get the referenced model with the same adapter as from parameter
     const adapter = from.model.__adapter.constructor as typeof Adapter;
@@ -130,26 +151,27 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 
     if (this.options.multiple) {
       const ids = Array.isArray(value) ? value : [value];
-      return model.getList({ ids });
+      return model.getList({ ids }, ctx);
     }
 
     const id = Array.isArray(value) ? value[0] : value;
-    return model.get(String(id));
+    return model.get(String(id), ctx);
   };
 
   serialize(
     value: any,
     format: SerializerFormat,
     from: Model,
-    populated: boolean
+    populatedData?: any,
+    ctx: ExecutorCtx = {}
   ): any {
     switch (format) {
       case SerializerFormat.JSON:
       case SerializerFormat.DOCUMENT:
-        return this._serializeJSON(value, format, from, populated);
+        return this._serializeJSON(value, format, from, populatedData);
       case SerializerFormat.OBJECT:
       default:
-        return this._serializeObject(value, format, from, populated);
+        return this._serializeObject(value, format, from, populatedData, ctx);
     }
   }
 }
