@@ -1,14 +1,14 @@
-import Model from "./lib/Model";
-import ModelList from "./lib/ModelList";
-import FieldTypes from "./enums/field-types";
-import RuleActions from "./enums/rule-actions";
-import ValidatorTypes from "./enums/validator-types";
-import Field from "./lib/Field";
-import ErrorCodes from "./enums/error-codes";
-import Validator from "./lib/Validator";
-import ValidationError from "./lib/ValidationError";
-import PromiseModel from "./lib/PromiseModel";
-import PromiseModelList from "./lib/PromiseModelList";
+import type Model from "./lib/Model";
+import type ModelList from "./lib/ModelList";
+import type FieldTypes from "./enums/field-types";
+import type RuleActions from "./enums/rule-actions";
+import type ValidatorTypes from "./enums/validator-types";
+import type Field from "./lib/Field";
+import type ErrorCodes from "./enums/error-codes";
+import type Validator from "./lib/Validator";
+import type ValidationError from "./lib/ValidationError";
+import type PromiseModel from "./lib/PromiseModel";
+import type PromiseModelList from "./lib/PromiseModelList";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT

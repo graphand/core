@@ -4,7 +4,7 @@
   "description": "",
   "homepage": "https://github.com/graphand/core",
   "repository": "graphand/core",
-  "main": "dist/index.js",
+  "main": "dist/bundle.js",
   "types": "dist/types/index.d.ts",
   "author": "Pierre Cabrière",
   "license": "MIT",
@@ -12,15 +12,22 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
+    "bundle": "webpack",
+    "bundle:watch": "webpack --watch",
     "test": "jest --coverage"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@types/jest": "^29.2.4",
+    "@types/jest": "^29.5.0",
     "eslint": "^8.29.0",
-    "jest": "^29.3.1",
+    "jest": "^29.5.0",
     "prettier": "^2.8.0",
-    "ts-jest": "^29.0.3",
-    "typescript": "^4.9.3"
+    "ts-jest": "^29.0.5",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.2",
+    "webpack": "^5.76.2"
+  },
+  "dependencies": {
+    "webpack-cli": "^5.0.1"
   }
 }
