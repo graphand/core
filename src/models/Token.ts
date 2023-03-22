@@ -25,6 +25,12 @@ class Token extends Model {
   @fieldDecorator(FieldTypes.DATE)
   expiration: FieldDefinitionDate;
 
+  @fieldDecorator(FieldTypes.NUMBER)
+  maxGen: FieldDefinitionNumber;
+
+  @fieldDecorator(FieldTypes.NUMBER, { default: 0 })
+  generation: FieldDefinitionNumber;
+
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "roles",
     multiple: false,
