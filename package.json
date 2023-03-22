@@ -4,16 +4,14 @@
   "description": "",
   "homepage": "https://github.com/graphand/core",
   "repository": "graphand/core",
-  "main": "dist/bundle.js",
+  "main": "dist/core.min.js",
   "types": "dist/types/index.d.ts",
   "author": "Pierre Cabrière",
   "license": "MIT",
   "source": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
-    "bundle": "webpack",
-    "bundle:watch": "webpack --watch",
+    "build": "webpack",
+    "build:watch": "webpack --watch",
     "test": "jest --coverage"
   },
   "devDependencies": {

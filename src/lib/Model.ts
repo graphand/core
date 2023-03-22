@@ -262,6 +262,13 @@ class Model {
               return this.get(slug);
             },
             set(v) {
+              if (v === undefined) {
+                console.warn(
+                  "cannot set undefined value with = operator. Please use .set method instead"
+                );
+                return;
+              }
+
               return this.set(slug, v);
             },
           },
@@ -279,9 +286,10 @@ class Model {
   }
 
   static verifyAdapter() {
-    if (!this.__adapter || !(this.__adapter instanceof Adapter)) {
+    if (!this.__adapter) {
       throw new CoreError({
         code: ErrorCodes.INVALID_ADAPTER,
+        message: `model ${this.slug} has invalid adapter`,
       });
     }
   }
@@ -378,13 +386,11 @@ class Model {
    * Model instance setter. Set value for the specified key
    * @param path {string} - The path to the field get
    * @param value {*}
-   * @param upsert {boolean=} - Define if the setter will trigger a store upsert action
    */
   set<T extends Model, S extends keyof T | string>(
     this: T,
     path: S,
-    value: S extends keyof T ? T[S] | any : any,
-    upsert?: boolean
+    value: S extends keyof T ? T[S] | any : any
   ) {
     const field = getFieldFromPath(this.model, String(path));
     if (!field) {
@@ -398,14 +404,6 @@ class Model {
     if (value !== undefined && value !== null) {
       value = field.serialize(value, SerializerFormat.DOCUMENT, this);
     }
-
-    upsert ??= ![
-      "_id",
-      "_createdAt",
-      "_createdBy",
-      "_updatedAt",
-      "_updatedBy",
-    ].includes(String(path));
 
     setValueOnPath(this.__doc, String(path), value);
 

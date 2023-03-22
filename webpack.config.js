@@ -4,7 +4,7 @@ module.exports = {
   mode: "production",
   entry: "./src/index.ts",
   output: {
-    filename: "bundle.js",
+    filename: "core.min.js",
     path: path.resolve(__dirname, "dist"),
     libraryTarget: "commonjs2",
   },

@@ -164,23 +164,6 @@ export const setValueOnPath = (
 
     assignTo = nextField;
   }
-
-  // let _value = instance.__doc;
-  //
-  // for (let i = 0; i < fullPath.length; i++) {
-  //   const key = fullPath[i];
-  //
-  //   if (typeof _value !== "object" || _value === null) {
-  //     return;
-  //   }
-  //
-  //   if (i === fullPath.length - 1) {
-  //     _value[key] = value;
-  //     return;
-  //   }
-  //
-  //   _value = _value[key];
-  // }
 };
 
 export const getRecursiveHooksFromModel = <
