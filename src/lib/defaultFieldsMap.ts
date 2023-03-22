@@ -13,7 +13,6 @@ import Validator from "./Validator";
 import CoreError from "./CoreError";
 import ValidationFieldError from "./ValidationFieldError";
 import ValidationError from "./ValidationError";
-import ModelList from "./ModelList";
 
 class DefaultFieldId extends Field<FieldTypes.ID> {
   serialize(value: any): any {
@@ -79,42 +78,8 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 }
 
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
-  _serializeJSON = (
-    value: any,
-    format: SerializerFormat,
-    from: Model,
-    populatedData?: any
-  ) => {
+  _serializeJSON = (value: any) => {
     const canGetIds = typeof value === "object" && "getIds" in value;
-
-    if (populatedData !== undefined) {
-      if (populatedData instanceof ModelList) {
-        // const rows = populatedData?.toJSON?.().rows || [];
-        // let ids: Array<string>;
-        //
-        // if (canGetIds) {
-        //   ids = value.getIds();
-        // } else {
-        //   const arrValue = Array.isArray(value) ? value : [value];
-        //   ids = arrValue
-        //     .map((v) => (typeof v === "object" && "_id" in v ? v._id : v))
-        //     .filter(Boolean);
-        // }
-        //
-        // return ids.map((id) => {
-        //   const row = rows.find((r) => r._id === String(id));
-        //   return row || null;
-        // });
-
-        return populatedData?.toJSON?.().rows || [];
-      }
-
-      if ("toJSON" in populatedData) {
-        return populatedData.toJSON();
-      }
-
-      return Array.isArray(populatedData) ? populatedData : null;
-    }
 
     if (this.options.multiple) {
       let ids;
@@ -142,7 +107,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    populatedData?: any,
+    path: string,
     ctx: ExecutorCtx = {}
   ) => {
     // get the referenced model with the same adapter as from parameter
@@ -162,16 +127,16 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    populatedData?: any,
+    path: string,
     ctx: ExecutorCtx = {}
   ): any {
     switch (format) {
       case SerializerFormat.JSON:
       case SerializerFormat.DOCUMENT:
-        return this._serializeJSON(value, format, from, populatedData);
+        return this._serializeJSON(value);
       case SerializerFormat.OBJECT:
       default:
-        return this._serializeObject(value, format, from, populatedData, ctx);
+        return this._serializeObject(value, format, from, path, ctx);
     }
   }
 }
@@ -261,7 +226,8 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    populatedData?: any
+    path: string,
+    ctx: ExecutorCtx = {}
   ): any {
     const _format = (obj: object) => {
       let formattedEntries = Object.entries(this.options.fields ?? {}).map(
@@ -275,7 +241,13 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
           }
 
           if (value !== undefined && value !== null) {
-            value = field.serialize(value, format, from, populatedData?.[slug]);
+            value = field.serialize(
+              value,
+              format,
+              from,
+              [path, slug].join("."),
+              ctx
+            );
           }
 
           return [slug, value];
@@ -302,7 +274,8 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
                 value,
                 format,
                 from,
-                populatedData?.[slug]
+                [path, slug].join("."),
+                ctx
               );
             }
 

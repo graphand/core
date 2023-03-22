@@ -68,8 +68,6 @@ class Model {
   @fieldDecorator(FieldTypes.IDENTITY)
   _updatedBy;
 
-  __populated: Record<string, any>;
-
   constructor(doc: any = {}) {
     doc._id ??= Date.now();
     this.setDoc(doc);
@@ -84,33 +82,6 @@ class Model {
   clone() {
     const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
     return new this.model(clonedDoc);
-  }
-
-  async populate(path: string, value?: any, ctx?: ExecutorCtx) {
-    this.__populated ??= {};
-
-    if (value === undefined) {
-      value = await this.get(path, SerializerFormat.OBJECT, ctx);
-    }
-
-    let assignTo = this.__populated;
-    const fullPath = path.split(".");
-    for (let i = 0; i < fullPath.length; i++) {
-      const key = fullPath[i];
-
-      if (i === fullPath.length - 1) {
-        assignTo[key] = value;
-      }
-
-      assignTo[key] ??= {};
-      assignTo = assignTo[key];
-    }
-
-    return value;
-  }
-
-  isPopulated(path: string) {
-    return Boolean(getValueFromPath(this.__populated, path));
   }
 
   static getBaseClass() {
@@ -384,21 +355,20 @@ class Model {
    * @param format {json|object|document} - Serializer format
    * @param ctx {ExecutorCtx} - Executor context
    */
-  get(path: string, format = SerializerFormat.OBJECT, ctx?: ExecutorCtx) {
+  get(path: string, format = SerializerFormat.OBJECT, ctx: ExecutorCtx = {}) {
     const field = getFieldFromPath(this.model, path);
     if (!field) {
       return undefined;
     }
 
     let value = getValueFromPath(this.__doc, path);
-    let populatedValue = getValueFromPath(this.__populated, path);
 
     if (value === undefined && "default" in field.options) {
       value = field.options.default as typeof value;
     }
 
-    if (populatedValue || (value !== undefined && value !== null)) {
-      value = field.serialize(value, format, this, populatedValue, ctx);
+    if (value !== undefined && value !== null) {
+      value = field.serialize(value, format, this, path, ctx);
     }
 
     return value;
@@ -412,9 +382,11 @@ class Model {
   set<T extends Model, S extends keyof T | string>(
     this: T,
     path: S,
-    value: S extends keyof T ? T[S] | any : any
+    value: S extends keyof T ? T[S] | any : any,
+    ctx: ExecutorCtx = {}
   ) {
-    const field = getFieldFromPath(this.model, String(path));
+    const _path = String(path);
+    const field = getFieldFromPath(this.model, _path);
     if (!field) {
       return;
     }
@@ -424,7 +396,13 @@ class Model {
     }
 
     if (value !== undefined && value !== null) {
-      value = field.serialize(value, SerializerFormat.DOCUMENT, this);
+      value = field.serialize(
+        value,
+        SerializerFormat.DOCUMENT,
+        this,
+        _path,
+        ctx
+      );
     }
 
     setValueOnPath(this.__doc, String(path), value);
