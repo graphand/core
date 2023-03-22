@@ -188,6 +188,7 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
     args: never,
     ctx: ExecutorCtx
   ) => Promise<AdapterFetcherModelDefinition<T>>;
+  initialize?: (args: never, ctx: ExecutorCtx) => Promise<void>;
 };
 
 export type Module<T extends typeof Model = any> = (model: T) => void;

@@ -73,6 +73,58 @@ describe("Test Model", () => {
       const AccountModel = Model.getFromSlug("accounts");
       expect(AccountModel.__adapter).toBeUndefined();
     });
+
+    it("Model initialization should execute hooks", async () => {
+      const _model = mockModel();
+      const model = _model.withAdapter(adapter);
+
+      const hookBefore = jest.fn();
+      const hookAfter = jest.fn();
+      model.hook("before", "initialize", hookBefore);
+      model.hook("after", "initialize", hookAfter);
+
+      await model.initialize();
+
+      expect(hookBefore).toBeCalledTimes(1);
+      expect(hookAfter).toBeCalledTimes(1);
+    });
+
+    it("Model initialization should execute hooks only at first initialization", async () => {
+      const _model = mockModel();
+      const model = _model.withAdapter(adapter);
+
+      const hookBefore = jest.fn();
+      const hookAfter = jest.fn();
+      model.hook("before", "initialize", hookBefore);
+      model.hook("after", "initialize", hookAfter);
+
+      await model.initialize();
+
+      expect(hookBefore).toBeCalledTimes(1);
+      expect(hookAfter).toBeCalledTimes(1);
+
+      await model.initialize();
+
+      expect(hookBefore).toBeCalledTimes(1);
+      expect(hookAfter).toBeCalledTimes(1);
+
+      await model.initialize(true);
+
+      expect(hookBefore).toBeCalledTimes(2);
+      expect(hookAfter).toBeCalledTimes(2);
+    });
+
+    it("Model initialization with hook error should throw error", async () => {
+      const _model = mockModel();
+      const model = _model.withAdapter(adapter);
+
+      const hookBefore = jest.fn(() => {
+        throw new Error("test");
+      });
+      model.hook("before", "initialize", hookBefore);
+
+      await expect(model.initialize()).rejects.toThrowError("test");
+    });
   });
 
   describe("Model fields", () => {

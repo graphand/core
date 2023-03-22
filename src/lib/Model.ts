@@ -155,9 +155,31 @@ class Model {
 
     this.__initPromise ??= new Promise(async (resolve, reject) => {
       try {
+        const hooksBefore = getRecursiveHooksFromModel(
+          this,
+          "initialize",
+          "before"
+        );
+
+        await hooksBefore.reduce(async (p, hook) => {
+          await p;
+          await hook.fn.call(this, { ctx });
+        }, Promise.resolve());
+
         if (model.extendable) {
           await model.reloadModel(ctx);
         }
+
+        const hooksAfter = getRecursiveHooksFromModel(
+          this,
+          "initialize",
+          "after"
+        );
+
+        await hooksAfter.reduce(async (p, hook) => {
+          await p;
+          await hook.fn.call(this, { ctx });
+        }, Promise.resolve());
       } catch (e) {
         reject(e);
       }

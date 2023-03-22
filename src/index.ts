@@ -20,6 +20,7 @@ import Adapter from "./lib/Adapter";
 import Field from "./lib/Field";
 import Validator from "./lib/Validator";
 import ValidatorTypes from "./enums/validator-types";
+import ErrorCodes from "./enums/error-codes";
 import CoreError from "./lib/CoreError";
 import ValidationError from "./lib/ValidationError";
 import controllersMap from "./lib/controllersMap";
@@ -81,6 +82,7 @@ export {
   getFieldFromPath,
   getValueFromPath,
   setValueOnPath,
+  ErrorCodes,
 };
 
 export * from "./types";
