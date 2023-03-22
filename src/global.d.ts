@@ -1,4 +1,4 @@
-import {
+import type {
   DefaultFieldBooleanDefinition,
   DefaultFieldDefinitionOptions,
   DefaultFieldIdDefinition,
@@ -8,8 +8,8 @@ import {
   DefaultFieldDateDefinition,
   DefaultFieldJSONDefinition,
   FieldDefinitionOptions,
+  FieldTypes,
 } from "./types";
-import FieldTypes from "./enums/field-types";
 
 declare global {
   export type ExecutorCtx = any;
