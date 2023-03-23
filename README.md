@@ -12,9 +12,12 @@ Pour être utilisés correctement, les modèles ont besoin d'un adaptateur (clas
 ## Adaptateur : classe `Adapter`
 
 Une fois la structure de base définie par cette librairie, certaines actions doivent être implémentées pour fonctionner différemment selon le contexte. (serveur/client)
-C'est le rôle de l'adaptateur qui est une classe qui étend la classe `Adapter`. Cette classe sera instanciée par core pour chaque modèle avec le modèle en question accesible via `Adapter.prototype.model`.
-Pour fonctionner, chaque modèle doit donc être appelé avec la méthode `Model.withAdapter` qui prend en paramètre la classe de l'adaptateur.
-C'est cette fonction est appelée under the hood par le client avec la méthode `Client.prototype.getModel` et par le serveur avec la méthode `Controller.prototype.getModel`.
+Par exemple, le serveur lit et écrit dans une base de données, alors que le client émet des appels HTTP vers le serveur pour y récupérer les données ou effectuer des opérations de lecture/écriture.
+
+C'est donc le rôle de l'adaptateur : une classe qui étend la classe `Adapter` et qui sera instanciée par core pour chaque modèle.
+Chaque instance de l'adapteteur a accès au modèle en question via l'attribut `Adapter.prototype.model`.
+Pour fonctionner avec un adaptateur, les modèles doivent être appelé avec la méthode `Model.withAdapter` qui prend en paramètre la classe de l'adaptateur.
+C'est cette fonction qui est appelée under the hood par le client avec la méthode `Client.prototype.getModel` et par le serveur avec la méthode `Controller.prototype.getModel` (avec leurs adaptateurs respectifs).
 
 ### `Adapter.prototype.fetcher`
 
@@ -32,7 +35,7 @@ Le `fetcher` définit le fonctionnement de plusieurs méthodes :
 - getModelDefinition : récupère les informations sur ce modèle (champs, validateurs, etc.)
 
 Chacune de ces méthodes sera appelée par le modèle via la méthode `execute`.
-Chaque appel de celle-ci exécutera les hooks `before` et `after` correspondants à l'action en question du fetcher.
+**Chaque appel de celle-ci exécutera les hooks `before` et `after` correspondants à l'action en question du fetcher.**
 Par exemple, `Model.get` utilise la méthode `Model.execute('get', ...args)` qui exécutera la fonction `get` définie dans `adapter.fetcher` ainsi que les hooks `before` et `after` de l'action `get`.
 
 #### Exemple
@@ -53,20 +56,20 @@ Model.withAdapter(MyAdapter).get("..."); // exécute la methode get du fetcher d
 
 ### `Adapter.prototype.fieldsMap`
 
-Le `fieldsMap` est un objet qui définit chaque champ en fonction de son type.
+`fieldsMap` est un objet qui lie chaque champ à la classe de son type.
 Les types de champs sont tous définis par l'enum `FieldTypes` et sont les suivants :
 
-- FieldTypes.ID
-- FieldTypes.TEXT
-- FieldTypes.NUMBER
-- FieldTypes.BOOLEAN
-- FieldTypes.RELATION
-- FieldTypes.DATE
-- FieldTypes.JSON
-- FieldTypes.IDENTITY
+- _FieldTypes.ID_
+- _FieldTypes.TEXT_
+- _FieldTypes.NUMBER_
+- _FieldTypes.BOOLEAN_
+- _FieldTypes.RELATION_
+- _FieldTypes.DATE_
+- _FieldTypes.JSON_
+- _FieldTypes.IDENTITY_
 
-Chaque champ est une classe qui étend la classe de base `Field` est qui définit la manière dont le type de champ encode et décode les données.
-Tous les types de champs ont leur classe définie dans `@graphand/core` et l'adaptateur peut surcharger seulement certaines.
+Chaque champ est donc une classe qui étend la classe de base `Field` et qui décrit la manière dont le type de champ en question encode et décode les données.
+Tous les types de champs existent déjà dans `@graphand/core` et l'adaptateur peut en surcharger seulement certaines si besoin.
 
 #### Exemple
 
@@ -87,11 +90,11 @@ MyAdapter.prototype.fieldsMap = {
 De la même manière que pour les champs, les validateurs sont définis dans le `validatorsMap`.
 Les types de champs sont dans l'enum `ValidatorTypes` :
 
-- ValidatorTypes.REQUIRED
-- ValidatorTypes.UNIQUE
-- ValidatorTypes.BOUNDARIES
-- ValidatorTypes.LENGTH
-- ValidatorTypes.REGEX
-- ValidatorTypes.SAMPLE
-- ValidatorTypes.CONFIG_KEY
-- ValidatorTypes.DATAMODEL_CONFIG_KEY
+- _ValidatorTypes.REQUIRED_
+- _ValidatorTypes.UNIQUE_
+- _ValidatorTypes.BOUNDARIES_
+- _ValidatorTypes.LENGTH_
+- _ValidatorTypes.REGEX_
+- _ValidatorTypes.SAMPLE_
+- _ValidatorTypes.CONFIG_KEY_
+- _ValidatorTypes.DATAMODEL_CONFIG_KEY_
