@@ -7,11 +7,11 @@ Voici les concepts de base de cette librairie :
 
 `@graphand/core` exporte les modèles utilisées dans Graphand, leurs champs ainsi que les validateurs de chacun.
 Chaque modèle est une classe qui étend la classe de base `Model`.
-Pour être utilisés correctement, les modèles ont besoin d'un adaptateur (classe `Adapter`) qui définit leur fonctionnement.
+Pour être utilisés correctement, les modèles ont besoin d'un adaptateur (classe `Adapter`) qui décrit leur fonctionnement.
 
 ## Adaptateur : classe `Adapter`
 
-Une fois la structure de base définie par cette librairie, certaines actions doivent être implémentées pour fonctionner différemment selon le contexte. (serveur/client)
+Une fois la structure de base posée par cette librairie, certaines actions doivent être implémentées pour fonctionner différemment selon le contexte. (serveur/client)
 Par exemple, le serveur lit et écrit dans une base de données, alors que le client émet des appels HTTP vers le serveur pour y récupérer les données ou effectuer des opérations de lecture/écriture.
 
 C'est donc le rôle de l'adaptateur : une classe qui étend la classe `Adapter` et qui sera instanciée par core pour chaque modèle.
@@ -36,7 +36,7 @@ Le `fetcher` définit le fonctionnement de plusieurs méthodes :
 
 Chacune de ces méthodes sera appelée par le modèle via la méthode `execute`.
 **Chaque appel de celle-ci exécutera les hooks `before` et `after` correspondants à l'action en question du fetcher.**
-Par exemple, `Model.get` utilise la méthode `Model.execute('get', ...args)` qui exécutera la fonction `get` définie dans `adapter.fetcher` ainsi que les hooks `before` et `after` de l'action `get`.
+Par exemple, `Model.get` utilise la méthode `Model.execute('get', ...args)` qui exécutera la fonction `get` dans `adapter.fetcher` ainsi que les hooks `before` et `after` de l'action `get`.
 
 #### Exemple
 
@@ -88,7 +88,7 @@ MyAdapter.prototype.fieldsMap = {
 ### `Adapter.prototype.validatorsMap`
 
 De la même manière que pour les champs, les validateurs sont définis dans le `validatorsMap`.
-Les types de champs sont dans l'enum `ValidatorTypes` :
+Les types de champs sont tous dans l'enum `ValidatorTypes` :
 
 - _ValidatorTypes.REQUIRED_
 - _ValidatorTypes.UNIQUE_
