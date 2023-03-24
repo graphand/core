@@ -70,32 +70,56 @@ class Model {
 
   constructor(doc: any = {}) {
     doc._id ??= Date.now();
-    this.setDoc(doc);
+    this.__doc = doc;
 
     Object.defineProperty(this, "__doc", { enumerable: false });
   }
 
+  /**
+   * Returns the current instance model constructor as a typeof Model.
+   * instance.model is an alias for instance.constructor.
+   */
   get model() {
     return this.constructor as typeof Model;
   }
 
+  /**
+   * Clone the current model instance.
+   * @example
+   * const account = await models.Account.get();
+   * const clonedAccount = account.clone();
+   * console.log(account === clonedAccount); // false
+   */
   clone() {
     const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
     return new this.model(clonedDoc);
   }
 
+  /**
+   * Returns the base class of the model.
+   * When a model is extended with an adapter, the base class is the original model.
+   * @example
+   * const Account = models.Account.withAdapter(MyAdapter);
+   * console.log(Account === models.Account); // false
+   * console.log(Account.getBaseClass() === models.Account); // true
+   * console.log(models.Account.getBaseClass() === models.Account); // true
+   */
   static getBaseClass() {
-    if (!this.hasAdapter()) {
+    if (!this.__adapter) {
       return this;
     }
 
     return this.__baseClass ?? this;
   }
 
-  static hasAdapter() {
-    return Boolean(this.__adapter);
-  }
-
+  /**
+   * Returns a new model class with the given adapter.
+   * @param adapterClass
+   * @param modules
+   * @example
+   * const Account = models.Account.withAdapter(MyAdapter); // Account is now usable with MyAdapter
+   * const account = await Account.getList({}); // returns a PromiseModelList
+   */
   static withAdapter<T extends typeof Model>(
     this: T,
     adapterClass: typeof Adapter,
@@ -243,6 +267,7 @@ class Model {
     return this.__fieldsKeys;
   }
 
+  // TODO: move to utils
   defineFieldsProperties() {
     if (!this.model.__fieldsProperties) {
       const propEntries = this.model.fieldsKeys.map((slug) => {
@@ -274,10 +299,7 @@ class Model {
     Object.defineProperties(this, this.model.__fieldsProperties);
   }
 
-  setDoc(doc: any) {
-    this.__doc = doc;
-  }
-
+  // TODO: move to utils
   static verifyAdapter() {
     if (!this.__adapter) {
       throw new CoreError({
@@ -318,6 +340,7 @@ class Model {
     return model;
   }
 
+  // TODO: move to utils
   static getAdaptedModel<M extends typeof Model = typeof Model>(
     model: M,
     adapter?: typeof Adapter,
@@ -350,10 +373,11 @@ class Model {
   }
 
   /**
-   * Model instance getter. Returns the value for the specified key
-   * @param path {string} - The path to the field get
-   * @param format {json|object|document} - Serializer format
-   * @param ctx {ExecutorCtx} - Executor context
+   * Get value for a specific field. Model.get("field") is an equivalent to `model.field`
+   * @param path - The path to the field
+   * @param format - The format to serialize the value (default object)
+   * @example
+   * console.log(model.get("field"));
    */
   get(path: string, format = SerializerFormat.OBJECT, ctx: ExecutorCtx = {}) {
     const field = getFieldFromPath(this.model, path);
@@ -375,9 +399,12 @@ class Model {
   }
 
   /**
-   * Model instance setter. Set value for the specified key
-   * @param path {string} - The path to the field get
-   * @param value {*}
+   * Set value for a specific field. Model.set("field", "value") is an equivalent to `model.field = value`
+   * @param path - The path to the field
+   * @param value - The value to set
+   * @example
+   * model.set("field", "value");
+   * console.log(model.get("field")); // value
    */
   set<T extends Model, S extends keyof T | string>(
     this: T,
@@ -410,6 +437,12 @@ class Model {
     return this;
   }
 
+  /**
+   * Get the document representation of the current instance with the given format
+   * @param format
+   * @example
+   * console.log(instance.to(SerializerFormat.JSON)); // equivalent to instance.toJSON()
+   */
   to(format: SerializerFormat) {
     this.defineFieldsProperties();
 
@@ -420,22 +453,49 @@ class Model {
     return Object.fromEntries(entries);
   }
 
+  /**
+   * Get the document representation of the current instance as JSON
+   * @example
+   * console.log(instance.toJSON()); // equivalent to instance.to(SerializerFormat.JSON)
+   */
   toJSON() {
     return this.to(SerializerFormat.JSON);
   }
 
+  /**
+   * Get the document representation of the current instance as an object
+   * @example
+   * console.log(instance.toObject()); // equivalent to instance.to(SerializerFormat.OBJECT)
+   */
   toObject() {
     return this.to(SerializerFormat.OBJECT);
   }
 
+  /**
+   * Get the document representation of the current instance as a document
+   * @example
+   * console.log(instance.toDocument()); // equivalent to instance.to(SerializerFormat.DOCUMENT)
+   */
   toDocument() {
     return this.to(SerializerFormat.DOCUMENT);
   }
 
+  /**
+   * Serialize the current instance to a string
+   */
   toString() {
     return JSON.stringify(this.__doc);
   }
 
+  /**
+   * Hydrate a new instance of the current model from a string.
+   * You can use Model.prototype.toString() to get the string representation of an instance and then use this method to hydrate a new instance.
+   * @param str
+   * @param cleanPayload
+   * @example
+   * const modelStr = instance.toString();
+   * const instance = Model.fromString(modelStr);
+   */
   static fromString<T extends typeof Model>(
     this: T,
     str: string,
@@ -553,7 +613,7 @@ class Model {
       ctx
     );
 
-    this.setDoc(res.__doc);
+    this.__doc = res.__doc;
 
     return this;
   }
