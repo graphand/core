@@ -29,11 +29,8 @@ class Organization extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "users", multiple: true })
-  users: FieldDefinitionRelation<{
-    model: User;
-    multiple: true;
-  }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: "users" })
+  users: FieldDefinitionRelation<User>;
 }
 
 export default Organization;

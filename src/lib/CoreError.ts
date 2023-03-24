@@ -8,13 +8,15 @@ class CoreError extends Error {
     super();
     const { constructor } = Object.getPrototypeOf(this);
 
-    if (Error.captureStackTrace) {
+    if ("captureStackTrace" in Error) {
+      // @ts-ignore
       Error.captureStackTrace(this, constructor);
     }
 
     this.__definition = definition;
 
-    Object.defineProperty(this, "__definition", { enumerable: false });
+    const _this = this as CoreError;
+    Object.defineProperty(_this, "__definition", { enumerable: false });
   }
 
   get code() {

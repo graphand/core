@@ -8,7 +8,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "lib": ["es6", "dom", "es2017"],
+    "lib": ["es2019"],
     "target": "esnext",
     "outDir": "dist",
     "baseUrl": ".",
@@ -16,7 +16,7 @@
     "skipLibCheck": true,
     "preserveConstEnums": true,
     "declarationDir": "dist/types",
-    "downlevelIteration": true,
+    "downlevelIteration": true
   },
   "include": ["src"],
   "exclude": [

@@ -1,5 +1,6 @@
 enum FieldTypes {
   ID = "Id",
+  ARRAY = "Array",
   TEXT = "Text",
   NUMBER = "Number",
   BOOLEAN = "Boolean",

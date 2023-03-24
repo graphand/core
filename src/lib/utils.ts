@@ -4,6 +4,7 @@ import {
   DocumentDefinition,
   FieldDefinition,
   FieldOptions,
+  FieldOptionsMap,
   FieldsDefinition,
   Hook,
   HookPhase,
@@ -233,7 +234,9 @@ export const parseValidatorHook = (
   return { phase, action, fn };
 };
 
-export const createFieldFromDefinition = <T extends FieldTypes>(
+export const createFieldFromDefinition = <
+  T extends keyof FieldOptionsMap | FieldTypes
+>(
   def: FieldDefinition<T>,
   adapter: Adapter
 ) => {

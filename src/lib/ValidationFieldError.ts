@@ -6,8 +6,9 @@ class ValidationFieldError {
   constructor(definition: ValidationFieldErrorDefinition) {
     this.__definition = definition;
 
-    Object.defineProperty(this, "__definition", { enumerable: false });
-    Object.defineProperty(this, "__log", {
+    const _this = this as ValidationFieldError;
+    Object.defineProperty(_this, "__definition", { enumerable: false });
+    Object.defineProperty(_this, "__log", {
       enumerable: true,
       value: this.toLog(),
     });

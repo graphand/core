@@ -13,6 +13,8 @@ import Validator from "./Validator";
 import CoreError from "./CoreError";
 import ValidationFieldError from "./ValidationFieldError";
 import ValidationError from "./ValidationError";
+import { FieldOptions } from "../types";
+import * as console from "console";
 
 class DefaultFieldId extends Field<FieldTypes.ID> {
   serialize(value: any): any {
@@ -40,7 +42,7 @@ class DefaultFieldDate extends Field<FieldTypes.DATE> {
 
 class DefaultFieldText extends Field<FieldTypes.TEXT> {
   async validate(value) {
-    if (this.options.options?.length && !this.options.creatable) {
+    if (this.options.options?.length && this.options.strict) {
       if (Array.isArray(value)) {
         return value.every((i) => this.options.options.includes(i));
       }
@@ -52,22 +54,22 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
   }
 
   serialize(value: any, format: SerializerFormat, from: Model): any {
-    if (this.options.multiple) {
-      const arrValue = value && !Array.isArray(value) ? [value] : value;
-      const res = arrValue.map(String);
-      if (this.options?.options?.length && !this.options.creatable) {
-        return res.filter((i) => this.options.options.includes(i));
-      }
-
-      return res;
-    }
+    // if (this.options.multiple) {
+    //   const arrValue = value && !Array.isArray(value) ? [value] : value;
+    //   const res = arrValue.map(String);
+    //   if (this.options?.options?.length && !this.options.creatable) {
+    //     return res.filter((i) => this.options.options.includes(i));
+    //   }
+    //
+    //   return res;
+    // }
 
     const res =
       value && Array.isArray(value) ? String(value[0]) : String(value);
 
     if (
       this.options.options?.length &&
-      !this.options.creatable &&
+      this.options.strict &&
       !this.options.options.includes(res)
     ) {
       return undefined;
@@ -81,26 +83,30 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   _serializeJSON = (value: any) => {
     const canGetIds = typeof value === "object" && "getIds" in value;
 
-    if (this.options.multiple) {
-      let ids;
+    // if (this.options.multiple) {
+    //   let ids;
+    //
+    //   if (canGetIds) {
+    //     ids = value.getIds();
+    //   } else {
+    //     const arrValue = Array.isArray(value) ? value : [value];
+    //     ids = arrValue
+    //       .map((v) => (typeof v === "object" && "_id" in v ? v._id : v))
+    //       .filter(Boolean);
+    //   }
+    //
+    //   return ids.map((i) => i?.toString());
+    // }
 
-      if (canGetIds) {
-        ids = value.getIds();
-      } else {
-        const arrValue = Array.isArray(value) ? value : [value];
-        ids = arrValue
-          .map((v) => (typeof v === "object" && "_id" in v ? v._id : v))
-          .filter(Boolean);
-      }
+    let id;
 
-      return ids.map((i) => i?.toString());
+    if (canGetIds) {
+      id = value.getIds()[0];
     }
 
-    return canGetIds
-      ? value.getIds()[0]?.toString()
-      : typeof value === "string"
-      ? value
-      : value._id?.toString() ?? value?.toString();
+    id ??= typeof value === "object" && "_id" in value ? value._id : value;
+
+    return id?.toString?.() || id;
   };
 
   _serializeObject = (
@@ -114,13 +120,16 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     const adapter = from.model.__adapter.constructor as typeof Adapter;
     let model = Model.getFromSlug(this.options.ref, adapter);
 
-    if (this.options.multiple) {
-      const ids = Array.isArray(value) ? value : [value];
-      return model.getList({ ids }, ctx);
+    // if (this.options.multiple) {
+    //   const ids = Array.isArray(value) ? value : [value];
+    //   return model.getList({ ids }, ctx);
+    // }
+
+    if (!isObjectId(value)) {
+      return null;
     }
 
-    const id = Array.isArray(value) ? value[0] : value;
-    return model.get(String(id), ctx);
+    return model.get(String(value), ctx);
   };
 
   serialize(
@@ -180,7 +189,9 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
 
       const defaultEntries = arrValue
         .map((v) =>
-          Object.entries(v).filter(([slug]) => !this.options.fields?.[slug])
+          Object.entries(v).filter(
+            ([slug]: [string, unknown]) => !this.options.fields?.[slug]
+          )
         )
         .flat();
 
@@ -294,13 +305,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       return { ...obj, ...formatted };
     };
 
-    if (this.options.multiple) {
-      if (!Array.isArray(value)) {
-        return [_format(value)];
-      }
-
-      return Object.values(value).map(_format);
-    }
+    value = Array.isArray(value) ? value[0] : value;
 
     return _format(value);
   }
@@ -324,6 +329,63 @@ class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
   }
 }
 
+class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
+  async validate(value, ctx, slug) {
+    if (value === null || value === undefined) {
+      return true;
+    }
+
+    const model = ctx.model;
+
+    if (!model) {
+      throw new CoreError();
+    }
+
+    value = Array.isArray(value) ? value : [value];
+    const field = createFieldFromDefinition(
+      this.options.items,
+      model.__adapter
+    );
+
+    return Promise.all(value.map((v) => field.validate(v, ctx, slug))).then(
+      (results) => results.every((r) => r)
+    );
+  }
+
+  serialize(
+    value: any,
+    format: SerializerFormat,
+    from: Model,
+    path: string,
+    ctx: ExecutorCtx = {}
+  ): any {
+    value = Array.isArray(value) ? value : [value];
+
+    const field = createFieldFromDefinition(
+      this.options.items,
+      from.model.__adapter
+    );
+
+    if (
+      field.type === FieldTypes.RELATION &&
+      format === SerializerFormat.OBJECT
+    ) {
+      const options = field.options as FieldOptions<FieldTypes.RELATION>;
+      const adapter = from.model.__adapter.constructor as typeof Adapter;
+      let model = Model.getFromSlug(options.ref, adapter);
+
+      return model.getList(
+        {
+          ids: value,
+        },
+        ctx
+      );
+    }
+
+    return value.map((v) => field.serialize(v, format, from, path, ctx));
+  }
+}
+
 const defaultFieldsMap: Adapter["fieldsMap"] = {
   [FieldTypes.ID]: DefaultFieldId,
   [FieldTypes.NUMBER]: DefaultFieldNumber,
@@ -333,6 +395,7 @@ const defaultFieldsMap: Adapter["fieldsMap"] = {
   [FieldTypes.RELATION]: DefaultFieldRelation,
   [FieldTypes.JSON]: DefaultFieldJSON,
   [FieldTypes.IDENTITY]: DefaultFieldIdentity,
+  [FieldTypes.ARRAY]: DefaultFieldArray,
 };
 
 export default defaultFieldsMap;

@@ -211,7 +211,6 @@ describe("Test Model", () => {
                   type: FieldTypes.RELATION,
                   options: {
                     ref: model1.slug,
-                    multiple: false,
                   },
                 },
               },
@@ -221,6 +220,7 @@ describe("Test Model", () => {
       }).withAdapter(adapter);
 
       const instance1 = await model1.create({
+        _id: "507f1f77bcf86cd799439011",
         title: "title",
       });
 

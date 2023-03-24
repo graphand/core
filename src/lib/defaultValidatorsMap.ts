@@ -114,10 +114,6 @@ class DefaultValidatorDatamodelConfigKey extends Validator<ValidatorTypes.DATAMO
         return false;
       }
 
-      if (configKeyField.options.multiple !== false) {
-        return false;
-      }
-
       if (configKeyField.options.default) {
         return false;
       }

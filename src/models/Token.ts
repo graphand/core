@@ -31,14 +31,8 @@ class Token extends Model {
   @fieldDecorator(FieldTypes.NUMBER, { default: 0 })
   generation: FieldDefinitionNumber;
 
-  @fieldDecorator(FieldTypes.RELATION, {
-    ref: "roles",
-    multiple: false,
-  })
-  role: FieldDefinitionRelation<{
-    model: Role;
-    multiple: false;
-  }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: "roles" })
+  role: FieldDefinitionRelation<Role>;
 }
 
 export default Token;

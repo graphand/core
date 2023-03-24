@@ -5,6 +5,10 @@ import Field from "../../lib/Field";
 import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
 import ValidationError from "../../lib/ValidationError";
+import PromiseModel from "../../lib/PromiseModel";
+import { models } from "../../index";
+import PromiseModelList from "../../lib/PromiseModelList";
+import SerializerFormat from "../../enums/serializer-format";
 
 describe("test fieldsMap", () => {
   const adapter = mockAdapter({
@@ -63,52 +67,8 @@ describe("test fieldsMap", () => {
       expect(typeof i.title).toBe("string");
     });
 
-    describe("options.multiple", () => {
-      it("Should returns array of string when multiple", async () => {
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                multiple: true,
-              },
-            },
-          },
-        }).withAdapter(adapter);
-        await model.initialize();
-
-        const title = [faker.lorem.word(), faker.lorem.word()];
-
-        const i = new model({ title });
-        expect(i.title).toBeInstanceOf(Array);
-        expect(i.title.length).toEqual(2);
-        expect(i.title.every((t) => typeof t === "string")).toBeTruthy();
-      });
-
-      it("Should returns array from string when multiple", async () => {
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                multiple: true,
-              },
-            },
-          },
-        }).withAdapter(adapter);
-        await model.initialize();
-
-        const title = faker.lorem.word();
-
-        const i = new model({ title });
-        expect(i.title).toBeInstanceOf(Array);
-        expect(i.title.length).toEqual(1);
-        expect(i.title.every((t) => typeof t === "string")).toBeTruthy();
-      });
-    });
-
     describe("options.options", () => {
-      it("Should returns values within options when not creatable and multiple", async () => {
+      it("Should returns value within options", async () => {
         const options = [
           faker.lorem.word(),
           faker.lorem.word(),
@@ -120,51 +80,20 @@ describe("test fieldsMap", () => {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                multiple: true,
                 options,
-                creatable: false,
               },
             },
           },
         }).withAdapter(adapter);
         await model.initialize();
 
-        const title = ["notInOptions", "notInOptions2"];
+        const title = options[0];
 
         const i = new model({ title });
-        expect(i.title).toBeInstanceOf(Array);
-        expect(i.title.length).toEqual(0);
+        expect(i.title).toEqual(title);
       });
 
-      it("Should returns all values when creatable and multiple", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
-
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                multiple: true,
-                options,
-                creatable: true,
-              },
-            },
-          },
-        }).withAdapter(adapter);
-        await model.initialize();
-
-        const title = ["notInOptions", "notInOptions2"];
-
-        const i = new model({ title });
-        expect(i.title).toBeInstanceOf(Array);
-        expect(i.title.length).toEqual(2);
-      });
-
-      it("Should returns values within options when not creatable and not multiple", async () => {
+      it("Should returns value not in options if strict mode is not enabled", async () => {
         const options = [
           faker.lorem.word(),
           faker.lorem.word(),
@@ -177,7 +106,6 @@ describe("test fieldsMap", () => {
               type: FieldTypes.TEXT,
               options: {
                 options,
-                creatable: false,
               },
             },
           },
@@ -187,10 +115,10 @@ describe("test fieldsMap", () => {
         const title = "notInOptions";
 
         const i = new model({ title });
-        expect(i.title).toBe(undefined);
+        expect(i.title).toEqual(title);
       });
 
-      it("Should returns all values when creatable and not multiple", async () => {
+      it("Should returns value within options if value is valid & strict mode is enabled", async () => {
         const options = [
           faker.lorem.word(),
           faker.lorem.word(),
@@ -203,7 +131,33 @@ describe("test fieldsMap", () => {
               type: FieldTypes.TEXT,
               options: {
                 options,
-                creatable: true,
+                strict: true,
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        const title = options[0];
+
+        const i = new model({ title });
+        expect(i.title).toEqual(title);
+      });
+
+      it("Should returns null if value not in options and strict mode is enabled", async () => {
+        const options = [
+          faker.lorem.word(),
+          faker.lorem.word(),
+          faker.lorem.word(),
+        ];
+
+        const model = mockModel({
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                options,
+                strict: true,
               },
             },
           },
@@ -213,10 +167,10 @@ describe("test fieldsMap", () => {
         const title = "notInOptions";
 
         const i = new model({ title });
-        expect(i.title).toBe(title);
+        expect(i.title).toEqual(undefined);
       });
 
-      it("Should throw error if value is not in options and no creatable", async () => {
+      it("Should not throw error if value is in options and strict mode is enabled", async () => {
         const options = [
           faker.lorem.word(),
           faker.lorem.word(),
@@ -229,7 +183,33 @@ describe("test fieldsMap", () => {
               type: FieldTypes.TEXT,
               options: {
                 options,
-                creatable: false,
+                strict: true,
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        const title = options[0];
+
+        const i = new model({ title });
+        await expect(model.validate([i])).resolves.toBeTruthy();
+      });
+
+      it("Should throw error if value not in options and strict mode is enabled", async () => {
+        const options = [
+          faker.lorem.word(),
+          faker.lorem.word(),
+          faker.lorem.word(),
+        ];
+
+        const model = mockModel({
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                options,
+                strict: true,
               },
             },
           },
@@ -239,79 +219,7 @@ describe("test fieldsMap", () => {
         const title = "notInOptions";
 
         const i = new model({ title });
-
-        expect.assertions(2);
-
-        try {
-          await model.validate([i]);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ValidationError);
-          expect(e.fieldsPaths.includes("title")).toBeTruthy();
-        }
-      });
-
-      it("Should throw error if one of array value is not in options and no creatable", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
-
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                multiple: true,
-                options,
-                creatable: false,
-              },
-            },
-          },
-        }).withAdapter(adapter);
-        await model.initialize();
-
-        const title = [options[0], "notInOptions"];
-
-        const i = new model({ title });
-
-        expect.assertions(2);
-
-        try {
-          await model.validate([i]);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ValidationError);
-          expect(e.fieldsPaths.includes("title")).toBeTruthy();
-        }
-      });
-
-      it("Should not throw error if every array value is in options and no creatable", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
-
-        const model = mockModel({
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                multiple: true,
-                options,
-                creatable: false,
-              },
-            },
-          },
-        }).withAdapter(adapter);
-        await model.initialize();
-
-        const title = [options[0], options[1]];
-
-        const i = new model({ title });
-        const validated = await model.validate([i]);
-
-        expect(validated).toBeTruthy();
+        await expect(model.validate([i])).rejects.toThrow(ValidationError);
       });
     });
   });
@@ -369,49 +277,7 @@ describe("test fieldsMap", () => {
 
       const i = new model({ obj });
       expect(i.obj).toBeInstanceOf(Object);
-    });
-
-    describe("options.multiple", () => {
-      it("Should returns array of objects when multiple", async () => {
-        const model = mockModel({
-          fields: {
-            obj: {
-              type: FieldTypes.JSON,
-              options: {
-                multiple: true,
-              },
-            },
-          },
-        }).withAdapter(adapter);
-        await model.initialize();
-
-        const obj = [
-          { title: faker.lorem.word() },
-          { title: faker.lorem.word() },
-        ];
-
-        const i = new model({ obj });
-        expect(i.obj).toBeInstanceOf(Array);
-      });
-
-      it("Should returns array from object when multiple", async () => {
-        const model = mockModel({
-          fields: {
-            obj: {
-              type: FieldTypes.JSON,
-              options: {
-                multiple: true,
-              },
-            },
-          },
-        }).withAdapter(adapter);
-        await model.initialize();
-
-        const obj = { title: faker.lorem.word() };
-
-        const i = new model({ obj });
-        expect(i.obj).toBeInstanceOf(Array);
-      });
+      expect(Array.isArray(i.obj)).toBeFalsy();
     });
 
     describe("options.strict", () => {
@@ -920,7 +786,8 @@ describe("test fieldsMap", () => {
       });
 
       it("should use defaultField by default to validate", async () => {
-        const testValidator = jest.fn((value) => Promise.resolve(true));
+        // @ts-ignore
+        const testValidator = jest.fn(() => Promise.resolve(true));
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
           validate = testValidator;
@@ -1000,6 +867,214 @@ describe("test fieldsMap", () => {
       await expect(
         model.create({ identity: "account:507f191e810c19729de860ea" })
       ).resolves.toBeInstanceOf(model);
+    });
+  });
+
+  describe("Relation field", () => {
+    it("should returns valid PromiseModel instance", async () => {
+      const model = mockModel({
+        fields: {
+          rel: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: "accounts",
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({ rel: "507f191e810c19729de860ea" });
+
+      expect(i.rel).toBeInstanceOf(PromiseModel);
+      expect(i.rel.model?.getBaseClass()).toBe(models.Account);
+      expect(i.rel.query).toEqual("507f191e810c19729de860ea");
+    });
+
+    it("should returns null if value is null", async () => {
+      const model = mockModel({
+        fields: {
+          rel: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: "accounts",
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({ rel: null });
+
+      expect(i.rel).toBe(null);
+    });
+
+    it("should returns null if value is invalid", async () => {
+      const model = mockModel({
+        fields: {
+          rel: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: "accounts",
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({ rel: "invalid" });
+
+      expect(i.rel).toBe(null);
+    });
+  });
+
+  describe("Array field", () => {
+    it("should returns valid serialized array from items option", async () => {
+      const options = [
+        faker.lorem.word(),
+        faker.lorem.word(),
+        faker.lorem.word(),
+      ];
+
+      const model = mockModel({
+        fields: {
+          arrTextWithOpts: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+                options: {
+                  options,
+                  strict: true,
+                },
+              },
+            },
+          },
+          arrNumbers: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.NUMBER,
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({
+        arrTextWithOpts: ["invalid1", options[1], "invalid2"],
+        arrNumbers: ["1", "2", "3"],
+      });
+
+      expect(i.arrTextWithOpts).toEqual([undefined, options[1], undefined]);
+      expect(i.arrNumbers).toEqual([1, 2, 3]);
+    });
+
+    it("should returns PromiseModelList for relation array with format object", async () => {
+      const model = mockModel({
+        fields: {
+          arrRel: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "accounts",
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({
+        arrRel: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
+      });
+
+      expect(i.arrRel).toBeInstanceOf(PromiseModelList);
+      expect(i.arrRel.model?.getBaseClass()).toBe(models.Account);
+      expect(i.arrRel.query).toEqual({
+        ids: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
+      });
+    });
+
+    it("should returns array of ids for relation array with format json", async () => {
+      const model = mockModel({
+        fields: {
+          arrRel: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "accounts",
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({
+        arrRel: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
+      });
+
+      const jsonArrRel = i.get("arrRel", SerializerFormat.JSON);
+
+      expect(jsonArrRel).toBeInstanceOf(Array);
+      expect(jsonArrRel).toEqual([
+        "507f191e810c19729de860ea",
+        "507f191e810c19729de860eb",
+      ]);
+    });
+
+    it("should returns array of objects for json field", async () => {
+      const model = mockModel({
+        fields: {
+          arrJson: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({
+        arrJson: [{ test: "test" }, { test2: "test2" }],
+      });
+
+      expect(i.arrJson).toBeInstanceOf(Array);
+      expect(i.arrJson).toEqual([{ test: "test" }, { test2: "test2" }]);
+    });
+
+    it("should returns array from non-array with json field", async () => {
+      const model = mockModel({
+        fields: {
+          arrJson: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({
+        arrJson: { test: "test" },
+      });
+
+      expect(i.arrJson).toBeInstanceOf(Array);
+      expect(i.arrJson).toEqual([{ test: "test" }]);
     });
   });
 });

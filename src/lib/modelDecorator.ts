@@ -7,7 +7,8 @@ export const modelDecorator = () => {
       constructor(doc) {
         super(doc);
 
-        this.defineFieldsProperties();
+        const _this = this as InstanceType<T>;
+        _this.defineFieldsProperties();
       }
     };
   };
