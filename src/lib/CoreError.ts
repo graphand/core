@@ -9,7 +9,6 @@ class CoreError extends Error {
     const { constructor } = Object.getPrototypeOf(this);
 
     if ("captureStackTrace" in Error) {
-      // @ts-ignore
       Error.captureStackTrace(this, constructor);
     }
 

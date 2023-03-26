@@ -6,6 +6,7 @@ import {
   FieldOptions,
   FieldOptionsMap,
   FieldsDefinition,
+  FieldsPathItem,
   Hook,
   HookPhase,
   ValidateCtx,
@@ -74,97 +75,89 @@ export const getRecursiveValidatorsFromModel = (
   return validators;
 };
 
-export const getFieldFromPath = (model: typeof Model, path: string): Field => {
-  const fullPath = path.split(".");
-  let map = model.fieldsMap;
-  let field = null;
+export const getFieldsPathFromPath = (
+  model: typeof Model,
+  pathArr: Array<string> | string
+): Array<FieldsPathItem> => {
+  pathArr = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
 
-  for (let i = 0; i < fullPath.length; i++) {
-    const key = fullPath[i];
-    const nextField = map.get(key);
+  const firstFieldKey = pathArr.shift();
+  const firstField = model.fieldsMap.get(firstFieldKey);
 
-    if (!nextField) {
-      return null;
-    }
+  return pathArr.reduce(
+    (fieldsPaths: Array<FieldsPathItem>, key: string) => {
+      const prevField = fieldsPaths[fieldsPaths.length - 1]?.field;
 
-    if (i === fullPath.length - 1) {
-      return nextField;
-    }
+      if (prevField?.type === FieldTypes.ARRAY) {
+        const options = prevField.options as FieldOptions<FieldTypes.ARRAY>;
+        const itemsField = createFieldFromDefinition(
+          options.items,
+          model.__adapter
+        );
 
-    if (nextField.type === FieldTypes.JSON) {
-      const options = nextField.options as FieldOptions<FieldTypes.JSON>;
-      const subfieldsEntries = Object.entries(options.fields ?? {});
-      const subfieldsMap = new Map();
+        if (key === "[]") {
+          return [...fieldsPaths, { key: "[]", field: itemsField }];
+        }
 
-      for (const [slug, def] of subfieldsEntries) {
-        const subfield = createFieldFromDefinition(def, model.__adapter);
-        subfieldsMap.set(slug, subfield);
+        fieldsPaths = [...fieldsPaths, { key: "[]", field: itemsField }];
+
+        if (itemsField?.type === FieldTypes.JSON) {
+          const options = itemsField.options as FieldOptions<FieldTypes.JSON>;
+          const nextFieldDef = options.fields[key];
+          const nextField = createFieldFromDefinition(
+            nextFieldDef,
+            model.__adapter
+          );
+
+          if (nextField) {
+            return [...fieldsPaths, { key, field: nextField }];
+          }
+        }
       }
 
-      map = subfieldsMap;
-    } else {
-      map = null;
-    }
-  }
+      if (prevField?.type === FieldTypes.JSON) {
+        const options = prevField.options as FieldOptions<FieldTypes.JSON>;
+        const nextFieldDef = options.fields[key];
+        const nextField = createFieldFromDefinition(
+          nextFieldDef,
+          model.__adapter
+        );
 
-  return field;
+        if (nextField) {
+          return [...fieldsPaths, { key, field: nextField }];
+        }
+      }
+
+      return [...fieldsPaths, null];
+    },
+    [firstField ? { key: firstFieldKey, field: firstField } : null]
+  );
 };
 
 export const getValueFromPath = (
   doc: DocumentDefinition,
   path: string
 ): any => {
-  if (!doc || typeof doc !== "object") {
-    return doc;
-  }
-
   const fullPath = path.split(".");
+
   let value = doc;
 
   for (let i = 0; i < fullPath.length; i++) {
-    const key = fullPath[i];
-
-    if (typeof value !== "object" || value === null) {
-      return value;
+    if (!value || typeof value !== "object") {
+      return undefined;
     }
 
-    value = value[key];
+    const key = fullPath[i];
+
+    if (Array.isArray(value)) {
+      const nestedPath = fullPath.slice(i).join(".");
+      return value.map((item) => getValueFromPath(item, nestedPath));
+    } else {
+      value = value[key];
+    }
   }
 
   return value;
-};
-
-export const setValueOnPath = (
-  doc: DocumentDefinition,
-  path: string,
-  value: any
-): void => {
-  const fullPath = path.split(".");
-
-  let assignTo = doc;
-
-  for (let i = 0; i < fullPath.length; i++) {
-    const key = fullPath[i];
-    let nextField = assignTo[key];
-
-    if (i === fullPath.length - 1) {
-      assignTo[key] = value;
-      return;
-    }
-
-    if (nextField === undefined) {
-      nextField = {};
-      assignTo[key] = nextField;
-    }
-
-    if (typeof nextField !== "object" || nextField === null) {
-      throw new Error(
-        `Cannot set value on path ${path} because ${key} is not an object`
-      );
-    }
-
-    assignTo = nextField;
-  }
 };
 
 export const getRecursiveHooksFromModel = <
@@ -240,6 +233,10 @@ export const createFieldFromDefinition = <
   def: FieldDefinition<T>,
   adapter: Adapter
 ) => {
+  if (!def || typeof def !== "object") {
+    return null;
+  }
+
   let FieldClass: typeof Field<T> = adapter?.fieldsMap?.[
     def.type
   ] as typeof Field<T>;
@@ -259,6 +256,10 @@ export const createValidatorFromDefinition = <T extends ValidatorTypes>(
   def: ValidatorDefinition<T>,
   adapter: Adapter
 ) => {
+  if (!def || typeof def !== "object") {
+    return null;
+  }
+
   let ValidatorClass: typeof Validator<T> = adapter?.validatorsMap?.[
     def.type
   ] as typeof Validator<T>;

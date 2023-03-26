@@ -409,3 +409,5 @@ export type ModelCrudEvent =
   | ModelDeleteEvent;
 
 export type IdentityString = string;
+
+export type FieldsPathItem = { key: string; field: Field };

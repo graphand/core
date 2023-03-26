@@ -18,6 +18,10 @@ declare global {
     D extends FieldDefinitionOptions<FieldTypes.ID> = DefaultFieldDefinitionOptions<FieldTypes.ID>
   > = DefaultFieldIdDefinition<D>;
 
+  export type FieldDefinitionArray<
+    D extends FieldDefinitionOptions<FieldTypes.ARRAY> = DefaultFieldArrayDefinition<FieldTypes.ARRAY>
+  > = DefaultFieldArrayDefinition<D>;
+
   export type FieldDefinitionText<
     D extends FieldDefinitionOptions<FieldTypes.TEXT> = DefaultFieldDefinitionOptions<FieldTypes.TEXT>
   > = DefaultFieldTextDefinition<D>;

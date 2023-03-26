@@ -22,12 +22,10 @@ import Validator from "./Validator";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
-  getFieldFromPath,
+  getFieldsPathFromPath,
   getRecursiveFieldsFromModel,
   getRecursiveHooksFromModel,
   getRecursiveValidatorsFromModel,
-  getValueFromPath,
-  setValueOnPath,
   validateDocs,
 } from "./utils";
 import CoreError from "./CoreError";
@@ -380,22 +378,84 @@ class Model {
    * console.log(model.get("field"));
    */
   get(path: string, format = SerializerFormat.OBJECT, ctx: ExecutorCtx = {}) {
-    const field = getFieldFromPath(this.model, path);
-    if (!field) {
+    const pathArr = path.split(".");
+    const fieldsPaths = getFieldsPathFromPath(this.model, [...pathArr]);
+
+    const firstField = fieldsPaths.shift()?.field;
+
+    if (!firstField) {
       return undefined;
     }
 
-    let value = getValueFromPath(this.__doc, path);
+    const lastField = fieldsPaths[fieldsPaths.length - 1]?.field || firstField;
 
-    if (value === undefined && "default" in field.options) {
-      value = field.options.default as typeof value;
+    let value: any = this.__doc[pathArr[0]];
+
+    if (value === undefined && "default" in firstField.options) {
+      value = firstField.options.default as typeof value;
     }
 
-    if (value !== undefined && value !== null) {
-      value = field.serialize(value, format, this, path, ctx);
+    if (value !== undefined) {
+      value = firstField.serialize(value, SerializerFormat.JSON, this, ctx);
     }
 
-    return value;
+    const noFieldSymbol = Symbol("noField");
+
+    const _getter = (
+      _value: any,
+      _fieldsPaths: Array<{ key: string; field: Field }>
+    ) => {
+      for (const _fieldsPath of _fieldsPaths) {
+        if (!_fieldsPath) {
+          return noFieldSymbol;
+        }
+
+        const { key, field } = _fieldsPath;
+
+        if (key === "[]") {
+          const restPaths = _fieldsPaths.slice(1);
+
+          if (Array.isArray(_value)) {
+            if (!_value.length) {
+              return _value;
+            }
+
+            const r = _value.map((v) => _getter(v, restPaths));
+            if (r.every((v) => v === noFieldSymbol)) {
+              return undefined;
+            }
+
+            return r.filter((v) => v !== noFieldSymbol);
+          }
+
+          const res = _getter(_value, restPaths);
+          if (res === noFieldSymbol) {
+            return undefined;
+          }
+
+          return res;
+        }
+
+        if (!_value || typeof _value !== "object") {
+          break;
+        }
+
+        _value = field.serialize(_value[key], SerializerFormat.JSON, this, ctx);
+      }
+
+      return lastField.serialize(_value, format, this, ctx);
+    };
+
+    if (value === undefined) {
+      return undefined;
+    }
+
+    let res = _getter(value, fieldsPaths);
+    if (res === noFieldSymbol) {
+      res = undefined;
+    }
+
+    return res;
   }
 
   /**
@@ -412,29 +472,70 @@ class Model {
     value: S extends keyof T ? T[S] | any : any,
     ctx: ExecutorCtx = {}
   ) {
-    const _path = String(path);
-    const field = getFieldFromPath(this.model, _path);
-    if (!field) {
-      return;
+    const pathArr = String(path).split(".");
+    const fieldsPaths = getFieldsPathFromPath(this.model, [...pathArr]);
+
+    if (fieldsPaths.includes(null)) {
+      throw new CoreError({
+        message: `Field ${String(path)} is not found in model ${
+          this.model.slug
+        }`,
+      });
     }
 
-    if (value === undefined && "default" in field.options) {
-      value = field.options.default as typeof value;
-    }
+    const _setter = (
+      _assignTo: any = {},
+      _value: any,
+      _fieldsPaths: Array<{ key: string | number; field: Field }>
+    ) => {
+      let assignTo = _assignTo;
+      let assignPath = _fieldsPaths.shift();
 
-    if (value !== undefined && value !== null) {
-      value = field.serialize(
-        value,
-        SerializerFormat.DOCUMENT,
-        this,
-        _path,
-        ctx
-      );
-    }
+      for (const [i, _fieldsPath] of _fieldsPaths.entries()) {
+        if (!_fieldsPath) {
+          throw new CoreError({
+            message: `Field ${String(path)} is not found in model ${
+              this.model.slug
+            }`,
+          });
+        }
 
-    setValueOnPath(this.__doc, String(path), value);
+        assignTo[assignPath.key] ??= {};
+        assignTo = assignTo[assignPath.key];
+        assignPath = _fieldsPath;
 
-    return this;
+        if (assignPath.key === "[]") {
+          const restPaths = _fieldsPaths.slice(i + 1);
+
+          const assignToArr = Array.isArray(assignTo) ? assignTo : [];
+          if (assignToArr.length) {
+            assignTo = assignToArr.map((v, index) => {
+              return _setter(assignTo, _value, [
+                { key: index, field: assignPath.field },
+                ...restPaths,
+              ]);
+            });
+          }
+
+          return assignTo;
+        }
+      }
+
+      if (assignPath?.field && assignTo && typeof assignTo === "object") {
+        assignTo[assignPath.key] = assignPath.field.serialize(
+          value,
+          SerializerFormat.DOCUMENT,
+          this,
+          ctx
+        );
+
+        return assignTo[assignPath.key];
+      }
+
+      return null;
+    };
+
+    return _setter(this.__doc, value, fieldsPaths);
   }
 
   /**

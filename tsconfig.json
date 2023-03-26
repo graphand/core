@@ -19,14 +19,5 @@
     "downlevelIteration": true
   },
   "include": ["src"],
-  "exclude": [
-    "node_modules",
-    "**/node_modules/*",
-    "src/__jest__",
-    "src/__tests__",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-    "src/**/jest.*.ts",
-    "src/**/test-utils.ts"
-  ]
+  "exclude": ["node_modules", "**/node_modules/*"]
 }
