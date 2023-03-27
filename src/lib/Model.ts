@@ -256,38 +256,6 @@ class Model {
     return model;
   }
 
-  // TODO: move to utils
-  static getAdaptedModel<M extends typeof Model = typeof Model>(
-    model: M,
-    adapter?: typeof Adapter,
-    override?: boolean
-  ): M {
-    if (!adapter) {
-      adapter = this.__adapter?.constructor as typeof Adapter;
-    }
-
-    if (!adapter) {
-      throw new CoreError({
-        message: "Adapter is required in getAdaptedModel method",
-      });
-    }
-
-    adapter.__modelsMap ??= new Map();
-
-    let adaptedModel: M;
-
-    if (!override) {
-      adaptedModel = adapter?.__modelsMap.get(model.slug) as M;
-    }
-
-    if (!adaptedModel) {
-      adaptedModel = model.withAdapter(adapter);
-      adapter.__modelsMap.set(model.slug, adaptedModel);
-    }
-
-    return adaptedModel;
-  }
-
   /**
    * Get value for a specific field. Model.get("field") is an equivalent to `model.field`
    * @param path - The path to the field

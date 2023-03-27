@@ -4,8 +4,17 @@ import Model from "../../lib/Model";
 import FieldTypes from "../../enums/field-types";
 import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
-import { models, PromiseModelList, SerializerFormat } from "../../index";
-import { getRecursiveValidatorsFromModel } from "../../lib/utils";
+import {
+  Account,
+  DataModel,
+  models,
+  PromiseModelList,
+  SerializerFormat,
+} from "../../index";
+import {
+  getRecursiveValidatorsFromModel,
+  getAdaptedModel,
+} from "../../lib/utils";
 import Data from "../../lib/Data";
 import PromiseModel from "../../lib/PromiseModel";
 
@@ -1230,7 +1239,7 @@ describe("Test Model", () => {
     });
 
     it("getRecursiveValidatorsFromModel should returns configKey validator if model has a configKey", () => {
-      const validators = getRecursiveValidatorsFromModel(models.DataModel);
+      const validators = getRecursiveValidatorsFromModel(DataModel);
       const configKeyValidator = validators.find(
         (v) => v.type === ValidatorTypes.CONFIG_KEY
       );
@@ -1274,7 +1283,7 @@ describe("Test Model", () => {
       BaseModel = mockModel();
 
       const model = Model.getFromSlug(BaseModel.slug, adapter);
-      const modelBis = Model.getAdaptedModel(BaseModel, adapter);
+      const modelBis = getAdaptedModel(BaseModel, adapter);
 
       expect(model).toBe(modelBis);
     });
@@ -1282,7 +1291,7 @@ describe("Test Model", () => {
     it("should returns same model from adapter and then slug", () => {
       BaseModel = mockModel();
 
-      const model = Model.getAdaptedModel(BaseModel, adapter);
+      const model = getAdaptedModel(BaseModel, adapter);
       const modelBis = Model.getFromSlug(BaseModel.slug, adapter);
 
       expect(model).toBe(modelBis);
@@ -1290,36 +1299,30 @@ describe("Test Model", () => {
 
     it("should returns first cached model", () => {
       const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = Model.getAdaptedModel(
-        models.Account,
-        adapter
-      );
+      const baseAccountFromModel = getAdaptedModel(Account, adapter);
 
       expect(baseAccountFromSlug).toBe(baseAccountFromModel);
 
-      const extendedAccount = class extends models.Account {};
+      const extendedAccount = class extends Account {};
 
-      const extendedAccountFromModel = Model.getAdaptedModel(
+      const extendedAccountFromModel = getAdaptedModel(
         extendedAccount,
         adapter
       );
 
       expect(extendedAccountFromModel.getBaseClass()).not.toBe(extendedAccount);
-      expect(extendedAccountFromModel.getBaseClass()).toBe(models.Account);
+      expect(extendedAccountFromModel.getBaseClass()).toBe(Account);
     });
 
     it("should be able to override model", () => {
       const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = Model.getAdaptedModel(
-        models.Account,
-        adapter
-      );
+      const baseAccountFromModel = getAdaptedModel(Account, adapter);
 
       expect(baseAccountFromSlug).toBe(baseAccountFromModel);
 
-      const extendedAccount = class extends models.Account {};
+      const extendedAccount = class extends Account {};
 
-      const extendedAccountFromModel = Model.getAdaptedModel(
+      const extendedAccountFromModel = getAdaptedModel(
         extendedAccount,
         adapter,
         true
@@ -1330,16 +1333,13 @@ describe("Test Model", () => {
 
     it("Should be able to get adapted model from slug once it has been adapted from model", () => {
       const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = Model.getAdaptedModel(
-        models.Account,
-        adapter
-      );
+      const baseAccountFromModel = getAdaptedModel(Account, adapter);
 
       expect(baseAccountFromSlug).toBe(baseAccountFromModel);
 
-      const extendedAccount = class ExtendedAccount extends models.Account {};
+      const extendedAccount = class ExtendedAccount extends Account {};
 
-      const extendedAccountFromModel = Model.getAdaptedModel(
+      const extendedAccountFromModel = getAdaptedModel(
         extendedAccount,
         adapter,
         true
@@ -1360,12 +1360,12 @@ describe("Test Model", () => {
       };
 
       const baseModelFromSlug = Model.getFromSlug(slug, adapter);
-      const baseModelFromModel = Model.getAdaptedModel(ExampleModel, adapter);
+      const baseModelFromModel = getAdaptedModel(ExampleModel, adapter);
 
       expect(baseModelFromSlug).toBe(baseModelFromModel);
       expect(baseModelFromModel.getBaseClass()).not.toBe(ExampleModel);
 
-      const extendedModelFromModel = Model.getAdaptedModel(
+      const extendedModelFromModel = getAdaptedModel(
         ExampleModel,
         adapter,
         true

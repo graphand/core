@@ -5,6 +5,7 @@ import { mockAdapter, mockModel } from "../../test-utils";
 import CoreError from "../../lib/CoreError";
 import FieldTypes from "../../enums/field-types";
 import Model from "../../lib/Model";
+import { getAdaptedModel } from "../../lib/utils";
 
 describe("Data", () => {
   const adapter = mockAdapter({
@@ -67,10 +68,7 @@ describe("Data", () => {
       expect(modelFromModelSlug).toBe(modelFromDM);
       expect(modelFromDM).not.toBe(modelFromDataSlug);
 
-      const adaptedModelFromModel = Model.getAdaptedModel(
-        modelFromDataSlug,
-        adapter
-      );
+      const adaptedModelFromModel = getAdaptedModel(modelFromDataSlug, adapter);
 
       expect(adaptedModelFromModel).toBe(modelFromModelSlug);
       expect(modelFromDM).toBe(modelFromModelSlug);
