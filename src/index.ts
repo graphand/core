@@ -34,6 +34,7 @@ import {
   getFieldsPathsFromPath,
   getJSONSubfieldsMap,
   defineFieldsProperties,
+  getAdaptedModel,
 } from "./lib/utils";
 
 const models = {
@@ -85,6 +86,7 @@ export {
   getFieldsPathsFromPath,
   getJSONSubfieldsMap,
   defineFieldsProperties,
+  getAdaptedModel,
 };
 
 export * from "./types";
