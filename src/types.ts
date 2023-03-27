@@ -13,31 +13,37 @@ import type PromiseModelList from "./lib/PromiseModelList";
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
     ? {
-        multiple: false;
-        creatable: true;
+        options: [];
+        strict: false;
+      }
+    : T extends FieldTypes.ARRAY
+    ? {
+        type: FieldTypes.TEXT;
       }
     : T extends FieldTypes.RELATION
     ? {
         model: null;
-        multiple: true;
       }
     : {};
 
-export type FieldDefinitionOptions<T extends FieldTypes> =
-  T extends FieldTypes.TEXT
-    ? {
-        options?: string[];
-        multiple?: boolean;
-        creatable?: boolean;
-      }
-    : T extends FieldTypes.RELATION
-    ? {
-        model: Model;
-        multiple?: boolean;
-      }
-    : T extends FieldTypes.JSON
-    ? { [key: string]: any }
-    : {};
+export type FieldDefinitionOptions<
+  T extends FieldTypes,
+  S extends FieldTypes = FieldTypes
+> = T extends FieldTypes.TEXT
+  ? {
+      options?: Array<string>;
+      strict?: boolean;
+    }
+  : T extends FieldTypes.ARRAY
+  ? {
+      type: S;
+      definition?: FieldDefinitionOptions<S>;
+    }
+  : T extends FieldTypes.RELATION
+  ? Model
+  : T extends FieldTypes.JSON
+  ? { [key: string]: any }
+  : any;
 
 type PromiseModelOn<T extends Model> = PromiseModel<T> & {};
 
@@ -45,25 +51,45 @@ type string_ = string & Partial<any>;
 
 type FieldTextDefinitionSingleType<
   Options extends string[],
-  Creatable extends boolean = true,
-  DefaultType extends any = string_
-> = Options extends string[]
-  ? Creatable extends false
-    ? Options[number]
-    : FieldTextDefinitionSingleType<Options, false> | DefaultType
-  : FieldTextDefinitionSingleType<[], Creatable, string>;
+  Strict extends boolean = false
+> = Strict extends true
+  ? Options[number]
+  : FieldTextDefinitionSingleType<Options, true> | string_;
+
+type FieldDefinitionType<
+  T extends FieldTypes,
+  D extends FieldDefinitionOptions<T>
+> = T extends FieldTypes.ID
+  ? FieldDefinitionId<D>
+  : T extends FieldTypes.TEXT
+  ? FieldDefinitionText<D>
+  : T extends FieldTypes.BOOLEAN
+  ? FieldDefinitionBoolean<D>
+  : T extends FieldTypes.NUMBER
+  ? FieldDefinitionNumber<D>
+  : T extends FieldTypes.DATE
+  ? FieldDefinitionDate<D>
+  : T extends FieldTypes.JSON
+  ? FieldDefinitionJSON<D>
+  : T extends FieldTypes.RELATION
+  ? FieldDefinitionRelation<D>
+  : T extends FieldTypes.ARRAY
+  ? FieldDefinitionArray<D>
+  : never;
 
 export type DefaultFieldIdDefinition<
   D extends FieldDefinitionOptions<FieldTypes.ID>
 > = string;
 
+export type DefaultFieldArrayDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.ARRAY>
+> = D["type"] extends FieldTypes.RELATION
+  ? PromiseModelList<D["definition"]>
+  : Array<FieldDefinitionType<D["type"], D["definition"]>>;
+
 export type DefaultFieldTextDefinition<
   D extends FieldDefinitionOptions<FieldTypes.TEXT>
-> =
-  | (D["multiple"] extends true
-      ? FieldTextDefinitionSingleType<D["options"], D["creatable"]>[]
-      : FieldTextDefinitionSingleType<D["options"], D["creatable"]>)
-  | undefined;
+> = FieldTextDefinitionSingleType<D["options"], D["strict"]> | undefined;
 
 export type DefaultFieldBooleanDefinition<
   D extends FieldDefinitionOptions<FieldTypes.BOOLEAN>
@@ -78,16 +104,12 @@ export type DefaultFieldDateDefinition<
 > = Date | undefined;
 
 export type DefaultFieldJSONDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.JSON>
-> = D | any | undefined;
+  D extends FieldDefinitionOptions<FieldTypes.JSON> = any
+> = D | undefined;
 
 export type DefaultFieldRelationDefinition<
   D extends FieldDefinitionOptions<FieldTypes.RELATION>
-> =
-  | (D["multiple"] extends true
-      ? PromiseModelList<D["model"]>
-      : PromiseModelOn<D["model"]>)
-  | undefined;
+> = PromiseModelOn<D> | undefined;
 
 export type SortDirection =
   | 1
@@ -207,41 +229,44 @@ export type ValidatorOptionsMap = {
   };
 };
 
-export type ValidatorOptions<T extends ValidatorTypes = ValidatorTypes> =
-  T extends keyof ValidatorOptionsMap
-    ? ValidatorOptionsMap[T]
-    : Record<string, never>;
+export type ValidatorOptions<
+  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes
+> = T extends keyof ValidatorOptionsMap
+  ? ValidatorOptionsMap[T]
+  : Record<string, never>;
 
-export type ValidatorDefinition<T extends ValidatorTypes = ValidatorTypes> =
-  T extends keyof ValidatorOptionsMap
-    ? {
-        type: T;
-        options: ValidatorOptionsMap[T];
-      }
-    : {
-        type: T;
-        options?: Record<string, never>;
-      };
+export type ValidatorDefinition<
+  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes
+> = T extends keyof ValidatorOptionsMap
+  ? {
+      type: T;
+      options: ValidatorOptionsMap[T];
+    }
+  : {
+      type: T;
+      options?: Record<string, never>;
+    };
 
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
 export type FieldOptionsMap = {
+  [FieldTypes.ARRAY]: {
+    items: FieldDefinition;
+    unicity?: boolean;
+  };
   [FieldTypes.TEXT]: {
     default?: string;
-    multiple?: boolean;
     options?: string[];
-    creatable?: boolean;
+    strict?: boolean;
   };
   [FieldTypes.RELATION]: {
     ref: string;
-    multiple?: boolean;
   };
   [FieldTypes.NUMBER]: {
     default?: number;
   };
   [FieldTypes.JSON]: {
     default?: { [key: string]: any };
-    multiple?: boolean;
     defaultField?: FieldDefinition;
     fields?: FieldsDefinition;
     strict?: boolean;
@@ -252,23 +277,25 @@ export type FieldOptionsMap = {
   };
 };
 
-export type FieldOptions<T extends FieldTypes = FieldTypes> =
-  T extends keyof FieldOptionsMap ? FieldOptionsMap[T] : Record<string, never>;
+export type FieldOptions<
+  T extends FieldTypes = keyof FieldOptionsMap | FieldTypes
+> = T extends keyof FieldOptionsMap
+  ? FieldOptionsMap[T]
+  : Record<string, never>;
 
-export type FieldDefinition<T extends FieldTypes = FieldTypes> =
-  T extends keyof FieldOptionsMap
-    ? {
-        type: T;
-        options?: FieldOptionsMap[T];
-      }
-    : {
-        type: T;
-        options?: Record<string, never>;
-      };
+export type FieldDefinition<
+  T extends FieldTypes = keyof FieldOptionsMap | FieldTypes
+> = T extends keyof FieldOptionsMap
+  ? {
+      type: T;
+      options?: FieldOptionsMap[T];
+    }
+  : {
+      type: T;
+      options?: Record<string, never>;
+    };
 
-export type FieldsDefinition = {
-  [slug: string]: FieldDefinition;
-};
+export type FieldsDefinition = Record<string, FieldDefinition>;
 
 export type DocumentDefinition = Record<string, any>;
 
@@ -382,3 +409,5 @@ export type ModelCrudEvent =
   | ModelDeleteEvent;
 
 export type IdentityString = string;
+
+export type FieldsPathItem = { key: string; field: Field };

@@ -26,13 +26,14 @@ import ValidationError from "./lib/ValidationError";
 import controllersMap from "./lib/controllersMap";
 import ValidationFieldError from "./lib/ValidationFieldError";
 import ValidationValidatorError from "./lib/ValidationValidatorError";
+import defaultFieldsMap from "./lib/defaultFieldsMap";
 import {
-  createFieldFromDefinition,
-  createValidatorFromDefinition,
+  getFieldFromDefinition,
+  getValidatorFromDefinition,
   validateDocs,
-  getFieldFromPath,
-  getValueFromPath,
-  setValueOnPath,
+  getFieldsPathsFromPath,
+  getJSONSubfieldsMap,
+  defineFieldsProperties,
 } from "./lib/utils";
 
 const models = {
@@ -73,16 +74,17 @@ export {
   ValidatorTypes,
   CoreError,
   ValidationError,
-  createFieldFromDefinition,
-  createValidatorFromDefinition,
+  getFieldFromDefinition,
+  getValidatorFromDefinition,
   ValidationFieldError,
   ValidationValidatorError,
   controllersMap,
   validateDocs,
-  getFieldFromPath,
-  getValueFromPath,
-  setValueOnPath,
   ErrorCodes,
+  defaultFieldsMap,
+  getFieldsPathsFromPath,
+  getJSONSubfieldsMap,
+  defineFieldsProperties,
 };
 
 export * from "./types";

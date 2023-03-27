@@ -13,6 +13,7 @@ import ValidatorTypes from "./enums/validator-types";
 import defaultFieldsMap from "./lib/defaultFieldsMap";
 import defaultValidatorsMap from "./lib/defaultValidatorsMap";
 import Data from "./lib/Data";
+import { defineFieldsProperties } from "./lib/utils";
 
 const cache: Map<typeof Model, Set<any>> = new Map();
 
@@ -193,7 +194,7 @@ export const mockModel = ({
     constructor(doc) {
       super(doc);
 
-      this.defineFieldsProperties();
+      defineFieldsProperties(this);
     }
 
     [slug: string]: any;

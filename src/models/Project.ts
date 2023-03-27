@@ -36,12 +36,8 @@ class Project extends Model {
 
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "organizations",
-    multiple: false,
   })
-  organization: FieldDefinitionRelation<{
-    model: Organization;
-    multiple: false;
-  }>;
+  organization: FieldDefinitionRelation<Organization>;
 
   @fieldDecorator(FieldTypes.NUMBER, { default: 86400 })
   accessTokenLifetime: FieldDefinitionNumber;
@@ -51,12 +47,8 @@ class Project extends Model {
 
   @fieldDecorator(FieldTypes.RELATION, {
     ref: "accounts",
-    multiple: false,
   })
-  owner: FieldDefinitionRelation<{
-    model: Account;
-    multiple: false;
-  }>;
+  owner: FieldDefinitionRelation<Account>;
 }
 
 export default Project;

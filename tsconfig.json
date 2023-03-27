@@ -8,7 +8,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "lib": ["es6", "dom", "es2017"],
+    "lib": ["es2019"],
     "target": "esnext",
     "outDir": "dist",
     "baseUrl": ".",
@@ -16,17 +16,8 @@
     "skipLibCheck": true,
     "preserveConstEnums": true,
     "declarationDir": "dist/types",
-    "downlevelIteration": true,
+    "downlevelIteration": true
   },
   "include": ["src"],
-  "exclude": [
-    "node_modules",
-    "**/node_modules/*",
-    "src/__jest__",
-    "src/__tests__",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-    "src/**/jest.*.ts",
-    "src/**/test-utils.ts"
-  ]
+  "exclude": ["node_modules", "**/node_modules/*"]
 }

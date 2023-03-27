@@ -4,8 +4,17 @@ import Model from "../../lib/Model";
 import FieldTypes from "../../enums/field-types";
 import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
-import { models } from "../../index";
-import { getRecursiveValidatorsFromModel } from "../../lib/utils";
+import {
+  Account,
+  DataModel,
+  models,
+  PromiseModelList,
+  SerializerFormat,
+} from "../../index";
+import {
+  getRecursiveValidatorsFromModel,
+  getAdaptedModel,
+} from "../../lib/utils";
 import Data from "../../lib/Data";
 import PromiseModel from "../../lib/PromiseModel";
 
@@ -127,46 +136,43 @@ describe("Test Model", () => {
     });
   });
 
-  describe("Model fields", () => {
+  describe("Model getter", () => {
     it("Model should returns field default value if undefined", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
-      const created = await TestModel.create({});
-      expect(created.title).toBe("test");
-    });
-
-    it("Model should undefined if no field", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
-      const created = await TestModel.create({ noField: "test" });
-      expect(created.noField).toBe(undefined);
-    });
-
-    it("Model getter should serialize with field from adapter", async () => {
-      const testSerializer = jest.fn(() => "test");
-
-      class TestFieldText extends Field<FieldTypes.TEXT> {
-        serialize = testSerializer;
-      }
-
-      const _adapter = mockAdapter({
-        fieldsMap: {
-          [FieldTypes.TEXT]: TestFieldText,
-        },
-      });
-
-      const TestModel = BaseModel.withAdapter(_adapter);
-      const created = await TestModel.create({ title: "title" });
-      expect(testSerializer).toHaveBeenCalledTimes(0);
-      expect(created.title).toBeDefined();
-      expect(testSerializer).toHaveBeenCalledTimes(1);
-    });
-
-    it("Model getter should be able to return value from within json", async () => {
       const model = mockModel({
         fields: {
-          title: {
+          test: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "default",
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
+      expect(created.get("test")).toBe("default");
+    });
+
+    it("should serialize with field from adapter", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
             type: FieldTypes.TEXT,
           },
-          obj: {
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        test: 123,
+      });
+
+      expect(created.get("test")).toBe("123");
+    });
+
+    it("should serialize with nested fields in json", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
             type: FieldTypes.JSON,
             options: {
               fields: {
@@ -180,38 +186,54 @@ describe("Test Model", () => {
       }).withAdapter(adapter);
 
       const created = await model.create({
-        title: "title",
-        obj: { nested: "nested" },
+        test: {
+          nested: 123,
+        },
       });
 
-      expect(created.title).toBe("title");
-      expect(created.obj.nested).toBe("nested");
-      expect(created.get("obj.nested")).toBe("nested");
+      expect(created.get("test.nested")).toBe("123");
+      expect(created.test.nested).toBe("123");
     });
 
-    it("Model getter should serialize value from within json", async () => {
-      const model1 = mockModel({
+    it("should serialize with nested fields in array", async () => {
+      const model = mockModel({
         fields: {
-          title: {
-            type: FieldTypes.TEXT,
+          test: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+            },
           },
         },
       }).withAdapter(adapter);
 
-      const model2 = mockModel({
+      const created = await model.create({
+        test: [123],
+      });
+
+      expect(created.get("test")).toEqual(["123"]);
+      expect(created.get("test.[]")).toEqual(["123"]);
+      expect(created.get("test.toto")).toEqual(undefined);
+      expect(created.test).toBeInstanceOf(Array);
+      expect(created.test.length).toEqual(1);
+      expect(created.test[0]).toEqual("123");
+    });
+
+    it("should serialize with nested fields in array of json", async () => {
+      const model = mockModel({
         fields: {
-          title: {
-            type: FieldTypes.TEXT,
-          },
-          obj: {
-            type: FieldTypes.JSON,
+          test: {
+            type: FieldTypes.ARRAY,
             options: {
-              fields: {
-                nested: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: model1.slug,
-                    multiple: false,
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  fields: {
+                    nested: {
+                      type: FieldTypes.TEXT,
+                    },
                   },
                 },
               },
@@ -220,48 +242,71 @@ describe("Test Model", () => {
         },
       }).withAdapter(adapter);
 
-      const instance1 = await model1.create({
-        title: "title",
-      });
-
-      const instance2 = await model2.create({
-        title: "title",
-        obj: { nested: instance1._id },
-      });
-
-      const getNested = instance2.obj.nested?.catch?.((e) => null);
-
-      expect(getNested).toBeInstanceOf(PromiseModel);
-    });
-
-    it("Model setter should be able to set value", async () => {
-      const model = mockModel({
-        fields: {
-          title: {
-            type: FieldTypes.TEXT,
+      const created = await model.create({
+        test: [
+          {
+            nested: 123,
           },
+          {
+            nested: 456,
+          },
+        ],
+      });
+
+      expect(created.get("test")).toEqual([
+        {
+          nested: "123",
         },
-      }).withAdapter(adapter);
+        {
+          nested: "456",
+        },
+      ]);
 
-      const created = await model.create({ title: "title" });
+      expect(created.get("test.[]")).toEqual([
+        {
+          nested: "123",
+        },
+        {
+          nested: "456",
+        },
+      ]);
 
-      expect(created.title).toBe("title");
-      created.set("title", "title2");
-      expect(created.title).toBe("title2");
+      expect(created.get("test.nested")).toEqual(["123", "456"]);
+
+      expect(created.get("test.[].nested")).toEqual(["123", "456"]);
+
+      expect(created.get("test.nested.undefined")).toEqual(undefined);
     });
 
-    it("Model setter should be able to set value from within json", async () => {
+    it("should serialize with complex schema fields", async () => {
       const model = mockModel({
         fields: {
-          title: {
-            type: FieldTypes.TEXT,
-          },
-          obj: {
-            type: FieldTypes.JSON,
+          field1: {
+            type: FieldTypes.ARRAY,
             options: {
-              fields: {
-                nested: {
-                  type: FieldTypes.TEXT,
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  fields: {
+                    field2: {
+                      type: FieldTypes.TEXT,
+                    },
+                    field3: {
+                      type: FieldTypes.ARRAY,
+                      options: {
+                        items: {
+                          type: FieldTypes.JSON,
+                          options: {
+                            fields: {
+                              field4: {
+                                type: FieldTypes.TEXT,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -270,23 +315,276 @@ describe("Test Model", () => {
       }).withAdapter(adapter);
 
       const created = await model.create({
-        title: "title",
-        obj: { nested: "" },
+        field1: [
+          {
+            field2: "test1",
+            field3: [
+              {
+                field4: "test1.1",
+              },
+              {
+                field4: "test1.2",
+              },
+            ],
+          },
+          {
+            field2: "test2",
+            field3: [
+              {
+                field4: "test2.1",
+              },
+              {
+                field4: "test2.2",
+              },
+            ],
+          },
+        ],
       });
 
-      expect(created.title).toBe("title");
+      expect(created.get("field1")).toEqual([
+        {
+          field2: "test1",
+          field3: [
+            {
+              field4: "test1.1",
+            },
+            {
+              field4: "test1.2",
+            },
+          ],
+        },
+        {
+          field2: "test2",
+          field3: [
+            {
+              field4: "test2.1",
+            },
+            {
+              field4: "test2.2",
+            },
+          ],
+        },
+      ]);
 
-      expect(created.get("obj.nested")).toBe("");
-      created.set("obj.nested", "nested");
-      expect(created.get("obj.nested")).toBe("nested");
+      expect(created.get("field1.field2")).toEqual(["test1", "test2"]);
+      expect(created.get("field1.[].field2")).toEqual(["test1", "test2"]);
+      expect(created.get("field1.field3")).toEqual([
+        [
+          {
+            field4: "test1.1",
+          },
+          {
+            field4: "test1.2",
+          },
+        ],
+        [
+          {
+            field4: "test2.1",
+          },
+          {
+            field4: "test2.2",
+          },
+        ],
+      ]);
+
+      expect(created.get("field1.field3.field4")).toEqual([
+        ["test1.1", "test1.2"],
+        ["test2.1", "test2.2"],
+      ]);
+
+      expect(created.get("field1.[].field3.field4")).toEqual([
+        ["test1.1", "test1.2"],
+        ["test2.1", "test2.2"],
+      ]);
+
+      expect(created.get("field1.[].field3.[].field4")).toEqual([
+        ["test1.1", "test1.2"],
+        ["test2.1", "test2.2"],
+      ]);
+
+      expect(created.get("field1.[].field3.[].field4.undefined")).toEqual([
+        [undefined, undefined],
+        [undefined, undefined],
+      ]);
     });
 
-    it("Model setter should be able to set value from within json even if object is undefined", async () => {
+    it("should serialize array of relation to PromiseModelList", async () => {
       const model = mockModel({
         fields: {
-          title: {
+          test: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "accounts",
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        test: ["63fdefb5debe7dae686d3575", "63fdefb5debe7dae686d3575"],
+      });
+
+      expect(created.get("test")).toBeInstanceOf(PromiseModelList);
+    });
+
+    it("should serialize array of relation to PromiseModelList even if json nested", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  fields: {
+                    arrRel: {
+                      type: FieldTypes.ARRAY,
+                      options: {
+                        items: {
+                          type: FieldTypes.RELATION,
+                          options: {
+                            ref: "accounts",
+                          },
+                        },
+                      },
+                    },
+                    rel: {
+                      type: FieldTypes.RELATION,
+                      options: {
+                        ref: "accounts",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        arr: [
+          {
+            arrRel: ["63fdefb5debe7dae686d3575", "63fdefb5debe7dae686d3575"],
+            rel: "63fdefb5debe7dae686d3575",
+          },
+          {
+            arrRel: ["63fdefb5debe7dae686d3575", "63fdefb5debe7dae686d3575"],
+            rel: "63fdefb5debe7dae686d3575",
+          },
+        ],
+      });
+
+      expect(created.get("arr")).toBeInstanceOf(Array);
+
+      const rels = created.get("arr.rel");
+      expect(rels).toBeInstanceOf(Array);
+      expect(rels.every((r) => r instanceof PromiseModel)).toBeTruthy();
+
+      const arrRels = created.get("arr.arrRel");
+      expect(arrRels).toBeInstanceOf(Array);
+      expect(arrRels.every((r) => r instanceof PromiseModelList)).toBeTruthy();
+    });
+
+    it("should serialize to undefined nested fields of null", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                test: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
+
+      expect(created.get("test.test")).toBe(undefined);
+    });
+
+    it("should serialize to undefined nested fields of null array", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  fields: {
+                    test: {
+                      type: FieldTypes.TEXT,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({ test: [] });
+
+      expect(created.get("test.test")).toEqual([]);
+      expect(created.get("test.test2")).toEqual([]);
+    });
+
+    it("should serialize to undefined nested fields of nested unexisting field", async () => {
+      const model = mockModel({
+        fields: {},
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
+
+      expect(created.get("obj")).toEqual(undefined);
+    });
+  });
+
+  describe("Model setter", () => {
+    it("should set simple field value", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
             type: FieldTypes.TEXT,
           },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
+
+      expect(created.get("test")).toBe(undefined);
+      created.set("test", "test");
+      expect(created.get("test")).toEqual("test");
+    });
+
+    it("should serialize value", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
+
+      created.set("test", 123);
+      expect(created.__doc.test).toEqual("123");
+    });
+
+    it("should set nested json field", async () => {
+      const model = mockModel({
+        fields: {
           obj: {
             type: FieldTypes.JSON,
             options: {
@@ -300,12 +598,359 @@ describe("Test Model", () => {
         },
       }).withAdapter(adapter);
 
-      const created = await model.create({ title: "title" });
+      const created = await model.create({ obj: { nested: "toto" } });
+
+      expect(created.get("obj.nested")).toBe("toto");
+      created.set("obj.nested", "test");
+      expect(created.get("obj.nested")).toEqual("test");
+    });
+
+    it("should set nested json field even if not exists", async () => {
+      const model = mockModel({
+        fields: {
+          obj: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                nested: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
 
       expect(created.get("obj.nested")).toBe(undefined);
-      created.set("obj.nested", "nested");
-      expect(created.get("obj")).toEqual({ nested: "nested" });
-      expect(created.get("obj.nested")).toBe("nested");
+      created.set("obj.nested", "test");
+      expect(created.get("obj.nested")).toEqual("test");
+    });
+
+    it("should set value as array", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
+
+      expect(created.get("arr")).toEqual(undefined);
+      created.set("arr", ["test1", "test2"]);
+      expect(created.get("arr")).toEqual(["test1", "test2"]);
+    });
+
+    it("should set value in array", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({ arr: ["test1"] });
+
+      expect(created.get("arr")).toEqual(["test1"]);
+      created.set("arr.[]", "test2");
+      expect(created.get("arr")).toEqual(["test2"]);
+    });
+
+    it("should set value in array of json", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  fields: {
+                    nested: {
+                      type: FieldTypes.TEXT,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        arr: [
+          {
+            nested: "test1",
+          },
+          {
+            nested: "test2",
+          },
+        ],
+      });
+
+      expect(created.get("arr.nested")).toEqual(["test1", "test2"]);
+      created.set("arr.nested", "test3");
+      expect(created.get("arr")).toEqual([
+        {
+          nested: "test3",
+        },
+        {
+          nested: "test3",
+        },
+      ]);
+      expect(created.get("arr.nested")).toEqual(["test3", "test3"]);
+    });
+
+    it("should return the setted value", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  fields: {
+                    nested: {
+                      type: FieldTypes.TEXT,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        arr: [
+          {
+            nested: "test1",
+          },
+          {
+            nested: "test2",
+          },
+        ],
+      });
+
+      expect(
+        created.set("arr", [
+          {
+            nested: "test3a",
+          },
+          {
+            nested: "test3a",
+          },
+        ])
+      ).toEqual([
+        {
+          nested: "test3a",
+        },
+        {
+          nested: "test3a",
+        },
+      ]);
+      expect(
+        created.set("arr.[]", {
+          nested: "test3b",
+        })
+      ).toEqual([
+        {
+          nested: "test3b",
+        },
+        {
+          nested: "test3b",
+        },
+      ]);
+      expect(created.set("arr.nested", "test3")).toEqual(["test3", "test3"]);
+    });
+
+    it("should throw error if field doesn't exist", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  fields: {
+                    nested: {
+                      type: FieldTypes.TEXT,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({});
+
+      expect(() => created.set("arr.undefined", "")).toThrow();
+      expect(() => created.set("arr.[].undefined", "")).toThrow();
+      expect(() => created.set("undefined.arr", "")).toThrow();
+    });
+  });
+
+  describe("Model getter and setter should be consistant", () => {
+    let model;
+
+    beforeAll(() => {
+      model = mockModel({
+        fields: {
+          text: {
+            type: FieldTypes.TEXT,
+          },
+          obj: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                nested: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+          relSingle: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: "accounts",
+            },
+          },
+          relArray: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "accounts",
+                },
+              },
+            },
+          },
+          arrOfText: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+          complex: {
+            type: FieldTypes.JSON,
+            options: {
+              fields: {
+                nestedArr: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.JSON,
+                      options: {
+                        fields: {
+                          nested: {
+                            type: FieldTypes.TEXT,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+    });
+
+    const _testWith = async (field, value, create?) => {
+      create ??= { [field]: value };
+      const created = await model.create(create);
+      const v = created.get(field);
+      const r = created.set(field, v);
+      expect(r).toEqual(value);
+
+      const v2 = created.get(field, SerializerFormat.DOCUMENT);
+      expect(v2).toEqual(value);
+    };
+
+    it("with simple text field", async () => {
+      await _testWith("text", "test");
+    });
+
+    it("with array of text field", async () => {
+      await _testWith("arrOfText", ["test1", "test2"]);
+    });
+
+    it("with json field", async () => {
+      await _testWith("obj", { nested: "test" });
+    });
+
+    it("with json field nested", async () => {
+      await _testWith("obj.nested", "test", {
+        obj: { nested: "test" },
+      });
+    });
+
+    it("with relation field", async () => {
+      await _testWith("relSingle", "507f191e810c19729de860ea");
+    });
+
+    it("with array of relation field", async () => {
+      await _testWith("relArray", [
+        "507f191e810c19729de860ea",
+        "507f191e810c19729de860eb",
+      ]);
+    });
+
+    it("with complex nested fields", async () => {
+      await _testWith("complex", {
+        nestedArr: [],
+      });
+
+      await _testWith("complex.nestedArr", [], {
+        complex: {
+          nestedArr: [],
+        },
+      });
+
+      const created = await model.create({
+        complex: {
+          nestedArr: [
+            {
+              nested: "test1",
+            },
+            {
+              nested: "test2",
+            },
+          ],
+        },
+      });
+
+      expect(created.get("complex.nestedArr.nested")).toEqual([
+        "test1",
+        "test2",
+      ]);
+
+      const r = created.set("complex.nestedArr.nested", "test3");
+
+      expect(r).toEqual(created.get("complex.nestedArr.nested"));
+      expect(r).toEqual(["test3", "test3"]);
     });
   });
 
@@ -594,7 +1239,7 @@ describe("Test Model", () => {
     });
 
     it("getRecursiveValidatorsFromModel should returns configKey validator if model has a configKey", () => {
-      const validators = getRecursiveValidatorsFromModel(models.DataModel);
+      const validators = getRecursiveValidatorsFromModel(DataModel);
       const configKeyValidator = validators.find(
         (v) => v.type === ValidatorTypes.CONFIG_KEY
       );
@@ -638,7 +1283,7 @@ describe("Test Model", () => {
       BaseModel = mockModel();
 
       const model = Model.getFromSlug(BaseModel.slug, adapter);
-      const modelBis = Model.getAdaptedModel(BaseModel, adapter);
+      const modelBis = getAdaptedModel(BaseModel, adapter);
 
       expect(model).toBe(modelBis);
     });
@@ -646,7 +1291,7 @@ describe("Test Model", () => {
     it("should returns same model from adapter and then slug", () => {
       BaseModel = mockModel();
 
-      const model = Model.getAdaptedModel(BaseModel, adapter);
+      const model = getAdaptedModel(BaseModel, adapter);
       const modelBis = Model.getFromSlug(BaseModel.slug, adapter);
 
       expect(model).toBe(modelBis);
@@ -654,36 +1299,30 @@ describe("Test Model", () => {
 
     it("should returns first cached model", () => {
       const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = Model.getAdaptedModel(
-        models.Account,
-        adapter
-      );
+      const baseAccountFromModel = getAdaptedModel(Account, adapter);
 
       expect(baseAccountFromSlug).toBe(baseAccountFromModel);
 
-      const extendedAccount = class extends models.Account {};
+      const extendedAccount = class extends Account {};
 
-      const extendedAccountFromModel = Model.getAdaptedModel(
+      const extendedAccountFromModel = getAdaptedModel(
         extendedAccount,
         adapter
       );
 
       expect(extendedAccountFromModel.getBaseClass()).not.toBe(extendedAccount);
-      expect(extendedAccountFromModel.getBaseClass()).toBe(models.Account);
+      expect(extendedAccountFromModel.getBaseClass()).toBe(Account);
     });
 
     it("should be able to override model", () => {
       const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = Model.getAdaptedModel(
-        models.Account,
-        adapter
-      );
+      const baseAccountFromModel = getAdaptedModel(Account, adapter);
 
       expect(baseAccountFromSlug).toBe(baseAccountFromModel);
 
-      const extendedAccount = class extends models.Account {};
+      const extendedAccount = class extends Account {};
 
-      const extendedAccountFromModel = Model.getAdaptedModel(
+      const extendedAccountFromModel = getAdaptedModel(
         extendedAccount,
         adapter,
         true
@@ -694,16 +1333,13 @@ describe("Test Model", () => {
 
     it("Should be able to get adapted model from slug once it has been adapted from model", () => {
       const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = Model.getAdaptedModel(
-        models.Account,
-        adapter
-      );
+      const baseAccountFromModel = getAdaptedModel(Account, adapter);
 
       expect(baseAccountFromSlug).toBe(baseAccountFromModel);
 
-      const extendedAccount = class ExtendedAccount extends models.Account {};
+      const extendedAccount = class ExtendedAccount extends Account {};
 
-      const extendedAccountFromModel = Model.getAdaptedModel(
+      const extendedAccountFromModel = getAdaptedModel(
         extendedAccount,
         adapter,
         true
@@ -724,12 +1360,12 @@ describe("Test Model", () => {
       };
 
       const baseModelFromSlug = Model.getFromSlug(slug, adapter);
-      const baseModelFromModel = Model.getAdaptedModel(ExampleModel, adapter);
+      const baseModelFromModel = getAdaptedModel(ExampleModel, adapter);
 
       expect(baseModelFromSlug).toBe(baseModelFromModel);
       expect(baseModelFromModel.getBaseClass()).not.toBe(ExampleModel);
 
-      const extendedModelFromModel = Model.getAdaptedModel(
+      const extendedModelFromModel = getAdaptedModel(
         ExampleModel,
         adapter,
         true

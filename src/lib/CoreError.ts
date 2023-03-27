@@ -8,7 +8,7 @@ class CoreError extends Error {
     super();
     const { constructor } = Object.getPrototypeOf(this);
 
-    if (Error.captureStackTrace) {
+    if ("captureStackTrace" in Error) {
       Error.captureStackTrace(this, constructor);
     }
 

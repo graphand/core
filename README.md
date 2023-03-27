@@ -101,3 +101,8 @@ Les types de champs sont tous dans l'enum `ValidatorTypes` :
 - _ValidatorTypes.SAMPLE_
 - _ValidatorTypes.CONFIG_KEY_
 - _ValidatorTypes.DATAMODEL_CONFIG_KEY_
+
+### `Adapter.prototype.runValidators`
+
+`runValidators` permet d'activer ou de désactiver les validateurs sur les actions de crud.
+Même si les validateurs sont désactivés via cette variable, ils peuvent toujours être exécutés via la méthode `Model.validate`.

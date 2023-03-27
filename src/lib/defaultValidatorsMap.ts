@@ -108,17 +108,13 @@ class DefaultValidatorDatamodelConfigKey extends Validator<ValidatorTypes.DATAMO
         return false;
       }
 
-      const configKeyField = new Field<FieldTypes.TEXT>(i.fields[configKey]);
+      const configKeyField = i.fields[configKey];
 
       if (configKeyField.type !== FieldTypes.TEXT) {
         return false;
       }
 
-      if (configKeyField.options.multiple !== false) {
-        return false;
-      }
-
-      if (configKeyField.options.default) {
+      if (configKeyField.options?.default) {
         return false;
       }
 

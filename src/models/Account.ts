@@ -40,17 +40,11 @@ class Account extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   password: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "roles", multiple: false })
-  role: FieldDefinitionRelation<{
-    model: Role;
-    multiple: false;
-  }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: "roles" })
+  role: FieldDefinitionRelation<Role>;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "users", multiple: false })
-  user: FieldDefinitionRelation<{
-    model: User;
-    multiple: false;
-  }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: "users" })
+  user: FieldDefinitionRelation<User>;
 }
 
 export default Account;

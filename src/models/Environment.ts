@@ -27,14 +27,8 @@ class Environment extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.RELATION, {
-    ref: "environments",
-    multiple: false,
-  })
-  base: FieldDefinitionRelation<{
-    model: Environment;
-    multiple: false;
-  }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: "environments" })
+  base: FieldDefinitionRelation<Environment>;
 }
 
 export default Environment;

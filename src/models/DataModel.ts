@@ -2,7 +2,11 @@ import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
-import { FieldsDefinition, ValidatorsDefinition } from "../types";
+import {
+  FieldsDefinition,
+  ValidatorDefinition,
+  ValidatorsDefinition,
+} from "../types";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 
@@ -55,29 +59,36 @@ class DataModel extends Model {
   })
   fields: FieldDefinitionJSON<FieldsDefinition>;
 
-  @fieldDecorator(FieldTypes.JSON, {
-    multiple: true,
-    fields: {
-      type: {
-        type: FieldTypes.TEXT,
-        options: {
-          options: Object.values(ValidatorTypes),
-        },
-      },
+  @fieldDecorator(FieldTypes.ARRAY, {
+    items: {
+      type: FieldTypes.JSON,
       options: {
-        type: FieldTypes.JSON,
+        fields: {
+          type: {
+            type: FieldTypes.TEXT,
+            options: {
+              options: Object.values(ValidatorTypes),
+            },
+          },
+          options: {
+            type: FieldTypes.JSON,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.REQUIRED,
+            options: {
+              field: "type",
+            },
+          },
+        ],
       },
     },
-    validators: [
-      {
-        type: ValidatorTypes.REQUIRED,
-        options: {
-          field: "type",
-        },
-      },
-    ],
   })
-  validators: FieldDefinitionJSON<ValidatorsDefinition>;
+  validators: FieldDefinitionArray<{
+    type: FieldTypes.JSON;
+    definition: ValidatorDefinition;
+  }>;
 
   @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
   isPage: FieldDefinitionBoolean;

@@ -20,15 +20,13 @@ import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
 import Validator from "./Validator";
 import {
-  createFieldFromDefinition,
-  createValidatorFromDefinition,
-  getFieldFromPath,
-  getRecursiveFieldsFromModel,
+  createFieldsMap,
+  createValidatorsArray,
+  getFieldsPathsFromPath,
   getRecursiveHooksFromModel,
-  getRecursiveValidatorsFromModel,
-  getValueFromPath,
-  setValueOnPath,
   validateDocs,
+  verifyModelAdapter,
+  defineFieldsProperties,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
@@ -70,32 +68,56 @@ class Model {
 
   constructor(doc: any = {}) {
     doc._id ??= Date.now();
-    this.setDoc(doc);
+    this.__doc = doc;
 
     Object.defineProperty(this, "__doc", { enumerable: false });
   }
 
+  /**
+   * Returns the current instance model constructor as a typeof Model.
+   * instance.model is an alias for instance.constructor.
+   */
   get model() {
     return this.constructor as typeof Model;
   }
 
+  /**
+   * Clone the current model instance.
+   * @example
+   * const account = await models.Account.get();
+   * const clonedAccount = account.clone();
+   * console.log(account === clonedAccount); // false
+   */
   clone() {
     const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
     return new this.model(clonedDoc);
   }
 
+  /**
+   * Returns the base class of the model.
+   * When a model is extended with an adapter, the base class is the original model.
+   * @example
+   * const Account = models.Account.withAdapter(MyAdapter);
+   * console.log(Account === models.Account); // false
+   * console.log(Account.getBaseClass() === models.Account); // true
+   * console.log(models.Account.getBaseClass() === models.Account); // true
+   */
   static getBaseClass() {
-    if (!this.hasAdapter()) {
+    if (!this.__adapter) {
       return this;
     }
 
     return this.__baseClass ?? this;
   }
 
-  static hasAdapter() {
-    return Boolean(this.__adapter);
-  }
-
+  /**
+   * Returns a new model class with the given adapter.
+   * @param adapterClass
+   * @param modules
+   * @example
+   * const Account = models.Account.withAdapter(MyAdapter); // Account is now usable with MyAdapter
+   * const account = await Account.getList({}); // returns a PromiseModelList
+   */
   static withAdapter<T extends typeof Model>(
     this: T,
     adapterClass: typeof Adapter,
@@ -173,118 +195,34 @@ class Model {
       });
     }
 
-    let modelFields = getRecursiveFieldsFromModel(this);
-    let modelValidators = getRecursiveValidatorsFromModel(this);
-
-    const modelDefinition = await this.execute(
+    const modelDef = await this.execute(
       "getModelDefinition",
       undefined as never,
       ctx
     );
 
-    this.configKey = modelDefinition?.configKey ?? this.configKey;
+    this.configKey = modelDef?.configKey ?? this.configKey;
 
-    const fields = modelDefinition?.fields || {};
-    modelFields = { ...modelFields, ...fields };
-
-    const validators = modelDefinition?.validators || [];
-    modelValidators = [...modelValidators, ...validators];
-
-    const fieldsEntries: Array<[string, Field]> = Object.entries(
-      modelFields
-    ).map(([slug, def]) => {
-      return [slug, createFieldFromDefinition(def, this.__adapter)];
-    });
-
-    const validatorsArray: Array<Validator> = modelValidators.map((def) => {
-      return createValidatorFromDefinition(def, this.__adapter);
-    });
-
-    this.__fieldsMap = new Map(fieldsEntries);
-    this.__validatorsArray = validatorsArray;
+    this.__fieldsMap = createFieldsMap(this, modelDef?.fields);
+    this.__validatorsArray = createValidatorsArray(this, modelDef?.validators);
 
     delete this.__fieldsProperties;
     delete this.__fieldsKeys;
   }
 
   static get fieldsMap() {
-    if (!this.__fieldsMap) {
-      let modelFields = getRecursiveFieldsFromModel(this);
-
-      const fieldsEntries: Array<[string, Field]> = Object.entries(
-        modelFields
-      ).map(([slug, def]) => {
-        return [slug, createFieldFromDefinition(def, this.__adapter)];
-      });
-
-      this.__fieldsMap = new Map(fieldsEntries);
-    }
-
+    this.__fieldsMap ??= createFieldsMap(this);
     return this.__fieldsMap;
   }
 
   static get validatorsArray() {
-    if (!this.__validatorsArray) {
-      let modelValidators = getRecursiveValidatorsFromModel(this);
-
-      this.__validatorsArray = modelValidators.map((def) =>
-        createValidatorFromDefinition(def, this.__adapter)
-      );
-    }
-
+    this.__validatorsArray ??= createValidatorsArray(this);
     return this.__validatorsArray;
   }
 
   static get fieldsKeys() {
-    if (!this.__fieldsKeys) {
-      this.__fieldsKeys = Array.from(this.fieldsMap.keys());
-    }
-
+    this.__fieldsKeys ??= Array.from(this.fieldsMap.keys());
     return this.__fieldsKeys;
-  }
-
-  defineFieldsProperties() {
-    if (!this.model.__fieldsProperties) {
-      const propEntries = this.model.fieldsKeys.map((slug) => {
-        return [
-          slug,
-          {
-            enumerable: true,
-            configurable: true,
-            get: function () {
-              return this.get(slug);
-            },
-            set(v) {
-              if (v === undefined) {
-                console.warn(
-                  "cannot set undefined value with = operator. Please use .set method instead"
-                );
-                return;
-              }
-
-              return this.set(slug, v);
-            },
-          },
-        ];
-      });
-
-      this.model.__fieldsProperties = Object.fromEntries(propEntries);
-    }
-
-    Object.defineProperties(this, this.model.__fieldsProperties);
-  }
-
-  setDoc(doc: any) {
-    this.__doc = doc;
-  }
-
-  static verifyAdapter() {
-    if (!this.__adapter) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_ADAPTER,
-        message: `model ${this.slug} has invalid adapter`,
-      });
-    }
   }
 
   static getFromSlug<M extends typeof Model = typeof Model>(
@@ -318,66 +256,107 @@ class Model {
     return model;
   }
 
-  static getAdaptedModel<M extends typeof Model = typeof Model>(
-    model: M,
-    adapter?: typeof Adapter,
-    override?: boolean
-  ): M {
-    if (!adapter) {
-      adapter = this.__adapter?.constructor as typeof Adapter;
-    }
-
-    if (!adapter) {
-      throw new CoreError({
-        message: "Adapter is required in getAdaptedModel method",
-      });
-    }
-
-    adapter.__modelsMap ??= new Map();
-
-    let adaptedModel: M;
-
-    if (!override) {
-      adaptedModel = adapter?.__modelsMap.get(model.slug) as M;
-    }
-
-    if (!adaptedModel) {
-      adaptedModel = model.withAdapter(adapter);
-      adapter.__modelsMap.set(model.slug, adaptedModel);
-    }
-
-    return adaptedModel;
-  }
-
   /**
-   * Model instance getter. Returns the value for the specified key
-   * @param path {string} - The path to the field get
-   * @param format {json|object|document} - Serializer format
-   * @param ctx {ExecutorCtx} - Executor context
+   * Get value for a specific field. Model.get("field") is an equivalent to `model.field`
+   * @param path - The path to the field
+   * @param format - The format to serialize the value (default object)
+   * @example
+   * console.log(model.get("field"));
    */
   get(path: string, format = SerializerFormat.OBJECT, ctx: ExecutorCtx = {}) {
-    const field = getFieldFromPath(this.model, path);
-    if (!field) {
+    const pathArr = path.split(".");
+    const fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+
+    const firstField = fieldsPaths.shift()?.field;
+
+    if (!firstField) {
       return undefined;
     }
 
-    let value = getValueFromPath(this.__doc, path);
+    const lastField = fieldsPaths[fieldsPaths.length - 1]?.field || firstField;
 
-    if (value === undefined && "default" in field.options) {
-      value = field.options.default as typeof value;
+    let value: any = this.__doc[pathArr[0]];
+
+    if (value === undefined && "default" in firstField.options) {
+      value = firstField.options.default as typeof value;
     }
 
-    if (value !== undefined && value !== null) {
-      value = field.serialize(value, format, this, path, ctx);
+    if (value === undefined) {
+      return value;
     }
 
-    return value;
+    if (!fieldsPaths.length) {
+      return firstField.serialize(value, format, this, ctx);
+    } else {
+      value = firstField.serialize(value, SerializerFormat.JSON, this, ctx);
+    }
+
+    const noFieldSymbol = Symbol("noField");
+
+    const _getter = (
+      _value: any,
+      _fieldsPaths: Array<{ key: string; field: Field }>
+    ) => {
+      for (const _fieldsPath of _fieldsPaths) {
+        if (!_fieldsPath) {
+          return noFieldSymbol;
+        }
+
+        const { key, field } = _fieldsPath;
+
+        if (key === "[]") {
+          const restPaths = _fieldsPaths.slice(1);
+
+          if (Array.isArray(_value)) {
+            if (!_value.length) {
+              return _value;
+            }
+
+            const r = _value.map((v) => _getter(v, restPaths));
+            if (r.every((v) => v === noFieldSymbol)) {
+              return undefined;
+            }
+
+            return r.filter((v) => v !== noFieldSymbol);
+          }
+
+          const res = _getter(_value, restPaths);
+          if (res === noFieldSymbol) {
+            return undefined;
+          }
+
+          return res;
+        }
+
+        if (!_value || typeof _value !== "object") {
+          break;
+        }
+
+        _value = field.serialize(_value[key], SerializerFormat.JSON, this, ctx);
+      }
+
+      return lastField.serialize(_value, format, this, ctx);
+    };
+
+    if (value === undefined) {
+      return undefined;
+    }
+
+    let res = _getter(value, fieldsPaths);
+    if (res === noFieldSymbol) {
+      res = undefined;
+    }
+
+    return res;
   }
 
   /**
-   * Model instance setter. Set value for the specified key
-   * @param path {string} - The path to the field get
-   * @param value {*}
+   * Set value for a specific field. Model.set("field", "value") is an equivalent to `model.field = value`
+   * @param path - The path to the field
+   * @param value - The value to set
+   * @example
+   * model.set("field", "value");
+   * console.log(model.get("field")); // value
    */
   set<T extends Model, S extends keyof T | string>(
     this: T,
@@ -385,33 +364,80 @@ class Model {
     value: S extends keyof T ? T[S] | any : any,
     ctx: ExecutorCtx = {}
   ) {
-    const _path = String(path);
-    const field = getFieldFromPath(this.model, _path);
-    if (!field) {
-      return;
+    const pathArr = String(path).split(".");
+    const fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+
+    if (fieldsPaths.includes(null)) {
+      throw new CoreError({
+        message: `Field ${String(path)} is not found in model ${
+          this.model.slug
+        }`,
+      });
     }
 
-    if (value === undefined && "default" in field.options) {
-      value = field.options.default as typeof value;
-    }
+    const _setter = (
+      _assignTo: any = {},
+      _value: any,
+      _fieldsPaths: Array<{ key: string | number; field: Field }>
+    ) => {
+      let assignTo = _assignTo;
+      let assignPath = _fieldsPaths.shift();
 
-    if (value !== undefined && value !== null) {
-      value = field.serialize(
-        value,
-        SerializerFormat.DOCUMENT,
-        this,
-        _path,
-        ctx
-      );
-    }
+      for (const [i, _fieldsPath] of _fieldsPaths.entries()) {
+        if (!_fieldsPath) {
+          throw new CoreError({
+            message: `Field ${String(path)} is not found in model ${
+              this.model.slug
+            }`,
+          });
+        }
 
-    setValueOnPath(this.__doc, String(path), value);
+        assignTo[assignPath.key] ??= {};
+        assignTo = assignTo[assignPath.key];
+        assignPath = _fieldsPath;
 
-    return this;
+        if (assignPath.key === "[]") {
+          const restPaths = _fieldsPaths.slice(i + 1);
+
+          const assignToArr = Array.isArray(assignTo) ? assignTo : [];
+          if (assignToArr.length) {
+            assignTo = assignToArr.map((v, index) => {
+              return _setter(assignTo, _value, [
+                { key: index, field: assignPath.field },
+                ...restPaths,
+              ]);
+            });
+          }
+
+          return assignTo;
+        }
+      }
+
+      if (assignPath?.field && assignTo && typeof assignTo === "object") {
+        assignTo[assignPath.key] = assignPath.field.serialize(
+          value,
+          SerializerFormat.DOCUMENT,
+          this,
+          ctx
+        );
+
+        return assignTo[assignPath.key];
+      }
+
+      return null;
+    };
+
+    return _setter(this.__doc, value, fieldsPaths);
   }
 
-  to(format: SerializerFormat) {
-    this.defineFieldsProperties();
+  /**
+   * Get the document representation of the current instance with the given format
+   * @param format
+   * @example
+   * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
+   */
+  serialize(format: SerializerFormat) {
+    defineFieldsProperties(this);
 
     const entries = this.model.fieldsKeys.map((slug) => {
       return [slug, this.get(slug, format)];
@@ -420,22 +446,49 @@ class Model {
     return Object.fromEntries(entries);
   }
 
+  /**
+   * Get the document representation of the current instance as JSON
+   * @example
+   * console.log(instance.toJSON()); // equivalent to instance.to(SerializerFormat.JSON)
+   */
   toJSON() {
-    return this.to(SerializerFormat.JSON);
+    return this.serialize(SerializerFormat.JSON);
   }
 
+  /**
+   * Get the document representation of the current instance as an object
+   * @example
+   * console.log(instance.toObject()); // equivalent to instance.to(SerializerFormat.OBJECT)
+   */
   toObject() {
-    return this.to(SerializerFormat.OBJECT);
+    return this.serialize(SerializerFormat.OBJECT);
   }
 
+  /**
+   * Get the document representation of the current instance as a document
+   * @example
+   * console.log(instance.toDocument()); // equivalent to instance.to(SerializerFormat.DOCUMENT)
+   */
   toDocument() {
-    return this.to(SerializerFormat.DOCUMENT);
+    return this.serialize(SerializerFormat.DOCUMENT);
   }
 
+  /**
+   * Serialize the current instance to a string
+   */
   toString() {
     return JSON.stringify(this.__doc);
   }
 
+  /**
+   * Hydrate a new instance of the current model from a string.
+   * You can use Model.prototype.toString() to get the string representation of an instance and then use this method to hydrate a new instance.
+   * @param str
+   * @param cleanPayload
+   * @example
+   * const modelStr = instance.toString();
+   * const instance = Model.fromString(modelStr);
+   */
   static fromString<T extends typeof Model>(
     this: T,
     str: string,
@@ -461,7 +514,7 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): Promise<number> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -473,8 +526,8 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): PromiseModel<InstanceType<T>> {
+    verifyModelAdapter(this);
     const model = this;
-    model.verifyAdapter();
 
     return new PromiseModel(
       [
@@ -499,8 +552,8 @@ class Model {
     query: JSONQuery = {},
     ctx?: ExecutorCtx
   ): PromiseModelList<InstanceType<T>> {
+    verifyModelAdapter(this);
     const model = this;
-    model.verifyAdapter();
 
     return new PromiseModelList<InstanceType<T>>(
       [
@@ -525,7 +578,7 @@ class Model {
     payload: InputModelPayload<T>,
     ctx?: ExecutorCtx
   ): Promise<InstanceType<T>> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -537,7 +590,7 @@ class Model {
     payload: Array<InputModelPayload<T>>,
     ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -545,7 +598,7 @@ class Model {
   }
 
   async update(update: any, ctx?: ExecutorCtx): Promise<this> {
-    this.model.verifyAdapter();
+    verifyModelAdapter(this.model);
 
     const res = await this.model.execute(
       "updateOne",
@@ -553,7 +606,7 @@ class Model {
       ctx
     );
 
-    this.setDoc(res.__doc);
+    this.__doc = res.__doc;
 
     return this;
   }
@@ -564,7 +617,7 @@ class Model {
     update: any,
     ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -577,7 +630,7 @@ class Model {
   }
 
   async delete(ctx?: ExecutorCtx): Promise<this> {
-    this.model.verifyAdapter();
+    verifyModelAdapter(this.model);
 
     await this.model.execute("deleteOne", [String(this._id)], ctx);
 
@@ -589,7 +642,7 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): Promise<string[]> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 

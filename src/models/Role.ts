@@ -27,63 +27,93 @@ class Role extends Model {
   @fieldDecorator(FieldTypes.BOOLEAN)
   admin: FieldDefinitionBoolean;
 
-  @fieldDecorator(FieldTypes.RELATION, {
-    ref: "roles",
-    multiple: true,
+  @fieldDecorator(FieldTypes.ARRAY, {
+    items: {
+      type: FieldTypes.RELATION,
+      options: {
+        ref: "roles",
+      },
+    },
   })
-  inherits: FieldDefinitionRelation<{
-    model: Role;
-    multiple: true;
+  inherits: FieldDefinitionArray<{
+    type: FieldTypes.RELATION;
+    definition: Role;
   }>;
 
-  @fieldDecorator(FieldTypes.JSON, {
-    multiple: true,
-    fields: {
-      ref: {
-        type: FieldTypes.TEXT,
-      },
-      actions: {
-        type: FieldTypes.TEXT,
-        options: {
-          multiple: true,
-          options: Object.values(RuleActions),
+  @fieldDecorator(FieldTypes.ARRAY, {
+    items: {
+      type: FieldTypes.JSON,
+      options: {
+        fields: {
+          ref: {
+            type: FieldTypes.TEXT,
+          },
+          actions: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+                options: {
+                  options: Object.values(RuleActions),
+                  strict: true,
+                },
+              },
+            },
+          },
+          filter: {
+            type: FieldTypes.JSON,
+          },
+          prohibition: {
+            type: FieldTypes.BOOLEAN,
+          },
         },
-      },
-      filter: {
-        type: FieldTypes.JSON,
-      },
-      prohibition: {
-        type: FieldTypes.BOOLEAN,
       },
     },
   })
-  rules: FieldDefinitionJSON<Array<Rule>>;
+  rules: FieldDefinitionArray<{
+    type: FieldTypes.JSON;
+    definition: Rule;
+  }>;
 
-  @fieldDecorator(FieldTypes.JSON, {
-    multiple: true,
-    fields: {
-      ref: {
-        type: FieldTypes.TEXT,
-      },
-      actions: {
-        type: FieldTypes.TEXT,
-        options: {
-          multiple: true,
-          options: Object.values(RuleActions),
-        },
-      },
-      filter: {
-        type: FieldTypes.JSON,
-      },
-      fields: {
-        type: FieldTypes.TEXT,
-        options: {
-          multiple: true,
+  @fieldDecorator(FieldTypes.ARRAY, {
+    items: {
+      type: FieldTypes.JSON,
+      options: {
+        fields: {
+          ref: {
+            type: FieldTypes.TEXT,
+          },
+          actions: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+                options: {
+                  options: Object.values(RuleActions),
+                  strict: true,
+                },
+              },
+            },
+          },
+          filter: {
+            type: FieldTypes.JSON,
+          },
+          fields: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
         },
       },
     },
   })
-  fieldsRestrictions: FieldDefinitionJSON<Array<FieldsRestriction>>;
+  fieldsRestrictions: FieldDefinitionArray<{
+    type: FieldTypes.JSON;
+    definition: FieldsRestriction;
+  }>;
 
   async getRulesInherited(): Promise<Array<Rule>> {
     let rules: Array<Rule> = this.rules || [];
