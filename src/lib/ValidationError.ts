@@ -21,8 +21,7 @@ class ValidationError extends CoreError {
     this.fields = fields ?? [];
     this.validators = validators ?? [];
 
-    const _this = this as ValidationError;
-    Object.defineProperty(_this, "fieldsPaths", {
+    Object.defineProperty(this, "fieldsPaths", {
       enumerable: true,
       value: this.fieldsPaths,
     });

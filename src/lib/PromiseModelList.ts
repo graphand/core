@@ -16,7 +16,6 @@ class PromiseModelList<T extends Model> extends Promise<ModelList<T>> {
       return super(promiseParams);
     }
 
-    // @ts-ignore
     super(...promiseParams);
 
     this.__model = model;

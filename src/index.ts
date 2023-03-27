@@ -33,6 +33,7 @@ import {
   validateDocs,
   getFieldsPathsFromPath,
   getJSONSubfieldsMap,
+  defineFieldsProperties,
 } from "./lib/utils";
 
 const models = {
@@ -83,6 +84,7 @@ export {
   defaultFieldsMap,
   getFieldsPathsFromPath,
   getJSONSubfieldsMap,
+  defineFieldsProperties,
 };
 
 export * from "./types";

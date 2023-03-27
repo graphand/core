@@ -25,6 +25,8 @@ import {
   getFieldsPathsFromPath,
   getRecursiveHooksFromModel,
   validateDocs,
+  verifyModelAdapter,
+  defineFieldsProperties,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
@@ -221,48 +223,6 @@ class Model {
   static get fieldsKeys() {
     this.__fieldsKeys ??= Array.from(this.fieldsMap.keys());
     return this.__fieldsKeys;
-  }
-
-  // TODO: move to utils
-  defineFieldsProperties() {
-    if (!this.model.__fieldsProperties) {
-      const propEntries = this.model.fieldsKeys.map((slug) => {
-        return [
-          slug,
-          {
-            enumerable: true,
-            configurable: true,
-            get: function () {
-              return this.get(slug);
-            },
-            set(v) {
-              if (v === undefined) {
-                console.warn(
-                  "cannot set undefined value with = operator. Please use .set method instead"
-                );
-                return;
-              }
-
-              return this.set(slug, v);
-            },
-          },
-        ];
-      });
-
-      this.model.__fieldsProperties = Object.fromEntries(propEntries);
-    }
-
-    Object.defineProperties(this, this.model.__fieldsProperties);
-  }
-
-  // TODO: move to utils
-  static verifyAdapter() {
-    if (!this.__adapter) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_ADAPTER,
-        message: `model ${this.slug} has invalid adapter`,
-      });
-    }
   }
 
   static getFromSlug<M extends typeof Model = typeof Model>(
@@ -509,7 +469,7 @@ class Model {
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
   serialize(format: SerializerFormat) {
-    this.defineFieldsProperties();
+    defineFieldsProperties(this);
 
     const entries = this.model.fieldsKeys.map((slug) => {
       return [slug, this.get(slug, format)];
@@ -586,7 +546,7 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): Promise<number> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -598,8 +558,8 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): PromiseModel<InstanceType<T>> {
+    verifyModelAdapter(this);
     const model = this;
-    model.verifyAdapter();
 
     return new PromiseModel(
       [
@@ -624,8 +584,8 @@ class Model {
     query: JSONQuery = {},
     ctx?: ExecutorCtx
   ): PromiseModelList<InstanceType<T>> {
+    verifyModelAdapter(this);
     const model = this;
-    model.verifyAdapter();
 
     return new PromiseModelList<InstanceType<T>>(
       [
@@ -650,7 +610,7 @@ class Model {
     payload: InputModelPayload<T>,
     ctx?: ExecutorCtx
   ): Promise<InstanceType<T>> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -662,7 +622,7 @@ class Model {
     payload: Array<InputModelPayload<T>>,
     ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -670,7 +630,7 @@ class Model {
   }
 
   async update(update: any, ctx?: ExecutorCtx): Promise<this> {
-    this.model.verifyAdapter();
+    verifyModelAdapter(this.model);
 
     const res = await this.model.execute(
       "updateOne",
@@ -689,7 +649,7 @@ class Model {
     update: any,
     ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 
@@ -702,7 +662,7 @@ class Model {
   }
 
   async delete(ctx?: ExecutorCtx): Promise<this> {
-    this.model.verifyAdapter();
+    verifyModelAdapter(this.model);
 
     await this.model.execute("deleteOne", [String(this._id)], ctx);
 
@@ -714,7 +674,7 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): Promise<string[]> {
-    this.verifyAdapter();
+    verifyModelAdapter(this);
 
     await this.initialize();
 

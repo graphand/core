@@ -25,6 +25,8 @@ import Adapter from "./Adapter";
 import ValidationFieldError from "./ValidationFieldError";
 import ValidationValidatorError from "./ValidationValidatorError";
 import ValidationError from "./ValidationError";
+import CoreError from "./CoreError";
+import ErrorCodes from "../enums/error-codes";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -464,4 +466,51 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
 
 export const isObjectId = (input: string) => {
   return /^[a-f\d]{24}$/i.test(input);
+};
+
+export const verifyModelAdapter = (model: typeof Model) => {
+  if (!model.__adapter) {
+    throw new CoreError({
+      code: ErrorCodes.INVALID_ADAPTER,
+      message: `model ${model.slug} has invalid adapter`,
+    });
+  }
+
+  // if (model.__adapter.model.getBaseClass() !== model.getBaseClass()) {
+  //   throw new CoreError({
+  //     code: ErrorCodes.INVALID_ADAPTER,
+  //     message: `model ${model.slug} has invalid adapter`,
+  //   });
+  // }
+};
+
+export const defineFieldsProperties = (instance: Model) => {
+  if (!instance.model.__fieldsProperties) {
+    const propEntries = instance.model.fieldsKeys.map((slug) => {
+      return [
+        slug,
+        {
+          enumerable: true,
+          configurable: true,
+          get: function () {
+            return this.get(slug);
+          },
+          set(v) {
+            if (v === undefined) {
+              console.warn(
+                "cannot set undefined value with = operator. Please use .set method instead"
+              );
+              return;
+            }
+
+            return this.set(slug, v);
+          },
+        },
+      ];
+    });
+
+    instance.model.__fieldsProperties = Object.fromEntries(propEntries);
+  }
+
+  Object.defineProperties(instance, instance.model.__fieldsProperties);
 };
