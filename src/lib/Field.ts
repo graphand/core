@@ -5,10 +5,12 @@ import SerializerFormat from "../enums/serializer-format";
 import { getDefaultFieldOptions } from "./utils";
 
 class Field<T extends FieldTypes = FieldTypes> {
-  private __definition: FieldDefinition<T>;
+  __definition: FieldDefinition<T>;
+  __path: string;
 
-  constructor(definition: FieldDefinition<T>) {
+  constructor(definition: FieldDefinition<T>, path: string) {
     this.__definition = definition;
+    this.__path = path;
 
     Object.defineProperty(this, "__definition", { enumerable: false });
   }

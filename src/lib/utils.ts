@@ -87,12 +87,14 @@ export const getFieldsPathsFromPath = (
   return pathArr.reduce(
     (fieldsPaths: Array<FieldsPathItem>, key: string) => {
       const prevField = fieldsPaths[fieldsPaths.length - 1]?.field;
+      const pathStr = fieldsPaths.map((item) => item?.key).join(".");
 
       if (prevField?.type === FieldTypes.ARRAY) {
         const options = prevField.options as FieldOptions<FieldTypes.ARRAY>;
-        const itemsField = createFieldFromDefinition(
+        const itemsField = getFieldFromDefinition(
           options.items,
-          model.__adapter
+          model.__adapter,
+          pathStr + ".[]"
         );
 
         if (key === "[]") {
@@ -104,9 +106,10 @@ export const getFieldsPathsFromPath = (
         if (itemsField?.type === FieldTypes.JSON) {
           const options = itemsField.options as FieldOptions<FieldTypes.JSON>;
           const nextFieldDef = options.fields[key];
-          const nextField = createFieldFromDefinition(
+          const nextField = getFieldFromDefinition(
             nextFieldDef,
-            model.__adapter
+            model.__adapter,
+            pathStr + ".[]." + key
           );
 
           if (nextField) {
@@ -118,9 +121,10 @@ export const getFieldsPathsFromPath = (
       if (prevField?.type === FieldTypes.JSON) {
         const options = prevField.options as FieldOptions<FieldTypes.JSON>;
         const nextFieldDef = options.fields[key];
-        const nextField = createFieldFromDefinition(
+        const nextField = getFieldFromDefinition(
           nextFieldDef,
-          model.__adapter
+          model.__adapter,
+          pathStr + "." + key
         );
 
         if (nextField) {
@@ -181,6 +185,24 @@ export const getRecursiveHooksFromModel = <
   return _hooks.sort((a, b) => a.order - b.order);
 };
 
+export const getJSONSubfieldsMap = (
+  model: typeof Model,
+  jsonField: Field<FieldTypes.JSON>
+) => {
+  const subfieldsEntries: Array<[string, Field]> = Object.entries(
+    jsonField.options.fields ?? {}
+  ).map(([slug, def]) => {
+    const field = getFieldFromDefinition(
+      def,
+      model.__adapter,
+      jsonField.__path + "." + slug
+    );
+
+    return [slug, field];
+  });
+  return new Map(subfieldsEntries);
+};
+
 export const parseValidatorHook = (
   hook: ValidatorHook,
   validator: Validator
@@ -201,14 +223,63 @@ export const parseValidatorHook = (
   return { phase, action, fn };
 };
 
-export const createFieldFromDefinition = <
+export const createFieldsMap = (
+  model: typeof Model,
+  assignFields?: FieldsDefinition
+) => {
+  let modelFields = getRecursiveFieldsFromModel(model);
+
+  if (assignFields) {
+    modelFields = { ...modelFields, ...assignFields };
+  }
+
+  const fieldsEntries: Array<[string, Field]> = Object.entries(modelFields).map(
+    ([slug, def]) => {
+      return [slug, getFieldFromDefinition(def, model.__adapter, slug)];
+    }
+  );
+
+  return new Map(fieldsEntries);
+};
+
+export const createValidatorsArray = (
+  model: typeof Model,
+  assignValidators?: ValidatorsDefinition
+) => {
+  let modelValidators = getRecursiveValidatorsFromModel(model);
+
+  if (assignValidators?.length) {
+    modelValidators = [...modelValidators, ...assignValidators];
+  }
+
+  return modelValidators.map((def) => {
+    return getValidatorFromDefinition(def, model.__adapter);
+  });
+};
+
+export const getFieldFromDefinition = <
   T extends keyof FieldOptionsMap | FieldTypes
 >(
   def: FieldDefinition<T>,
-  adapter: Adapter
+  adapter: Adapter,
+  path: string
 ) => {
   if (!def || typeof def !== "object") {
     return null;
+  }
+
+  let cacheKey: string;
+
+  if (adapter && path) {
+    cacheKey = [JSON.stringify(def), path].join(":");
+  }
+
+  if (cacheKey) {
+    adapter.__createdFieldsCache ??= new Map();
+
+    if (adapter.__createdFieldsCache.has(cacheKey)) {
+      return adapter.__createdFieldsCache.get(cacheKey);
+    }
   }
 
   let FieldClass: typeof Field<T> = adapter?.fieldsMap?.[
@@ -223,15 +294,35 @@ export const createFieldFromDefinition = <
     FieldClass = Field;
   }
 
-  return new FieldClass(def);
+  const field = new FieldClass(def, path);
+
+  if (cacheKey) {
+    adapter.__createdFieldsCache.set(cacheKey, field);
+  }
+
+  return field;
 };
 
-export const createValidatorFromDefinition = <T extends ValidatorTypes>(
+export const getValidatorFromDefinition = <T extends ValidatorTypes>(
   def: ValidatorDefinition<T>,
   adapter: Adapter
 ) => {
   if (!def || typeof def !== "object") {
     return null;
+  }
+
+  let cacheKey: string;
+
+  if (adapter) {
+    cacheKey = JSON.stringify(def);
+  }
+
+  if (cacheKey) {
+    adapter.__createdValidatorsCache ??= new Map();
+
+    if (adapter.__createdValidatorsCache.has(cacheKey)) {
+      return adapter.__createdValidatorsCache.get(cacheKey);
+    }
   }
 
   let ValidatorClass: typeof Validator<T> = adapter?.validatorsMap?.[
@@ -246,7 +337,13 @@ export const createValidatorFromDefinition = <T extends ValidatorTypes>(
     ValidatorClass = Validator;
   }
 
-  return new ValidatorClass(def);
+  const validator = new ValidatorClass(def);
+
+  if (cacheKey) {
+    adapter.__createdValidatorsCache.set(cacheKey, validator);
+  }
+
+  return validator;
 };
 
 export const validateDocs = async <T extends typeof Model = typeof Model>(

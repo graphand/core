@@ -4,10 +4,11 @@ import SerializerFormat from "../enums/serializer-format";
 import Model from "./Model";
 import Adapter from "./Adapter";
 import {
-  createFieldFromDefinition,
-  createValidatorFromDefinition,
+  getFieldFromDefinition,
+  getValidatorFromDefinition,
   isObjectId,
   validateDocs,
+  getJSONSubfieldsMap,
 } from "./utils";
 import Validator from "./Validator";
 import CoreError from "./CoreError";
@@ -72,7 +73,12 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 }
 
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
-  _serializeJSON = (value: any) => {
+  _serializeJSON = (
+    value: any,
+    format: SerializerFormat,
+    from: Model,
+    ctx: ExecutorCtx = {}
+  ) => {
     if (!value) {
       return null;
     }
@@ -90,7 +96,13 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
       id = value;
     }
 
-    return id;
+    const fieldId = getFieldFromDefinition<FieldTypes.ID>(
+      { type: FieldTypes.ID },
+      from.model.__adapter,
+      "_id"
+    );
+
+    return fieldId.serialize(id, format, from, ctx);
   };
 
   _serializeObject = (
@@ -107,9 +119,10 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
       return null;
     }
 
-    const fieldId = createFieldFromDefinition<FieldTypes.ID>(
+    const fieldId = getFieldFromDefinition<FieldTypes.ID>(
       { type: FieldTypes.ID },
-      from.model.__adapter
+      from.model.__adapter,
+      "_id"
     );
 
     const _serialize = (id: any) => {
@@ -128,7 +141,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     switch (format) {
       case SerializerFormat.JSON:
       case SerializerFormat.DOCUMENT:
-        return this._serializeJSON(value);
+        return this._serializeJSON(value, format, from, ctx);
       case SerializerFormat.OBJECT:
       default:
         return this._serializeObject(value, format, from, ctx);
@@ -151,16 +164,8 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
     const arrValue = Array.isArray(value) ? value : [value];
 
     const validators: Array<Validator> = (this.options.validators ?? []).map(
-      (def) => createValidatorFromDefinition(def, model.__adapter)
+      (def) => getValidatorFromDefinition(def, model.__adapter)
     );
-
-    const fieldsEntries: Array<[string, Field<FieldTypes>]> = Object.entries(
-      this.options.fields ?? {}
-    ).map(([slug, def]) => {
-      const field = createFieldFromDefinition(def, model.__adapter);
-
-      return [slug, field];
-    });
 
     const fieldsJSONPath = Array.prototype.concat.apply(
       ctx.fieldsJSONPath ?? [],
@@ -168,9 +173,10 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
     );
 
     if (this.options.defaultField) {
-      const defaultField = createFieldFromDefinition(
+      const defaultField = getFieldFromDefinition(
         this.options.defaultField,
-        model.__adapter
+        model.__adapter,
+        this.__path + ".__default"
       );
 
       const defaultEntries = arrValue
@@ -211,11 +217,13 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       }
     }
 
+    const subfieldsMap = getJSONSubfieldsMap(model, this);
+
     return validateDocs(
       arrValue,
       { ...ctx, fieldsJSONPath },
       validators,
-      fieldsEntries
+      Array.from(subfieldsMap.entries())
     );
   }
 
@@ -232,7 +240,11 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
 
       let formattedEntries = Object.entries(this.options.fields ?? {}).map(
         ([slug, def]) => {
-          const field = createFieldFromDefinition(def, from.model.__adapter);
+          const field = getFieldFromDefinition(
+            def,
+            from.model.__adapter,
+            this.__path + "." + slug
+          );
 
           let value = obj[slug];
 
@@ -249,9 +261,10 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       );
 
       if (this.options.defaultField) {
-        const defaultField = createFieldFromDefinition(
+        const defaultField = getFieldFromDefinition(
           this.options.defaultField,
-          from.model.__adapter
+          from.model.__adapter,
+          this.__path + ".__default"
         );
 
         const defaultEntries = Object.keys(obj)
@@ -319,9 +332,10 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     }
 
     value = Array.isArray(value) ? value : [value];
-    const field = createFieldFromDefinition(
+    const field = getFieldFromDefinition(
       this.options.items,
-      model.__adapter
+      model.__adapter,
+      this.__path + ".[]"
     );
 
     return Promise.all(value.map((v) => field.validate(v, ctx, slug))).then(
@@ -354,10 +368,20 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
       value instanceof PromiseModelList ||
       value instanceof ModelList
     ) {
-      return value.getIds();
+      value = value.getIds();
     }
 
-    return value || [];
+    if (!value) {
+      return [];
+    }
+
+    const fieldId = getFieldFromDefinition<FieldTypes.ID>(
+      { type: FieldTypes.ID },
+      from.model.__adapter,
+      "_id"
+    );
+
+    return value.map((id) => fieldId.serialize(id, format, from, ctx));
   }
 
   serialize(
@@ -366,14 +390,15 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     from: Model,
     ctx: ExecutorCtx = {}
   ): any {
-    const field = createFieldFromDefinition(
+    const itemsField = getFieldFromDefinition(
       this.options.items,
-      from.model.__adapter
+      from.model.__adapter,
+      this.__path + ".[]"
     );
 
-    if (field.type === FieldTypes.RELATION) {
+    if (itemsField.type === FieldTypes.RELATION) {
       return this._serializeRelationArray(
-        field as Field<FieldTypes.RELATION>,
+        itemsField as Field<FieldTypes.RELATION>,
         value,
         format,
         from,
@@ -383,7 +408,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
     value = Array.isArray(value) ? value : [value];
 
-    return value.map((v) => field.serialize(v, format, from, ctx));
+    return value.map((v) => itemsField.serialize(v, format, from, ctx));
   }
 }
 

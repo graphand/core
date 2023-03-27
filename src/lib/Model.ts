@@ -20,12 +20,10 @@ import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
 import Validator from "./Validator";
 import {
-  createFieldFromDefinition,
-  createValidatorFromDefinition,
+  createFieldsMap,
+  createValidatorsArray,
   getFieldsPathsFromPath,
-  getRecursiveFieldsFromModel,
   getRecursiveHooksFromModel,
-  getRecursiveValidatorsFromModel,
   validateDocs,
 } from "./utils";
 import CoreError from "./CoreError";
@@ -195,73 +193,33 @@ class Model {
       });
     }
 
-    let modelFields = getRecursiveFieldsFromModel(this);
-    let modelValidators = getRecursiveValidatorsFromModel(this);
-
-    const modelDefinition = await this.execute(
+    const modelDef = await this.execute(
       "getModelDefinition",
       undefined as never,
       ctx
     );
 
-    this.configKey = modelDefinition?.configKey ?? this.configKey;
+    this.configKey = modelDef?.configKey ?? this.configKey;
 
-    const fields = modelDefinition?.fields || {};
-    modelFields = { ...modelFields, ...fields };
-
-    const validators = modelDefinition?.validators || [];
-    modelValidators = [...modelValidators, ...validators];
-
-    const fieldsEntries: Array<[string, Field]> = Object.entries(
-      modelFields
-    ).map(([slug, def]) => {
-      return [slug, createFieldFromDefinition(def, this.__adapter)];
-    });
-
-    const validatorsArray: Array<Validator> = modelValidators.map((def) => {
-      return createValidatorFromDefinition(def, this.__adapter);
-    });
-
-    this.__fieldsMap = new Map(fieldsEntries);
-    this.__validatorsArray = validatorsArray;
+    this.__fieldsMap = createFieldsMap(this, modelDef?.fields);
+    this.__validatorsArray = createValidatorsArray(this, modelDef?.validators);
 
     delete this.__fieldsProperties;
     delete this.__fieldsKeys;
   }
 
   static get fieldsMap() {
-    if (!this.__fieldsMap) {
-      let modelFields = getRecursiveFieldsFromModel(this);
-
-      const fieldsEntries: Array<[string, Field]> = Object.entries(
-        modelFields
-      ).map(([slug, def]) => {
-        return [slug, createFieldFromDefinition(def, this.__adapter)];
-      });
-
-      this.__fieldsMap = new Map(fieldsEntries);
-    }
-
+    this.__fieldsMap ??= createFieldsMap(this);
     return this.__fieldsMap;
   }
 
   static get validatorsArray() {
-    if (!this.__validatorsArray) {
-      let modelValidators = getRecursiveValidatorsFromModel(this);
-
-      this.__validatorsArray = modelValidators.map((def) =>
-        createValidatorFromDefinition(def, this.__adapter)
-      );
-    }
-
+    this.__validatorsArray ??= createValidatorsArray(this);
     return this.__validatorsArray;
   }
 
   static get fieldsKeys() {
-    if (!this.__fieldsKeys) {
-      this.__fieldsKeys = Array.from(this.fieldsMap.keys());
-    }
-
+    this.__fieldsKeys ??= Array.from(this.fieldsMap.keys());
     return this.__fieldsKeys;
   }
 
@@ -395,7 +353,13 @@ class Model {
       value = firstField.options.default as typeof value;
     }
 
-    if (value !== undefined) {
+    if (value === undefined) {
+      return value;
+    }
+
+    if (!fieldsPaths.length) {
+      return firstField.serialize(value, format, this, ctx);
+    } else {
       value = firstField.serialize(value, SerializerFormat.JSON, this, ctx);
     }
 
@@ -542,9 +506,9 @@ class Model {
    * Get the document representation of the current instance with the given format
    * @param format
    * @example
-   * console.log(instance.to(SerializerFormat.JSON)); // equivalent to instance.toJSON()
+   * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
-  to(format: SerializerFormat) {
+  serialize(format: SerializerFormat) {
     this.defineFieldsProperties();
 
     const entries = this.model.fieldsKeys.map((slug) => {
@@ -560,7 +524,7 @@ class Model {
    * console.log(instance.toJSON()); // equivalent to instance.to(SerializerFormat.JSON)
    */
   toJSON() {
-    return this.to(SerializerFormat.JSON);
+    return this.serialize(SerializerFormat.JSON);
   }
 
   /**
@@ -569,7 +533,7 @@ class Model {
    * console.log(instance.toObject()); // equivalent to instance.to(SerializerFormat.OBJECT)
    */
   toObject() {
-    return this.to(SerializerFormat.OBJECT);
+    return this.serialize(SerializerFormat.OBJECT);
   }
 
   /**
@@ -578,7 +542,7 @@ class Model {
    * console.log(instance.toDocument()); // equivalent to instance.to(SerializerFormat.DOCUMENT)
    */
   toDocument() {
-    return this.to(SerializerFormat.DOCUMENT);
+    return this.serialize(SerializerFormat.DOCUMENT);
   }
 
   /**
