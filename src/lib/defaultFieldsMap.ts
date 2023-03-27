@@ -86,18 +86,17 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
       typeof value.query === "string"
     ) {
       id = value.query;
-    } else if (typeof value === "string") {
+    } else {
       id = value;
     }
 
-    return String(id);
+    return id;
   };
 
   _serializeObject = (
     value: any,
     format: SerializerFormat,
     from: Model,
-    path: string,
     ctx: ExecutorCtx = {}
   ) => {
     // get the referenced model with the same adapter as from parameter
@@ -124,7 +123,6 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    path: string,
     ctx: ExecutorCtx = {}
   ): any {
     switch (format) {
@@ -133,7 +131,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
         return this._serializeJSON(value);
       case SerializerFormat.OBJECT:
       default:
-        return this._serializeObject(value, format, from, path, ctx);
+        return this._serializeObject(value, format, from, ctx);
     }
   }
 }
@@ -304,7 +302,6 @@ class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
   }
 
   serialize(value: any, format: SerializerFormat, from: Model): any {
-    const [type, id] = value.split(":");
     return value;
   }
 }

@@ -5,10 +5,7 @@ import FieldTypes from "../../enums/field-types";
 import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
 import { models, PromiseModelList, SerializerFormat } from "../../index";
-import {
-  getFieldsPathFromPath,
-  getRecursiveValidatorsFromModel,
-} from "../../lib/utils";
+import { getRecursiveValidatorsFromModel } from "../../lib/utils";
 import Data from "../../lib/Data";
 import PromiseModel from "../../lib/PromiseModel";
 

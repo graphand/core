@@ -1,10 +1,10 @@
-import { getFieldsPathFromPath } from "../../lib/utils";
+import { getFieldsPathsFromPath } from "../../lib/utils";
 import Model from "../../lib/Model";
 import FieldTypes from "../../enums/field-types";
 import { FieldsDefinition } from "../../types";
 
 describe("test utils", () => {
-  describe("getFieldsPathFromPath", () => {
+  describe("getFieldsPathsFromPath", () => {
     it("should returns single array entry for one field", () => {
       const model = class extends Model {
         static fields = {
@@ -20,7 +20,7 @@ describe("test utils", () => {
         } as FieldsDefinition;
       };
 
-      const fPath = getFieldsPathFromPath(model, "field1");
+      const fPath = getFieldsPathsFromPath(model, "field1");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(1);
@@ -46,7 +46,7 @@ describe("test utils", () => {
         } as FieldsDefinition;
       };
 
-      const fPath = getFieldsPathFromPath(model, "field1.[]");
+      const fPath = getFieldsPathsFromPath(model, "field1.[]");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
@@ -76,7 +76,7 @@ describe("test utils", () => {
         } as FieldsDefinition;
       };
 
-      const fPath = getFieldsPathFromPath(model, "field1.field2");
+      const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(2);
@@ -112,7 +112,7 @@ describe("test utils", () => {
         } as FieldsDefinition;
       };
 
-      const fPath = getFieldsPathFromPath(model, "field1.field2");
+      const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(3);
@@ -123,7 +123,7 @@ describe("test utils", () => {
       expect(fPath[2].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath[2].field).toHaveProperty("options.__label", "field2");
 
-      const fPath2 = getFieldsPathFromPath(model, "field1.[].field2");
+      const fPath2 = getFieldsPathsFromPath(model, "field1.[].field2");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
@@ -161,25 +161,25 @@ describe("test utils", () => {
         } as FieldsDefinition;
       };
 
-      const fPath = getFieldsPathFromPath(model, "field1.field2.field3");
+      const fPath = getFieldsPathsFromPath(model, "field1.field2.field3");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(4);
       expect(fPath[3]).toBe(null);
 
-      const fPath2 = getFieldsPathFromPath(model, "field1.[].field3");
+      const fPath2 = getFieldsPathsFromPath(model, "field1.[].field3");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
       expect(fPath2[2]).toBe(null);
 
-      const fPath3 = getFieldsPathFromPath(model, "field2");
+      const fPath3 = getFieldsPathsFromPath(model, "field2");
 
       expect(fPath3).toBeInstanceOf(Array);
       expect(fPath3.length).toEqual(1);
       expect(fPath3[0]).toBe(null);
 
-      const fPath4 = getFieldsPathFromPath(model, "field2.field1");
+      const fPath4 = getFieldsPathsFromPath(model, "field2.field1");
 
       expect(fPath4).toBeInstanceOf(Array);
       expect(fPath4.length).toEqual(2);
@@ -233,14 +233,14 @@ describe("test utils", () => {
         } as FieldsDefinition;
       };
 
-      const fPath = getFieldsPathFromPath(model, "field1");
+      const fPath = getFieldsPathsFromPath(model, "field1");
 
       expect(fPath).toBeInstanceOf(Array);
       expect(fPath.length).toEqual(1);
       expect(fPath[0].field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath[0].field).toHaveProperty("options.__label", "field1");
 
-      const fPath2 = getFieldsPathFromPath(model, "field1.field2");
+      const fPath2 = getFieldsPathsFromPath(model, "field1.field2");
 
       expect(fPath2).toBeInstanceOf(Array);
       expect(fPath2.length).toEqual(3);
@@ -251,7 +251,7 @@ describe("test utils", () => {
       expect(fPath2[2].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath2[2].field).toHaveProperty("options.__label", "field2");
 
-      const fPath3 = getFieldsPathFromPath(model, "field1.field3");
+      const fPath3 = getFieldsPathsFromPath(model, "field1.field3");
 
       expect(fPath3).toBeInstanceOf(Array);
       expect(fPath3.length).toEqual(3);
@@ -262,7 +262,7 @@ describe("test utils", () => {
       expect(fPath3[2].field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath3[2].field).toHaveProperty("options.__label", "field3");
 
-      const fPath4 = getFieldsPathFromPath(model, "field1.field3.field4");
+      const fPath4 = getFieldsPathsFromPath(model, "field1.field3.field4");
 
       expect(fPath4).toBeInstanceOf(Array);
       expect(fPath4.length).toEqual(5);
@@ -277,7 +277,7 @@ describe("test utils", () => {
       expect(fPath4[4].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath4[4].field).toHaveProperty("options.__label", "field4");
 
-      const fPath5 = getFieldsPathFromPath(model, "field1.[].field2");
+      const fPath5 = getFieldsPathsFromPath(model, "field1.[].field2");
 
       expect(fPath5).toBeInstanceOf(Array);
       expect(fPath5.length).toEqual(3);
@@ -288,7 +288,7 @@ describe("test utils", () => {
       expect(fPath5[2].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath5[2].field).toHaveProperty("options.__label", "field2");
 
-      const fPath6 = getFieldsPathFromPath(model, "field1.[].field3");
+      const fPath6 = getFieldsPathsFromPath(model, "field1.[].field3");
 
       expect(fPath6).toBeInstanceOf(Array);
       expect(fPath6.length).toEqual(3);
@@ -299,7 +299,10 @@ describe("test utils", () => {
       expect(fPath6[2].field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath6[2].field).toHaveProperty("options.__label", "field3");
 
-      const fPath7 = getFieldsPathFromPath(model, "field1.[].field3.[].field4");
+      const fPath7 = getFieldsPathsFromPath(
+        model,
+        "field1.[].field3.[].field4"
+      );
 
       expect(fPath7).toBeInstanceOf(Array);
       expect(fPath7.length).toEqual(5);
@@ -314,7 +317,7 @@ describe("test utils", () => {
       expect(fPath7[4].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath7[4].field).toHaveProperty("options.__label", "field4");
 
-      const fPath8 = getFieldsPathFromPath(
+      const fPath8 = getFieldsPathsFromPath(
         model,
         "field1.[].field3.[].field4.field5"
       );

@@ -22,7 +22,7 @@ import Validator from "./Validator";
 import {
   createFieldFromDefinition,
   createValidatorFromDefinition,
-  getFieldsPathFromPath,
+  getFieldsPathsFromPath,
   getRecursiveFieldsFromModel,
   getRecursiveHooksFromModel,
   getRecursiveValidatorsFromModel,
@@ -379,7 +379,7 @@ class Model {
    */
   get(path: string, format = SerializerFormat.OBJECT, ctx: ExecutorCtx = {}) {
     const pathArr = path.split(".");
-    const fieldsPaths = getFieldsPathFromPath(this.model, [...pathArr]);
+    const fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
 
     const firstField = fieldsPaths.shift()?.field;
 
@@ -473,7 +473,7 @@ class Model {
     ctx: ExecutorCtx = {}
   ) {
     const pathArr = String(path).split(".");
-    const fieldsPaths = getFieldsPathFromPath(this.model, [...pathArr]);
+    const fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
 
     if (fieldsPaths.includes(null)) {
       throw new CoreError({

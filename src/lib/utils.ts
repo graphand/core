@@ -75,7 +75,7 @@ export const getRecursiveValidatorsFromModel = (
   return validators;
 };
 
-export const getFieldsPathFromPath = (
+export const getFieldsPathsFromPath = (
   model: typeof Model,
   pathArr: Array<string> | string
 ): Array<FieldsPathItem> => {
@@ -132,32 +132,6 @@ export const getFieldsPathFromPath = (
     },
     [firstField ? { key: firstFieldKey, field: firstField } : null]
   );
-};
-
-export const getValueFromPath = (
-  doc: DocumentDefinition,
-  path: string
-): any => {
-  const fullPath = path.split(".");
-
-  let value = doc;
-
-  for (let i = 0; i < fullPath.length; i++) {
-    if (!value || typeof value !== "object") {
-      return undefined;
-    }
-
-    const key = fullPath[i];
-
-    if (Array.isArray(value)) {
-      const nestedPath = fullPath.slice(i).join(".");
-      return value.map((item) => getValueFromPath(item, nestedPath));
-    } else {
-      value = value[key];
-    }
-  }
-
-  return value;
 };
 
 export const getRecursiveHooksFromModel = <
