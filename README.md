@@ -44,13 +44,13 @@ Par exemple, `Model.get` utilise la méthode `Model.execute('get', ...args)` qui
 #### Exemple
 
 ```ts
-Model.hook("before", "get", function() {
-    // sera appelé avant l'appel de la méthode get du fetcher
-})
+Model.hook("before", "get", function () {
+  // sera appelé avant l'appel de la méthode get du fetcher
+});
 
-Model.hook("after", "get", function() {
-    // sera appelé après l'appel de la méthode get du fetcher
-})
+Model.hook("after", "get", function () {
+  // sera appelé après l'appel de la méthode get du fetcher
+});
 
 Model.withAdapter(MyAdapter).get("..."); // exécute la methode get du fetcher de "MyAdapter" ainsi que les hooks du modèle
 ```
@@ -63,6 +63,7 @@ Model.withAdapter(MyAdapter).get("..."); // exécute la methode get du fetcher d
 Les types de champs sont tous définis par l'enum `FieldTypes` et sont les suivants :
 
 - _FieldTypes.ID_
+- _FieldTypes.ARRAY_
 - _FieldTypes.TEXT_
 - _FieldTypes.NUMBER_
 - _FieldTypes.BOOLEAN_
@@ -78,14 +79,14 @@ Tous les types de champs existent déjà dans `@graphand/core` et l'adaptateur p
 
 ```ts
 class CustomFieldText extends Field<FieldTypes.TEXT> {
-    serialize(value: string) {
-        return value.toUpperCase();
-    }
+  serialize(value: string) {
+    return value.toUpperCase();
+  }
 }
 
 MyAdapter.prototype.fieldsMap = {
-    [FieldTypes.TEXT]: CustomFieldText
-}
+  [FieldTypes.TEXT]: CustomFieldText,
+};
 ```
 
 ### `Adapter.prototype.validatorsMap`
