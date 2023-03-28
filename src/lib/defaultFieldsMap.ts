@@ -176,7 +176,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       const defaultField = getFieldFromDefinition(
         this.options.defaultField,
         model.__adapter,
-        this.__path + ".__default"
+        this.__path + ".__defaultField"
       );
 
       const defaultEntries = arrValue

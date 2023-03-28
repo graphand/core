@@ -46,6 +46,7 @@ class Field<T extends FieldTypes = FieldTypes> {
     return {
       type: this.type,
       options: this.options,
+      path: this.__path,
     };
   }
 }
