@@ -107,5 +107,10 @@ Les types de champs sont tous dans l'enum `ValidatorTypes` :
 
 ### `Adapter.prototype.runValidators`
 
-`runValidators` permet d'activer ou de désactiver les validateurs sur les actions de crud.
+`runValidators` permet d'activer ou de désactiver les validateurs sur les actions de crud dans le contexte.
 Même si les validateurs sont désactivés via cette variable, ils peuvent toujours être exécutés via la méthode `Model.validate`.
+
+### Exemple
+
+Ici, le serveur exécue systématiquement les validateurs lorsqu'un élément est ajouté ou modifié (D'où `ServerAdapter.prototype.runValidators = true`).
+En revanche, le client n'exécute pas les validateurs car c'est le serveur qui gère cette partie (`ClientAdapter.prototype.runValidators = false`). Le client peut tout de même exécuter les validateurs si besoin (avant l'envoi d'un formulaire par exemple) avec la méthode `Model.validate`.
