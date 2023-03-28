@@ -52,7 +52,9 @@ Model.hook("after", "get", function () {
   // sera appelé après l'appel de la méthode get du fetcher
 });
 
-Model.withAdapter(MyAdapter).get("..."); // exécute la methode get du fetcher de "MyAdapter" ainsi que les hooks du modèle
+const adaptedModel = Model.withAdapter(MyAdapter); // nécessaire pour que les actions de crud fonctionnent dans le contexte (= client.getModel(Model) sur le client et context.getModel(Model) sur le serveur)
+
+adaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ainsi que les hooks du modèle
 ```
 
 **Ces hooks sont appelés avec les paramètres de la fonction en question et peuvent les modifier. En théorie, ces hooks peuvent permettrent d'étendre le fonctionnement du fetcher et de couvrir tous les cas de figure à la manière d'un plugin.**
