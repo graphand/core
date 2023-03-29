@@ -1,3 +1,4 @@
+import "./modules/validators";
 import Model from "./lib/Model";
 import DataModel from "./models/DataModel";
 import Account from "./models/Account";

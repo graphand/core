@@ -67,8 +67,8 @@ class Model {
   _updatedBy;
 
   constructor(doc: any = {}) {
-    doc._id ??= Date.now();
     this.__doc = doc;
+    this.__doc._id ??= Date.now();
 
     Object.defineProperty(this, "__doc", { enumerable: false });
   }
@@ -658,6 +658,17 @@ class Model {
     return await this.execute("deleteMultiple", [query], ctx);
   }
 
+  /**
+   * Add hook to the current model baseClass (every adapted model with the same baseClass will inherit the hook).
+   * @param phase - before | after
+   * @param action - The action when the hook will be triggered. actions are keys of the adapter fetcher
+   * @param fn - The hook function
+   * @param order
+   * @example
+   * Account.hook("before", "createOne", async (payload, ctx) => {
+   *  // will be triggered every time a single account is created with Account.create()
+   * });
+   */
   static hook<
     P extends HookPhase,
     A extends keyof AdapterFetcher,
@@ -674,6 +685,12 @@ class Model {
     baseClass.__hooks.add(hook);
   }
 
+  /**
+   * Validate multiple instances of the current model with the model validators
+   * @param input
+   * @param ctx
+   * @returns
+   */
   static async validate<T extends typeof Model>(
     this: T,
     input: Array<InstanceType<T> | DocumentDefinition>,
@@ -763,65 +780,5 @@ class Model {
     return hookPayloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
   }
 }
-
-Model.hook(
-  "after",
-  "createOne",
-  async function (payload) {
-    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
-      const res = await payload.res;
-
-      if (res) {
-        await this.validate([res], payload.ctx);
-      }
-    }
-  },
-  -1
-);
-
-Model.hook(
-  "after",
-  "createMultiple",
-  async function (payload) {
-    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
-      const res = await payload.res;
-
-      if (res) {
-        await this.validate(res, payload.ctx);
-      }
-    }
-  },
-  -1
-);
-
-Model.hook(
-  "after",
-  "updateOne",
-  async function (payload) {
-    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
-      const res = await payload.res;
-
-      if (res) {
-        await this.validate([res], payload.ctx);
-      }
-    }
-  },
-  -1
-);
-
-Model.hook(
-  "after",
-  "updateMultiple",
-  async function (payload) {
-    if (this.__adapter.runValidators && !payload.ctx.disableValidation) {
-      const res = await payload.res;
-
-      if (res) {
-        await this.validate(res, payload.ctx);
-      }
-    }
-  },
-  -1
-);
 
 export default Model;
