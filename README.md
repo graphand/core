@@ -6,19 +6,26 @@ Voici les concepts de base de cette librairie :
 ## Modèles : classe `Model`
 
 `@graphand/core` exporte les modèles utilisées dans Graphand, leurs champs ainsi que les validateurs de chacun.
-Chaque modèle est une classe qui étend la classe de base `Model` qui contient elle même les méthodes de base nécessaires au fonctionnement de core telles que les actions de crud, getters, setters, etc.
-Pour être utilisés correctement, les modèles ont besoin d'un adaptateur (classe `Adapter`) qui décrit le fonctionnement de certaines actions dans leur contexte (fonctionnement différent sur client et sur serveur).
+Chaque modèle (`src/models/*.ts`) est une classe qui étend la classe de base `Model` (qui contient elle même les méthodes de base nécessaires au fonctionnement de core telles que les actions de crud, getters, setters, etc.)
+Pour être utilisés correctement, les modèles ont besoin d'un adaptateur (classe `Adapter`) qui définit la manière dont le modèle interagit avec les données dans son contexte (fonctionnement différent sur le client et sur le serveur).
 
 ## Adaptateur : classe `Adapter`
 
-Une fois la structure de base posée par cette librairie, les actions dépendantes du contexte (serveur/client) doivent être définies.
-Par exemple, le serveur lit et écrit dans une base de données, alors que le client émet des appels HTTP vers le serveur pour y récupérer les données ou y effectuer des opérations de lecture/écriture.
+Le rôle de cette librairie est donc de fixer les bases de la structure de Graphand. Ensuite, les actions dépendantes du contexte (serveur/client) doivent être paramétrées pour que core fonctionne correctement.
+Par exemple, le serveur lit et écrit dans une base de données, tandis que le client émet des appels HTTP vers le serveur pour y récupérer les données ou y effectuer des opérations de lecture/écriture.
 
-**C'est donc le rôle de l'adaptateur** : une classe qui étend la classe `Adapter` et qui sera instanciée par core pour chaque modèle.
-_Chaque instance de l'adaptateur a accès au modèle en question via l'attribut `Adapter.prototype.model`._
+**C'est donc le rôle de l'adaptateur** : une classe qui étend la classe `Adapter` et qui sert de paramétrage à core pour savoir comment interagir avec les données dans le contexte courant.
+Pour chaque modèle, core créé une instance de cette classe.
+_Chaque instance de l'adaptateur a donc accès au modèle en question via l'attribut `Adapter.prototype.model`._
 
 Pour fonctionner avec un adaptateur, les modèles doivent être appelé avec la méthode `Model.withAdapter`, qui prend en paramètre la classe de l'adaptateur qui sera instanciée.
 C'est cette fonction qui est appelée under the hood par le client avec la méthode `Client.prototype.getModel` et par le serveur avec la méthode `Controller.prototype.getModel` (avec leurs adaptateurs respectifs).
+
+```ts
+class ServerAdapter extends Adapter {} // ServerAdapter décrit comment les modèles interagissent avec les données sur le serveur
+
+const AccountModel = Account.withAdapter(ServerAdapter); // maintenant AccountModel sait comment lire/écrire des données et est utilisable
+```
 
 Voici les méthodes et attributs que l'adaptateur permet de définir :
 
@@ -52,16 +59,16 @@ Model.hook("after", "get", function () {
   // sera appelé après l'appel de la méthode get du fetcher
 });
 
-const adaptedModel = Model.withAdapter(MyAdapter); // nécessaire pour que les actions de crud fonctionnent dans le contexte (= client.getModel(Model) sur le client et context.getModel(Model) sur le serveur)
+const AdaptedModel = Model.withAdapter(MyAdapter); // nécessaire pour que les actions de crud fonctionnent dans le contexte (= client.getModel(Model) sur le client et context.getModel(Model) sur le serveur)
 
-adaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ainsi que les hooks du modèle
+AdaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ainsi que les hooks du modèle
 ```
 
 **Ces hooks sont appelés avec les paramètres de la fonction en question et peuvent les modifier. En théorie, ces hooks peuvent permettrent d'étendre le fonctionnement du fetcher et de couvrir tous les cas de figure à la manière d'un plugin.**
 
 ### `Adapter.prototype.fieldsMap`
 
-`fieldsMap` est un objet qui lie chaque champ à la classe de son type.
+`fieldsMap` est un objet qui lie chaque type champ existant sur graphand à la classe de son type.
 Les types de champs sont tous définis par l'enum `FieldTypes` et sont les suivants :
 
 - _FieldTypes.ID_
@@ -74,7 +81,7 @@ Les types de champs sont tous définis par l'enum `FieldTypes` et sont les suiva
 - _FieldTypes.JSON_
 - _FieldTypes.IDENTITY_
 
-Chaque champ est donc une classe qui étend la classe de base `Field` et qui décrit la manière dont le type de champ en question encode et décode les données.
+Chaque champ est donc une classe qui étend la classe de base `Field` et qui décrit la manière dont le type de champ en question encode et décode les données dans le contexte courant. Par exemple le champ \_id est de type différent sur le client et sur le serveur : `string` sur le client et `ObjectId` sur le serveur.
 Tous les types de champs existent déjà dans `@graphand/core` et l'adaptateur peut en surcharger seulement certaines si besoin.
 
 #### Exemple
