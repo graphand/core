@@ -221,6 +221,136 @@ describe("Test Model", () => {
       expect(created.test[0]).toEqual("123");
     });
 
+    it("should serialize with nested fields in array of array", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  items: {
+                    type: FieldTypes.TEXT,
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        test: [[123], [456]],
+      });
+
+      expect(created.get("test")).toEqual([["123"], ["456"]]);
+      expect(created.get("test.[]")).toEqual([["123"], ["456"]]);
+    });
+
+    it("should serialize with nested json field in array of array", async () => {
+      const model = mockModel({
+        fields: {
+          test: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  items: {
+                    type: FieldTypes.JSON,
+                    options: {
+                      fields: {
+                        nested: {
+                          type: FieldTypes.TEXT,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      const created = await model.create({
+        test: [
+          [
+            {
+              nested: 123,
+            },
+            {
+              nested: 456,
+            },
+          ],
+          [
+            {
+              nested: 123,
+            },
+            {
+              nested: 456,
+            },
+          ],
+        ],
+      });
+
+      expect(created.get("test")).toEqual([
+        [
+          {
+            nested: "123",
+          },
+          {
+            nested: "456",
+          },
+        ],
+        [
+          {
+            nested: "123",
+          },
+          {
+            nested: "456",
+          },
+        ],
+      ]);
+
+      expect(created.get("test.[]")).toEqual([
+        [
+          {
+            nested: "123",
+          },
+          {
+            nested: "456",
+          },
+        ],
+        [
+          {
+            nested: "123",
+          },
+          {
+            nested: "456",
+          },
+        ],
+      ]);
+
+      expect(created.get("test.nested")).toEqual(undefined);
+
+      expect(created.get("test.[].nested")).toEqual([
+        ["123", "456"],
+        ["123", "456"],
+      ]);
+
+      expect(created.get("test.[].[].nested")).toEqual([
+        ["123", "456"],
+        ["123", "456"],
+      ]);
+
+      expect(created.get("test.[].[].nested.[]")).toEqual([
+        undefined,
+        undefined,
+      ]);
+    });
+
     it("should serialize with nested fields in array of json", async () => {
       const model = mockModel({
         fields: {

@@ -28,6 +28,67 @@ describe("test utils", () => {
       expect(fPath[0].field).toHaveProperty("options.__label", "field1");
     });
 
+    it("should decode nested array fields", () => {
+      const model = class extends Model {
+        static fields = {
+          field1: {
+            type: FieldTypes.ARRAY,
+            options: {
+              __label: "field1",
+              items: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  __label: "field1bis",
+                  items: {
+                    type: FieldTypes.JSON,
+                    options: {
+                      fields: {
+                        field2: {
+                          type: FieldTypes.TEXT,
+                          options: {
+                            __label: "field2",
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        } as FieldsDefinition;
+      };
+
+      const fPath1 = getFieldsPathsFromPath(model, "field1.field2");
+
+      expect(fPath1.length).toBe(3);
+      expect(fPath1[0].key).toBe("field1");
+      expect(fPath1[1].key).toBe("[]");
+      expect(fPath1[2]).toBe(null);
+
+      const fPath2 = getFieldsPathsFromPath(model, "field1.[].field2");
+
+      expect(fPath2.length).toBe(4);
+      expect(fPath2[0].key).toBe("field1");
+      expect(fPath2[1].key).toBe("[]");
+      expect(fPath2[2].key).toBe("[]");
+      expect(fPath2[3].key).toBe("field2");
+
+      const fPath3 = getFieldsPathsFromPath(model, "field1.[].[].field2");
+
+      expect(fPath3.length).toBe(4);
+      expect(fPath3[0].key).toBe("field1");
+      expect(fPath3[1].key).toBe("[]");
+      expect(fPath3[2].key).toBe("[]");
+      expect(fPath3[3].key).toBe("field2");
+
+      const fPath4 = getFieldsPathsFromPath(model, "field1.[]");
+
+      expect(fPath4.length).toBe(2);
+      expect(fPath4[0].key).toBe("field1");
+      expect(fPath4[1].key).toBe("[]");
+    });
+
     it("should decode array items field", () => {
       const model = class extends Model {
         static fields = {
