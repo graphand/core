@@ -403,10 +403,9 @@ export type ModelDeleteEvent = {
   ids: Array<string>;
 };
 
-export type ModelCrudEvent =
-  | ModelCreateEvent
-  | ModelUpdateEvent
-  | ModelDeleteEvent;
+export type ModelCrudEvent = {
+  __socketId?: string;
+} & (ModelCreateEvent | ModelUpdateEvent | ModelDeleteEvent);
 
 export type IdentityString = string;
 

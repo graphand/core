@@ -99,6 +99,12 @@ const _controllersMap = {
     scope: "project",
     secured: false,
   },
+  genAccountToken: {
+    path: "/accounts/:id/gen-token",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
   loginUser: {
     path: "/auth/login",
     methods: ["POST"],
