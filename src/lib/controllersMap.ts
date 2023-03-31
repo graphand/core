@@ -111,18 +111,6 @@ const _controllersMap = {
     scope: "global",
     secured: false,
   },
-  config: {
-    path: "/config",
-    methods: ["GET"],
-    scope: "project",
-    secured: true,
-  },
-  configSync: {
-    path: "/config/sync",
-    methods: ["POST"],
-    scope: "project",
-    secured: true,
-  },
   ql: {
     path: "/ql",
     methods: ["POST"],
