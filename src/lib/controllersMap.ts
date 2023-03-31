@@ -123,6 +123,18 @@ const _controllersMap = {
     scope: "project",
     secured: true,
   },
+  ql: {
+    path: "/ql",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
+  qlSync: {
+    path: "/ql/sync",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
   openapi: {
     path: "/openapi",
     methods: ["GET"],

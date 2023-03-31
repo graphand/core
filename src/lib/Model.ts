@@ -263,7 +263,11 @@ class Model {
    * @example
    * console.log(model.get("field"));
    */
-  get(path: string, format = SerializerFormat.OBJECT, ctx: ExecutorCtx = {}) {
+  get(
+    path: string,
+    format: SerializerFormat | string = SerializerFormat.OBJECT,
+    ctx: ExecutorCtx = {}
+  ) {
     const pathArr = path.split(".");
     const fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
 
@@ -281,7 +285,7 @@ class Model {
       value = firstField.options.default as typeof value;
     }
 
-    if (value === undefined) {
+    if (value === undefined || value === null) {
       return value;
     }
 
@@ -436,7 +440,7 @@ class Model {
    * @example
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
-  serialize(format: SerializerFormat) {
+  serialize(format: SerializerFormat | string) {
     defineFieldsProperties(this);
 
     const entries = this.model.fieldsKeys.map((slug) => {

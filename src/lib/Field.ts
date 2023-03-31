@@ -35,7 +35,7 @@ class Field<T extends FieldTypes = FieldTypes> {
 
   serialize(
     value: any,
-    format: SerializerFormat,
+    format: SerializerFormat | string,
     from: Model,
     ctx: ExecutorCtx = {}
   ) {

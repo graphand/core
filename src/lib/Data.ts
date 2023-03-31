@@ -30,7 +30,7 @@ class Data extends Model {
       static slug = datamodel.slug;
       static fields = datamodel.fields;
       static validators = [];
-      static configKey = datamodel.configKey;
+      static configKey = datamodel.configKey || undefined;
     };
 
     model.__datamodel = datamodel;
@@ -87,7 +87,7 @@ class Data extends Model {
             this.slug = datamodel.slug;
             this.fields = datamodel.fields;
             this.validators = [];
-            this.configKey = datamodel.configKey;
+            this.configKey = datamodel.configKey || undefined;
           }
 
           return Model.reloadModel.apply(this, [ctx]);
