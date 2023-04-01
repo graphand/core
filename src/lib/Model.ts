@@ -139,6 +139,11 @@ class Model {
     return modelWithAdapter;
   }
 
+  /**
+   * Returns a promises that resolves when the model is initialized.
+   * @param force - Force model initialization even if it's already initialized.
+   * @param ctx
+   */
   static async initialize(force: boolean = false, ctx?: ExecutorCtx) {
     const model = this;
 
@@ -183,6 +188,12 @@ class Model {
     await this.__initPromise;
   }
 
+  /**
+   * Reload model from its definition (fields, validators, etc).
+   * If the model is not extendable (Role, Token, etc.), this method does nothing.
+   * @param ctx
+   * @returns
+   */
   static async reloadModel(ctx?: ExecutorCtx) {
     if (!this.extendable) {
       return;
@@ -210,21 +221,42 @@ class Model {
     delete this.__fieldsKeys;
   }
 
+  /**
+   * Returns the fields map of the model.
+   * The fields map could be incomplete if the model is extendable and is not initialized.
+   */
   static get fieldsMap() {
     this.__fieldsMap ??= createFieldsMap(this);
     return this.__fieldsMap;
   }
 
-  static get validatorsArray() {
-    this.__validatorsArray ??= createValidatorsArray(this);
-    return this.__validatorsArray;
-  }
-
+  /**
+   * Returns the keys of the fields map of the model.
+   * Equivalent to Array.from(model.fieldsMap.keys()).
+   */
   static get fieldsKeys() {
     this.__fieldsKeys ??= Array.from(this.fieldsMap.keys());
     return this.__fieldsKeys;
   }
 
+  /**
+   * Retusn an array containing all the validators on the model.
+   * The validators array could be incomplete if the model is extendable and is not initialized.
+   */
+  static get validatorsArray() {
+    this.__validatorsArray ??= createValidatorsArray(this);
+    return this.__validatorsArray;
+  }
+
+  /**
+   * Returns the model from its slug.
+   * If the model is not existing in core models, a model extending Data will be returned and will be
+   * initialized from the datamodel with this slug.
+   * @param slug
+   * @param adapter
+   * @param fallbackData - Whether to return a Data model if the model is not found in core models.
+   * @returns
+   */
   static getFromSlug<M extends typeof Model = typeof Model>(
     slug: string,
     adapter?: typeof Adapter,
