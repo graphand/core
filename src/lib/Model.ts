@@ -440,11 +440,11 @@ class Model {
    * @example
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
-  serialize(format: SerializerFormat | string) {
+  serialize(format: SerializerFormat | string, ctx: ExecutorCtx = {}) {
     defineFieldsProperties(this);
 
     const entries = this.model.fieldsKeys.map((slug) => {
-      return [slug, this.get(slug, format)];
+      return [slug, this.get(slug, format, ctx)];
     });
 
     return Object.fromEntries(entries);
