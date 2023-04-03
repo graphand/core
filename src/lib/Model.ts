@@ -301,17 +301,24 @@ class Model {
     ctx: ExecutorCtx = {}
   ) {
     const pathArr = path.split(".");
-    const fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+    let fieldsPaths;
+    let firstField;
+    let lastField;
 
-    const firstField = fieldsPaths.shift()?.field;
+    if (pathArr.length === 1) {
+      fieldsPaths = [];
+      firstField = this.model.fieldsMap.get(pathArr[0]);
+    } else {
+      fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+      firstField = fieldsPaths.shift()?.field;
+      lastField = fieldsPaths[fieldsPaths.length - 1]?.field || firstField;
+    }
 
     if (!firstField) {
       return undefined;
     }
 
-    const lastField = fieldsPaths[fieldsPaths.length - 1]?.field || firstField;
-
-    let value: any = this.__doc[pathArr[0]];
+    let value: any = this.__doc[firstField.__path];
 
     if (value === undefined && "default" in firstField.options) {
       value = firstField.options.default as typeof value;
@@ -321,11 +328,12 @@ class Model {
       return value;
     }
 
+    // In case of a single field path (i._id for example), return the value directly
     if (!fieldsPaths.length) {
       return firstField.serialize(value, format, this, ctx);
-    } else {
-      value = firstField.serialize(value, SerializerFormat.JSON, this, ctx);
     }
+
+    value = firstField.serialize(value, SerializerFormat.JSON, this, ctx);
 
     const noFieldSymbol = Symbol("noField");
 
