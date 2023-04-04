@@ -256,6 +256,42 @@ describe("test validatorsMap", () => {
         const validated = await model.validate([{ title }]);
         expect(validated).toBeTruthy();
       });
+
+      it("should validate within array", async () => {
+        const _model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                  },
+                ],
+              },
+            },
+          },
+        }).withAdapter(adapter);
+
+        await expect(
+          _model.validate([
+            {
+              arr: [faker.lorem.word()],
+            },
+          ])
+        ).resolves.toBeTruthy();
+
+        await expect(
+          _model.validate([
+            {
+              arr: [faker.lorem.word(), ""],
+            },
+          ])
+        ).rejects.toBeInstanceOf(ValidationError);
+      });
     });
   });
 
@@ -317,6 +353,79 @@ describe("test validatorsMap", () => {
 
         await expect(invalidPromise).rejects.toBeInstanceOf(ValidationError);
       });
+    });
+
+    describe("url regex", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({
+          pattern: "^https?:\\/\\/.+",
+        });
+      });
+
+      it("create with valid url should not throw error", async () => {
+        const i = await model.create({ title: faker.internet.url() });
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with undefined url should not throw error", async () => {
+        const i = await model.create({});
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with null url should not throw error", async () => {
+        const i = await model.create({ title: null });
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with invalid url should throw error", async () => {
+        const invalidPromise = model.create({ title: "invalidUrl" });
+
+        await expect(invalidPromise).rejects.toBeInstanceOf(ValidationError);
+      });
+    });
+
+    it("should validate within array", async () => {
+      const _model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REGEX,
+                  options: {
+                    pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      await expect(
+        _model.validate([
+          {
+            arr: [faker.internet.email()],
+          },
+        ])
+      ).resolves.toBeTruthy();
+
+      await expect(
+        _model.validate([
+          {
+            arr: [faker.internet.email(), "invalidEmail"],
+          },
+        ])
+      ).rejects.toBeInstanceOf(ValidationError);
     });
   });
 
@@ -390,46 +499,46 @@ describe("test validatorsMap", () => {
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
-    // it("datamodel with configKey and invalid configKey field should throw error", async () => {
-    //   const datamodel1 = DataModel.create({
-    //     slug: Math.random().toString(36).substring(7),
-    //     fields: {
-    //       title: {
-    //         type: FieldTypes.TEXT,
-    //       },
-    //     },
-    //     configKey: "title",
-    //   });
-    //
-    //   await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
-    //
-    //   const datamodel2 = DataModel.create({
-    //     slug: Math.random().toString(36).substring(7),
-    //     fields: {
-    //       title: {
-    //         type: FieldTypes.TEXT,
-    //         options: {
-    //           default: "default",
-    //         },
-    //       },
-    //     },
-    //     configKey: "title",
-    //   });
-    //
-    //   await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
-    //
-    //   const datamodel3 = DataModel.create({
-    //     slug: Math.random().toString(36).substring(7),
-    //     fields: {
-    //       title: {
-    //         type: FieldTypes.NUMBER,
-    //       },
-    //     },
-    //     configKey: "title",
-    //   });
-    //
-    //   await expect(datamodel3).rejects.toBeInstanceOf(ValidationError);
-    // });
+    it("datamodel with configKey and invalid configKey field should throw error", async () => {
+      const datamodel1 = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        configKey: "test",
+      });
+
+      await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
+
+      const datamodel2 = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "default",
+            },
+          },
+        },
+        configKey: "title",
+      });
+
+      await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
+
+      const datamodel3 = DataModel.create({
+        slug: Math.random().toString(36).substring(7),
+        fields: {
+          title: {
+            type: FieldTypes.NUMBER,
+          },
+        },
+        configKey: "title",
+      });
+
+      await expect(datamodel3).rejects.toBeInstanceOf(ValidationError);
+    });
   });
 
   describe("length validator", () => {

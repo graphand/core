@@ -7,14 +7,17 @@ import {
   ValidatorOptions,
 } from "../types";
 import { getDefaultValidatorOptions } from "./utils";
+import Model from "./Model";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
-  private __definition: ValidatorDefinition<T>;
+  __definition: ValidatorDefinition<T>;
+  __path: string;
 
   hooks: Array<ValidatorHook>;
 
-  constructor(definition: ValidatorDefinition<T>) {
+  constructor(definition: ValidatorDefinition<T>, path: string) {
     this.__definition = definition;
+    this.__path = path;
 
     Object.defineProperty(this, "hooks", { enumerable: false });
     Object.defineProperty(this, "__definition", { enumerable: false });
@@ -38,7 +41,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     ) as ValidatorOptions<T>;
   }
 
-  async validate(docs: DocumentDefinition[], ctx: ValidateCtx) {
+  async validate(docs: Array<DocumentDefinition>, ctx: ValidateCtx) {
     return true;
   }
 

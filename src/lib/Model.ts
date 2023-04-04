@@ -744,9 +744,11 @@ class Model {
 
     return await validateDocs(
       docs,
-      { ...ctx, model: this },
-      this.validatorsArray,
-      Array.from(this.fieldsMap.entries())
+      {
+        validators: this.validatorsArray,
+        fieldsEntries: Array.from(this.fieldsMap.entries()),
+      },
+      { ...ctx, model: this }
     );
   }
 

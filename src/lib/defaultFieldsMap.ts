@@ -14,7 +14,7 @@ import Validator from "./Validator";
 import CoreError from "./CoreError";
 import ValidationFieldError from "./ValidationFieldError";
 import ValidationError from "./ValidationError";
-import { FieldOptions } from "../types";
+import { FieldOptions, ValidatorDefinition } from "../types";
 import PromiseModelList from "./PromiseModelList";
 import PromiseModel from "./PromiseModel";
 import ModelList from "./ModelList";
@@ -164,12 +164,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
     const arrValue = Array.isArray(value) ? value : [value];
 
     const validators: Array<Validator> = (this.options.validators ?? []).map(
-      (def) => getValidatorFromDefinition(def, model.__adapter)
-    );
-
-    const fieldsJSONPath = Array.prototype.concat.apply(
-      ctx.fieldsJSONPath ?? [],
-      [{ slug, field: this }]
+      (def) => getValidatorFromDefinition(def, model.__adapter, this.__path)
     );
 
     if (this.options.defaultField) {
@@ -221,9 +216,11 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
 
     return validateDocs(
       arrValue,
-      { ...ctx, fieldsJSONPath },
-      validators,
-      Array.from(subfieldsMap.entries())
+      {
+        validators,
+        fieldsEntries: Array.from(subfieldsMap.entries()),
+      },
+      ctx
     );
   }
 
@@ -321,6 +318,43 @@ class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
 
 class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
   async validate(value, ctx, slug) {
+    if (value === null || value === undefined) {
+      return true;
+    }
+
+    const model = ctx.model;
+
+    if (!model) {
+      throw new CoreError();
+    }
+
+    const arrValue = Array.isArray(value) ? value : [value];
+    const field = getFieldFromDefinition(
+      this.options.items,
+      model.__adapter,
+      this.__path + ".[]"
+    );
+
+    const validators: Array<Validator> = (this.options.validators ?? []).map(
+      (def) => {
+        return getValidatorFromDefinition(
+          def as ValidatorDefinition,
+          model.__adapter,
+          this.__path
+        );
+      }
+    );
+
+    await validateDocs(arrValue, { validators }, ctx);
+
+    return Promise.all(
+      arrValue
+        .map((v) => field.validate(v, ctx, slug))
+        .concat(validateDocs(arrValue, { validators }, ctx))
+    ).then((results) => results.every((r) => r));
+  }
+
+  async _validate(value, ctx, slug) {
     if (value === null || value === undefined) {
       return true;
     }
