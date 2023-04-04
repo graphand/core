@@ -229,6 +229,15 @@ export type ValidatorOptionsMap = {
   };
 };
 
+export type ValidatorOptionsMapOmitField = {
+  [ValidatorTypes.LENGTH]: { min?: number; max?: number };
+  [ValidatorTypes.BOUNDARIES]: { min?: number; max?: number };
+  [ValidatorTypes.REGEX]: {
+    pattern: string;
+    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
+  };
+};
+
 export type ValidatorOptions<
   T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes
 > = T extends keyof ValidatorOptionsMap
@@ -247,12 +256,26 @@ export type ValidatorDefinition<
       options?: Record<string, never>;
     };
 
+export type ValidatorDefinitionOmitField<
+  T extends ValidatorTypes = keyof ValidatorOptionsMapOmitField | ValidatorTypes
+> = T extends keyof ValidatorOptionsMapOmitField
+  ? {
+      type: T;
+      options: ValidatorOptionsMapOmitField[T];
+    }
+  : {
+      type: T;
+      options?: Record<string, never>;
+    };
+
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
+export type ValidatorsDefinitionOmitField = Array<ValidatorDefinitionOmitField>;
 
 export type FieldOptionsMap = {
   [FieldTypes.ARRAY]: {
     items: FieldDefinition;
     unicity?: boolean;
+    validators?: ValidatorsDefinitionOmitField;
   };
   [FieldTypes.TEXT]: {
     default?: string;
@@ -358,7 +381,6 @@ export type FieldsRestriction = {
 
 export type ValidateCtx = {
   model: typeof Model;
-  fieldsJSONPath?: Array<{ slug: string; field: Field }>;
 } & any;
 
 export type CoreErrorDefinition = {

@@ -21,7 +21,7 @@ export const mockAdapter = ({
   fieldsMap = defaultFieldsMap,
   validatorsMap = {
     ...defaultValidatorsMap,
-    [ValidatorTypes.UNIQUE]: null,
+    // [ValidatorTypes.UNIQUE]: null,
   },
   modelDefinition = {
     fields: {

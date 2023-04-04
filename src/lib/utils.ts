@@ -11,6 +11,7 @@ import {
   HookPhase,
   ValidateCtx,
   ValidatorDefinition,
+  ValidatorDefinitionOmitField,
   ValidatorHook,
   ValidatorOptions,
   ValidatorsDefinition,
@@ -255,7 +256,7 @@ export const createValidatorsArray = (
   }
 
   return modelValidators.map((def) => {
-    return getValidatorFromDefinition(def, model.__adapter);
+    return getValidatorFromDefinition(def, model.__adapter, null);
   });
 };
 
@@ -307,7 +308,8 @@ export const getFieldFromDefinition = <
 
 export const getValidatorFromDefinition = <T extends ValidatorTypes>(
   def: ValidatorDefinition<T>,
-  adapter: Adapter
+  adapter: Adapter,
+  path: string
 ) => {
   if (!def || typeof def !== "object") {
     return null;
@@ -316,7 +318,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
   let cacheKey: string;
 
   if (adapter) {
-    cacheKey = JSON.stringify(def);
+    cacheKey = [JSON.stringify(def), path].join(":");
   }
 
   if (cacheKey) {
@@ -339,7 +341,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
     ValidatorClass = Validator;
   }
 
-  const validator = new ValidatorClass(def);
+  const validator = new ValidatorClass(def, path);
 
   if (cacheKey) {
     adapter.__createdValidatorsCache.set(cacheKey, validator);
@@ -350,11 +352,16 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
 
 export const validateDocs = async <T extends typeof Model = typeof Model>(
   docs: Array<DocumentDefinition>,
-  ctx: ValidateCtx = {},
-  validators: Array<Validator>,
-  fieldsEntries?: Array<[string, Field<FieldTypes>]>,
-  bindDuplicatesValues = true
+  opts: {
+    validators?: Array<Validator>;
+    fieldsEntries?: Array<[string, Field<FieldTypes>]>;
+    bindDuplicatesValues?: boolean;
+  },
+  ctx: ValidateCtx = {}
 ) => {
+  const { validators, fieldsEntries } = opts;
+  const bindDuplicatesValues = opts.bindDuplicatesValues ?? true;
+
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
 
@@ -389,21 +396,23 @@ export const validateDocs = async <T extends typeof Model = typeof Model>(
     );
   }
 
-  await Promise.all(
-    validators.map(async (validator) => {
-      try {
-        const validated = await validator.validate(docs, ctx);
+  if (validators?.length) {
+    await Promise.all(
+      validators.map(async (validator) => {
+        try {
+          const validated = await validator.validate(docs, ctx);
 
-        if (!validated) {
-          throw null;
+          if (!validated) {
+            throw null;
+          }
+        } catch (err) {
+          const e = new ValidationValidatorError({ validator });
+
+          errorsValidatorsSet.add(e);
         }
-      } catch (err) {
-        const e = new ValidationValidatorError({ validator });
-
-        errorsValidatorsSet.add(e);
-      }
-    })
-  );
+      })
+    );
+  }
 
   if (errorsFieldsSet.size || errorsValidatorsSet.size) {
     throw new ValidationError({

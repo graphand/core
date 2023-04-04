@@ -1,8 +1,8 @@
 import Adapter from "./Adapter";
 import Validator from "./Validator";
 import ValidatorTypes from "../enums/validator-types";
-import Field from "./Field";
 import FieldTypes from "../enums/field-types";
+import CoreError from "./CoreError";
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
   async validate(data) {
@@ -16,11 +16,16 @@ class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
 
 class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
   async validate(data, ctx) {
-    const values = data
-      .map((i) => i[this.options.field])
-      .filter((v) => v !== undefined);
+    let values;
+    if (this.options.field) {
+      values = data
+        .map((i) => i[this.options.field])
+        .filter((v) => v !== undefined);
+    } else {
+      values = data;
+    }
 
-    if (!values.length) return true;
+    if (!values?.length) return true;
 
     const hasTwice = values.some(
       (v, i) => values.indexOf(v) !== i || values.lastIndexOf(v) !== i
@@ -30,18 +35,7 @@ class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
       return false;
     }
 
-    const fieldsPath = ctx.fieldsJSONPath?.map((f) => f.slug) || [];
-    const path = fieldsPath.concat(this.options.field).join(".");
-    const model = ctx.model;
-
-    const found = await Promise.all(
-      values.map(async (value) => {
-        const found = await model.count({ filter: { [path]: value } }, ctx);
-        return [value, found];
-      })
-    );
-
-    return found.every(([value, count]) => count < 2);
+    return true;
   }
 }
 
@@ -75,16 +69,22 @@ class DefaultValidatorConfigKey extends Validator<ValidatorTypes.CONFIG_KEY> {
     };
 
     const ValidatorRequired = _getValidator(ValidatorTypes.REQUIRED);
-    const validatorRequired = new ValidatorRequired({
-      type: ValidatorTypes.REQUIRED,
-      options: { field: this.options.field },
-    });
+    const validatorRequired = new ValidatorRequired(
+      {
+        type: ValidatorTypes.REQUIRED,
+        options: { field: this.options.field },
+      },
+      this.__path
+    );
 
     const ValidatorUnique = _getValidator(ValidatorTypes.UNIQUE);
-    const validatorUnique = new ValidatorUnique({
-      type: ValidatorTypes.UNIQUE,
-      options: { field: this.options.field },
-    });
+    const validatorUnique = new ValidatorUnique(
+      {
+        type: ValidatorTypes.UNIQUE,
+        options: { field: this.options.field },
+      },
+      this.__path
+    );
 
     const validates = await Promise.all([
       validatorRequired.validate(data, ctx),
