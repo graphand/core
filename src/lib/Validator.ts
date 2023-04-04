@@ -49,6 +49,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return {
       type: this.type,
       options: this.options,
+      path: this.__path,
     };
   }
 }
