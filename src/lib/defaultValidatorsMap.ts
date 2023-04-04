@@ -2,15 +2,19 @@ import Adapter from "./Adapter";
 import Validator from "./Validator";
 import ValidatorTypes from "../enums/validator-types";
 import FieldTypes from "../enums/field-types";
-import CoreError from "./CoreError";
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
   async validate(data) {
-    const invalid = data.find((i) =>
-      [null, undefined, ""].includes(i[this.options.field])
-    );
+    let values;
+    if (this.options.field) {
+      values = data.map((i) => i[this.options.field]);
+    } else {
+      values = data;
+    }
 
-    return !invalid;
+    if (!values?.length) return true;
+
+    return !values.some((v) => [null, undefined, ""].includes(v));
   }
 }
 
@@ -18,9 +22,7 @@ class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
   async validate(data, ctx) {
     let values;
     if (this.options.field) {
-      values = data
-        .map((i) => i[this.options.field])
-        .filter((v) => v !== undefined);
+      values = data.map((i) => i[this.options.field]);
     } else {
       values = data;
     }
@@ -46,10 +48,18 @@ class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
       this.options.options?.join("")
     );
 
-    return !data.some((i) => {
-      const v = i[this.options.field];
-      return v !== undefined && v !== null && !regex.test(v);
-    });
+    let values;
+    if (this.options.field) {
+      values = data
+        .map((i) => i[this.options.field])
+        .filter((v) => v !== undefined && v !== null);
+    } else {
+      values = data;
+    }
+
+    if (!values?.length) return true;
+
+    return !values.some((v) => !regex.test(v));
   }
 }
 
@@ -127,20 +137,23 @@ class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
   async validate(data) {
     const { min, max } = this.options;
 
-    return data.every((i) => {
-      const v = i[this.options.field];
+    let values;
+    if (this.options.field) {
+      values = data.map((i) => i[this.options.field]);
+    } else {
+      values = data;
+    }
 
-      if (v === undefined || v === null) {
-        return true;
-      }
+    if (!values?.length) return true;
 
+    return !values.some((v) => {
       let length = v?.length ?? 0;
 
       if (typeof v === "number") {
         length = String(v).length;
       }
 
-      return length >= min && length <= max;
+      return length < min || length > max;
     });
   }
 }
@@ -149,16 +162,19 @@ class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
   async validate(data) {
     const { min, max } = this.options;
 
-    return data.every((i) => {
-      const v = i[this.options.field];
+    let values;
+    if (this.options.field) {
+      values = data.map((i) => i[this.options.field]);
+    } else {
+      values = data;
+    }
 
-      if (v === undefined || v === null) {
-        return true;
-      }
+    if (!values?.length) return true;
 
+    return !values.some((v) => {
       const num = parseFloat(v);
 
-      return num >= min && num <= max;
+      return num < min || num > max;
     });
   }
 }

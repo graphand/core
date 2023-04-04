@@ -256,6 +256,42 @@ describe("test validatorsMap", () => {
         const validated = await model.validate([{ title }]);
         expect(validated).toBeTruthy();
       });
+
+      it("should validate within array", async () => {
+        const _model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                  },
+                ],
+              },
+            },
+          },
+        }).withAdapter(adapter);
+
+        await expect(
+          _model.validate([
+            {
+              arr: [faker.lorem.word()],
+            },
+          ])
+        ).resolves.toBeTruthy();
+
+        await expect(
+          _model.validate([
+            {
+              arr: [faker.lorem.word(), ""],
+            },
+          ])
+        ).rejects.toBeInstanceOf(ValidationError);
+      });
     });
   });
 
@@ -317,6 +353,79 @@ describe("test validatorsMap", () => {
 
         await expect(invalidPromise).rejects.toBeInstanceOf(ValidationError);
       });
+    });
+
+    describe("url regex", () => {
+      let model;
+
+      beforeAll(async () => {
+        model = await _mockModelWithRegexValidator({
+          pattern: "^https?:\\/\\/.+",
+        });
+      });
+
+      it("create with valid url should not throw error", async () => {
+        const i = await model.create({ title: faker.internet.url() });
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with undefined url should not throw error", async () => {
+        const i = await model.create({});
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with null url should not throw error", async () => {
+        const i = await model.create({ title: null });
+
+        expect(i).toBeInstanceOf(model);
+      });
+
+      it("create with invalid url should throw error", async () => {
+        const invalidPromise = model.create({ title: "invalidUrl" });
+
+        await expect(invalidPromise).rejects.toBeInstanceOf(ValidationError);
+      });
+    });
+
+    it("should validate within array", async () => {
+      const _model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REGEX,
+                  options: {
+                    pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      await expect(
+        _model.validate([
+          {
+            arr: [faker.internet.email()],
+          },
+        ])
+      ).resolves.toBeTruthy();
+
+      await expect(
+        _model.validate([
+          {
+            arr: [faker.internet.email(), "invalidEmail"],
+          },
+        ])
+      ).rejects.toBeInstanceOf(ValidationError);
     });
   });
 
