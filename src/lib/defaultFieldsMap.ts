@@ -253,6 +253,10 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
             value = field.serialize(value, format, from, ctx);
           }
 
+          if (value === undefined) {
+            return null;
+          }
+
           return [slug, value];
         }
       );
@@ -277,13 +281,17 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
               value = defaultField.serialize(value, format, from, ctx);
             }
 
+            if (value === undefined) {
+              return null;
+            }
+
             return [slug, value];
           });
 
         formattedEntries = formattedEntries.concat(defaultEntries);
       }
 
-      const formatted = Object.fromEntries(formattedEntries);
+      const formatted = Object.fromEntries(formattedEntries.filter(Boolean));
 
       if (this.options.strict) {
         return formatted;
