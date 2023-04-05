@@ -320,7 +320,11 @@ class Model {
 
     let value: any = this.__doc[firstField.__path];
 
-    if (value === undefined && "default" in firstField.options) {
+    if (
+      format !== SerializerFormat.DOCUMENT &&
+      value === undefined &&
+      "default" in firstField.options
+    ) {
       value = firstField.options.default as typeof value;
     }
 
@@ -477,15 +481,28 @@ class Model {
   /**
    * Get the document representation of the current instance with the given format
    * @param format
+   * @param ctx
+   * @param clean - if true, the result object will be cleaned from undefined values
    * @example
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
-  serialize(format: SerializerFormat | string, ctx: ExecutorCtx = {}) {
+  serialize(
+    format: SerializerFormat | string,
+    ctx: ExecutorCtx = {},
+    clean = false
+  ) {
     defineFieldsProperties(this);
 
-    const entries = this.model.fieldsKeys.map((slug) => {
-      return [slug, this.get(slug, format, ctx)];
-    });
+    const entries = this.model.fieldsKeys
+      .map((slug) => {
+        const v = this.get(slug, format, ctx);
+        if (clean && v === undefined) {
+          return null;
+        }
+
+        return [slug, v];
+      })
+      .filter(Boolean);
 
     return Object.fromEntries(entries);
   }
