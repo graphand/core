@@ -300,18 +300,18 @@ class Model {
     format: SerializerFormat | string = SerializerFormat.OBJECT,
     ctx: ExecutorCtx = {}
   ) {
-    const pathArr = path.split(".");
     let fieldsPaths;
     let firstField;
     let lastField;
 
-    if (pathArr.length === 1) {
-      fieldsPaths = [];
-      firstField = this.model.fieldsMap.get(pathArr[0]);
-    } else {
+    if (path.includes(".")) {
+      const pathArr = path.split(".");
       fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
       firstField = fieldsPaths.shift()?.field;
       lastField = fieldsPaths[fieldsPaths.length - 1]?.field || firstField;
+    } else {
+      fieldsPaths = [];
+      firstField = this.model.fieldsMap.get(path);
     }
 
     if (!firstField) {
@@ -412,14 +412,24 @@ class Model {
     value: S extends keyof T ? T[S] | any : any,
     ctx: ExecutorCtx = {}
   ) {
-    const pathArr = String(path).split(".");
-    const fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+    const _path = path as string;
+    let fieldsPaths;
+
+    if (_path.includes(".")) {
+      const pathArr = _path.split(".");
+      fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+    } else {
+      fieldsPaths = [
+        {
+          key: _path,
+          field: this.model.fieldsMap.get(_path),
+        },
+      ];
+    }
 
     if (fieldsPaths.includes(null)) {
       throw new CoreError({
-        message: `Field ${String(path)} is not found in model ${
-          this.model.slug
-        }`,
+        message: `Field ${_path} is not found in model ${this.model.slug}`,
       });
     }
 
@@ -434,9 +444,7 @@ class Model {
       for (const [i, _fieldsPath] of _fieldsPaths.entries()) {
         if (!_fieldsPath) {
           throw new CoreError({
-            message: `Field ${String(path)} is not found in model ${
-              this.model.slug
-            }`,
+            message: `Field ${_path} is not found in model ${this.model.slug}`,
           });
         }
 

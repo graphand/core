@@ -288,7 +288,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
             return [slug, value];
           });
 
-        formattedEntries = formattedEntries.concat(defaultEntries);
+        Array.prototype.push.apply(formattedEntries, defaultEntries);
       }
 
       const formatted = Object.fromEntries(formattedEntries.filter(Boolean));
@@ -355,11 +355,10 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
     await validateDocs(arrValue, { validators }, ctx);
 
-    return Promise.all(
-      arrValue
-        .map((v) => field.validate(v, ctx, slug))
-        .concat(validateDocs(arrValue, { validators }, ctx))
-    ).then((results) => results.every((r) => r));
+    return Promise.all([
+      ...arrValue.map((v) => field.validate(v, ctx, slug)),
+      validateDocs(arrValue, { validators }, ctx),
+    ]).then((results) => results.every((r) => r));
   }
 
   async _validate(value, ctx, slug) {

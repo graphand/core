@@ -150,6 +150,7 @@ export const getRecursiveHooksFromModel = <
   phase: HookPhase
 ): Array<Hook<any, A, T>> => {
   let _hooks = [];
+
   do {
     const baseClass = model.getBaseClass();
 
@@ -159,7 +160,7 @@ export const getRecursiveHooksFromModel = <
       );
 
       if (_modelHooks?.length) {
-        _hooks = _hooks.concat(_modelHooks);
+        Array.prototype.push.apply(_hooks, _modelHooks);
       }
     }
 
@@ -177,7 +178,7 @@ export const getRecursiveHooksFromModel = <
         .filter(Boolean);
 
       if (_validatorsHooks?.length) {
-        _hooks = _hooks.concat(_validatorsHooks);
+        Array.prototype.push.apply(_hooks, _validatorsHooks);
       }
     }
 
