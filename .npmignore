@@ -1,7 +1,10 @@
 .idea
+.lh
 src
 coverage
 jest.config.js
 tsconfig.json
 webpack.config.js
 README.md
+wallaby.js
+types/lib/test-utils.d.ts

@@ -1,4 +1,4 @@
-import { mockAdapter, mockModel } from "../../test-utils";
+import { mockAdapter, mockModel } from "../../lib/test-utils";
 import FieldTypes from "../../enums/field-types";
 import { faker } from "@faker-js/faker";
 import Field from "../../lib/Field";

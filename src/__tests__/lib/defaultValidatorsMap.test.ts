@@ -1,4 +1,4 @@
-import { mockAdapter, mockModel } from "../../test-utils";
+import { mockAdapter, mockModel } from "../../lib/test-utils";
 import ValidatorTypes from "../../enums/validator-types";
 import ValidationError from "../../lib/ValidationError";
 import { faker } from "@faker-js/faker";

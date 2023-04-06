@@ -1,7 +1,7 @@
 import DataModel from "../../models/DataModel";
 import { faker } from "@faker-js/faker";
 import Data from "../../lib/Data";
-import { mockAdapter, mockModel } from "../../test-utils";
+import { mockAdapter, mockModel } from "../../lib/test-utils";
 import CoreError from "../../lib/CoreError";
 import FieldTypes from "../../enums/field-types";
 import Model from "../../lib/Model";

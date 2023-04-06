@@ -1,4 +1,4 @@
-import { mockAdapter, mockModel } from "../../test-utils";
+import { mockAdapter, mockModel } from "../../lib/test-utils";
 import Field from "../../lib/Field";
 import Model from "../../lib/Model";
 import FieldTypes from "../../enums/field-types";

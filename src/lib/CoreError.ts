@@ -5,7 +5,9 @@ class CoreError extends Error {
   __definition: CoreErrorDefinition;
 
   constructor(definition: CoreErrorDefinition = {}) {
-    super();
+    const message = definition.message ?? "Unknown error";
+    super(message);
+
     const { constructor } = Object.getPrototypeOf(this);
 
     if ("captureStackTrace" in Error) {
@@ -19,10 +21,6 @@ class CoreError extends Error {
 
   get code() {
     return this.__definition.code ?? ErrorCodes.UNKNOWN;
-  }
-
-  get message() {
-    return this.__definition.message ?? "Unknown error";
   }
 
   toJSON() {

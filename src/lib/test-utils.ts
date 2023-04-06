@@ -1,19 +1,19 @@
-import Adapter from "./lib/Adapter";
+import Adapter from "./Adapter";
 import {
   AdapterFetcher,
   AdapterFetcherModelDefinition,
   FieldsDefinition,
   ValidatorsDefinition,
-} from "./types";
-import ModelList from "./lib/ModelList";
-import FieldTypes from "./enums/field-types";
-import ModelEnvScopes from "./enums/model-env-scopes";
-import Model from "./lib/Model";
-import ValidatorTypes from "./enums/validator-types";
-import defaultFieldsMap from "./lib/defaultFieldsMap";
-import defaultValidatorsMap from "./lib/defaultValidatorsMap";
-import Data from "./lib/Data";
-import { defineFieldsProperties } from "./lib/utils";
+} from "../types";
+import ModelList from "./ModelList";
+import FieldTypes from "../enums/field-types";
+import ModelEnvScopes from "../enums/model-env-scopes";
+import Model from "./Model";
+import ValidatorTypes from "../enums/validator-types";
+import defaultFieldsMap from "./defaultFieldsMap";
+import defaultValidatorsMap from "./defaultValidatorsMap";
+import Data from "./Data";
+import { defineFieldsProperties } from "./utils";
 
 const cache: Map<typeof Model, Set<any>> = new Map();
 
