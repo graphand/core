@@ -125,11 +125,9 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
       "_id"
     );
 
-    const _serialize = (id: any) => {
-      return fieldId.serialize(id, format, from, ctx);
-    };
+    const _id = fieldId.serialize(value, format, from, ctx);
 
-    return model.get(_serialize(value), ctx);
+    return model.get(_id, ctx);
   };
 
   serialize(
@@ -361,29 +359,6 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     ]).then((results) => results.every((r) => r));
   }
 
-  async _validate(value, ctx, slug) {
-    if (value === null || value === undefined) {
-      return true;
-    }
-
-    const model = ctx.model;
-
-    if (!model) {
-      throw new CoreError();
-    }
-
-    value = Array.isArray(value) ? value : [value];
-    const field = getFieldFromDefinition(
-      this.options.items,
-      model.__adapter,
-      this.__path + ".[]"
-    );
-
-    return Promise.all(value.map((v) => field.validate(v, ctx, slug))).then(
-      (results) => results.every((r) => r)
-    );
-  }
-
   _serializeRelationArray(
     field: Field<FieldTypes.RELATION>,
     value: any,
@@ -449,7 +424,14 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
     value = Array.isArray(value) ? value : [value];
 
-    return value.map((v) => itemsField.serialize(v, format, from, ctx));
+    const arrayPath = ctx.arrayPath ?? [];
+
+    return value.map((v, i) => {
+      return itemsField.serialize(v, format, from, {
+        ...ctx,
+        arrayPath: [...arrayPath, i],
+      });
+    });
   }
 }
 

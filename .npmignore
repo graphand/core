@@ -7,4 +7,4 @@ tsconfig.json
 webpack.config.js
 README.md
 wallaby.js
-types/lib/test-utils.d.ts
+dist/types/lib/test-utils.d.ts
