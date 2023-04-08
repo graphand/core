@@ -117,6 +117,34 @@ describe("test utils", () => {
       expect(fPath[1].field).toHaveProperty("options.__label", "field1bis");
     });
 
+    it("should decode array items field with index", () => {
+      const model = class extends Model {
+        static fields = {
+          field1: {
+            type: FieldTypes.ARRAY,
+            options: {
+              __label: "field1",
+              items: {
+                type: FieldTypes.TEXT,
+                options: {
+                  __label: "field1bis",
+                },
+              },
+            },
+          },
+        } as FieldsDefinition;
+      };
+
+      const fPath = getFieldsPathsFromPath(model, "field1.[0]");
+
+      expect(fPath).toBeInstanceOf(Array);
+      expect(fPath.length).toEqual(2);
+      expect(fPath[0].field).toHaveProperty("type", FieldTypes.ARRAY);
+      expect(fPath[0].field).toHaveProperty("options.__label", "field1");
+      expect(fPath[1].field).toHaveProperty("type", FieldTypes.TEXT);
+      expect(fPath[1].field).toHaveProperty("options.__label", "field1bis");
+    });
+
     it("should decode json fields field", () => {
       const model = class extends Model {
         static fields = {

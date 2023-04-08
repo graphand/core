@@ -13,8 +13,6 @@ class Adapter {
   validatorsMap: { [T in ValidatorTypes]?: typeof Validator<T> };
   model: typeof Model;
   runValidators: boolean;
-  __createdFieldsCache: Map<string, Field>;
-  __createdValidatorsCache: Map<string, Validator>;
 
   constructor(model: typeof Model) {
     this.model = model;

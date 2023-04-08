@@ -215,7 +215,7 @@ describe("Test Model", () => {
 
       expect(created.get("test")).toEqual(["123"]);
       expect(created.get("test.[]")).toEqual(["123"]);
-      expect(created.get("test.toto")).toEqual(undefined);
+      expect(created.get("test.toto")).toEqual([undefined]);
       expect(created.test).toBeInstanceOf(Array);
       expect(created.test.length).toEqual(1);
       expect(created.test[0]).toEqual("123");
@@ -333,7 +333,7 @@ describe("Test Model", () => {
         ],
       ]);
 
-      expect(created.get("test.nested")).toEqual(undefined);
+      expect(created.get("test.nested")).toEqual([undefined, undefined]);
 
       expect(created.get("test.[].nested")).toEqual([
         ["123", "456"],
@@ -345,9 +345,10 @@ describe("Test Model", () => {
         ["123", "456"],
       ]);
 
+      console.log(created.get("test.[].[].nested.[]"));
       expect(created.get("test.[].[].nested.[]")).toEqual([
-        undefined,
-        undefined,
+        [undefined, undefined],
+        [undefined, undefined],
       ]);
     });
 
@@ -405,7 +406,10 @@ describe("Test Model", () => {
 
       expect(created.get("test.[].nested")).toEqual(["123", "456"]);
 
-      expect(created.get("test.nested.undefined")).toEqual(undefined);
+      expect(created.get("test.nested.undefined")).toEqual([
+        undefined,
+        undefined,
+      ]);
     });
 
     it("should serialize with complex schema fields", async () => {
@@ -664,6 +668,8 @@ describe("Test Model", () => {
       }).withAdapter(adapter);
 
       const created = await model.create({ test: [] });
+
+      console.log(created.get("test.[]"));
 
       expect(created.get("test.test")).toEqual([]);
       expect(created.get("test.test2")).toEqual([]);

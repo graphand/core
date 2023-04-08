@@ -360,14 +360,13 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
   }
 
   _serializeRelationArray(
-    field: Field<FieldTypes.RELATION>,
+    options: FieldOptions<FieldTypes.RELATION>,
     value: any,
     format: SerializerFormat,
     from: Model,
     ctx: ExecutorCtx = {}
   ) {
     if (format === SerializerFormat.OBJECT) {
-      const options = field.options as FieldOptions<FieldTypes.RELATION>;
       const adapter = from.model.__adapter.constructor as typeof Adapter;
       let model = Model.getFromSlug(options.ref, adapter);
 
@@ -406,15 +405,9 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     from: Model,
     ctx: ExecutorCtx = {}
   ): any {
-    const itemsField = getFieldFromDefinition(
-      this.options.items,
-      from.model.__adapter,
-      this.__path + ".[]"
-    );
-
-    if (itemsField.type === FieldTypes.RELATION) {
+    if (this.options.items?.type === FieldTypes.RELATION) {
       return this._serializeRelationArray(
-        itemsField as Field<FieldTypes.RELATION>,
+        this.options.items?.options,
         value,
         format,
         from,
@@ -424,13 +417,15 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
     value = Array.isArray(value) ? value : [value];
 
-    const arrayPath = ctx.arrayPath ?? [];
-
     return value.map((v, i) => {
-      return itemsField.serialize(v, format, from, {
-        ...ctx,
-        arrayPath: [...arrayPath, i],
-      });
+      const itemsField = getFieldFromDefinition(
+        this.options.items,
+        from.model.__adapter,
+        this.__path + `.[${i}]`,
+        this.__path + ".[]"
+      );
+
+      return itemsField.serialize(v, format, from, ctx);
     });
   }
 }

@@ -94,17 +94,33 @@ export const getFieldsPathsFromPath = (
 
       if (prevField?.type === FieldTypes.ARRAY) {
         const options = prevField.options as FieldOptions<FieldTypes.ARRAY>;
+
+        const matchIndex = key.match(/\[(\d+)?\]/);
+        if (matchIndex) {
+          const index = matchIndex[1] ? parseInt(matchIndex[1]) : null;
+          if (index !== null) {
+            const itemsField = getFieldFromDefinition(
+              options.items,
+              model.__adapter,
+              pathStr + `.[${index}]`,
+              pathStr + ".[]"
+            );
+
+            return [...fieldsPaths, { key: `[${index}]`, field: itemsField }];
+          }
+        }
+
         const itemsField = getFieldFromDefinition(
           options.items,
           model.__adapter,
           pathStr + ".[]"
         );
 
-        if (key === "[]") {
-          return [...fieldsPaths, { key: "[]", field: itemsField }];
-        }
-
         fieldsPaths = [...fieldsPaths, { key: "[]", field: itemsField }];
+
+        if (matchIndex) {
+          return fieldsPaths;
+        }
 
         if (itemsField?.type === FieldTypes.JSON) {
           const options = itemsField.options as FieldOptions<FieldTypes.JSON>;
@@ -266,24 +282,11 @@ export const getFieldFromDefinition = <
 >(
   def: FieldDefinition<T>,
   adapter: Adapter,
-  path: string
+  path: string,
+  cachePath?: string
 ) => {
   if (!def || typeof def !== "object") {
     return null;
-  }
-
-  let cacheKey: string;
-
-  if (adapter && path) {
-    cacheKey = [JSON.stringify(def), path].join(":");
-  }
-
-  if (cacheKey) {
-    adapter.__createdFieldsCache ??= new Map();
-
-    if (adapter.__createdFieldsCache.has(cacheKey)) {
-      return adapter.__createdFieldsCache.get(cacheKey);
-    }
   }
 
   let FieldClass: typeof Field<T> = adapter?.fieldsMap?.[
@@ -298,13 +301,7 @@ export const getFieldFromDefinition = <
     FieldClass = Field;
   }
 
-  const field = new FieldClass(def, path);
-
-  if (cacheKey) {
-    adapter.__createdFieldsCache.set(cacheKey, field);
-  }
-
-  return field;
+  return new FieldClass(def, path);
 };
 
 export const getValidatorFromDefinition = <T extends ValidatorTypes>(
@@ -314,20 +311,6 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
 ) => {
   if (!def || typeof def !== "object") {
     return null;
-  }
-
-  let cacheKey: string;
-
-  if (adapter) {
-    cacheKey = [JSON.stringify(def), path].join(":");
-  }
-
-  if (cacheKey) {
-    adapter.__createdValidatorsCache ??= new Map();
-
-    if (adapter.__createdValidatorsCache.has(cacheKey)) {
-      return adapter.__createdValidatorsCache.get(cacheKey);
-    }
   }
 
   let ValidatorClass: typeof Validator<T> = adapter?.validatorsMap?.[
@@ -342,13 +325,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
     ValidatorClass = Validator;
   }
 
-  const validator = new ValidatorClass(def, path);
-
-  if (cacheKey) {
-    adapter.__createdValidatorsCache.set(cacheKey, validator);
-  }
-
-  return validator;
+  return new ValidatorClass(def, path);
 };
 
 export const validateDocs = async <T extends typeof Model = typeof Model>(
@@ -428,25 +405,7 @@ export const validateDocs = async <T extends typeof Model = typeof Model>(
 export const getDefaultFieldOptions = <T extends FieldTypes>(
   type: T
 ): FieldOptions<T> => {
-  let options = {};
-
-  switch (type) {
-    case FieldTypes.TEXT:
-      options = {
-        creatable: true,
-        multiple: false,
-      };
-      break;
-    case FieldTypes.JSON:
-      options = {
-        multiple: false,
-      };
-      break;
-    default:
-      break;
-  }
-
-  return options as FieldOptions<T>;
+  return {} as FieldOptions<T>;
 };
 
 export const getDefaultValidatorOptions = <T extends ValidatorTypes>(

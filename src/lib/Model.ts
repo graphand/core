@@ -27,6 +27,7 @@ import {
   validateDocs,
   verifyModelAdapter,
   defineFieldsProperties,
+  getFieldFromDefinition,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
@@ -289,11 +290,13 @@ class Model {
   }
 
   /**
-   * Get value for a specific field. Model.get("field") is an equivalent to `model.field`
+   * Get value for a specific field. model.get("field") is an equivalent to `model.field`
    * @param path - The path to the field
    * @param format - The format to serialize the value (default object)
    * @example
    * console.log(model.get("field"));
+   * console.log(model.get("field.subfield.arr.nested"));
+   * console.log(model.get("field.subfield.arr.[1].nested"));
    */
   get(
     path: string,
@@ -345,30 +348,63 @@ class Model {
       _value: any,
       _fieldsPaths: Array<{ key: string; field: Field }>
     ) => {
-      for (const _fieldsPath of _fieldsPaths) {
+      for (const [i, _fieldsPath] of _fieldsPaths.entries()) {
         if (!_fieldsPath) {
           return noFieldSymbol;
         }
 
+        if (
+          format !== SerializerFormat.DOCUMENT &&
+          _value === undefined &&
+          "default" in firstField.options
+        ) {
+          _value = firstField.options.default as typeof _value;
+        }
+
+        if (_value === undefined || _value === null) {
+          return _value;
+        }
+
         const { key, field } = _fieldsPath;
 
-        if (key === "[]") {
-          const restPaths = _fieldsPaths.slice(1);
+        const matchIndex = key.match(/\[(\d+)?\]/);
+        if (matchIndex) {
+          const index = matchIndex[1] ? parseInt(matchIndex[1]) : null;
 
-          if (Array.isArray(_value)) {
-            if (!_value.length) {
-              return _value;
-            }
-
-            const r = _value.map((v) => _getter(v, restPaths));
-            if (r.every((v) => v === noFieldSymbol)) {
-              return undefined;
-            }
-
-            return r.filter((v) => v !== noFieldSymbol);
+          if (!Array.isArray(_value)) {
+            return noFieldSymbol;
           }
 
-          const res = _getter(_value, restPaths);
+          if (index === null) {
+            return _value.map((v, fi) => {
+              const thisPath = field.__path.replace(/\[\]$/, `[${fi}]`);
+              const adapter = this.model.__adapter as Adapter;
+              const restPaths = _fieldsPaths.slice(i + 1).map((p) => {
+                if (!p) {
+                  return p;
+                }
+
+                return {
+                  ...p,
+                  field: getFieldFromDefinition(
+                    p.field.__definition,
+                    adapter,
+                    p.field.__path.replace(field.__path, thisPath)
+                  ),
+                };
+              });
+
+              const res = _getter(v, restPaths);
+              return res === noFieldSymbol ? undefined : res;
+            });
+          }
+
+          if (_value.length <= index) {
+            return noFieldSymbol;
+          }
+
+          const restPaths = _fieldsPaths.slice(i + 1);
+          const res = _getter(_value[index], restPaths);
           if (res === noFieldSymbol) {
             return undefined;
           }

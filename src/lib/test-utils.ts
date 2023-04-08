@@ -13,6 +13,7 @@ import ValidatorTypes from "../enums/validator-types";
 import defaultFieldsMap from "./defaultFieldsMap";
 import defaultValidatorsMap from "./defaultValidatorsMap";
 import Data from "./Data";
+import DataModel from "../models/DataModel";
 import { defineFieldsProperties } from "./utils";
 
 const cache: Map<typeof Model, Set<any>> = new Map();
@@ -199,6 +200,12 @@ export const mockModel = ({
 
     [slug: string]: any;
   }
+
+  Test.__datamodel = new DataModel({
+    slug: uidSlug,
+    fields,
+    validators,
+  });
 
   return Test;
 };

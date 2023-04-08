@@ -1,3 +1,4 @@
+import { ObjectId } from "bson";
 import { mockAdapter, mockModel } from "../../lib/test-utils";
 import FieldTypes from "../../enums/field-types";
 import { faker } from "@faker-js/faker";
@@ -1075,6 +1076,96 @@ describe("test fieldsMap", () => {
 
       expect(i.arrJson).toBeInstanceOf(Array);
       expect(i.arrJson).toEqual([{ test: "test" }]);
+    });
+
+    it("should returns serialized item from index", async () => {
+      const model = mockModel({
+        fields: {
+          arrJson: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.JSON,
+                options: {
+                  strict: true,
+                  fields: {
+                    title: {
+                      type: FieldTypes.TEXT,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({
+        arrJson: [
+          { title: 1, test: "1" },
+          { title: 2, test: "2" },
+          "invalid",
+          { title: 3, test: "3" },
+        ],
+      });
+
+      const value = i.get("arrJson.[2].title");
+
+      expect(i.get("arrJson.[0].title")).toEqual("1");
+      expect(i.get("arrJson.[0].test")).toBe(undefined);
+
+      expect(i.get("arrJson.[1].title")).toEqual("2");
+      expect(i.get("arrJson.[1].test")).toBe(undefined);
+
+      expect(i.get("arrJson.[2].title")).toBe(null);
+      expect(i.get("arrJson.[2].test")).toBe(undefined);
+
+      expect(i.get("arrJson.[3].title")).toEqual("3");
+      expect(i.get("arrJson.[3].test")).toBe(undefined);
+    });
+
+    it("should returns serialized item from index within array", async () => {
+      const model = mockModel({
+        fields: {
+          arrRel: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "accounts",
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+
+      await model.initialize();
+
+      const ids = Array.from({ length: 3 }, () => new ObjectId().toString());
+
+      const i = new model({
+        arrRel: ids,
+      });
+
+      expect(i.get("arrRel")).toBeInstanceOf(PromiseModelList);
+      expect(i.get("arrRel.[]")).toBeInstanceOf(Array);
+      expect(
+        i.get("arrRel.[]").every((i) => i instanceof PromiseModel)
+      ).toBeTruthy();
+
+      expect(i.get("arrRel.[0]")).toBeInstanceOf(PromiseModel);
+      expect(i.get("arrRel.[0]").query).toEqual(ids[0]);
+
+      expect(i.get("arrRel.[1]")).toBeInstanceOf(PromiseModel);
+      expect(i.get("arrRel.[1]").query).toEqual(ids[1]);
+
+      expect(i.get("arrRel.[2]")).toBeInstanceOf(PromiseModel);
+      expect(i.get("arrRel.[2]").query).toEqual(ids[2]);
+
+      expect(i.get("arrRel.[3]")).toBe(undefined);
     });
   });
 });
