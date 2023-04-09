@@ -27,6 +27,7 @@ class Data extends Model {
     let model = class extends Data {
       static __name = datamodel.name;
 
+      static isPage = datamodel.isPage;
       static slug = datamodel.slug;
       static fields = datamodel.fields;
       static validators = [];
@@ -83,12 +84,13 @@ class Data extends Model {
             }
 
             this.__datamodel = datamodel;
-
-            this.slug = datamodel.slug;
-            this.fields = datamodel.fields;
-            this.validators = [];
-            this.configKey = datamodel.configKey || undefined;
           }
+
+          this.isPage = this.__datamodel.isPage;
+          this.slug = this.__datamodel.slug;
+          this.fields = this.__datamodel.fields;
+          this.validators = [];
+          this.configKey = this.__datamodel.configKey || undefined;
 
           return Model.reloadModel.apply(this, [ctx]);
         }

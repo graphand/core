@@ -21,7 +21,7 @@ class DataModel extends Model {
     { type: ValidatorTypes.DATAMODEL_CONFIG_KEY },
     {
       type: ValidatorTypes.REGEX,
-      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+      options: { field: "slug", pattern: "^[a-zA-Z][a-zA-Z0-9]+?$" },
     },
   ];
 
@@ -95,6 +95,9 @@ class DataModel extends Model {
 
   @fieldDecorator(FieldTypes.TEXT)
   configKey: FieldDefinitionText;
+
+  @fieldDecorator(FieldTypes.JSON)
+  _doc: any;
 }
 
 export default DataModel;

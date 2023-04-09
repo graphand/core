@@ -6,7 +6,9 @@ import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
 import {
   Account,
+  CoreError,
   DataModel,
+  ErrorCodes,
   models,
   PromiseModelList,
   SerializerFormat,
@@ -19,15 +21,8 @@ import Data from "../../lib/Data";
 import PromiseModel from "../../lib/PromiseModel";
 
 describe("Test Model", () => {
-  let adapter;
-  let BaseModel;
-
-  beforeAll(() => {
-    adapter = mockAdapter();
-    BaseModel = mockModel();
-  });
-
-  afterAll(() => {});
+  let adapter = mockAdapter();
+  let BaseModel = mockModel();
 
   describe("Model crud", () => {
     it("Should be able to Model.create", async () => {
@@ -1126,7 +1121,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.withAdapter(_adapter);
       await TestModel.initialize();
-      const i = new TestModel();
+      const i = new TestModel({});
       expect(testValidate).toHaveBeenCalledTimes(0);
 
       await TestModel.validate([i]);
@@ -1149,7 +1144,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.withAdapter(_adapter);
       await TestModel.initialize();
-      const i = new TestModel();
+      const i = new TestModel({});
 
       expect.assertions(1);
 
@@ -1175,7 +1170,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.withAdapter(_adapter);
       await TestModel.initialize();
-      const i = new TestModel();
+      const i = new TestModel({});
       expect(testValidate).toHaveBeenCalledTimes(0);
 
       await TestModel.validate([i]);
@@ -1198,7 +1193,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.withAdapter(_adapter);
       await TestModel.initialize();
-      const i = new TestModel();
+      const i = new TestModel({});
 
       expect.assertions(1);
 
@@ -1513,6 +1508,64 @@ describe("Test Model", () => {
 
       expect(extendedModelFromSlug.getBaseClass()).toBe(ExampleModel);
       expect(extendedModelFromSlug).toBe(extendedModelFromModel);
+    });
+  });
+
+  describe("Model page", () => {
+    const PageModel = mockModel({
+      isPage: true,
+      fields: {
+        test: {
+          type: FieldTypes.TEXT,
+          options: {
+            default: "defaultValue",
+          },
+        },
+        nested: {
+          type: FieldTypes.JSON,
+          options: {
+            fields: {
+              subtitle: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        },
+      },
+    }).withAdapter(adapter);
+
+    it("Should be able to get data from model", async () => {
+      const getPromise = PageModel.get();
+      expect(getPromise).toBeInstanceOf(PromiseModel);
+
+      const i = await getPromise;
+      expect(i).toBeInstanceOf(PageModel);
+
+      // expect(i._id).toEqual(PageModel.__datamodel._id);
+      expect(i.test).toEqual("defaultValue");
+    });
+
+    // it("should be able update data from instance", async () => {
+    //   const i = await PageModel.get();
+
+    //   await i.update({
+    //     $set: {
+    //       test: "newValue",
+    //     },
+    //   });
+
+    //   expect(i.test).toEqual("newValue");
+    //   // expect(PageModel.__datamodel._pageDoc.test).toEqual("newValue");
+    // });
+
+    it("Should not be able to create an instance", async () => {
+      const creatingPromise = PageModel.create({});
+
+      await expect(creatingPromise).rejects.toThrow(CoreError);
+      await expect(creatingPromise).rejects.toHaveProperty(
+        "code",
+        ErrorCodes.INVALID_OPERATION
+      );
     });
   });
 });

@@ -31,9 +31,11 @@ import {
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
+import Data from "./Data";
 
 class Model {
   static extendable: boolean = false;
+  static isPage: boolean = false;
   static slug: string;
   static scope: ModelEnvScopes;
   static fields: FieldsDefinition;
@@ -614,6 +616,13 @@ class Model {
     return new model(payload);
   }
 
+  /**
+   * Count the number of documents with the given query.
+   * If Model.isPage is true, the result will always be 1.
+   * @param query - a JSONQuery object (or a string) that contains the filter to apply
+   * @example
+   * const count = await Model.count({ filter: { title: { "$regex": "a" } } });
+   */
   static async count<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
@@ -622,6 +631,10 @@ class Model {
     verifyModelAdapter(this);
 
     await this.initialize();
+
+    if (this.isPage) {
+      return 1;
+    }
 
     return this.execute("count", [query], ctx);
   }
@@ -666,6 +679,13 @@ class Model {
           try {
             await model.initialize();
 
+            if (model.isPage) {
+              throw new CoreError({
+                code: ErrorCodes.INVALID_OPERATION,
+                message: `Cannot use getList on a page model, use get instead`,
+              });
+            }
+
             const list = await this.execute("getList", [query], ctx);
             resolve(list);
           } catch (e) {
@@ -687,6 +707,13 @@ class Model {
 
     await this.initialize();
 
+    if (this.isPage) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot use create on a page model, instance is already created`,
+      });
+    }
+
     return await this.execute("createOne", [payload], ctx);
   }
 
@@ -699,6 +726,13 @@ class Model {
 
     await this.initialize();
 
+    if (this.isPage) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot use createMultiple on a page model, instance is already created`,
+      });
+    }
+
     return await this.execute("createMultiple", [payload], ctx);
   }
 
@@ -710,6 +744,12 @@ class Model {
       [String(this._id), update],
       ctx
     );
+
+    if (!res?.__doc) {
+      throw new CoreError({
+        message: `Unable to update model`,
+      });
+    }
 
     this.__doc = res.__doc;
 
@@ -731,11 +771,26 @@ class Model {
       return [updated];
     }
 
+    if (this.isPage) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot use update on a page model, use instance of the model instead`,
+      });
+    }
+
     return await this.execute("updateMultiple", [query, update], ctx);
   }
 
   async delete(ctx?: ExecutorCtx): Promise<this> {
     verifyModelAdapter(this.model);
+    await this.model.initialize();
+
+    if (this.model.isPage) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot use delete on a page model, delete the model itself instead`,
+      });
+    }
 
     await this.model.execute("deleteOne", [String(this._id)], ctx);
 
@@ -748,8 +803,14 @@ class Model {
     ctx?: ExecutorCtx
   ): Promise<string[]> {
     verifyModelAdapter(this);
-
     await this.initialize();
+
+    if (this.isPage) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot use delete on a page model, delete the model itself instead`,
+      });
+    }
 
     if (typeof query === "string") {
       const deleted = await this.execute("deleteOne", [query], ctx);

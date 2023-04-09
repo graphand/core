@@ -378,6 +378,21 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
         });
       }
 
+      if (model.isPage) {
+        value = Array.isArray(value) ? value : [value];
+
+        return value.map((v, i) => {
+          const itemsField = getFieldFromDefinition(
+            this.options.items,
+            from.model.__adapter,
+            this.__path + `.[${i}]`,
+            this.__path + ".[]"
+          );
+
+          return itemsField.serialize(v, format, from, ctx);
+        });
+      }
+
       return model.getList({ ids }, ctx);
     } else if (
       value instanceof PromiseModelList ||

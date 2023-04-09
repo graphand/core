@@ -15,6 +15,7 @@ import defaultValidatorsMap from "./defaultValidatorsMap";
 import Data from "./Data";
 import DataModel from "../models/DataModel";
 import { defineFieldsProperties } from "./utils";
+import { ObjectId } from "bson";
 
 const cache: Map<typeof Model, Set<any>> = new Map();
 
@@ -108,19 +109,45 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
-        const [first] = Array.from(this.thisCache);
+        let found;
+
+        // if (this.model.isPage) {
+        //   const _model = this.model as typeof Data;
+        //   found = _model.__datamodel;
+        // } else {
+        const cache = Array.from(this.thisCache);
+
+        if (typeof query === "string") {
+          return cache.find((r) => r._id === query);
+        }
+
+        found = cache[0];
+
+        if (query.filter) {
+          const filterEntries = Object.entries(query.filter);
+          found = cache.find((r) =>
+            filterEntries.every(([key, value]) => r.__doc[key] === value)
+          );
+        }
+        // }
+
+        if (!found) {
+          return Promise.resolve(null);
+        }
 
         if (update.$set) {
-          Object.assign(first.__doc, update.$set);
+          Object.assign(found.__doc, update.$set);
         }
 
         if (update.$unset) {
           Object.keys(update.$unset).forEach((key) => {
-            delete first.__doc[key];
+            delete found.__doc[key];
           });
         }
 
-        return Promise.resolve(first);
+        console.log("found", found?.toJSON());
+
+        return Promise.resolve(found);
       }),
       updateMultiple: jest.fn(([query, update]) => {
         if (!query || !update) {
@@ -178,15 +205,18 @@ export const mockModel = ({
   scope = ModelEnvScopes.ENV,
   fields = {},
   validators = [],
+  isPage = false,
 }: {
   scope?: ModelEnvScopes;
   fields?: FieldsDefinition;
   validators?: ValidatorsDefinition;
+  isPage?: boolean;
 } = {}) => {
   const uidSlug = Math.random().toString(36).substring(7);
 
   class Test extends Data {
     static extendable = true;
+    static isPage = isPage;
     static slug = uidSlug;
     static scope = scope;
     static fields = fields;
@@ -202,7 +232,9 @@ export const mockModel = ({
   }
 
   Test.__datamodel = new DataModel({
+    _id: new ObjectId().toString(),
     slug: uidSlug,
+    isPage,
     fields,
     validators,
   });
