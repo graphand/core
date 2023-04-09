@@ -111,25 +111,20 @@ export const mockAdapter = ({
 
         let found;
 
-        // if (this.model.isPage) {
-        //   const _model = this.model as typeof Data;
-        //   found = _model.__datamodel;
-        // } else {
         const cache = Array.from(this.thisCache);
 
         if (typeof query === "string") {
-          return cache.find((r) => r._id === query);
-        }
+          found = cache.find((r) => r._id === query);
+        } else {
+          found = cache[0];
 
-        found = cache[0];
-
-        if (query.filter) {
-          const filterEntries = Object.entries(query.filter);
-          found = cache.find((r) =>
-            filterEntries.every(([key, value]) => r.__doc[key] === value)
-          );
+          if (query.filter) {
+            const filterEntries = Object.entries(query.filter);
+            found = cache.find((r) =>
+              filterEntries.every(([key, value]) => r.__doc[key] === value)
+            );
+          }
         }
-        // }
 
         if (!found) {
           return Promise.resolve(null);
@@ -144,8 +139,6 @@ export const mockAdapter = ({
             delete found.__doc[key];
           });
         }
-
-        console.log("found", found?.toJSON());
 
         return Promise.resolve(found);
       }),
@@ -240,4 +233,8 @@ export const mockModel = ({
   });
 
   return Test;
+};
+
+export const generateRandomString = () => {
+  return "a" + Math.random().toString(36).substring(7);
 };

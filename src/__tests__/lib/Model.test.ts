@@ -340,7 +340,6 @@ describe("Test Model", () => {
         ["123", "456"],
       ]);
 
-      console.log(created.get("test.[].[].nested.[]"));
       expect(created.get("test.[].[].nested.[]")).toEqual([
         [undefined, undefined],
         [undefined, undefined],
@@ -663,8 +662,6 @@ describe("Test Model", () => {
       }).withAdapter(adapter);
 
       const created = await model.create({ test: [] });
-
-      console.log(created.get("test.[]"));
 
       expect(created.get("test.test")).toEqual([]);
       expect(created.get("test.test2")).toEqual([]);

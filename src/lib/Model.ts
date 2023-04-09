@@ -747,7 +747,7 @@ class Model {
 
     if (!res?.__doc) {
       throw new CoreError({
-        message: `Unable to update model`,
+        message: `Unable to update model: ${res instanceof Model}`,
       });
     }
 

@@ -1,4 +1,8 @@
-import { mockAdapter, mockModel } from "../../lib/test-utils";
+import {
+  mockAdapter,
+  mockModel,
+  generateRandomString,
+} from "../../lib/test-utils";
 import ValidatorTypes from "../../enums/validator-types";
 import ValidationError from "../../lib/ValidationError";
 import { faker } from "@faker-js/faker";
@@ -465,7 +469,7 @@ describe("test validatorsMap", () => {
 
     it("datamodel without configKey should not throw error", async () => {
       const datamodel = DataModel.create({
-        slug: Math.random().toString(36).substring(7),
+        slug: generateRandomString(),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -478,7 +482,7 @@ describe("test validatorsMap", () => {
 
     it("datamodel with configKey and valid configKey field should not throw error", async () => {
       const datamodel = DataModel.create({
-        slug: Math.random().toString(36).substring(7),
+        slug: generateRandomString(),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -492,7 +496,7 @@ describe("test validatorsMap", () => {
 
     it("datamodel with configKey and not existing field should throw error", async () => {
       const datamodel = DataModel.create({
-        slug: Math.random().toString(36).substring(7),
+        slug: generateRandomString(),
         configKey: "title",
       });
 
@@ -501,7 +505,7 @@ describe("test validatorsMap", () => {
 
     it("datamodel with configKey and invalid configKey field should throw error", async () => {
       const datamodel1 = DataModel.create({
-        slug: Math.random().toString(36).substring(7),
+        slug: generateRandomString(),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -513,7 +517,7 @@ describe("test validatorsMap", () => {
       await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
 
       const datamodel2 = DataModel.create({
-        slug: Math.random().toString(36).substring(7),
+        slug: generateRandomString(),
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -528,7 +532,7 @@ describe("test validatorsMap", () => {
       await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
 
       const datamodel3 = DataModel.create({
-        slug: Math.random().toString(36).substring(7),
+        slug: generateRandomString(),
         fields: {
           title: {
             type: FieldTypes.NUMBER,
