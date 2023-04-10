@@ -97,7 +97,7 @@ class DataModel extends Model {
   configKey: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.JSON)
-  _doc: any;
+  _page: FieldDefinitionJSON;
 }
 
 export default DataModel;

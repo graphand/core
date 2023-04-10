@@ -12,6 +12,42 @@ class Data extends Model {
   static scope = ModelEnvScopes.ENV;
   static __datamodel: DataModel;
 
+  static async reloadModel(ctx?: ExecutorCtx) {
+    if (!this.__datamodel) {
+      if (!this.__adapter) {
+        throw new CoreError({
+          code: ErrorCodes.INVALID_MODEL_ADAPTER,
+          message: `model ${this.slug} is initialized without adapter`,
+        });
+      }
+
+      const slug = this.slug;
+
+      const adapter = this.__adapter.constructor as typeof Adapter;
+      const datamodel = await DataModel.withAdapter(adapter).get(
+        { filter: { slug } },
+        ctx
+      );
+
+      if (!datamodel) {
+        throw new CoreError({
+          code: ErrorCodes.INVALID_MODEL_SLUG,
+          message: `model with slug ${slug} does no exist`,
+        });
+      }
+
+      this.__datamodel = datamodel;
+    }
+
+    this.isPage = this.__datamodel.isPage;
+    this.slug = this.__datamodel.slug;
+    this.fields = this.__datamodel.fields;
+    this.validators = [];
+    this.configKey = this.__datamodel.configKey || undefined;
+
+    return Model.reloadModel.apply(this, [ctx]);
+  }
+
   static getFromDatamodel(
     datamodel: DataModel,
     adapter?: typeof Adapter
@@ -60,40 +96,6 @@ class Data extends Model {
         static __name = `Data<${slug}>`;
 
         static slug = slug;
-
-        static async reloadModel(ctx?: ExecutorCtx) {
-          if (!this.__datamodel) {
-            if (!this.__adapter) {
-              throw new CoreError({
-                code: ErrorCodes.INVALID_MODEL_ADAPTER,
-                message: `model ${this.slug} is initialized without adapter`,
-              });
-            }
-
-            const adapter = this.__adapter.constructor as typeof Adapter;
-            const datamodel = await DataModel.withAdapter(adapter).get(
-              { filter: { slug } },
-              ctx
-            );
-
-            if (!datamodel) {
-              throw new CoreError({
-                code: ErrorCodes.INVALID_MODEL_SLUG,
-                message: `model with slug ${slug} does no exist`,
-              });
-            }
-
-            this.__datamodel = datamodel;
-          }
-
-          this.isPage = this.__datamodel.isPage;
-          this.slug = this.__datamodel.slug;
-          this.fields = this.__datamodel.fields;
-          this.validators = [];
-          this.configKey = this.__datamodel.configKey || undefined;
-
-          return Model.reloadModel.apply(this, [ctx]);
-        }
       };
 
       if (adapter) {

@@ -1538,22 +1538,8 @@ describe("Test Model", () => {
       const i = await getPromise;
       expect(i).toBeInstanceOf(PageModel);
 
-      // expect(i._id).toEqual(PageModel.__datamodel._id);
       expect(i.test).toEqual("defaultValue");
     });
-
-    // it("should be able update data from instance", async () => {
-    //   const i = await PageModel.get();
-
-    //   await i.update({
-    //     $set: {
-    //       test: "newValue",
-    //     },
-    //   });
-
-    //   expect(i.test).toEqual("newValue");
-    //   // expect(PageModel.__datamodel._pageDoc.test).toEqual("newValue");
-    // });
 
     it("Should not be able to create an instance", async () => {
       const creatingPromise = PageModel.create({});
