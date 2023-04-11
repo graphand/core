@@ -7,7 +7,6 @@ import {
   ValidatorOptions,
 } from "../types";
 import { getDefaultValidatorOptions } from "./utils";
-import Model from "./Model";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
   __definition: ValidatorDefinition<T>;
