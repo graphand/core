@@ -31,6 +31,7 @@ import defaultFieldsMap from "./lib/defaultFieldsMap";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
+  getRecursiveHooksFromModel,
   validateDocs,
   getFieldsPathsFromPath,
   getJSONSubfieldsMap,
@@ -88,6 +89,7 @@ export {
   getJSONSubfieldsMap,
   defineFieldsProperties,
   getAdaptedModel,
+  getRecursiveHooksFromModel,
 };
 
 export * from "./types";

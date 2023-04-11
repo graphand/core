@@ -1,7 +1,6 @@
 import Adapter from "./Adapter";
 import {
   AdapterFetcher,
-  AdapterFetcherModelDefinition,
   FieldsDefinition,
   ValidatorsDefinition,
 } from "../types";
@@ -13,9 +12,7 @@ import ValidatorTypes from "../enums/validator-types";
 import defaultFieldsMap from "./defaultFieldsMap";
 import defaultValidatorsMap from "./defaultValidatorsMap";
 import Data from "./Data";
-import DataModel from "../models/DataModel";
 import { defineFieldsProperties } from "./utils";
-import { ObjectId } from "bson";
 
 const cache: Map<typeof Model, Set<any>> = new Map();
 
@@ -25,26 +22,9 @@ export const mockAdapter = ({
     ...defaultValidatorsMap,
     // [ValidatorTypes.UNIQUE]: null,
   },
-  modelDefinition = {
-    fields: {
-      title: {
-        type: FieldTypes.TEXT,
-        options: { default: "test" },
-      },
-    },
-    validators: [
-      {
-        type: ValidatorTypes.SAMPLE,
-        options: {
-          field: "title",
-        },
-      },
-    ],
-  },
 }: {
   fieldsMap?: Adapter["fieldsMap"];
   validatorsMap?: Adapter["validatorsMap"];
-  modelDefinition?: AdapterFetcherModelDefinition;
 } = {}) => {
   class MockAdapter extends Adapter {
     runValidators = true;
@@ -181,9 +161,6 @@ export const mockAdapter = ({
         this.thisCache.clear();
         return Promise.resolve(ids);
       }),
-      getModelDefinition: jest.fn(() => {
-        return Promise.resolve(modelDefinition);
-      }),
     };
 
     fieldsMap = fieldsMap;
@@ -196,9 +173,21 @@ export const mockAdapter = ({
 
 export const mockModel = ({
   scope = ModelEnvScopes.ENV,
-  fields = {},
-  validators = [],
   isPage = false,
+  fields = {
+    title: {
+      type: FieldTypes.TEXT,
+      options: { default: "test" },
+    },
+  },
+  validators = [
+    {
+      type: ValidatorTypes.SAMPLE,
+      options: {
+        field: "title",
+      },
+    },
+  ],
 }: {
   scope?: ModelEnvScopes;
   fields?: FieldsDefinition;
@@ -224,13 +213,13 @@ export const mockModel = ({
     [slug: string]: any;
   }
 
-  Test.__datamodel = new DataModel({
-    _id: new ObjectId().toString(),
-    slug: uidSlug,
-    isPage,
-    fields,
-    validators,
-  });
+  // Test.__datamodel = new DataModel({
+  //   _id: new ObjectId().toString(),
+  //   slug: uidSlug,
+  //   isPage,
+  //   fields,
+  //   validators,
+  // });
 
   return Test;
 };

@@ -12,9 +12,7 @@ import PromiseModelList from "../../lib/PromiseModelList";
 import SerializerFormat from "../../enums/serializer-format";
 
 describe("test fieldsMap", () => {
-  const adapter = mockAdapter({
-    modelDefinition: { fields: {}, validators: [] },
-  });
+  const adapter = mockAdapter({});
 
   describe("TEXT field", () => {
     it("Should returns default value if undefined", async () => {
@@ -322,7 +320,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           fieldsMap: {
             [FieldTypes.TEXT]: TestFieldText,
           },
@@ -361,7 +358,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           fieldsMap: {
             [FieldTypes.TEXT]: TestFieldText,
           },
@@ -405,7 +401,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           fieldsMap: {
             [FieldTypes.TEXT]: TestFieldText,
           },
@@ -460,7 +455,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           fieldsMap: {
             [FieldTypes.TEXT]: TestFieldText,
           },
@@ -532,7 +526,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           validatorsMap: {
             [ValidatorTypes.REQUIRED]: TestValidatorRequired,
           },
@@ -574,7 +567,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           validatorsMap: {
             [ValidatorTypes.REQUIRED]: TestValidatorRequired,
           },
@@ -617,7 +609,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           validatorsMap: {
             [ValidatorTypes.REQUIRED]: TestValidatorRequired,
           },
@@ -666,7 +657,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           validatorsMap: {
             [ValidatorTypes.REQUIRED]: TestValidatorRequired,
           },
@@ -718,7 +708,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           fieldsMap: {
             [FieldTypes.TEXT]: TestFieldText,
           },
@@ -753,7 +742,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           fieldsMap: {
             [FieldTypes.TEXT]: TestFieldText,
           },
@@ -795,7 +783,6 @@ describe("test fieldsMap", () => {
         }
 
         const _adapter = mockAdapter({
-          modelDefinition: { fields: {}, validators: [] },
           fieldsMap: {
             [FieldTypes.TEXT]: TestFieldText,
           },

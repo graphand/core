@@ -11,7 +11,6 @@ import {
   HookPhase,
   ValidateCtx,
   ValidatorDefinition,
-  ValidatorDefinitionOmitField,
   ValidatorHook,
   ValidatorOptions,
   ValidatorsDefinition,

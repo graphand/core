@@ -28,10 +28,11 @@ import {
   verifyModelAdapter,
   defineFieldsProperties,
   getFieldFromDefinition,
+  getAdaptedModel,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
-import Data from "./Data";
+import type DataModel from "../models/DataModel";
 
 class Model {
   static extendable: boolean = false;
@@ -51,6 +52,7 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
+  static __datamodel?: DataModel;
 
   __doc: DocumentDefinition;
 
@@ -157,14 +159,14 @@ class Model {
     this.__initPromise ??= new Promise(async (resolve, reject) => {
       try {
         const hooksBefore = getRecursiveHooksFromModel(
-          this,
+          model,
           "initialize",
           "before"
         );
 
         await hooksBefore.reduce(async (p, hook) => {
           await p;
-          await hook.fn.call(this, { ctx });
+          await hook.fn.call(model, { ctx });
         }, Promise.resolve());
 
         if (model.extendable) {
@@ -172,14 +174,14 @@ class Model {
         }
 
         const hooksAfter = getRecursiveHooksFromModel(
-          this,
+          model,
           "initialize",
           "after"
         );
 
         await hooksAfter.reduce(async (p, hook) => {
           await p;
-          await hook.fn.call(this, { ctx });
+          await hook.fn.call(model, { ctx });
         }, Promise.resolve());
       } catch (e) {
         reject(e);
@@ -198,10 +200,6 @@ class Model {
    * @returns
    */
   static async reloadModel(ctx?: ExecutorCtx) {
-    if (!this.extendable) {
-      return;
-    }
-
     if (!this.__adapter) {
       throw new CoreError({
         code: ErrorCodes.INVALID_MODEL_ADAPTER,
@@ -209,16 +207,23 @@ class Model {
       });
     }
 
-    const modelDef = await this.execute(
-      "getModelDefinition",
-      undefined as never,
+    const adapter = this.__adapter.constructor as typeof Adapter;
+
+    const DataModel = require("../models/DataModel").default;
+    const datamodel = await getAdaptedModel(DataModel, adapter).get(
+      {
+        filter: {
+          slug: this.slug,
+        },
+      },
       ctx
     );
 
-    this.configKey = modelDef?.configKey ?? this.configKey;
+    this.configKey = datamodel?.configKey ?? this.configKey;
+    this.isPage = datamodel?.isPage ?? this.isPage;
 
-    this.__fieldsMap = createFieldsMap(this, modelDef?.fields);
-    this.__validatorsArray = createValidatorsArray(this, modelDef?.validators);
+    this.__fieldsMap = createFieldsMap(this, datamodel?.fields);
+    this.__validatorsArray = createValidatorsArray(this, datamodel?.validators);
 
     delete this.__fieldsProperties;
     delete this.__fieldsKeys;
@@ -948,5 +953,7 @@ class Model {
     return hookPayloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
   }
 }
+
+globalThis.Model = Model;
 
 export default Model;

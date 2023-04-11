@@ -56,6 +56,7 @@ describe("Test Model", () => {
   describe("Model initialization", () => {
     it("Model should load fields from adapter", async () => {
       const TestModel = BaseModel.withAdapter(adapter);
+      console.log(TestModel.slug);
       const created = await TestModel.create({});
       expect(created.model.fieldsMap.get("title")).toBeInstanceOf(Field);
     });

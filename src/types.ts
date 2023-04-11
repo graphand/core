@@ -161,14 +161,6 @@ export type JSONQuery = {
   populate?: Populate;
 };
 
-export type AdapterFetcherModelDefinition<
-  T extends typeof Model = typeof Model
-> = {
-  fields: FieldsDefinition;
-  validators: ValidatorsDefinition;
-  configKey?: string;
-};
-
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (
     args: [query: string | JSONQuery],
@@ -206,10 +198,6 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
     args: [query: JSONQuery],
     ctx: ExecutorCtx
   ) => Promise<string[]>;
-  getModelDefinition: (
-    args: never,
-    ctx: ExecutorCtx
-  ) => Promise<AdapterFetcherModelDefinition<T>>;
   initialize?: (args: never, ctx: ExecutorCtx) => Promise<void>;
 };
 

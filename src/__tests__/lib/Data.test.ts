@@ -8,9 +8,7 @@ import Model from "../../lib/Model";
 import { getAdaptedModel } from "../../lib/utils";
 
 describe("Data", () => {
-  const adapter = mockAdapter({
-    modelDefinition: { fields: {}, validators: [] },
-  });
+  const adapter = mockAdapter();
 
   describe("model unicity", () => {
     it("should get same model from slug and from datamodel instance with same adapter", async () => {
@@ -79,14 +77,6 @@ describe("Data", () => {
     const slug = faker.animal.type();
 
     const model = Data.getFromSlug(slug);
-
-    await expect(model.initialize()).rejects.toThrow(CoreError);
-  });
-
-  it("should throw error at initializing if datamodel doesn't exist", async () => {
-    const slug = faker.lorem.word();
-
-    const model = Data.getFromSlug(slug).withAdapter(adapter);
 
     await expect(model.initialize()).rejects.toThrow(CoreError);
   });

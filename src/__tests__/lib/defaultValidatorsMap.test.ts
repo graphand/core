@@ -13,9 +13,7 @@ import { ValidatorOptions } from "../../types";
 import { models } from "../../index";
 
 describe("test validatorsMap", () => {
-  const adapter = mockAdapter({
-    modelDefinition: { fields: {}, validators: [] },
-  });
+  const adapter = mockAdapter();
 
   describe("required validator", () => {
     const model = mockModel({
