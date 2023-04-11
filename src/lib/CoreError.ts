@@ -5,7 +5,7 @@ class CoreError extends Error {
   __definition: CoreErrorDefinition;
 
   constructor(definition: CoreErrorDefinition = {}) {
-    super();
+    super(definition.message ?? "Unknown error");
 
     const { constructor } = Object.getPrototypeOf(this);
 
@@ -20,10 +20,6 @@ class CoreError extends Error {
 
   get code() {
     return this.__definition.code ?? ErrorCodes.UNKNOWN;
-  }
-
-  get message() {
-    return this.__definition.message ?? "Unknown error";
   }
 
   toJSON() {
