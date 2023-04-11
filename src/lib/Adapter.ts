@@ -17,6 +17,10 @@ class Adapter {
   constructor(model: typeof Model) {
     this.model = model;
   }
+
+  get base() {
+    return this.constructor as typeof Adapter;
+  }
 }
 
 export default Adapter;

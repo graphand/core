@@ -96,9 +96,10 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
       id = value;
     }
 
+    const adapter = from.model.getAdapter();
     const fieldId = getFieldFromDefinition<FieldTypes.ID>(
       { type: FieldTypes.ID },
-      from.model.__adapter,
+      adapter,
       "_id"
     );
 
@@ -111,9 +112,10 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     from: Model,
     ctx: ExecutorCtx = {}
   ) => {
+    const adapter = from.model.getAdapter();
+
     // get the referenced model with the same adapter as from parameter
-    const adapter = from.model.__adapter.constructor as typeof Adapter;
-    let model = Model.getFromSlug(this.options.ref, adapter);
+    let model = Model.getFromSlug(this.options.ref, adapter.base);
 
     if (!isObjectId(value)) {
       return null;
@@ -121,7 +123,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 
     const fieldId = getFieldFromDefinition<FieldTypes.ID>(
       { type: FieldTypes.ID },
-      from.model.__adapter,
+      adapter,
       "_id"
     );
 
@@ -159,16 +161,18 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       throw new CoreError();
     }
 
+    const adapter = model.getAdapter();
+
     const arrValue = Array.isArray(value) ? value : [value];
 
     const validators: Array<Validator> = (this.options.validators ?? []).map(
-      (def) => getValidatorFromDefinition(def, model.__adapter, this.__path)
+      (def) => getValidatorFromDefinition(def, adapter, this.__path)
     );
 
     if (this.options.defaultField) {
       const defaultField = getFieldFromDefinition(
         this.options.defaultField,
-        model.__adapter,
+        adapter,
         this.__path + ".__defaultField"
       );
 
@@ -233,11 +237,13 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
         return null;
       }
 
+      const adapter = from.model.getAdapter();
+
       let formattedEntries = Object.entries(this.options.fields ?? {}).map(
         ([slug, def]) => {
           const field = getFieldFromDefinition(
             def,
-            from.model.__adapter,
+            adapter,
             this.__path + "." + slug
           );
 
@@ -262,7 +268,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       if (this.options.defaultField) {
         const defaultField = getFieldFromDefinition(
           this.options.defaultField,
-          from.model.__adapter,
+          adapter,
           this.__path + ".__default"
         );
 
@@ -334,10 +340,12 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
       throw new CoreError();
     }
 
+    const adapter = model.getAdapter();
+
     const arrValue = Array.isArray(value) ? value : [value];
     const field = getFieldFromDefinition(
       this.options.items,
-      model.__adapter,
+      adapter,
       this.__path + ".[]"
     );
 
@@ -345,7 +353,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
       (def) => {
         return getValidatorFromDefinition(
           def as ValidatorDefinition,
-          model.__adapter,
+          adapter,
           this.__path
         );
       }
@@ -366,9 +374,10 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     from: Model,
     ctx: ExecutorCtx = {}
   ) {
+    const adapter = from.model.getAdapter();
+
     if (format === SerializerFormat.OBJECT) {
-      const adapter = from.model.__adapter.constructor as typeof Adapter;
-      let model = Model.getFromSlug(options.ref, adapter);
+      let model = Model.getFromSlug(options.ref, adapter.base);
 
       const ids = value;
 
@@ -384,7 +393,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
         return value.map((v, i) => {
           const itemsField = getFieldFromDefinition(
             this.options.items,
-            from.model.__adapter,
+            adapter,
             this.__path + `.[${i}]`,
             this.__path + ".[]"
           );
@@ -407,7 +416,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
     const fieldId = getFieldFromDefinition<FieldTypes.ID>(
       { type: FieldTypes.ID },
-      from.model.__adapter,
+      adapter,
       "_id"
     );
 
@@ -430,12 +439,13 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
       );
     }
 
+    const adapter = from.model.getAdapter();
     value = Array.isArray(value) ? value : [value];
 
     return value.map((v, i) => {
       const itemsField = getFieldFromDefinition(
         this.options.items,
-        from.model.__adapter,
+        adapter,
         this.__path + `.[${i}]`,
         this.__path + ".[]"
       );

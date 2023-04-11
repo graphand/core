@@ -56,7 +56,6 @@ describe("Test Model", () => {
   describe("Model initialization", () => {
     it("Model should load fields from adapter", async () => {
       const TestModel = BaseModel.withAdapter(adapter);
-      console.log(TestModel.slug);
       const created = await TestModel.create({});
       expect(created.model.fieldsMap.get("title")).toBeInstanceOf(Field);
     });
@@ -71,12 +70,12 @@ describe("Test Model", () => {
     it("Should be able to getFromSlug with adapter", async () => {
       const TestModel = BaseModel.withAdapter(adapter);
       const AccountModel = TestModel.getFromSlug("accounts");
-      expect(AccountModel.__adapter).toBeInstanceOf(adapter);
+      expect(AccountModel.getAdapter(false)).toBeInstanceOf(adapter);
     });
 
     it("Should be able to getFromSlug without adapter", async () => {
       const AccountModel = Model.getFromSlug("accounts");
-      expect(AccountModel.__adapter).toBeUndefined();
+      expect(AccountModel.getAdapter(false)).toBeUndefined();
     });
 
     it("Model initialization should execute hooks", async () => {

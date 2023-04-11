@@ -25,7 +25,6 @@ import {
   getFieldsPathsFromPath,
   getRecursiveHooksFromModel,
   validateDocs,
-  verifyModelAdapter,
   defineFieldsProperties,
   getFieldFromDefinition,
   getAdaptedModel,
@@ -33,6 +32,8 @@ import {
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
 import type DataModel from "../models/DataModel";
+
+const noFieldSymbol = Symbol("noField");
 
 class Model {
   static extendable: boolean = false;
@@ -46,7 +47,8 @@ class Model {
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
   static __initPromise: Promise<void>;
-  static __adapter: Adapter;
+  static __localAdapter: Adapter;
+  static __globalAdapter: Adapter;
   static __fieldsMap: Map<string, Field>;
   static __validatorsArray: Array<Validator>;
   static __fieldsKeys: string[];
@@ -108,7 +110,7 @@ class Model {
    * console.log(models.Account.getBaseClass() === models.Account); // true
    */
   static getBaseClass() {
-    if (!this.__adapter) {
+    if (!this.__localAdapter) {
       return this;
     }
 
@@ -137,7 +139,7 @@ class Model {
 
     Object.defineProperty(modelWithAdapter, "name", { value: this.__name });
 
-    modelWithAdapter.__adapter = new adapterClass(modelWithAdapter);
+    modelWithAdapter.__localAdapter = new adapterClass(modelWithAdapter);
 
     modules?.forEach((module) => module(modelWithAdapter));
 
@@ -166,7 +168,7 @@ class Model {
 
         await hooksBefore.reduce(async (p, hook) => {
           await p;
-          await hook.fn.call(model, { ctx });
+          return hook.fn.call(model, { ctx });
         }, Promise.resolve());
 
         if (model.extendable) {
@@ -181,7 +183,7 @@ class Model {
 
         await hooksAfter.reduce(async (p, hook) => {
           await p;
-          await hook.fn.call(model, { ctx });
+          return hook.fn.call(model, { ctx });
         }, Promise.resolve());
       } catch (e) {
         reject(e);
@@ -200,17 +202,10 @@ class Model {
    * @returns
    */
   static async reloadModel(ctx?: ExecutorCtx) {
-    if (!this.__adapter) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_MODEL_ADAPTER,
-        message: `model ${this.slug} is initialized without adapter`,
-      });
-    }
-
-    const adapter = this.__adapter.constructor as typeof Adapter;
+    const adapter = this.getAdapter();
 
     const DataModel = require("../models/DataModel").default;
-    const datamodel = await getAdaptedModel(DataModel, adapter).get(
+    const datamodel = await getAdaptedModel(DataModel, adapter.base).get(
       {
         filter: {
           slug: this.slug,
@@ -218,6 +213,10 @@ class Model {
       },
       ctx
     );
+
+    if (!datamodel) {
+      return;
+    }
 
     this.configKey = datamodel?.configKey ?? this.configKey;
     this.isPage = datamodel?.isPage ?? this.isPage;
@@ -271,7 +270,7 @@ class Model {
     fallbackData: boolean = true
   ): M {
     if (!adapter) {
-      adapter = this.__adapter?.constructor as typeof Adapter;
+      adapter = this.getAdapter(false)?.base;
     }
 
     if (adapter) {
@@ -349,8 +348,6 @@ class Model {
 
     value = firstField.serialize(value, SerializerFormat.JSON, this, ctx);
 
-    const noFieldSymbol = Symbol("noField");
-
     const _getter = (
       _value: any,
       _fieldsPaths: Array<{ key: string; field: Field }>
@@ -374,6 +371,7 @@ class Model {
 
         const { key, field } = _fieldsPath;
 
+        const restPaths = _fieldsPaths.slice(i + 1);
         const matchIndex = key.match(/\[(\d+)?\]/);
         if (matchIndex) {
           const index = matchIndex[1] ? parseInt(matchIndex[1]) : null;
@@ -383,10 +381,14 @@ class Model {
           }
 
           if (index === null) {
+            const _pathReplace = (p, fp) => {
+              return p.field.__path.replace(field.__path, fp);
+            };
+            const adapter = this.model.getAdapter();
+
             return _value.map((v, fi) => {
               const thisPath = field.__path.replace(/\[\]$/, `[${fi}]`);
-              const adapter = this.model.__adapter as Adapter;
-              const restPaths = _fieldsPaths.slice(i + 1).map((p) => {
+              const _restPaths = restPaths.map((p) => {
                 if (!p) {
                   return p;
                 }
@@ -396,12 +398,12 @@ class Model {
                   field: getFieldFromDefinition(
                     p.field.__definition,
                     adapter,
-                    p.field.__path.replace(field.__path, thisPath)
+                    _pathReplace(p, thisPath)
                   ),
                 };
               });
 
-              const res = _getter(v, restPaths);
+              const res = _getter(v, _restPaths);
               return res === noFieldSymbol ? undefined : res;
             });
           }
@@ -410,7 +412,6 @@ class Model {
             return noFieldSymbol;
           }
 
-          const restPaths = _fieldsPaths.slice(i + 1);
           const res = _getter(_value[index], restPaths);
           if (res === noFieldSymbol) {
             return undefined;
@@ -461,6 +462,12 @@ class Model {
     if (_path.includes(".")) {
       const pathArr = _path.split(".");
       fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+
+      if (fieldsPaths.includes(null)) {
+        throw new CoreError({
+          message: `Field ${_path} is not found in model ${this.model.slug}`,
+        });
+      }
     } else {
       fieldsPaths = [
         {
@@ -468,12 +475,6 @@ class Model {
           field: this.model.fieldsMap.get(_path),
         },
       ];
-    }
-
-    if (fieldsPaths.includes(null)) {
-      throw new CoreError({
-        message: `Field ${_path} is not found in model ${this.model.slug}`,
-      });
     }
 
     const _setter = (
@@ -611,7 +612,7 @@ class Model {
     let payload = parsed;
 
     if (cleanPayload) {
-      const payloadEntries = this.fieldsKeys.map((slug) => {
+      const payloadEntries = model.fieldsKeys.map((slug) => {
         return [slug, parsed[slug]];
       });
 
@@ -633,8 +634,6 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): Promise<number> {
-    verifyModelAdapter(this);
-
     await this.initialize();
 
     if (this.isPage) {
@@ -649,7 +648,6 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): PromiseModel<InstanceType<T>> {
-    verifyModelAdapter(this);
     const model = this;
 
     return new PromiseModel(
@@ -675,7 +673,6 @@ class Model {
     query: JSONQuery = {},
     ctx?: ExecutorCtx
   ): PromiseModelList<InstanceType<T>> {
-    verifyModelAdapter(this);
     const model = this;
 
     return new PromiseModelList<InstanceType<T>>(
@@ -708,8 +705,6 @@ class Model {
     payload: InputModelPayload<T>,
     ctx?: ExecutorCtx
   ): Promise<InstanceType<T>> {
-    verifyModelAdapter(this);
-
     await this.initialize();
 
     if (this.isPage) {
@@ -727,8 +722,6 @@ class Model {
     payload: Array<InputModelPayload<T>>,
     ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
-    verifyModelAdapter(this);
-
     await this.initialize();
 
     if (this.isPage) {
@@ -742,8 +735,6 @@ class Model {
   }
 
   async update(update: any, ctx?: ExecutorCtx): Promise<this> {
-    verifyModelAdapter(this.model);
-
     const res = await this.model.execute(
       "updateOne",
       [String(this._id), update],
@@ -767,8 +758,6 @@ class Model {
     update: any,
     ctx?: ExecutorCtx
   ): Promise<Array<InstanceType<T>>> {
-    verifyModelAdapter(this);
-
     await this.initialize();
 
     if (typeof query === "string") {
@@ -787,7 +776,6 @@ class Model {
   }
 
   async delete(ctx?: ExecutorCtx): Promise<this> {
-    verifyModelAdapter(this.model);
     await this.model.initialize();
 
     if (this.model.isPage) {
@@ -807,7 +795,6 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: ExecutorCtx
   ): Promise<string[]> {
-    verifyModelAdapter(this);
     await this.initialize();
 
     if (this.isPage) {
@@ -879,6 +866,37 @@ class Model {
     );
   }
 
+  static getAdapter<T extends typeof Model>(this: T, required = true) {
+    let adapter = this.__localAdapter ?? this.__globalAdapter;
+
+    if (!adapter && globalThis.__GLOBAL_ADAPTER__) {
+      const globalAdapter = globalThis.__GLOBAL_ADAPTER__ as typeof Adapter;
+
+      if (globalAdapter) {
+        adapter = new globalAdapter(this);
+        this.__globalAdapter = adapter;
+      }
+    }
+
+    if (!adapter && required) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_ADAPTER,
+        message: `invalid adapter on model ${this.slug}. Please define an adapter for this model or use __GLOBAL_ADAPTER__ as global adapter class`,
+      });
+    }
+
+    if (
+      globalThis.__GLOBAL_ADAPTER__ &&
+      adapter.base !== globalThis.__GLOBAL_ADAPTER__
+    ) {
+      console.warn(
+        `Model ${this.slug} is using a different adapter than the global adapter. This may cause unexpected behavior.`
+      );
+    }
+
+    return adapter;
+  }
+
   static async execute<
     M extends typeof Model,
     A extends keyof AdapterFetcher<M>,
@@ -889,7 +907,7 @@ class Model {
     args: Args,
     bindCtx?: ExecutorCtx
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
-    const adapter = this.__adapter;
+    const adapter = this.getAdapter();
     const fn = adapter.fetcher[action];
     const retryToken = Symbol();
     const hooksBefore = getRecursiveHooksFromModel(this, action, "before");

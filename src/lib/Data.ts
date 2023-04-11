@@ -3,8 +3,6 @@ import { modelDecorator } from "./modelDecorator";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import DataModel from "../models/DataModel";
 import Adapter from "./Adapter";
-import CoreError from "./CoreError";
-import ErrorCodes from "../enums/error-codes";
 
 @modelDecorator()
 class Data extends Model {
@@ -16,7 +14,7 @@ class Data extends Model {
     adapter?: typeof Adapter
   ): typeof Data {
     if (!adapter) {
-      adapter = datamodel.model.__adapter?.constructor as typeof Adapter;
+      adapter = datamodel.model.getAdapter(false)?.base;
     }
 
     if (adapter) {

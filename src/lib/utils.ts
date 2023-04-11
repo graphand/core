@@ -31,14 +31,13 @@ import ErrorCodes from "../enums/error-codes";
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
 ): FieldsDefinition => {
-  let fields = {};
+  const fields = {};
 
   do {
     const baseClass = model.getBaseClass();
     if (baseClass.hasOwnProperty("fields")) {
       const _modelFields = baseClass.fields || {};
-
-      fields = { ...fields, ..._modelFields };
+      Object.assign(fields, _modelFields);
     }
 
     // @ts-ignore
@@ -51,7 +50,7 @@ export const getRecursiveFieldsFromModel = (
 export const getRecursiveValidatorsFromModel = (
   model: typeof Model
 ): ValidatorsDefinition => {
-  let validators: ValidatorsDefinition = [];
+  const validators: ValidatorsDefinition = [];
   const baseClass = model.getBaseClass();
 
   if (baseClass.configKey) {
@@ -67,7 +66,7 @@ export const getRecursiveValidatorsFromModel = (
     if (baseClass.hasOwnProperty("validators")) {
       const _modelValidators = baseClass.validators || [];
 
-      validators = [...validators, ..._modelValidators];
+      Array.prototype.push.apply(validators, _modelValidators);
     }
 
     // @ts-ignore
@@ -85,6 +84,7 @@ export const getFieldsPathsFromPath = (
 
   const firstFieldKey = pathArr.shift();
   const firstField = model.fieldsMap.get(firstFieldKey);
+  const adapter = model.getAdapter(false);
 
   return pathArr.reduce(
     (fieldsPaths: Array<FieldsPathItem>, key: string) => {
@@ -100,7 +100,7 @@ export const getFieldsPathsFromPath = (
           if (index !== null) {
             const itemsField = getFieldFromDefinition(
               options.items,
-              model.__adapter,
+              adapter,
               pathStr + `.[${index}]`,
               pathStr + ".[]"
             );
@@ -111,11 +111,11 @@ export const getFieldsPathsFromPath = (
 
         const itemsField = getFieldFromDefinition(
           options.items,
-          model.__adapter,
+          adapter,
           pathStr + ".[]"
         );
 
-        fieldsPaths = [...fieldsPaths, { key: "[]", field: itemsField }];
+        fieldsPaths.push({ key: "[]", field: itemsField });
 
         if (matchIndex) {
           return fieldsPaths;
@@ -126,7 +126,7 @@ export const getFieldsPathsFromPath = (
           const nextFieldDef = options.fields[key];
           const nextField = getFieldFromDefinition(
             nextFieldDef,
-            model.__adapter,
+            adapter,
             pathStr + ".[]." + key
           );
 
@@ -141,7 +141,7 @@ export const getFieldsPathsFromPath = (
         const nextFieldDef = options.fields[key];
         const nextField = getFieldFromDefinition(
           nextFieldDef,
-          model.__adapter,
+          adapter,
           pathStr + "." + key
         );
 
@@ -164,7 +164,7 @@ export const getRecursiveHooksFromModel = <
   action: A,
   phase: HookPhase
 ): Array<Hook<any, A, T>> => {
-  let _hooks = [];
+  const _hooks = [];
 
   do {
     const baseClass = model.getBaseClass();
@@ -213,7 +213,7 @@ export const getJSONSubfieldsMap = (
   ).map(([slug, def]) => {
     const field = getFieldFromDefinition(
       def,
-      model.__adapter,
+      model.getAdapter(),
       jsonField.__path + "." + slug
     );
 
@@ -246,15 +246,15 @@ export const createFieldsMap = (
   model: typeof Model,
   assignFields?: FieldsDefinition
 ) => {
-  let modelFields = getRecursiveFieldsFromModel(model);
+  const modelFields = getRecursiveFieldsFromModel(model);
 
   if (assignFields) {
-    modelFields = { ...modelFields, ...assignFields };
+    Object.assign(modelFields, assignFields);
   }
 
   const fieldsEntries: Array<[string, Field]> = Object.entries(modelFields).map(
     ([slug, def]) => {
-      return [slug, getFieldFromDefinition(def, model.__adapter, slug)];
+      return [slug, getFieldFromDefinition(def, model.getAdapter(false), slug)];
     }
   );
 
@@ -272,7 +272,7 @@ export const createValidatorsArray = (
   }
 
   return modelValidators.map((def) => {
-    return getValidatorFromDefinition(def, model.__adapter, null);
+    return getValidatorFromDefinition(def, model.getAdapter(false), null);
   });
 };
 
@@ -329,72 +329,61 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
 
 export const validateDocs = async <T extends typeof Model = typeof Model>(
   docs: Array<DocumentDefinition>,
-  opts: {
+  {
+    validators = [],
+    fieldsEntries = [],
+    bindDuplicatesValues = true,
+  }: {
     validators?: Array<Validator>;
     fieldsEntries?: Array<[string, Field<FieldTypes>]>;
     bindDuplicatesValues?: boolean;
-  },
+  } = {},
   ctx: ValidateCtx = {}
 ) => {
-  const { validators, fieldsEntries } = opts;
-  const bindDuplicatesValues = opts.bindDuplicatesValues ?? true;
-
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
 
-  if (fieldsEntries?.length) {
-    await Promise.all(
-      fieldsEntries.map(async ([slug, field]) => {
-        let list = docs.map((doc) => doc[slug]);
+  for (const [slug, field] of fieldsEntries) {
+    const list = bindDuplicatesValues
+      ? Array.from(new Set(docs.map((doc) => doc[slug])))
+      : docs.map((doc) => doc[slug]);
 
-        if (bindDuplicatesValues) {
-          list = Array.from(new Set(list));
+    for (const values of list) {
+      try {
+        const validated = await field.validate(values, ctx, slug);
+        if (!validated) {
+          throw null;
         }
+      } catch (err) {
+        const e = new ValidationFieldError({
+          slug,
+          field,
+          validationError: err instanceof ValidationError ? err : null,
+        });
 
-        await Promise.all(
-          list.map(async (values) => {
-            try {
-              const validated = await field.validate(values, ctx, slug);
-              if (!validated) {
-                throw null;
-              }
-            } catch (err) {
-              const e = new ValidationFieldError({
-                slug,
-                field,
-                validationError: err instanceof ValidationError ? err : null,
-              });
-
-              errorsFieldsSet.add(e);
-            }
-          })
-        );
-      })
-    );
+        errorsFieldsSet.add(e);
+      }
+    }
   }
 
-  if (validators?.length) {
-    await Promise.all(
-      validators.map(async (validator) => {
-        try {
-          const validated = await validator.validate(docs, ctx);
+  for (const validator of validators) {
+    try {
+      const validated = await validator.validate(docs, ctx);
 
-          if (!validated) {
-            throw null;
-          }
-        } catch (err) {
-          const e = new ValidationValidatorError({ validator });
+      if (!validated) {
+        throw null;
+      }
+    } catch (err) {
+      const e = new ValidationValidatorError({ validator });
 
-          errorsValidatorsSet.add(e);
-        }
-      })
-    );
+      errorsValidatorsSet.add(e);
+    }
   }
 
   if (errorsFieldsSet.size || errorsValidatorsSet.size) {
     throw new ValidationError({
-      fields: Array.from(errorsFieldsSet),
-      validators: Array.from(errorsValidatorsSet),
+      fields: [...errorsFieldsSet],
+      validators: [...errorsValidatorsSet],
     });
   }
 
@@ -432,35 +421,19 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
   return options as ValidatorOptions<T>;
 };
 
-export const isObjectId = (input: string) => {
-  return /^[a-f\d]{24}$/i.test(input);
-};
-
-export const verifyModelAdapter = (model: typeof Model) => {
-  if (!model.__adapter) {
-    throw new CoreError({
-      code: ErrorCodes.INVALID_ADAPTER,
-      message: `model ${model.slug} has invalid adapter`,
-    });
-  }
-
-  // if (model.__adapter.model.getBaseClass() !== model.getBaseClass()) {
-  //   throw new CoreError({
-  //     code: ErrorCodes.INVALID_ADAPTER,
-  //     message: `model ${model.slug} has invalid adapter`,
-  //   });
-  // }
-};
+export const isObjectId = (input: string) => /^[a-f\d]{24}$/i.test(input);
 
 export const defineFieldsProperties = (instance: Model) => {
-  if (!instance.model.__fieldsProperties) {
-    const propEntries = instance.model.fieldsKeys.map((slug) => {
-      return [
+  const { model } = instance;
+  if (!model.__fieldsProperties) {
+    const propEntries = [];
+    for (const slug of model.fieldsKeys) {
+      propEntries.push([
         slug,
         {
           enumerable: true,
           configurable: true,
-          get: function () {
+          get() {
             return this.get(slug);
           },
           set(v) {
@@ -474,13 +447,13 @@ export const defineFieldsProperties = (instance: Model) => {
             return this.set(slug, v);
           },
         },
-      ];
-    });
+      ]);
+    }
 
-    instance.model.__fieldsProperties = Object.fromEntries(propEntries);
+    model.__fieldsProperties = Object.fromEntries(propEntries);
   }
 
-  Object.defineProperties(instance, instance.model.__fieldsProperties);
+  Object.defineProperties(instance, model.__fieldsProperties);
 };
 
 export const getAdaptedModel = <M extends typeof Model = typeof Model>(
@@ -488,10 +461,6 @@ export const getAdaptedModel = <M extends typeof Model = typeof Model>(
   adapter: typeof Adapter,
   override?: boolean
 ): M => {
-  // if (!adapter) {
-  //   adapter = this.__adapter?.constructor as typeof Adapter;
-  // }
-
   if (!adapter) {
     throw new CoreError({
       message: "Adapter is required in getAdaptedModel method",
@@ -503,7 +472,7 @@ export const getAdaptedModel = <M extends typeof Model = typeof Model>(
   let adaptedModel: M;
 
   if (!override) {
-    adaptedModel = adapter?.__modelsMap.get(model.slug) as M;
+    adaptedModel = adapter.__modelsMap.get(model.slug) as M;
   }
 
   if (!adaptedModel) {

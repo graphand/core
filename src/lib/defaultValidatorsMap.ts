@@ -65,7 +65,8 @@ class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
 
 class DefaultValidatorConfigKey extends Validator<ValidatorTypes.CONFIG_KEY> {
   async validate(data, ctx) {
-    const validatorsMap = ctx.model.__adapter.validatorsMap ?? {};
+    const adapter = ctx.model.getAdapter();
+    const validatorsMap = adapter.validatorsMap ?? {};
 
     const _getValidator = <T extends ValidatorTypes>(
       type: T

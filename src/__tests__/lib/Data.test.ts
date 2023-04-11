@@ -39,7 +39,7 @@ describe("Data", () => {
 
       const modelFromDM = Data.getFromDatamodel(datamodel);
 
-      expect(modelFromDM.__adapter?.constructor).toBe(adapter);
+      expect(modelFromDM.getAdapter(false)?.base).toBe(adapter);
     });
 
     it("getFromDatamodel should save adapted model in cache", () => {
