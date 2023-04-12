@@ -11,14 +11,10 @@ class Data extends Model {
 
   static getFromDatamodel(
     datamodel: DataModel,
-    adapter?: typeof Adapter
+    adapterClass?: typeof Adapter
   ): typeof Data {
-    if (!adapter) {
-      adapter = datamodel.model.getAdapter(false)?.base;
-    }
-
-    if (adapter) {
-      adapter.__modelsMap ??= new Map();
+    if (!adapterClass) {
+      adapterClass = datamodel.model.getAdapter(false)?.base;
     }
 
     let model = class extends Data {
@@ -31,24 +27,23 @@ class Data extends Model {
       static configKey = datamodel.configKey || undefined;
     };
 
-    if (adapter) {
-      model = model.withAdapter(adapter);
-    }
+    if (adapterClass) {
+      model = model.withAdapter(adapterClass);
 
-    adapter?.__modelsMap.set(datamodel.slug, model);
+      adapterClass.__modelsMap ??= new Map();
+      adapterClass.__modelsMap.set(datamodel.slug, model);
+    }
 
     return model;
   }
 
   static __getFromSlug<M extends typeof Model = typeof Data>(
     slug: string,
-    adapter?: typeof Adapter
+    adapterClass?: typeof Adapter
   ): M {
-    if (adapter) {
-      adapter.__modelsMap ??= new Map();
-    }
-
-    let model: typeof Data = adapter?.__modelsMap.get(slug) as typeof Data;
+    let model: typeof Data = adapterClass?.__modelsMap?.get(
+      slug
+    ) as typeof Data;
 
     if (!model) {
       model = class extends Data {
@@ -57,11 +52,12 @@ class Data extends Model {
         static slug = slug;
       };
 
-      if (adapter) {
-        model = model.withAdapter(adapter);
-      }
+      if (adapterClass) {
+        model = model.withAdapter(adapterClass);
 
-      adapter?.__modelsMap.set(slug, model);
+        adapterClass.__modelsMap ??= new Map();
+        adapterClass.__modelsMap.set(slug, model);
+      }
     }
 
     return model as any as M;

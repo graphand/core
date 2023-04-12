@@ -458,26 +458,25 @@ export const defineFieldsProperties = (instance: Model) => {
 
 export const getAdaptedModel = <M extends typeof Model = typeof Model>(
   model: M,
-  adapter: typeof Adapter,
+  adapterClass: typeof Adapter,
   override?: boolean
 ): M => {
-  if (!adapter) {
+  if (!adapterClass) {
     throw new CoreError({
       message: "Adapter is required in getAdaptedModel method",
     });
   }
-
-  adapter.__modelsMap ??= new Map();
-
   let adaptedModel: M;
 
   if (!override) {
-    adaptedModel = adapter.__modelsMap.get(model.slug) as M;
+    adaptedModel = adapterClass.__modelsMap?.get(model.slug) as M;
   }
 
   if (!adaptedModel) {
-    adaptedModel = model.withAdapter(adapter);
-    adapter.__modelsMap.set(model.slug, adaptedModel);
+    adaptedModel = model.withAdapter(adapterClass);
+
+    adapterClass.__modelsMap ??= new Map();
+    adapterClass.__modelsMap.set(model.slug, adaptedModel);
   }
 
   return adaptedModel;

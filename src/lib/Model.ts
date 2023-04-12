@@ -140,6 +140,7 @@ class Model {
     Object.defineProperty(modelWithAdapter, "name", { value: this.__name });
 
     modelWithAdapter.__localAdapter = new adapterClass(modelWithAdapter);
+    modelWithAdapter.__globalAdapter = modelWithAdapter.__localAdapter;
 
     modules?.forEach((module) => module(modelWithAdapter));
 
@@ -154,11 +155,11 @@ class Model {
   static async initialize(force: boolean = false, ctx?: ExecutorCtx) {
     const model = this;
 
-    if (force) {
-      this.__initPromise = undefined;
+    if (this.hasOwnProperty("__initPromise") && !force) {
+      return this.__initPromise;
     }
 
-    this.__initPromise ??= new Promise(async (resolve, reject) => {
+    this.__initPromise = new Promise(async (resolve, reject) => {
       try {
         const hooksBefore = getRecursiveHooksFromModel(
           model,
@@ -273,16 +274,13 @@ class Model {
       adapter = this.getAdapter(false)?.base;
     }
 
-    if (adapter) {
-      adapter.__modelsMap ??= new Map();
-    }
-
     const models = require("../index").models as Record<string, typeof Model>;
     let model: M = Object.values(models).find((m) => m.slug === slug) as M;
     if (model) {
-      let adaptedModel = adapter?.__modelsMap.get(model.slug) as M;
+      let adaptedModel = adapter?.__modelsMap?.get(model.slug) as M;
       if (!adaptedModel && adapter) {
         adaptedModel = model.withAdapter(adapter);
+        adapter.__modelsMap ??= new Map();
         adapter.__modelsMap.set(model.slug, adaptedModel);
       }
 
@@ -867,32 +865,51 @@ class Model {
   }
 
   static getAdapter<T extends typeof Model>(this: T, required = true) {
-    let adapter = this.__localAdapter ?? this.__globalAdapter;
+    let adapter = this.__localAdapter;
 
-    if (!adapter && globalThis.__GLOBAL_ADAPTER__) {
-      const globalAdapter = globalThis.__GLOBAL_ADAPTER__ as typeof Adapter;
+    if (adapter) {
+      return adapter;
+    }
 
-      if (globalAdapter) {
-        adapter = new globalAdapter(this);
-        this.__globalAdapter = adapter;
+    const baseClass = this.getBaseClass();
+    const globalAdapter = globalThis.__GLOBAL_ADAPTER__ as typeof Adapter;
+
+    if (
+      baseClass.hasOwnProperty("__globalAdapter") &&
+      baseClass.__globalAdapter
+    ) {
+      if (baseClass.__globalAdapter.base === globalAdapter) {
+        adapter = baseClass.__globalAdapter;
+      } else {
+        console.warn(
+          `__GLOBAL_ADAPTER__ has changed. Updating adapter on model ${this.__name}`
+        );
       }
+    }
+
+    if (!adapter && globalAdapter) {
+      adapter = new globalAdapter(this);
+      baseClass.__globalAdapter = adapter;
+
+      globalAdapter.__modelsMap ??= new Map();
+      globalAdapter.__modelsMap.set(this.slug, this);
     }
 
     if (!adapter && required) {
       throw new CoreError({
         code: ErrorCodes.INVALID_ADAPTER,
-        message: `invalid adapter on model ${this.slug}. Please define an adapter for this model or use __GLOBAL_ADAPTER__ as global adapter class`,
+        message: `invalid adapter on model ${this.__name}. Please define an adapter for this model or declare __GLOBAL_ADAPTER__`,
       });
     }
 
-    if (
-      globalThis.__GLOBAL_ADAPTER__ &&
-      adapter.base !== globalThis.__GLOBAL_ADAPTER__
-    ) {
-      console.warn(
-        `Model ${this.slug} is using a different adapter than the global adapter. This may cause unexpected behavior.`
-      );
-    }
+    // if (
+    //   globalThis.__GLOBAL_ADAPTER__ &&
+    //   adapter?.base !== globalThis.__GLOBAL_ADAPTER__
+    // ) {
+    //   console.warn(
+    //     `__GLOBAL_ADAPTER__ is declared but model ${this.__name} is using a different adapter. This may result in unexpected behavior`
+    //   );
+    // }
 
     return adapter;
   }
