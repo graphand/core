@@ -16,9 +16,9 @@ class DataModel extends Model {
 
   static slug = "datamodels";
   static scope = ModelEnvScopes.ENV;
-  static configKey = "slug";
+  static keyField = "slug";
   static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.DATAMODEL_CONFIG_KEY },
+    { type: ValidatorTypes.DATAMODEL_KEY_FIELD },
     {
       type: ValidatorTypes.REGEX,
       options: { field: "slug", pattern: "^[a-zA-Z][a-zA-Z0-9]+?$" },
@@ -94,7 +94,7 @@ class DataModel extends Model {
   isPage: FieldDefinitionBoolean;
 
   @fieldDecorator(FieldTypes.TEXT)
-  configKey: FieldDefinitionText;
+  keyField: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.NESTED)
   _page: FieldDefinitionNested;

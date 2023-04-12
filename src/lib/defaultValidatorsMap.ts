@@ -63,7 +63,7 @@ class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
   }
 }
 
-class DefaultValidatorConfigKey extends Validator<ValidatorTypes.CONFIG_KEY> {
+class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
   async validate(data, ctx) {
     const adapter = ctx.model.getAdapter();
     const validatorsMap = adapter.validatorsMap ?? {};
@@ -106,26 +106,26 @@ class DefaultValidatorConfigKey extends Validator<ValidatorTypes.CONFIG_KEY> {
   }
 }
 
-class DefaultValidatorDatamodelConfigKey extends Validator<ValidatorTypes.DATAMODEL_CONFIG_KEY> {
+class DefaultValidatorDatamodelKeyField extends Validator<ValidatorTypes.DATAMODEL_KEY_FIELD> {
   async validate(data, ctx) {
     return data.every((i) => {
-      const configKey = i?.configKey;
+      const keyField = i?.keyField;
 
-      if (!configKey) {
+      if (!keyField) {
         return true;
       }
 
-      if (!i.fields?.[configKey]) {
+      if (!i.fields?.[keyField]) {
         return false;
       }
 
-      const configKeyField = i.fields[configKey];
+      const keyFieldField = i.fields[keyField];
 
-      if (configKeyField.type !== FieldTypes.TEXT) {
+      if (keyFieldField.type !== FieldTypes.TEXT) {
         return false;
       }
 
-      if (configKeyField.options?.default) {
+      if (keyFieldField.options?.default) {
         return false;
       }
 
@@ -184,8 +184,8 @@ const defaultValidatorsMap: Adapter["validatorsMap"] = {
   [ValidatorTypes.REQUIRED]: DefaultValidatorRequired,
   [ValidatorTypes.UNIQUE]: DefaultValidatorUnique,
   [ValidatorTypes.REGEX]: DefaultValidatorRegex,
-  [ValidatorTypes.CONFIG_KEY]: DefaultValidatorConfigKey,
-  [ValidatorTypes.DATAMODEL_CONFIG_KEY]: DefaultValidatorDatamodelConfigKey,
+  [ValidatorTypes.KEY_FIELD]: DefaultValidatorKeyField,
+  [ValidatorTypes.DATAMODEL_KEY_FIELD]: DefaultValidatorDatamodelKeyField,
   [ValidatorTypes.LENGTH]: DefaultValidatorLength,
   [ValidatorTypes.BOUNDARIES]: DefaultValidatorBoundaries,
 };

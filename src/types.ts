@@ -224,7 +224,7 @@ export type Module<T extends typeof Model = any> = (model: T) => void;
 export type ValidatorOptionsMap = {
   [ValidatorTypes.REQUIRED]: { field: string };
   [ValidatorTypes.UNIQUE]: { field: string };
-  [ValidatorTypes.CONFIG_KEY]: { field: string };
+  [ValidatorTypes.KEY_FIELD]: { field: string };
   [ValidatorTypes.SAMPLE]: { field: string };
   [ValidatorTypes.LENGTH]: { field: string; min?: number; max?: number };
   [ValidatorTypes.BOUNDARIES]: { field: string; min?: number; max?: number };

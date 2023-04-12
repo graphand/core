@@ -24,7 +24,7 @@ class Data extends Model {
       static slug = datamodel.slug;
       static fields = datamodel.fields;
       static validators = [];
-      static configKey = datamodel.configKey || undefined;
+      static keyField = datamodel.keyField || undefined;
     };
 
     if (adapterClass) {

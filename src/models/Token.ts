@@ -13,7 +13,7 @@ class Token extends Model {
 
   static slug = "tokens";
   static scope = ModelEnvScopes.PROJECT;
-  static configKey = "name";
+  static keyField = "name";
   static validators: ValidatorsDefinition = [
     { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "role" } },

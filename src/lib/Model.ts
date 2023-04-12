@@ -42,7 +42,7 @@ class Model {
   static scope: ModelEnvScopes;
   static fields: FieldsDefinition;
   static validators: ValidatorsDefinition;
-  static configKey?: string;
+  static keyField?: string;
 
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
@@ -219,7 +219,7 @@ class Model {
       return;
     }
 
-    this.configKey = datamodel?.configKey ?? this.configKey;
+    this.keyField = datamodel?.keyField ?? this.keyField;
     this.isPage = datamodel?.isPage ?? this.isPage;
 
     this.__fieldsMap = createFieldsMap(this, datamodel?.fields);

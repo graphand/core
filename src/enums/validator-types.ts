@@ -5,8 +5,8 @@ enum ValidatorTypes {
   LENGTH = "length",
   REGEX = "regex",
   SAMPLE = "sample",
-  CONFIG_KEY = "configKey",
-  DATAMODEL_CONFIG_KEY = "datamodelConfigKey",
+  KEY_FIELD = "keyField",
+  DATAMODEL_KEY_FIELD = "datamodelKeyField",
 }
 
 export default ValidatorTypes;

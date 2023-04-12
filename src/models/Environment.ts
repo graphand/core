@@ -12,7 +12,7 @@ class Environment extends Model {
 
   static slug = "environments";
   static scope = ModelEnvScopes.PROJECT;
-  static configKey = "name";
+  static keyField = "name";
   static validators: ValidatorsDefinition = [
     {
       type: ValidatorTypes.REGEX,

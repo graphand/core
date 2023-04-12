@@ -13,7 +13,7 @@ class Role extends Model {
 
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
-  static configKey = "slug";
+  static keyField = "slug";
   static validators: ValidatorsDefinition = [
     {
       type: ValidatorTypes.REGEX,

@@ -431,7 +431,7 @@ describe("test validatorsMap", () => {
     });
   });
 
-  describe("configKey validator", () => {
+  describe("keyField validator", () => {
     const model = mockModel({
       fields: {
         title: {
@@ -440,7 +440,7 @@ describe("test validatorsMap", () => {
       },
       validators: [
         {
-          type: ValidatorTypes.CONFIG_KEY,
+          type: ValidatorTypes.KEY_FIELD,
           options: {
             field: "title",
           },
@@ -452,20 +452,20 @@ describe("test validatorsMap", () => {
       await model.initialize();
     });
 
-    it("create with no configKey should throw error", async () => {
+    it("create with no keyField should throw error", async () => {
       await expect(model.create({})).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("create with valid configKey should not throw error", async () => {
+    it("create with valid keyField should not throw error", async () => {
       const i = await model.create({ title: "validKey" });
       expect(i).toBeInstanceOf(model);
     });
   });
 
-  describe("datamodelConfigKey validator", () => {
+  describe("datamodelKeyField validator", () => {
     const DataModel = models.DataModel.withAdapter(adapter);
 
-    it("datamodel without configKey should not throw error", async () => {
+    it("datamodel without keyField should not throw error", async () => {
       const datamodel = DataModel.create({
         slug: generateRandomString(),
         fields: {
@@ -478,7 +478,7 @@ describe("test validatorsMap", () => {
       await expect(datamodel).resolves.toBeInstanceOf(DataModel);
     });
 
-    it("datamodel with configKey and valid configKey field should not throw error", async () => {
+    it("datamodel with keyField and valid keyField field should not throw error", async () => {
       const datamodel = DataModel.create({
         slug: generateRandomString(),
         fields: {
@@ -486,22 +486,22 @@ describe("test validatorsMap", () => {
             type: FieldTypes.TEXT,
           },
         },
-        configKey: "title",
+        keyField: "title",
       });
 
       await expect(datamodel).resolves.toBeInstanceOf(DataModel);
     });
 
-    it("datamodel with configKey and not existing field should throw error", async () => {
+    it("datamodel with keyField and not existing field should throw error", async () => {
       const datamodel = DataModel.create({
         slug: generateRandomString(),
-        configKey: "title",
+        keyField: "title",
       });
 
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
     });
 
-    it("datamodel with configKey and invalid configKey field should throw error", async () => {
+    it("datamodel with keyField and invalid keyField field should throw error", async () => {
       const datamodel1 = DataModel.create({
         slug: generateRandomString(),
         fields: {
@@ -509,7 +509,7 @@ describe("test validatorsMap", () => {
             type: FieldTypes.TEXT,
           },
         },
-        configKey: "test",
+        keyField: "test",
       });
 
       await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
@@ -524,7 +524,7 @@ describe("test validatorsMap", () => {
             },
           },
         },
-        configKey: "title",
+        keyField: "title",
       });
 
       await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
@@ -536,7 +536,7 @@ describe("test validatorsMap", () => {
             type: FieldTypes.NUMBER,
           },
         },
-        configKey: "title",
+        keyField: "title",
       });
 
       await expect(datamodel3).rejects.toBeInstanceOf(ValidationError);

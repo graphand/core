@@ -111,8 +111,8 @@ Les types de champs sont tous dans l'enum `ValidatorTypes` :
 - _ValidatorTypes.LENGTH_
 - _ValidatorTypes.REGEX_
 - _ValidatorTypes.SAMPLE_
-- _ValidatorTypes.CONFIG_KEY_
-- _ValidatorTypes.DATAMODEL_CONFIG_KEY_
+- _ValidatorTypes.KEY_FIELD_
+- _ValidatorTypes.DATAMODEL_KEY_FIELD_
 
 ### `Adapter.prototype.runValidators`
 

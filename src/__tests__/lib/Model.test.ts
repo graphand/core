@@ -1083,8 +1083,8 @@ describe("Test Model", () => {
   });
 
   describe("Model validation", () => {
-    it("Model should have configKey validator if configKey is defined", async () => {
-      const BaseModelWithConfigKey = mockModel({
+    it("Model should have keyField validator if keyField is defined", async () => {
+      const BaseModelWithKeyField = mockModel({
         fields: {
           title: {
             type: FieldTypes.TEXT,
@@ -1094,13 +1094,13 @@ describe("Test Model", () => {
           { type: ValidatorTypes.UNIQUE, options: { field: "title" } },
         ],
       });
-      BaseModelWithConfigKey.configKey = "title";
-      const TestModel = BaseModelWithConfigKey.withAdapter(adapter);
+      BaseModelWithKeyField.keyField = "title";
+      const TestModel = BaseModelWithKeyField.withAdapter(adapter);
 
-      const configKeyValidator = TestModel.validatorsArray.find(
-        (v) => v.type === ValidatorTypes.CONFIG_KEY
+      const keyFieldValidator = TestModel.validatorsArray.find(
+        (v) => v.type === ValidatorTypes.KEY_FIELD
       );
-      expect(configKeyValidator).toBeDefined();
+      expect(keyFieldValidator).toBeDefined();
     });
 
     it("Model should validate with validator from adapter", async () => {
@@ -1366,12 +1366,12 @@ describe("Test Model", () => {
       expect(clone._id).toEqual(i._id);
     });
 
-    it("getRecursiveValidatorsFromModel should returns configKey validator if model has a configKey", () => {
+    it("getRecursiveValidatorsFromModel should returns keyField validator if model has a keyField", () => {
       const validators = getRecursiveValidatorsFromModel(DataModel);
-      const configKeyValidator = validators.find(
-        (v) => v.type === ValidatorTypes.CONFIG_KEY
+      const keyFieldValidator = validators.find(
+        (v) => v.type === ValidatorTypes.KEY_FIELD
       );
-      expect(configKeyValidator).toBeDefined();
+      expect(keyFieldValidator).toBeDefined();
     });
   });
 
