@@ -173,7 +173,7 @@ export const mockAdapter = ({
 
 export const mockModel = ({
   scope = ModelEnvScopes.ENV,
-  isPage = false,
+  single = false,
   fields = {
     title: {
       type: FieldTypes.TEXT,
@@ -192,13 +192,13 @@ export const mockModel = ({
   scope?: ModelEnvScopes;
   fields?: FieldsDefinition;
   validators?: ValidatorsDefinition;
-  isPage?: boolean;
+  single?: boolean;
 } = {}) => {
   const uidSlug = Math.random().toString(36).substring(7);
 
   class Test extends Data {
     static extendable = true;
-    static isPage = isPage;
+    static single = single;
     static slug = uidSlug;
     static scope = scope;
     static fields = fields;
@@ -216,7 +216,7 @@ export const mockModel = ({
   // Test.__datamodel = new DataModel({
   //   _id: new ObjectId().toString(),
   //   slug: uidSlug,
-  //   isPage,
+  //   single,
   //   fields,
   //   validators,
   // });

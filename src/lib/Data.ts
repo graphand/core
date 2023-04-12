@@ -20,7 +20,7 @@ class Data extends Model {
     let model = class extends Data {
       static __name = datamodel.name;
 
-      static isPage = datamodel.isPage;
+      static single = datamodel.single;
       static slug = datamodel.slug;
       static fields = datamodel.fields;
       static validators = [];

@@ -91,7 +91,7 @@ class DataModel extends Model {
   }>;
 
   @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
-  isPage: FieldDefinitionBoolean;
+  single: FieldDefinitionBoolean;
 
   @fieldDecorator(FieldTypes.TEXT)
   keyField: FieldDefinitionText;

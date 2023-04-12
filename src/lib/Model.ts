@@ -37,7 +37,7 @@ const noFieldSymbol = Symbol("noField");
 
 class Model {
   static extendable: boolean = false;
-  static isPage: boolean = false;
+  static single: boolean = false;
   static slug: string;
   static scope: ModelEnvScopes;
   static fields: FieldsDefinition;
@@ -220,7 +220,7 @@ class Model {
     }
 
     this.keyField = datamodel?.keyField ?? this.keyField;
-    this.isPage = datamodel?.isPage ?? this.isPage;
+    this.single = datamodel?.single ?? this.single;
 
     this.__fieldsMap = createFieldsMap(this, datamodel?.fields);
     this.__validatorsArray = createValidatorsArray(this, datamodel?.validators);
@@ -622,7 +622,7 @@ class Model {
 
   /**
    * Count the number of documents with the given query.
-   * If Model.isPage is true, the result will always be 1.
+   * If Model.single is true, the result will always be 1.
    * @param query - a JSONQuery object (or a string) that contains the filter to apply and other settings
    * @example
    * const count = await Model.count({ filter: { title: { "$regex": "a" } } });
@@ -634,7 +634,7 @@ class Model {
   ): Promise<number> {
     await this.initialize();
 
-    if (this.isPage) {
+    if (this.single) {
       return 1;
     }
 
@@ -697,7 +697,7 @@ class Model {
           try {
             await model.initialize();
 
-            if (model.isPage) {
+            if (model.single) {
               throw new CoreError({
                 code: ErrorCodes.INVALID_OPERATION,
                 message: `Cannot use getList on a page model, use get instead`,
@@ -731,7 +731,7 @@ class Model {
   ): Promise<InstanceType<T>> {
     await this.initialize();
 
-    if (this.isPage) {
+    if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use create on a page model, instance is already created`,
@@ -762,7 +762,7 @@ class Model {
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
-    if (this.isPage) {
+    if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use createMultiple on a page model, instance is already created`,
@@ -829,7 +829,7 @@ class Model {
       return [updated];
     }
 
-    if (this.isPage) {
+    if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use update on a page model, use instance of the model instead`,
@@ -848,7 +848,7 @@ class Model {
   async delete(ctx?: ExecutorCtx): Promise<this> {
     await this.model.initialize();
 
-    if (this.model.isPage) {
+    if (this.model.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use delete on a page model, delete the model itself instead`,
@@ -882,7 +882,7 @@ class Model {
   ): Promise<string[]> {
     await this.initialize();
 
-    if (this.isPage) {
+    if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use delete on a page model, delete the model itself instead`,

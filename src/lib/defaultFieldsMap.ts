@@ -387,7 +387,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
         });
       }
 
-      if (model.isPage) {
+      if (model.single) {
         value = Array.isArray(value) ? value : [value];
 
         return value.map((v, i) => {

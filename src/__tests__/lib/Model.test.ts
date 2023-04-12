@@ -1510,7 +1510,7 @@ describe("Test Model", () => {
 
   describe("Model page", () => {
     const PageModel = mockModel({
-      isPage: true,
+      single: true,
       fields: {
         test: {
           type: FieldTypes.TEXT,
