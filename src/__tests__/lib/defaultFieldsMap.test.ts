@@ -223,14 +223,14 @@ describe("test fieldsMap", () => {
     });
   });
 
-  describe("JSON field", () => {
+  describe("Nested field", () => {
     it("Should returns default value if undefined", async () => {
       const defaultJSON = { default: true };
 
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
             options: {
               default: defaultJSON,
             },
@@ -247,7 +247,7 @@ describe("test fieldsMap", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
           },
         },
       }).withAdapter(adapter);
@@ -263,7 +263,7 @@ describe("test fieldsMap", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
           },
         },
       }).withAdapter(adapter);
@@ -284,7 +284,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 strict: true,
                 fields: {
@@ -328,7 +328,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 fields: {
                   title: {
@@ -366,7 +366,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 fields: {
                   title: {
@@ -409,11 +409,11 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.JSON,
+                    type: FieldTypes.NESTED,
                     options: {
                       fields: {
                         title: {
@@ -463,11 +463,11 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.JSON,
+                    type: FieldTypes.NESTED,
                     options: {
                       fields: {
                         title: {
@@ -534,7 +534,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 validators: [
                   {
@@ -575,7 +575,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 validators: [
                   {
@@ -617,11 +617,11 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.JSON,
+                    type: FieldTypes.NESTED,
                     options: {
                       validators: [
                         {
@@ -665,11 +665,11 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 fields: {
                   nested: {
-                    type: FieldTypes.JSON,
+                    type: FieldTypes.NESTED,
                     options: {
                       validators: [
                         {
@@ -716,7 +716,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 defaultField: {
                   type: FieldTypes.TEXT,
@@ -750,7 +750,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 defaultField: {
                   type: FieldTypes.TEXT,
@@ -791,7 +791,7 @@ describe("test fieldsMap", () => {
         const model = mockModel({
           fields: {
             obj: {
-              type: FieldTypes.JSON,
+              type: FieldTypes.NESTED,
               options: {
                 defaultField: {
                   type: FieldTypes.TEXT,
@@ -1026,7 +1026,7 @@ describe("test fieldsMap", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
               },
             },
           },
@@ -1049,7 +1049,7 @@ describe("test fieldsMap", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
               },
             },
           },
@@ -1072,7 +1072,7 @@ describe("test fieldsMap", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   strict: true,
                   fields: {

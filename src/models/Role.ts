@@ -42,7 +42,7 @@ class Role extends Model {
 
   @fieldDecorator(FieldTypes.ARRAY, {
     items: {
-      type: FieldTypes.JSON,
+      type: FieldTypes.NESTED,
       options: {
         fields: {
           ref: {
@@ -61,7 +61,7 @@ class Role extends Model {
             },
           },
           filter: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
           },
           prohibition: {
             type: FieldTypes.BOOLEAN,
@@ -71,13 +71,13 @@ class Role extends Model {
     },
   })
   rules: FieldDefinitionArray<{
-    type: FieldTypes.JSON;
+    type: FieldTypes.NESTED;
     definition: Rule;
   }>;
 
   @fieldDecorator(FieldTypes.ARRAY, {
     items: {
-      type: FieldTypes.JSON,
+      type: FieldTypes.NESTED,
       options: {
         fields: {
           ref: {
@@ -96,7 +96,7 @@ class Role extends Model {
             },
           },
           filter: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
           },
           fields: {
             type: FieldTypes.ARRAY,
@@ -111,7 +111,7 @@ class Role extends Model {
     },
   })
   fieldsRestrictions: FieldDefinitionArray<{
-    type: FieldTypes.JSON;
+    type: FieldTypes.NESTED;
     definition: FieldsRestriction;
   }>;
 

@@ -168,7 +168,7 @@ describe("Test Model", () => {
       const model = mockModel({
         fields: {
           test: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
             options: {
               fields: {
                 nested: {
@@ -253,7 +253,7 @@ describe("Test Model", () => {
                 type: FieldTypes.ARRAY,
                 options: {
                   items: {
-                    type: FieldTypes.JSON,
+                    type: FieldTypes.NESTED,
                     options: {
                       fields: {
                         nested: {
@@ -353,7 +353,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     nested: {
@@ -413,7 +413,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     field2: {
@@ -423,7 +423,7 @@ describe("Test Model", () => {
                       type: FieldTypes.ARRAY,
                       options: {
                         items: {
-                          type: FieldTypes.JSON,
+                          type: FieldTypes.NESTED,
                           options: {
                             fields: {
                               field4: {
@@ -567,7 +567,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     arrRel: {
@@ -623,7 +623,7 @@ describe("Test Model", () => {
       const model = mockModel({
         fields: {
           test: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
             options: {
               fields: {
                 test: {
@@ -647,7 +647,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     test: {
@@ -714,7 +714,7 @@ describe("Test Model", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
             options: {
               fields: {
                 nested: {
@@ -737,7 +737,7 @@ describe("Test Model", () => {
       const model = mockModel({
         fields: {
           obj: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
             options: {
               fields: {
                 nested: {
@@ -805,7 +805,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     nested: {
@@ -850,7 +850,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     nested: {
@@ -914,7 +914,7 @@ describe("Test Model", () => {
             type: FieldTypes.ARRAY,
             options: {
               items: {
-                type: FieldTypes.JSON,
+                type: FieldTypes.NESTED,
                 options: {
                   fields: {
                     nested: {
@@ -946,7 +946,7 @@ describe("Test Model", () => {
             type: FieldTypes.TEXT,
           },
           obj: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
             options: {
               fields: {
                 nested: {
@@ -981,14 +981,14 @@ describe("Test Model", () => {
             },
           },
           complex: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
             options: {
               fields: {
                 nestedArr: {
                   type: FieldTypes.ARRAY,
                   options: {
                     items: {
-                      type: FieldTypes.JSON,
+                      type: FieldTypes.NESTED,
                       options: {
                         fields: {
                           nested: {
@@ -1519,7 +1519,7 @@ describe("Test Model", () => {
           },
         },
         nested: {
-          type: FieldTypes.JSON,
+          type: FieldTypes.NESTED,
           options: {
             fields: {
               subtitle: {

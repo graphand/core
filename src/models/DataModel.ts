@@ -31,9 +31,9 @@ class DataModel extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.JSON, {
+  @fieldDecorator(FieldTypes.NESTED, {
     defaultField: {
-      type: FieldTypes.JSON,
+      type: FieldTypes.NESTED,
       options: {
         fields: {
           type: {
@@ -43,7 +43,7 @@ class DataModel extends Model {
             },
           },
           options: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
           },
         },
         validators: [
@@ -57,11 +57,11 @@ class DataModel extends Model {
       },
     },
   })
-  fields: FieldDefinitionJSON<FieldsDefinition>;
+  fields: FieldDefinitionNested<FieldsDefinition>;
 
   @fieldDecorator(FieldTypes.ARRAY, {
     items: {
-      type: FieldTypes.JSON,
+      type: FieldTypes.NESTED,
       options: {
         fields: {
           type: {
@@ -71,7 +71,7 @@ class DataModel extends Model {
             },
           },
           options: {
-            type: FieldTypes.JSON,
+            type: FieldTypes.NESTED,
           },
         },
         validators: [
@@ -86,7 +86,7 @@ class DataModel extends Model {
     },
   })
   validators: FieldDefinitionArray<{
-    type: FieldTypes.JSON;
+    type: FieldTypes.NESTED;
     definition: ValidatorDefinition;
   }>;
 
@@ -96,8 +96,8 @@ class DataModel extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   configKey: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.JSON)
-  _page: FieldDefinitionJSON;
+  @fieldDecorator(FieldTypes.NESTED)
+  _page: FieldDefinitionNested;
 }
 
 export default DataModel;

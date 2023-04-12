@@ -80,7 +80,7 @@ Les types de champs sont tous définis par l'enum `FieldTypes` et sont les suiva
 - _FieldTypes.BOOLEAN_
 - _FieldTypes.RELATION_
 - _FieldTypes.DATE_
-- _FieldTypes.JSON_
+- _FieldTypes.NESTED_
 - _FieldTypes.IDENTITY_
 
 Chaque champ est donc une classe qui étend la classe de base `Field` et qui décrit la manière dont le type de champ en question encode et décode les données dans le contexte courant. Par exemple le champ \_id est de type différent sur le client et sur le serveur : `string` sur le client et `ObjectId` sur le serveur.

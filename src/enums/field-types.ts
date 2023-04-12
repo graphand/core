@@ -6,7 +6,7 @@ enum FieldTypes {
   BOOLEAN = "Boolean",
   RELATION = "Relation",
   DATE = "Date",
-  JSON = "JSON",
+  NESTED = "Nested",
   IDENTITY = "Identity",
 }
 

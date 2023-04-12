@@ -121,8 +121,8 @@ export const getFieldsPathsFromPath = (
           return fieldsPaths;
         }
 
-        if (itemsField?.type === FieldTypes.JSON) {
-          const options = itemsField.options as FieldOptions<FieldTypes.JSON>;
+        if (itemsField?.type === FieldTypes.NESTED) {
+          const options = itemsField.options as FieldOptions<FieldTypes.NESTED>;
           const nextFieldDef = options.fields[key];
           const nextField = getFieldFromDefinition(
             nextFieldDef,
@@ -136,8 +136,8 @@ export const getFieldsPathsFromPath = (
         }
       }
 
-      if (prevField?.type === FieldTypes.JSON) {
-        const options = prevField.options as FieldOptions<FieldTypes.JSON>;
+      if (prevField?.type === FieldTypes.NESTED) {
+        const options = prevField.options as FieldOptions<FieldTypes.NESTED>;
         const nextFieldDef = options.fields[key];
         const nextField = getFieldFromDefinition(
           nextFieldDef,
@@ -204,9 +204,9 @@ export const getRecursiveHooksFromModel = <
   return _hooks.sort((a, b) => a.order - b.order);
 };
 
-export const getJSONSubfieldsMap = (
+export const getNestedFieldsMap = (
   model: typeof Model,
-  jsonField: Field<FieldTypes.JSON>
+  jsonField: Field<FieldTypes.NESTED>
 ) => {
   const subfieldsEntries: Array<[string, Field]> = Object.entries(
     jsonField.options.fields ?? {}

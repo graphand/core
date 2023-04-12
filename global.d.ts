@@ -6,7 +6,7 @@ import type {
   DefaultFieldRelationDefinition,
   DefaultFieldNumberDefinition,
   DefaultFieldDateDefinition,
-  DefaultFieldJSONDefinition,
+  DefaultFieldNestedDefinition,
   FieldDefinitionOptions,
   FieldTypes,
 } from "./dist/types";
@@ -38,9 +38,9 @@ declare global {
     D extends FieldDefinitionOptions<FieldTypes.DATE> = DefaultFieldDefinitionOptions<FieldTypes.DATE>
   > = DefaultFieldDateDefinition<D>;
 
-  export type FieldDefinitionJSON<
-    D extends FieldDefinitionOptions<FieldTypes.JSON> = DefaultFieldDefinitionOptions<FieldTypes.JSON>
-  > = DefaultFieldJSONDefinition<D>;
+  export type FieldDefinitionNested<
+    D extends FieldDefinitionOptions<FieldTypes.NESTED> = DefaultFieldDefinitionOptions<FieldTypes.NESTED>
+  > = DefaultFieldNestedDefinition<D>;
 
   export type FieldDefinitionRelation<
     D extends FieldDefinitionOptions<FieldTypes.RELATION> = DefaultFieldDefinitionOptions<FieldTypes.RELATION>

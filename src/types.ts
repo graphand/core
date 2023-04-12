@@ -41,7 +41,7 @@ export type FieldDefinitionOptions<
     }
   : T extends FieldTypes.RELATION
   ? Model
-  : T extends FieldTypes.JSON
+  : T extends FieldTypes.NESTED
   ? { [key: string]: any }
   : any;
 
@@ -69,8 +69,8 @@ type FieldDefinitionType<
   ? FieldDefinitionNumber<D>
   : T extends FieldTypes.DATE
   ? FieldDefinitionDate<D>
-  : T extends FieldTypes.JSON
-  ? FieldDefinitionJSON<D>
+  : T extends FieldTypes.NESTED
+  ? FieldDefinitionNested<D>
   : T extends FieldTypes.RELATION
   ? FieldDefinitionRelation<D>
   : T extends FieldTypes.ARRAY
@@ -103,8 +103,8 @@ export type DefaultFieldDateDefinition<
   D extends FieldDefinitionOptions<FieldTypes.DATE>
 > = Date | undefined;
 
-export type DefaultFieldJSONDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.JSON> = any
+export type DefaultFieldNestedDefinition<
+  D extends FieldDefinitionOptions<FieldTypes.NESTED> = any
 > = D | undefined;
 
 export type DefaultFieldRelationDefinition<
@@ -161,6 +161,24 @@ export type JSONQuery = {
   populate?: Populate;
 };
 
+export type UpdateFilter = {
+  $currentDate?: any;
+  $inc?: any;
+  $min?: any;
+  $max?: any;
+  $mul?: any;
+  $rename?: any;
+  $set?: any;
+  $setOnInsert?: any;
+  $unset?: any;
+  $addToSet?: any;
+  $pop?: any;
+  $pull?: any;
+  $push?: any;
+  $pullAll?: any;
+  $bit?: any;
+};
+
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (
     args: [query: string | JSONQuery],
@@ -183,11 +201,11 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
     ctx: ExecutorCtx
   ) => Promise<Array<InstanceType<T>>>;
   updateOne: (
-    args: [query: string | JSONQuery, update: any],
+    args: [query: string | JSONQuery, update: UpdateFilter],
     ctx: ExecutorCtx
   ) => Promise<InstanceType<T>>;
   updateMultiple: (
-    args: [query: JSONQuery, update: any],
+    args: [query: JSONQuery, update: UpdateFilter],
     ctx: ExecutorCtx
   ) => Promise<Array<InstanceType<T>>>;
   deleteOne: (
@@ -276,7 +294,7 @@ export type FieldOptionsMap = {
   [FieldTypes.NUMBER]: {
     default?: number;
   };
-  [FieldTypes.JSON]: {
+  [FieldTypes.NESTED]: {
     default?: { [key: string]: any };
     defaultField?: FieldDefinition;
     fields?: FieldsDefinition;

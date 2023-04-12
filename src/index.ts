@@ -33,7 +33,7 @@ import {
   getValidatorFromDefinition,
   validateDocs,
   getFieldsPathsFromPath,
-  getJSONSubfieldsMap,
+  getNestedFieldsMap,
   defineFieldsProperties,
   getAdaptedModel,
 } from "./lib/utils";
@@ -85,7 +85,7 @@ export {
   ErrorCodes,
   defaultFieldsMap,
   getFieldsPathsFromPath,
-  getJSONSubfieldsMap,
+  getNestedFieldsMap,
   defineFieldsProperties,
   getAdaptedModel,
 };

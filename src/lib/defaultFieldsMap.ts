@@ -8,7 +8,7 @@ import {
   getValidatorFromDefinition,
   isObjectId,
   validateDocs,
-  getJSONSubfieldsMap,
+  getNestedFieldsMap,
 } from "./utils";
 import Validator from "./Validator";
 import CoreError from "./CoreError";
@@ -149,7 +149,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   }
 }
 
-class DefaultFieldJSON extends Field<FieldTypes.JSON> {
+class DefaultFieldNested extends Field<FieldTypes.NESTED> {
   async validate(value, ctx, slug) {
     if (value === null || value === undefined) {
       return true;
@@ -214,7 +214,7 @@ class DefaultFieldJSON extends Field<FieldTypes.JSON> {
       }
     }
 
-    const subfieldsMap = getJSONSubfieldsMap(model, this);
+    const subfieldsMap = getNestedFieldsMap(model, this);
 
     return validateDocs(
       arrValue,
@@ -462,7 +462,7 @@ const defaultFieldsMap: Adapter["fieldsMap"] = {
   [FieldTypes.DATE]: DefaultFieldDate,
   [FieldTypes.TEXT]: DefaultFieldText,
   [FieldTypes.RELATION]: DefaultFieldRelation,
-  [FieldTypes.JSON]: DefaultFieldJSON,
+  [FieldTypes.NESTED]: DefaultFieldNested,
   [FieldTypes.IDENTITY]: DefaultFieldIdentity,
   [FieldTypes.ARRAY]: DefaultFieldArray,
 };
