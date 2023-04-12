@@ -623,7 +623,7 @@ class Model {
   /**
    * Count the number of documents with the given query.
    * If Model.isPage is true, the result will always be 1.
-   * @param query - a JSONQuery object (or a string) that contains the filter to apply
+   * @param query - a JSONQuery object (or a string) that contains the filter to apply and other settings
    * @example
    * const count = await Model.count({ filter: { title: { "$regex": "a" } } });
    */
@@ -641,6 +641,13 @@ class Model {
     return this.execute("count", [query], ctx);
   }
 
+  /**
+   * Return a PromiseModel instance that will resolve to the first document that match the given query.
+   * @param query - a JSONQuery object (or a string) that contains the filter to apply and other settings
+   * @example
+   * const instance = await Model.get({ filter: { title: { "$regex": "a" } } });
+   * console.log(instance.title); // "apple"
+   */
   static get<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
@@ -666,6 +673,17 @@ class Model {
     );
   }
 
+  /**
+   * Return a PromiseModelList instance that will resolve to a ModelList instance that contains all documents that match the given query.
+   * The default limit/pageSize is 100.
+   * You cannot use this method on a page model, use Model.get instead.
+   * @param query - a JSONQuery object that contains the filter to apply and other settings
+   * @example
+   * const list = await Model.getList({ filter: { title: { "$regex": "a" } } });
+   * console.log(list.count); // 2
+   * console.log(list[0].title); // "apple"
+   * console.log(list[1].title); // "banana"
+   */
   static getList<T extends typeof Model>(
     this: T,
     query: JSONQuery = {},
@@ -698,6 +716,14 @@ class Model {
     );
   }
 
+  /**
+   * Create a new single document based on the current model.
+   * @param payload - the content of the document to create
+   * @example
+   * const instance = await Model.create({ title: "apple" });
+   * console.log(instance._id); // ...
+   * console.log(instance.title); // "apple"
+   */
   static async create<T extends typeof Model>(
     this: T,
     payload: InputModelPayload<T>,
@@ -715,6 +741,20 @@ class Model {
     return await this.execute("createOne", [payload], ctx);
   }
 
+  /**
+   * Create multiple documents based on the current model.
+   * That method returns an array of created instances (not a ModelList).
+   * Use this instead of calling Model.create multiple times.
+   * @param payload - an array of documents content to create
+   * @example
+   * const instances = await Model.createMultiple([
+   *  { title: "apple" },
+   * { title: "banana" },
+   * ]);
+   * console.log(instances.length); // 2
+   * console.log(instances[0].title); // "apple"
+   * console.log(instances[1].title); // "banana"
+   */
   static async createMultiple<T extends typeof Model>(
     this: T,
     payload: Array<InputModelPayload<T>>,
@@ -732,6 +772,16 @@ class Model {
     return await this.execute("createMultiple", [payload], ctx);
   }
 
+  /**
+   * Update a single document (the current instance) with a mongodb update object.
+   * @param update - The mongodb update object to apply (Contains only update operators expressions - https://www.mongodb.com/docs/manual/reference/operator/update/#update-operators-1)
+   * @example
+   * const instance = await Model.create({ title: "apple" });
+   * await instance.update({ $set: { title: "banana" } });
+   * console.log(instance.title); // "banana"
+   * await instance.update({ $unset: { title: true } });
+   * console.log(instance.title); // undefined
+   */
   async update(update: any, ctx?: ExecutorCtx): Promise<this> {
     const res = await this.model.execute(
       "updateOne",
@@ -750,6 +800,22 @@ class Model {
     return this;
   }
 
+  /**
+   * Update one or multiple documents that match the given query with a mongodb update object.
+   * That method returns an array of updated instances (not a ModelList).
+   * Use this instead of calling Model.prototype.update multiple times.
+   * @param query - a JSONQuery object (or a string) that contains the filter to apply and other settings
+   * @param update- The mongodb update object to apply (Contains only update operators expressions - https://www.mongodb.com/docs/manual/reference/operator/update/#update-operators-1)
+   * @example
+   * const instances = await Model.createMultiple([
+   * { title: "apple" },
+   * { title: "banana" },
+   * ]);
+   * const list = await Model.update({ filter: { title: { "$regex": "a" } } }, { $set: { title: "pear" } });
+   * console.log(list.length); // 2
+   * console.log(list[0].title); // "pear"
+   * console.log(list[1].title); // "pear"
+   */
   static async update<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
@@ -773,6 +839,12 @@ class Model {
     return await this.execute("updateMultiple", [query, update], ctx);
   }
 
+  /**
+   * Delete a single document (the current instance).
+   * @example
+   * const instance = await Model.create({ title: "apple" });
+   * await instance.delete();
+   */
   async delete(ctx?: ExecutorCtx): Promise<this> {
     await this.model.initialize();
 
@@ -788,6 +860,21 @@ class Model {
     return this;
   }
 
+  /**
+   * Delete one or multiple documents that match the given query.
+   * That method returns an array of deleted ids.
+   * Use this instead of calling Model.prototype.delete multiple times.
+   * @param query - a JSONQuery object (or a string) that contains the filter to apply and other settings
+   * @example
+   * const instances = await Model.createMultiple([
+   * { title: "apple" },
+   * { title: "banana" },
+   * ]);
+   * const list = await Model.delete({ filter: { title: { "$regex": "a" } } });
+   * console.log(list.length); // 2
+   * console.log(list[0]); // ...
+   * console.log(list[1]); // ...
+   */
   static async delete<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
@@ -842,10 +929,15 @@ class Model {
   }
 
   /**
-   * Validate multiple instances of the current model with the model validators
-   * @param input
-   * @param ctx
-   * @returns
+   * Validate multiple documents with the current model validators.
+   * This method will throw an error if one of the input documents is invalid.
+   * @param input - An array of documents to validate
+   * @example
+   * const instances = await Model.createMultiple([
+   * { title: "apple" },
+   * { title: "banana" },
+   * ]);
+   * await Model.validate(instances); // will validate the two instances with the model validators and either throw an error or return true
    */
   static async validate<T extends typeof Model>(
     this: T,
@@ -864,6 +956,11 @@ class Model {
     );
   }
 
+  /**
+   * Return the adapter of the current model.
+   * If the model has no adapter set (Model.withAdapter  has not been called), it will try to use the global adapter (globalThis.__GLOBAL_ADAPTER__) and set on the model for the next call.
+   * @param required - Whether to throw an error if model has no adapter and globalThis.__GLOBAL_ADAPTER__ is not defined
+   */
   static getAdapter<T extends typeof Model>(this: T, required = true) {
     let adapter = this.__localAdapter;
 

@@ -339,7 +339,7 @@ export const validateDocs = async <T extends typeof Model = typeof Model>(
     bindDuplicatesValues?: boolean;
   } = {},
   ctx: ValidateCtx = {}
-) => {
+): Promise<boolean> => {
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
 

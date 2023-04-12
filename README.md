@@ -27,6 +27,8 @@ class ServerAdapter extends Adapter {} // ServerAdapter décrit comment les mod�
 const AccountModel = Account.withAdapter(ServerAdapter); // maintenant AccountModel sait comment lire/écrire des données et est utilisable
 ```
 
+la variable globale **GLOBAL_ADAPTER** peut être utilisée pour définir un adaptateur par défaut pour tous les modèles. La méthode `Client.prototype.declareGlobally` utilise cette variable pour permettre d'utiliser les modèles avec l'adaptateur du client en question sans avoir à appeler `Client.prototype.getModel` à chaque fois.
+
 Voici les méthodes et attributs que l'adaptateur permet de définir :
 
 ### `Adapter.prototype.fetcher`
