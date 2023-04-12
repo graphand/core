@@ -97,7 +97,7 @@ class DataModel extends Model {
   keyField: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.NESTED)
-  _page: FieldDefinitionNested;
+  _doc: FieldDefinitionNested;
 }
 
 export default DataModel;

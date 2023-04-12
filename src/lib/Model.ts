@@ -676,7 +676,7 @@ class Model {
   /**
    * Return a PromiseModelList instance that will resolve to a ModelList instance that contains all documents that match the given query.
    * The default limit/pageSize is 100.
-   * You cannot use this method on a page model, use Model.get instead.
+   * You cannot use this method on a single model, use Model.get instead.
    * @param query - a JSONQuery object that contains the filter to apply and other settings
    * @example
    * const list = await Model.getList({ filter: { title: { "$regex": "a" } } });
@@ -700,7 +700,7 @@ class Model {
             if (model.single) {
               throw new CoreError({
                 code: ErrorCodes.INVALID_OPERATION,
-                message: `Cannot use getList on a page model, use get instead`,
+                message: `Cannot use getList on a single model, use get instead`,
               });
             }
 
@@ -734,7 +734,7 @@ class Model {
     if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use create on a page model, instance is already created`,
+        message: `Cannot use create on a single model, instance is already created`,
       });
     }
 
@@ -765,7 +765,7 @@ class Model {
     if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use createMultiple on a page model, instance is already created`,
+        message: `Cannot use createMultiple on a single model, instance is already created`,
       });
     }
 
@@ -832,7 +832,7 @@ class Model {
     if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use update on a page model, use instance of the model instead`,
+        message: `Cannot use update on a single model, use instance of the model instead`,
       });
     }
 
@@ -851,7 +851,7 @@ class Model {
     if (this.model.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use delete on a page model, delete the model itself instead`,
+        message: `Cannot use delete on a single model, delete the model itself instead`,
       });
     }
 
@@ -885,7 +885,7 @@ class Model {
     if (this.single) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use delete on a page model, delete the model itself instead`,
+        message: `Cannot use delete on a single model, delete the model itself instead`,
       });
     }
 
