@@ -26,7 +26,6 @@ import ValidationFieldError from "./ValidationFieldError";
 import ValidationValidatorError from "./ValidationValidatorError";
 import ValidationError from "./ValidationError";
 import CoreError from "./CoreError";
-import ErrorCodes from "../enums/error-codes";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -206,15 +205,15 @@ export const getRecursiveHooksFromModel = <
 
 export const getNestedFieldsMap = (
   model: typeof Model,
-  jsonField: Field<FieldTypes.NESTED>
+  nestedField: Field<FieldTypes.NESTED>
 ) => {
   const subfieldsEntries: Array<[string, Field]> = Object.entries(
-    jsonField.options.fields ?? {}
+    nestedField.options.fields ?? {}
   ).map(([slug, def]) => {
     const field = getFieldFromDefinition(
       def,
       model.getAdapter(),
-      jsonField.__path + "." + slug
+      nestedField.__path + "." + slug
     );
 
     return [slug, field];

@@ -1509,7 +1509,7 @@ describe("Test Model", () => {
   });
 
   describe("Model page", () => {
-    const PageModel = mockModel({
+    const DocModel = mockModel({
       single: true,
       fields: {
         test: {
@@ -1532,17 +1532,17 @@ describe("Test Model", () => {
     }).withAdapter(adapter);
 
     it("Should be able to get data from model", async () => {
-      const getPromise = PageModel.get();
+      const getPromise = DocModel.get();
       expect(getPromise).toBeInstanceOf(PromiseModel);
 
       const i = await getPromise;
-      expect(i).toBeInstanceOf(PageModel);
+      expect(i).toBeInstanceOf(DocModel);
 
       expect(i.test).toEqual("defaultValue");
     });
 
     it("Should not be able to create an instance", async () => {
-      const creatingPromise = PageModel.create({});
+      const creatingPromise = DocModel.create({});
 
       await expect(creatingPromise).rejects.toThrow(CoreError);
       await expect(creatingPromise).rejects.toHaveProperty(

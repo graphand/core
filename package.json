@@ -12,7 +12,7 @@
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack --watch",
-    "test": "jest --coverage"
+    "test": "jest"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",

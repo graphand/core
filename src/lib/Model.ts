@@ -74,6 +74,12 @@ class Model {
   _updatedBy;
 
   constructor(doc: any = {}) {
+    if (!doc || typeof doc !== "object") {
+      throw new CoreError({
+        message: `Invalid document: ${doc}`,
+      });
+    }
+
     this.__doc = doc;
     this.__doc._id ??= Date.now();
 
