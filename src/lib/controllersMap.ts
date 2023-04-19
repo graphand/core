@@ -117,8 +117,8 @@ const _controllersMap = {
     scope: "project",
     secured: true,
   },
-  qlSync: {
-    path: "/ql/sync",
+  sync: {
+    path: "/sync",
     methods: ["POST"],
     scope: "project",
     secured: true,
