@@ -71,7 +71,7 @@ export const mockAdapter = ({
       }),
       getList: jest.fn(([query]) => {
         return Promise.resolve(
-          new ModelList(this.model, Array.from(this.thisCache), 1)
+          new ModelList(this.model, Array.from(this.thisCache))
         );
       }),
       createOne: jest.fn(async ([payload]) => {
