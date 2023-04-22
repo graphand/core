@@ -31,7 +31,6 @@ import {
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
-import type DataModel from "../models/DataModel";
 
 const noFieldSymbol = Symbol("noField");
 
@@ -253,7 +252,7 @@ class Model {
   }
 
   /**
-   * Retusn an array containing all the validators on the model.
+   * Returns an array of all validators of the model and its parents.
    * The validators array could be incomplete if the model is extendable and is not initialized.
    */
   static get validatorsArray() {

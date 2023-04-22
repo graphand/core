@@ -50,13 +50,7 @@ export const getRecursiveValidatorsFromModel = (
   model: typeof Model
 ): ValidatorsDefinition => {
   const validators: ValidatorsDefinition = [];
-
-  if (model.keyField) {
-    validators.push({
-      type: ValidatorTypes.KEY_FIELD,
-      options: { field: model.keyField },
-    });
-  }
+  const keyField = model.keyField;
 
   do {
     const baseClass = model.getBaseClass();
@@ -70,6 +64,25 @@ export const getRecursiveValidatorsFromModel = (
     // @ts-ignore
     model = baseClass.__proto__;
   } while (model?.getBaseClass);
+
+  if (keyField) {
+    validators.push({
+      type: ValidatorTypes.KEY_FIELD,
+      options: { field: keyField },
+    });
+
+    return validators.filter((v) => {
+      if (v.type === ValidatorTypes.UNIQUE && v.options?.field === keyField) {
+        return false;
+      }
+
+      if (v.type === ValidatorTypes.REQUIRED && v.options?.field === keyField) {
+        return false;
+      }
+
+      return true;
+    });
+  }
 
   return validators;
 };
@@ -262,16 +275,24 @@ export const createFieldsMap = (
 export const createValidatorsArray = (
   model: typeof Model,
   assignValidators?: ValidatorsDefinition
-) => {
+): Array<Validator> => {
   let modelValidators = getRecursiveValidatorsFromModel(model);
 
   if (assignValidators?.length) {
     modelValidators = [...modelValidators, ...assignValidators];
   }
 
-  return modelValidators.map((def) => {
-    return getValidatorFromDefinition(def, model.getAdapter(false), null);
+  const entries: Array<[string, Validator]> = modelValidators.map((def) => {
+    const validator = getValidatorFromDefinition(
+      def,
+      model.getAdapter(false),
+      null
+    );
+    return [validator.getKey(), validator];
   });
+
+  const map = new Map(entries);
+  return Array.from(map.values());
 };
 
 export const getFieldFromDefinition = <

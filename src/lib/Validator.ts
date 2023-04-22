@@ -44,6 +44,10 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return true;
   }
 
+  getKey() {
+    return [this.type, JSON.stringify(this.options)].join();
+  }
+
   toJSON() {
     return {
       type: this.type,

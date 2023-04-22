@@ -1090,9 +1090,6 @@ describe("Test Model", () => {
             type: FieldTypes.TEXT,
           },
         },
-        validators: [
-          { type: ValidatorTypes.UNIQUE, options: { field: "title" } },
-        ],
       });
       BaseModelWithKeyField.keyField = "title";
       const TestModel = BaseModelWithKeyField.withAdapter(adapter);
@@ -1101,6 +1098,38 @@ describe("Test Model", () => {
         (v) => v.type === ValidatorTypes.KEY_FIELD
       );
       expect(keyFieldValidator).toBeDefined();
+    });
+
+    it("Model should have keyField validator if keyField is defined and should filter unique and required validators", async () => {
+      const BaseModelWithKeyField = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        validators: [
+          { type: ValidatorTypes.UNIQUE, options: { field: "title" } },
+          { type: ValidatorTypes.REQUIRED, options: { field: "title" } },
+        ],
+      });
+      BaseModelWithKeyField.keyField = "title";
+      const TestModel = BaseModelWithKeyField.withAdapter(adapter);
+
+      const validators = TestModel.validatorsArray;
+
+      const keyFieldValidator = validators.find(
+        (v) => v.type === ValidatorTypes.KEY_FIELD
+      );
+      const uniqueValidator = validators.find(
+        (v) => v.type === ValidatorTypes.UNIQUE
+      );
+      const requiredValidator = validators.find(
+        (v) => v.type === ValidatorTypes.REQUIRED
+      );
+
+      expect(keyFieldValidator).toBeDefined();
+      expect(uniqueValidator).toBeUndefined();
+      expect(requiredValidator).toBeUndefined();
     });
 
     it("Model should validate with validator from adapter", async () => {
