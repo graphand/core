@@ -50,12 +50,11 @@ export const getRecursiveValidatorsFromModel = (
   model: typeof Model
 ): ValidatorsDefinition => {
   const validators: ValidatorsDefinition = [];
-  const baseClass = model.getBaseClass();
 
-  if (baseClass.keyField) {
+  if (model.keyField) {
     validators.push({
       type: ValidatorTypes.KEY_FIELD,
-      options: { field: baseClass.keyField },
+      options: { field: model.keyField },
     });
   }
 

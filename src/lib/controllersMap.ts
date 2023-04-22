@@ -2,7 +2,7 @@ import { ControllerDefinition } from "../types";
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 
-const _controllersMap = {
+const controllersMap: Record<string, ControllerDefinition> = {
   modelCount: {
     path: "/:model/count",
     methods: ["GET", "POST"],
@@ -154,10 +154,5 @@ const _controllersMap = {
     secured: false,
   },
 };
-
-const controllersMap = _controllersMap as Record<
-  keyof typeof _controllersMap,
-  ControllerDefinition
->;
 
 export default controllersMap;

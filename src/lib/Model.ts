@@ -54,7 +54,6 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
-  static __datamodel?: DataModel;
 
   __doc: DocumentDefinition;
 
