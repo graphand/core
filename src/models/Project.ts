@@ -15,14 +15,14 @@ class Project extends Model {
   static slug = "projects";
   static scope = ModelEnvScopes.GLOBAL;
   static validators: ValidatorsDefinition = [
-    // { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
-    // { type: ValidatorTypes.REQUIRED, options: { field: "slug" } },
-    // { type: ValidatorTypes.REQUIRED, options: { field: "organization" } },
-    // { type: ValidatorTypes.UNIQUE, options: { field: "slug" } },
-    // {
-    //   type: ValidatorTypes.REGEX,
-    //   options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
-    // },
+    { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "slug" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "organization" } },
+    { type: ValidatorTypes.UNIQUE, options: { field: "slug" } },
+    {
+      type: ValidatorTypes.REGEX,
+      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+    },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)

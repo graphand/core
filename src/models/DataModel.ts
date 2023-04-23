@@ -39,7 +39,8 @@ class DataModel extends Model {
           type: {
             type: FieldTypes.TEXT,
             options: {
-              options: Object.values(ValidatorTypes),
+              options: Object.values(FieldTypes),
+              strict: true,
             },
           },
           options: {
@@ -68,6 +69,7 @@ class DataModel extends Model {
             type: FieldTypes.TEXT,
             options: {
               options: Object.values(ValidatorTypes),
+              strict: true,
             },
           },
           options: {

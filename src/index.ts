@@ -2,7 +2,6 @@ import "./modules/validators";
 import Model from "./lib/Model";
 import DataModel from "./models/DataModel";
 import Account from "./models/Account";
-import Media from "./models/Media";
 import Project from "./models/Project";
 import User from "./models/User";
 import Role from "./models/Role";
@@ -41,7 +40,6 @@ import {
 const models = {
   Account,
   DataModel,
-  Media,
   Project,
   User,
   Organization,
@@ -56,7 +54,6 @@ export {
   Adapter,
   Account,
   Data,
-  Media,
   Project,
   User,
   Organization,
