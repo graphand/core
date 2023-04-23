@@ -143,6 +143,7 @@ export type Filter = Record<string, any>;
 export type PopulateOption = {
   path: string;
   populate?: Populate;
+  query?: JSONQuery;
 };
 
 export type PopulatePath = string | PopulateOption;
