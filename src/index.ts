@@ -2,6 +2,8 @@ import "./modules/validators";
 import Model from "./lib/Model";
 import DataModel from "./models/DataModel";
 import Account from "./models/Account";
+import AccountAuthMethod from "./models/AccountAuthMethod";
+import AuthProvider from "./models/AuthProvider";
 import Project from "./models/Project";
 import User from "./models/User";
 import Role from "./models/Role";
@@ -27,6 +29,7 @@ import controllersMap from "./lib/controllersMap";
 import ValidationFieldError from "./lib/ValidationFieldError";
 import ValidationValidatorError from "./lib/ValidationValidatorError";
 import defaultFieldsMap from "./lib/defaultFieldsMap";
+import AuthProviders from "./enums/auth-providers";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -39,6 +42,8 @@ import {
 
 const models = {
   Account,
+  AccountAuthMethod,
+  AuthProvider,
   DataModel,
   Project,
   User,
@@ -53,6 +58,8 @@ export {
   ModelList,
   Adapter,
   Account,
+  AccountAuthMethod,
+  AuthProvider,
   Data,
   Project,
   User,
@@ -73,6 +80,7 @@ export {
   ValidatorTypes,
   CoreError,
   ValidationError,
+  AuthProviders,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,

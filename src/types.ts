@@ -9,6 +9,7 @@ import type Validator from "./lib/Validator";
 import type ValidationError from "./lib/ValidationError";
 import type PromiseModel from "./lib/PromiseModel";
 import type PromiseModelList from "./lib/PromiseModelList";
+import AuthProviders from "./enums/auth-providers";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -439,3 +440,34 @@ export type ModelCrudEvent = {
 export type IdentityString = string;
 
 export type FieldsPathItem = { key: string; field: Field };
+
+export type AuthProviderOptionsMap = {
+  [AuthProviders.PASSWORD]: {
+    emailLink: boolean;
+  };
+  [AuthProviders.FACEBOOK]: {
+    clientId: string;
+    clientSecret: string;
+  };
+};
+
+export type AuthProviderOptions<
+  T extends AuthProviders = keyof AuthProviderOptionsMap | AuthProviders
+> = T extends keyof AuthProviderOptionsMap
+  ? AuthProviderOptionsMap[T]
+  : Record<string, never>;
+
+export type AuthMethodConfigurationMap = {
+  [AuthProviders.PASSWORD]: {
+    password: string;
+  };
+  [AuthProviders.FACEBOOK]: {
+    userId: string;
+  };
+};
+
+export type AuthMethodConfiguration<
+  T extends AuthProviders = keyof AuthMethodConfigurationMap | AuthProviders
+> = T extends keyof AuthMethodConfigurationMap
+  ? AuthMethodConfigurationMap[T]
+  : Record<string, never>;

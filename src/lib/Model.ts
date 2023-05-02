@@ -37,6 +37,7 @@ const noFieldSymbol = Symbol("noField");
 class Model {
   static extendable: boolean = false;
   static single: boolean = false;
+  static exposed: boolean = true;
   static slug: string;
   static scope: ModelEnvScopes;
   static fields: FieldsDefinition;
@@ -70,6 +71,9 @@ class Model {
 
   @fieldDecorator(FieldTypes.IDENTITY)
   _updatedBy;
+
+  @fieldDecorator(FieldTypes.BOOLEAN)
+  __system;
 
   constructor(doc: any = {}) {
     if (!doc || typeof doc !== "object") {

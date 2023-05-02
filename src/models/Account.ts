@@ -7,6 +7,7 @@ import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import User from "./User";
 import { ValidatorsDefinition } from "../types";
+import Patterns from "../enums/patterns";
 
 @modelDecorator()
 class Account extends Model {
@@ -21,10 +22,7 @@ class Account extends Model {
     { type: ValidatorTypes.UNIQUE, options: { field: "email" } },
     {
       type: ValidatorTypes.REGEX,
-      options: {
-        field: "email",
-        pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-      },
+      options: { field: "email", pattern: Patterns.EMAIL },
     },
   ];
 
@@ -37,14 +35,16 @@ class Account extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   email: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.TEXT)
-  password: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.RELATION, { ref: "roles" })
+  @fieldDecorator(FieldTypes.RELATION, { ref: Role.slug })
   role: FieldDefinitionRelation<Role>;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "users" })
+  @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
   user: FieldDefinitionRelation<User>;
+
+  // @fieldDecorator(FieldTypes.NESTED)
+  // _auth: FieldDefinitionNested<{
+  //   [provider in AuthProviders]: AuthMethodConfiguration<provider>;
+  // }>;
 }
 
 export default Account;
