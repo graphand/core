@@ -259,6 +259,14 @@ export const createFieldsMap = (
 ) => {
   const modelFields = getRecursiveFieldsFromModel(model);
 
+  if (!model.systemFields) {
+    delete modelFields._createdAt;
+    delete modelFields._createdBy;
+    delete modelFields._updatedAt;
+    delete modelFields._updatedBy;
+    delete modelFields.__system;
+  }
+
   if (assignFields) {
     Object.assign(modelFields, assignFields);
   }

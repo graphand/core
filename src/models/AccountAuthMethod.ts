@@ -14,6 +14,7 @@ class AccountAuthMethod<T extends AuthProviders = AuthProviders> extends Model {
   static __name = "AccountAuthMethod";
 
   static exposed = false;
+  static systemFields = false;
   static slug = "accountAuthMethods";
   static scope = ModelEnvScopes.ENV;
   static validators: ValidatorsDefinition = [

@@ -38,6 +38,7 @@ class Model {
   static extendable: boolean = false;
   static single: boolean = false;
   static exposed: boolean = true;
+  static systemFields: boolean = true;
   static slug: string;
   static scope: ModelEnvScopes;
   static fields: FieldsDefinition;

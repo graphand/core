@@ -374,7 +374,7 @@ export type ValidatorHook<
 > = [P, A, (args: HookCallbackArgs<P, A, T>) => boolean];
 
 export type Rule = {
-  ref: string;
+  ref?: string;
   actions?: RuleActions[];
   filter?: object;
   prohibition?: boolean;
