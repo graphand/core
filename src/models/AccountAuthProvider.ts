@@ -10,12 +10,14 @@ import AuthProvider from "./AuthProvider";
 import AuthProviders from "../enums/auth-providers";
 
 @modelDecorator()
-class AccountAuthMethod<T extends AuthProviders = AuthProviders> extends Model {
-  static __name = "AccountAuthMethod";
+class AccountAuthProvider<
+  T extends AuthProviders = AuthProviders
+> extends Model {
+  static __name = "AccountAuthProvider";
 
   static exposed = false;
   static systemFields = false;
-  static slug = "accountAuthMethods";
+  static slug = "accounts_authProviders";
   static scope = ModelEnvScopes.ENV;
   static validators: ValidatorsDefinition = [
     { type: ValidatorTypes.REQUIRED, options: { field: "account" } },
@@ -32,4 +34,4 @@ class AccountAuthMethod<T extends AuthProviders = AuthProviders> extends Model {
   configuration: FieldDefinitionNested<AuthMethodConfiguration<T>>;
 }
 
-export default AccountAuthMethod;
+export default AccountAuthProvider;
