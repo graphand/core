@@ -473,29 +473,27 @@ export type AuthMethodConfiguration<
   ? AuthMethodConfigurationMap[T]
   : Record<string, never>;
 
-export type AuthProviderInputMap = {
+export type AuthProviderCredentialsMap = {
   [AuthProviders.PASSWORD]: {
     email: string;
     password: string;
   };
 };
 
-export type AuthProviderInput<
-  T extends AuthProviders = keyof AuthProviderInputMap | AuthProviders
-> = T extends keyof AuthProviderInputMap ? AuthProviderInputMap[T] : {};
+export type AuthProviderCredentials<
+  T extends AuthProviders = keyof AuthProviderCredentialsMap | AuthProviders
+> = T extends keyof AuthProviderCredentialsMap
+  ? AuthProviderCredentialsMap[T]
+  : Record<string, never>;
 
-export type AuthMethodInputMap = {
+export type AuthMethodOptionsMap = {
   [AuthMethods.REDIRECT]: {
     redirect?: string;
   };
 };
 
-export type AuthMethodInput<
-  T extends AuthMethods = keyof AuthMethodInputMap | AuthMethods
-> = T extends keyof AuthMethodInputMap ? AuthMethodInputMap[T] : {};
-
-export type AuthInput<P extends AuthProviders, M extends AuthMethods> = {
-  provider?: P;
-  method?: M;
-} & AuthProviderInput<P> &
-  AuthMethodInput<M>;
+export type AuthMethodOptions<
+  T extends AuthMethods = keyof AuthMethodOptionsMap | AuthMethods
+> = T extends keyof AuthMethodOptionsMap
+  ? AuthMethodOptionsMap[T]
+  : Record<string, never>;
