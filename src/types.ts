@@ -10,6 +10,7 @@ import type ValidationError from "./lib/ValidationError";
 import type PromiseModel from "./lib/PromiseModel";
 import type PromiseModelList from "./lib/PromiseModelList";
 import AuthProviders from "./enums/auth-providers";
+import AuthMethods from "./enums/auth-methods";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -471,3 +472,30 @@ export type AuthMethodConfiguration<
 > = T extends keyof AuthMethodConfigurationMap
   ? AuthMethodConfigurationMap[T]
   : Record<string, never>;
+
+export type AuthProviderInputMap = {
+  [AuthProviders.PASSWORD]: {
+    email: string;
+    password: string;
+  };
+};
+
+export type AuthProviderInput<
+  T extends AuthProviders = keyof AuthProviderInputMap | AuthProviders
+> = T extends keyof AuthProviderInputMap ? AuthProviderInputMap[T] : {};
+
+export type AuthMethodInputMap = {
+  [AuthMethods.REDIRECT]: {
+    redirect?: string;
+  };
+};
+
+export type AuthMethodInput<
+  T extends AuthMethods = keyof AuthMethodInputMap | AuthMethods
+> = T extends keyof AuthMethodInputMap ? AuthMethodInputMap[T] : {};
+
+export type AuthInput<P extends AuthProviders, M extends AuthMethods> = {
+  provider?: P;
+  method?: M;
+} & AuthProviderInput<P> &
+  AuthMethodInput<M>;
