@@ -443,9 +443,6 @@ export type IdentityString = string;
 export type FieldsPathItem = { key: string; field: Field };
 
 export type AuthProviderOptionsMap = {
-  [AuthProviders.PASSWORD]: {
-    emailLink: boolean;
-  };
   [AuthProviders.FACEBOOK]: {
     clientId: string;
     clientSecret: string;
@@ -458,7 +455,19 @@ export type AuthProviderOptions<
   ? AuthProviderOptionsMap[T]
   : Record<string, never>;
 
-export type AuthMethodConfigurationMap = {
+export type AuthProviderRegisterOptionsMap = {
+  [AuthProviders.PASSWORD]: {
+    confirmEmail?: boolean;
+  };
+};
+
+export type AuthProviderRegisterOptions<
+  T extends AuthProviders = keyof AuthProviderRegisterOptionsMap | AuthProviders
+> = T extends keyof AuthProviderRegisterOptionsMap
+  ? AuthProviderRegisterOptionsMap[T]
+  : Record<string, never>;
+
+export type AccountAuthConfigurationMap = {
   [AuthProviders.PASSWORD]: {
     password: string;
   };
@@ -467,10 +476,10 @@ export type AuthMethodConfigurationMap = {
   };
 };
 
-export type AuthMethodConfiguration<
-  T extends AuthProviders = keyof AuthMethodConfigurationMap | AuthProviders
-> = T extends keyof AuthMethodConfigurationMap
-  ? AuthMethodConfigurationMap[T]
+export type AccountAuthConfiguration<
+  T extends AuthProviders = keyof AccountAuthConfigurationMap | AuthProviders
+> = T extends keyof AccountAuthConfigurationMap
+  ? AccountAuthConfigurationMap[T]
   : Record<string, never>;
 
 export type AuthProviderCredentialsMap = {

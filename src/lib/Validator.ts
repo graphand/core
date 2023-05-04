@@ -41,7 +41,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   }
 
   async validate(docs: Array<DocumentDefinition>, ctx: ValidateCtx) {
-    return true;
+    return false;
   }
 
   getKey() {

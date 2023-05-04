@@ -3,8 +3,9 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { AuthProviderOptions } from "../types";
+import { AuthProviderRegisterOptions, AuthProviderOptions } from "../types";
 import AuthProviders from "../enums/auth-providers";
+import Role from "./Role";
 
 @modelDecorator()
 class AuthProvider<T extends AuthProviders = AuthProviders> extends Model {
@@ -27,7 +28,20 @@ class AuthProvider<T extends AuthProviders = AuthProviders> extends Model {
   options: FieldDefinitionNested<AuthProviderOptions<T>>;
 
   @fieldDecorator(FieldTypes.BOOLEAN, { default: true })
-  enabled: boolean;
+  enabled: FieldDefinitionBoolean;
+
+  @fieldDecorator(FieldTypes.NESTED, {
+    fields: {
+      enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
+      role: { type: FieldTypes.RELATION, options: { ref: Role.slug } },
+      options: { type: FieldTypes.NESTED },
+    },
+  })
+  register: FieldDefinitionNested<{
+    enabled: FieldDefinitionBoolean;
+    role: FieldDefinitionRelation<Role>;
+    options: FieldDefinitionNested<AuthProviderRegisterOptions<T>>;
+  }>;
 }
 
 export default AuthProvider;

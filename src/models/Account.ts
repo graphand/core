@@ -43,7 +43,7 @@ class Account extends Model {
 
   // @fieldDecorator(FieldTypes.NESTED)
   // _auth: FieldDefinitionNested<{
-  //   [provider in AuthProviders]: AuthMethodConfiguration<provider>;
+  //   [provider in AuthProviders]: AccountAuthConfiguration<provider>;
   // }>;
 }
 

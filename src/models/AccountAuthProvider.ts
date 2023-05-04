@@ -4,7 +4,7 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
-import { ValidatorsDefinition, AuthMethodConfiguration } from "../types";
+import { ValidatorsDefinition, AccountAuthConfiguration } from "../types";
 import Account from "./Account";
 import AuthProvider from "./AuthProvider";
 import AuthProviders from "../enums/auth-providers";
@@ -31,7 +31,7 @@ class AccountAuthProvider<
   provider: FieldDefinitionRelation<AuthProvider<T>>;
 
   @fieldDecorator(FieldTypes.NESTED)
-  configuration: FieldDefinitionNested<AuthMethodConfiguration<T>>;
+  configuration: FieldDefinitionNested<AccountAuthConfiguration<T>>;
 }
 
 export default AccountAuthProvider;
