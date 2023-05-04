@@ -506,3 +506,19 @@ export type AuthMethodOptions<
 > = T extends keyof AuthMethodOptionsMap
   ? AuthMethodOptionsMap[T]
   : Record<string, never>;
+
+export type AuthProviderConfigurePayloadMap = {
+  [AuthProviders.PASSWORD]:
+    | {
+        password: string;
+      }
+    | string;
+};
+
+export type AuthProviderConfigurePayload<
+  T extends AuthProviders =
+    | keyof AuthProviderConfigurePayloadMap
+    | AuthProviders
+> = T extends keyof AuthProviderConfigurePayloadMap
+  ? AuthProviderConfigurePayloadMap[T]
+  : Record<string, never>;
