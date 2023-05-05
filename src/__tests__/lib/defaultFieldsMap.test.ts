@@ -521,17 +521,16 @@ describe("test fieldsMap", () => {
       it("Should validate validators defined in options", async () => {
         const testValidate = jest.fn(() => Promise.resolve(true));
 
-        class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
-          validate = testValidate;
-        }
-
         const _adapter = mockAdapter({
           validatorsMap: {
-            [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+            [ValidatorTypes.REQUIRED]: class extends Validator<ValidatorTypes.REQUIRED> {
+              validate = testValidate;
+            },
           },
         });
 
         const model = mockModel({
+          validators: [],
           fields: {
             obj: {
               type: FieldTypes.NESTED,
@@ -562,13 +561,11 @@ describe("test fieldsMap", () => {
       it("Should throw error if error happens in validator", async () => {
         const testValidate = jest.fn(() => Promise.resolve(false));
 
-        class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
-          validate = testValidate;
-        }
-
         const _adapter = mockAdapter({
           validatorsMap: {
-            [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+            [ValidatorTypes.REQUIRED]: class extends Validator<ValidatorTypes.REQUIRED> {
+              validate = testValidate;
+            },
           },
         });
 
@@ -604,17 +601,16 @@ describe("test fieldsMap", () => {
       it("Should support nested JSON fields and should not validate if nested value undefined", async () => {
         const testValidate = jest.fn(() => Promise.resolve(true));
 
-        class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
-          validate = testValidate;
-        }
-
         const _adapter = mockAdapter({
           validatorsMap: {
-            [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+            [ValidatorTypes.REQUIRED]: class extends Validator<ValidatorTypes.REQUIRED> {
+              validate = testValidate;
+            },
           },
         });
 
         const model = mockModel({
+          validators: [],
           fields: {
             obj: {
               type: FieldTypes.NESTED,
@@ -652,17 +648,16 @@ describe("test fieldsMap", () => {
       it("Should support nested JSON fields and should validate if nested value is not undefined", async () => {
         const testValidate = jest.fn(() => Promise.resolve(true));
 
-        class TestValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
-          validate = testValidate;
-        }
-
         const _adapter = mockAdapter({
           validatorsMap: {
-            [ValidatorTypes.REQUIRED]: TestValidatorRequired,
+            [ValidatorTypes.REQUIRED]: class extends Validator<ValidatorTypes.REQUIRED> {
+              validate = testValidate;
+            },
           },
         });
 
         const model = mockModel({
+          validators: [],
           fields: {
             obj: {
               type: FieldTypes.NESTED,

@@ -354,7 +354,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
   return new ValidatorClass(def, path);
 };
 
-export const validateDocs = async <T extends typeof Model = typeof Model>(
+export const validateDocs = async (
   docs: Array<DocumentDefinition>,
   {
     validators = [],
