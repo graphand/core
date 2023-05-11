@@ -73,6 +73,8 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 }
 
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
+  nextFieldEqObject = false;
+
   _serializeJSON = (
     value: any,
     format: SerializerFormat,
@@ -141,6 +143,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     switch (format) {
       case SerializerFormat.JSON:
       case SerializerFormat.DOCUMENT:
+      case SerializerFormat.NEXT_FIELD:
         return this._serializeJSON(value, format, from, ctx);
       case SerializerFormat.OBJECT:
       default:
@@ -365,6 +368,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       case SerializerFormat.DOCUMENT:
         return _serializeJSON(value);
       case SerializerFormat.OBJECT:
+      case SerializerFormat.NEXT_FIELD:
       default:
         return _serializeObject(value);
     }
@@ -390,6 +394,8 @@ class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
 }
 
 class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
+  nextFieldEqObject = false;
+
   async validate(value, ctx, slug) {
     if (value === null || value === undefined) {
       return true;
@@ -440,7 +446,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     if (format === SerializerFormat.OBJECT) {
       let model = Model.getFromSlug(options.ref, adapter.base);
 
-      const ids = value;
+      let ids = value;
 
       if (!ids.every(isObjectId)) {
         throw new CoreError({

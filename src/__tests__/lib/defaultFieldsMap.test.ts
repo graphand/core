@@ -426,8 +426,10 @@ describe("test fieldsMap", () => {
         expect(i.obj).toBeInstanceOf(Object);
         expect(i.obj.subObj).toBeInstanceOf(Object);
         expect(i.obj.subObj.title).toBe("test");
-
         expect(serializeText).toHaveBeenCalledTimes(1);
+
+        expect(i.get("obj.subObj.title")).toBe("test");
+
         expect(serializeNumber).not.toHaveBeenCalled();
       });
 
