@@ -232,19 +232,21 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
     from: Model,
     ctx: ExecutorCtx = {}
   ): any {
-    const _format = (obj: object) => {
-      if (!obj || typeof obj !== "object") {
-        return null;
-      }
+    value = Array.isArray(value) ? value[0] : value;
 
-      const adapter = from.model.getAdapter();
+    if (!value || typeof value !== "object") {
+      return null;
+    }
 
+    const adapter = from.model.getAdapter();
+
+    const _serializeJSON = (obj: object) => {
       let formattedEntries = Object.entries(this.options.fields ?? {}).map(
         ([slug, def]) => {
           const field = getFieldFromDefinition(
             def,
             adapter,
-            this.__path + "." + slug
+            [this.__path, slug].join(".")
           );
 
           let value = obj[slug];
@@ -285,10 +287,6 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
               value = defaultField.serialize(value, format, from, ctx);
             }
 
-            if (value === undefined) {
-              return null;
-            }
-
             return [slug, value];
           });
 
@@ -304,9 +302,72 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       return { ...obj, ...formatted };
     };
 
-    value = Array.isArray(value) ? value[0] : value;
+    const _serializeObject = (obj: object) => {
+      const isStrict = this.options.strict ?? false;
+      const fields = this.options.fields ?? {};
+      const path = this.__path;
+      let defaultField;
+      const fieldsMap = new Map<string, Field>();
 
-    return _format(value);
+      if (this.options.defaultField) {
+        defaultField = getFieldFromDefinition(
+          this.options.defaultField,
+          adapter,
+          this.__path + ".__default"
+        );
+      }
+
+      return new Proxy(obj, {
+        get(target, prop: string) {
+          if (prop === "__isProxy") {
+            return true;
+          }
+
+          if (isStrict && !(prop in fields)) {
+            return undefined;
+          }
+
+          let propField;
+          if (prop in fields) {
+            propField =
+              fieldsMap.get(prop) ??
+              getFieldFromDefinition(
+                fields[prop],
+                adapter,
+                [path, prop].join(".")
+              );
+          }
+
+          let field = propField ?? defaultField;
+          let value = target[prop];
+
+          if (field) {
+            fieldsMap.set(prop, field);
+          } else {
+            return isStrict ? undefined : value;
+          }
+
+          if (value === undefined && "default" in field.options) {
+            value = field.options.default as typeof value;
+          }
+
+          if (value !== undefined && value !== null) {
+            value = field.serialize(value, format, from, ctx);
+          }
+
+          return value;
+        },
+      });
+    };
+
+    switch (format) {
+      case SerializerFormat.JSON:
+      case SerializerFormat.DOCUMENT:
+        return _serializeJSON(value);
+      case SerializerFormat.OBJECT:
+      default:
+        return _serializeObject(value);
+    }
   }
 }
 

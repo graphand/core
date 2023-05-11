@@ -7,7 +7,7 @@ import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
 import ValidationError from "../../lib/ValidationError";
 import PromiseModel from "../../lib/PromiseModel";
-import { models } from "../../index";
+import { getFieldFromDefinition, models } from "../../index";
 import PromiseModelList from "../../lib/PromiseModelList";
 import SerializerFormat from "../../enums/serializer-format";
 
@@ -277,6 +277,223 @@ describe("test fieldsMap", () => {
       const i = new model({ obj });
       expect(i.obj).toBeInstanceOf(Object);
       expect(Array.isArray(i.obj)).toBeFalsy();
+    });
+
+    describe("Proxy", () => {
+      it("Should returns an object proxy", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  title: {
+                    type: FieldTypes.TEXT,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        const i = new model({
+          obj: {},
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.__isProxy).toBe(true);
+      });
+
+      it("Should not call other fields serializers thanks to the proxy", async () => {
+        const serializeText = jest.fn((value: any): any => {
+          return typeof value === "string" ? value : String(value);
+        });
+
+        const serializeNumber = jest.fn((value: any): any => {
+          return parseFloat(value);
+        });
+
+        const _adapter = mockAdapter({
+          fieldsMap: {
+            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+              serialize = serializeText;
+            },
+            [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
+              serialize = serializeNumber;
+            },
+          },
+        });
+
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  title: {
+                    type: FieldTypes.TEXT,
+                  },
+                  value: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(_adapter);
+        await model.initialize();
+
+        expect(serializeText).not.toHaveBeenCalled();
+        expect(serializeNumber).not.toHaveBeenCalled();
+
+        const i = new model({
+          obj: {
+            title: "test",
+            value: 123,
+          },
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.title).toBe("test");
+
+        expect(serializeText).toHaveBeenCalledTimes(1);
+        expect(serializeNumber).not.toHaveBeenCalled();
+      });
+
+      it("Should not call other fields serializers thanks to the proxy even in nested objects", async () => {
+        const serializeText = jest.fn((value: any): any => {
+          return typeof value === "string" ? value : String(value);
+        });
+
+        const serializeNumber = jest.fn((value: any): any => {
+          return parseFloat(value);
+        });
+
+        const _adapter = mockAdapter({
+          fieldsMap: {
+            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+              serialize = serializeText;
+            },
+            [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
+              serialize = serializeNumber;
+            },
+          },
+        });
+
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  subObj: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        title: {
+                          type: FieldTypes.TEXT,
+                        },
+                        value: {
+                          type: FieldTypes.NUMBER,
+                        },
+                      },
+                    },
+                  },
+                  subValue: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(_adapter);
+        await model.initialize();
+
+        expect(serializeText).not.toHaveBeenCalled();
+        expect(serializeNumber).not.toHaveBeenCalled();
+
+        const i = new model({
+          obj: {
+            subObj: {
+              title: "test",
+              value: 123,
+            },
+            subValue: 456,
+          },
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.subObj).toBeInstanceOf(Object);
+        expect(i.obj.subObj.title).toBe("test");
+
+        expect(serializeText).toHaveBeenCalledTimes(1);
+        expect(serializeNumber).not.toHaveBeenCalled();
+      });
+
+      it("Should not call other fields serializers thanks to the proxy even in nested array", async () => {
+        const serializeText = jest.fn((value: any): any => {
+          return typeof value === "string" ? value : String(value);
+        });
+
+        const serializeNumber = jest.fn((value: any): any => {
+          return parseFloat(value);
+        });
+
+        const _adapter = mockAdapter({
+          fieldsMap: {
+            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+              serialize = serializeText;
+            },
+            [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
+              serialize = serializeNumber;
+            },
+          },
+        });
+
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      title: {
+                        type: FieldTypes.TEXT,
+                      },
+                      value: {
+                        type: FieldTypes.NUMBER,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(_adapter);
+        await model.initialize();
+
+        expect(serializeText).not.toHaveBeenCalled();
+        expect(serializeNumber).not.toHaveBeenCalled();
+
+        const i = new model({
+          arr: [
+            {
+              title: "test",
+              value: 123,
+            },
+          ],
+        });
+
+        expect(i.arr).toBeInstanceOf(Array);
+        expect(i.arr[0]).toBeInstanceOf(Object);
+        expect(i.arr[0].title).toBe("test");
+
+        expect(serializeText).toHaveBeenCalledTimes(1);
+        expect(serializeNumber).not.toHaveBeenCalled();
+      });
     });
 
     describe("options.strict", () => {

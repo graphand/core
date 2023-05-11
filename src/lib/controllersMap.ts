@@ -165,6 +165,12 @@ const controllersMap: Record<string, ControllerDefinition> = {
     scope: "project",
     secured: false,
   },
+  codeAuth: {
+    path: "/auth/code",
+    methods: ["GET", "POST"],
+    scope: "project",
+    secured: false,
+  },
   configureAuth: {
     path: "/auth/configure",
     methods: ["POST"],
