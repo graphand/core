@@ -446,6 +446,7 @@ export type AuthProviderOptionsMap = {
   [AuthProviders.FACEBOOK]: {
     clientId: string;
     clientSecret: string;
+    fieldsMap?: Record<string, string>;
   };
 };
 
