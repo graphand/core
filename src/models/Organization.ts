@@ -6,6 +6,7 @@ import FieldTypes from "../enums/field-types";
 import { ValidatorsDefinition } from "../types";
 import User from "./User";
 import ValidatorTypes from "../enums/validator-types";
+import Patterns from "../enums/patterns";
 
 @modelDecorator()
 class Organization extends Model {
@@ -19,7 +20,7 @@ class Organization extends Model {
     { type: ValidatorTypes.UNIQUE, options: { field: "slug" } },
     {
       type: ValidatorTypes.REGEX,
-      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+      options: { field: "slug", pattern: Patterns.SLUG },
     },
   ];
 
@@ -29,7 +30,7 @@ class Organization extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "users" })
+  @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
   users: FieldDefinitionRelation<User>;
 }
 

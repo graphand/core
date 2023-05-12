@@ -1,22 +1,18 @@
 import Model from "./Model";
 import ModelList from "./ModelList";
 import { JSONQuery } from "../types";
+import Thenable from "./Thenable";
 
-class PromiseModelList<T extends Model> extends Promise<ModelList<T>> {
+class PromiseModelList<T extends Model> extends Thenable<ModelList<T>> {
   __model: typeof Model;
   __query: JSONQuery;
 
   constructor(
-    promiseParams: ConstructorParameters<typeof Promise<ModelList<T>>>,
+    params: ConstructorParameters<typeof Promise<ModelList<T>>>,
     model: typeof Model,
     query: JSONQuery
   ) {
-    if (!Array.isArray(promiseParams)) {
-      // @ts-ignore
-      return super(promiseParams);
-    }
-
-    super(...promiseParams);
+    super(params);
 
     this.__model = model;
     this.__query = query;

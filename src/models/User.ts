@@ -5,6 +5,7 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import { ValidatorsDefinition } from "../types";
+import Patterns from "../enums/patterns";
 
 @modelDecorator()
 class User extends Model {
@@ -19,10 +20,7 @@ class User extends Model {
     { type: ValidatorTypes.UNIQUE, options: { field: "email" } },
     {
       type: ValidatorTypes.REGEX,
-      options: {
-        field: "email",
-        pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-      },
+      options: { field: "email", pattern: Patterns.EMAIL },
     },
   ];
 

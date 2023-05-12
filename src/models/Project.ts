@@ -7,6 +7,7 @@ import Organization from "./Organization";
 import Account from "./Account";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
+import Patterns from "../enums/patterns";
 
 @modelDecorator()
 class Project extends Model {
@@ -21,7 +22,7 @@ class Project extends Model {
     { type: ValidatorTypes.UNIQUE, options: { field: "slug" } },
     {
       type: ValidatorTypes.REGEX,
-      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+      options: { field: "slug", pattern: Patterns.SLUG },
     },
   ];
 
@@ -34,9 +35,7 @@ class Project extends Model {
   @fieldDecorator(FieldTypes.TEXT, { default: "free" })
   plan: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.RELATION, {
-    ref: "organizations",
-  })
+  @fieldDecorator(FieldTypes.RELATION, { ref: Organization.slug })
   organization: FieldDefinitionRelation<Organization>;
 
   @fieldDecorator(FieldTypes.NUMBER, { default: 86400 })
@@ -45,9 +44,7 @@ class Project extends Model {
   @fieldDecorator(FieldTypes.NUMBER, { default: 2592000 })
   refreshTokenLifetime: FieldDefinitionNumber;
 
-  @fieldDecorator(FieldTypes.RELATION, {
-    ref: "accounts",
-  })
+  @fieldDecorator(FieldTypes.RELATION, { ref: Account.slug })
   owner: FieldDefinitionRelation<Account>;
 }
 

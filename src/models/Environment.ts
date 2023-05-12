@@ -5,6 +5,7 @@ import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import { ValidatorsDefinition } from "../types";
+import Patterns from "../enums/patterns";
 
 @modelDecorator()
 class Environment extends Model {
@@ -16,7 +17,7 @@ class Environment extends Model {
   static validators: ValidatorsDefinition = [
     {
       type: ValidatorTypes.REGEX,
-      options: { field: "name", pattern: "^[a-zA-Z0-9_\\-]+$" },
+      options: { field: "name", pattern: Patterns.SLUG },
     },
     {
       type: ValidatorTypes.REGEX,
@@ -27,7 +28,7 @@ class Environment extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: "environments" })
+  @fieldDecorator(FieldTypes.RELATION, { ref: Environment.slug })
   base: FieldDefinitionRelation<Environment>;
 }
 

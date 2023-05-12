@@ -37,6 +37,8 @@ const noFieldSymbol = Symbol("noField");
 class Model {
   static extendable: boolean = false;
   static single: boolean = false;
+  static exposed: boolean = true;
+  static systemFields: boolean = true;
   static slug: string;
   static scope: ModelEnvScopes;
   static fields: FieldsDefinition;
@@ -70,6 +72,9 @@ class Model {
 
   @fieldDecorator(FieldTypes.IDENTITY)
   _updatedBy;
+
+  @fieldDecorator(FieldTypes.BOOLEAN)
+  __system;
 
   constructor(doc: any = {}) {
     if (!doc || typeof doc !== "object") {
@@ -348,7 +353,7 @@ class Model {
       return firstField.serialize(value, format, this, ctx);
     }
 
-    value = firstField.serialize(value, SerializerFormat.JSON, this, ctx);
+    value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, this, ctx);
 
     const _getter = (
       _value: any,
@@ -376,13 +381,11 @@ class Model {
         const restPaths = _fieldsPaths.slice(i + 1);
         const matchIndex = key.match(/\[(\d+)?\]/);
         if (matchIndex) {
-          const index = matchIndex[1] ? parseInt(matchIndex[1]) : null;
-
           if (!Array.isArray(_value)) {
             return noFieldSymbol;
           }
 
-          if (index === null) {
+          if (matchIndex[1] === undefined) {
             const _pathReplace = (p, fp) => {
               return p.field.__path.replace(field.__path, fp);
             };
@@ -410,6 +413,8 @@ class Model {
             });
           }
 
+          const index = parseInt(matchIndex[1]);
+
           if (_value.length <= index) {
             return noFieldSymbol;
           }
@@ -426,7 +431,16 @@ class Model {
           break;
         }
 
-        _value = field.serialize(_value[key], SerializerFormat.JSON, this, ctx);
+        _value = field.serialize(
+          _value[key],
+          SerializerFormat.NEXT_FIELD,
+          this,
+          ctx
+        );
+      }
+
+      if (format === SerializerFormat.OBJECT && lastField.nextFieldEqObject) {
+        return _value;
       }
 
       return lastField.serialize(_value, format, this, ctx);

@@ -6,6 +6,7 @@ import FieldTypes from "../enums/field-types";
 import { FieldsRestriction, Rule, ValidatorsDefinition } from "../types";
 import RuleActions from "../enums/rule-actions";
 import ValidatorTypes from "../enums/validator-types";
+import Patterns from "../enums/patterns";
 
 @modelDecorator()
 class Role extends Model {
@@ -17,7 +18,7 @@ class Role extends Model {
   static validators: ValidatorsDefinition = [
     {
       type: ValidatorTypes.REGEX,
-      options: { field: "slug", pattern: "^[a-zA-Z0-9_\\-]+$" },
+      options: { field: "slug", pattern: Patterns.SLUG },
     },
   ];
 
@@ -31,7 +32,7 @@ class Role extends Model {
     items: {
       type: FieldTypes.RELATION,
       options: {
-        ref: "roles",
+        ref: Role.slug,
       },
     },
   })

@@ -259,6 +259,14 @@ export const createFieldsMap = (
 ) => {
   const modelFields = getRecursiveFieldsFromModel(model);
 
+  if (!model.systemFields) {
+    delete modelFields._createdAt;
+    delete modelFields._createdBy;
+    delete modelFields._updatedAt;
+    delete modelFields._updatedBy;
+    delete modelFields.__system;
+  }
+
   if (assignFields) {
     Object.assign(modelFields, assignFields);
   }
@@ -346,7 +354,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
   return new ValidatorClass(def, path);
 };
 
-export const validateDocs = async <T extends typeof Model = typeof Model>(
+export const validateDocs = async (
   docs: Array<DocumentDefinition>,
   {
     validators = [],

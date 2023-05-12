@@ -153,6 +153,30 @@ const controllersMap: Record<string, ControllerDefinition> = {
     scope: "global",
     secured: false,
   },
+  registerAccount: {
+    path: "/auth/register",
+    methods: ["POST"],
+    scope: "project",
+    secured: false,
+  },
+  handleAuth: {
+    path: "/auth/handle",
+    methods: ["GET", "POST"],
+    scope: "project",
+    secured: false,
+  },
+  codeAuth: {
+    path: "/auth/code",
+    methods: ["GET", "POST"],
+    scope: "project",
+    secured: false,
+  },
+  configureAuth: {
+    path: "/auth/configure",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
 };
 
 export default controllersMap;

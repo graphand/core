@@ -9,6 +9,7 @@ import {
 } from "../types";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
+import Patterns from "../enums/patterns";
 
 @modelDecorator()
 class DataModel extends Model {
@@ -21,7 +22,7 @@ class DataModel extends Model {
     { type: ValidatorTypes.DATAMODEL_KEY_FIELD },
     {
       type: ValidatorTypes.REGEX,
-      options: { field: "slug", pattern: "^[a-zA-Z][a-zA-Z0-9]+?$" },
+      options: { field: "slug", pattern: Patterns.SLUG },
     },
   ];
 

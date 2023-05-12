@@ -9,6 +9,8 @@ import type Validator from "./lib/Validator";
 import type ValidationError from "./lib/ValidationError";
 import type PromiseModel from "./lib/PromiseModel";
 import type PromiseModelList from "./lib/PromiseModelList";
+import AuthProviders from "./enums/auth-providers";
+import AuthMethods from "./enums/auth-methods";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -373,7 +375,7 @@ export type ValidatorHook<
 > = [P, A, (args: HookCallbackArgs<P, A, T>) => boolean];
 
 export type Rule = {
-  ref: string;
+  ref?: string;
   actions?: RuleActions[];
   filter?: object;
   prohibition?: boolean;
@@ -439,3 +441,85 @@ export type ModelCrudEvent = {
 export type IdentityString = string;
 
 export type FieldsPathItem = { key: string; field: Field };
+
+export type AuthProviderOptionsMap = {
+  [AuthProviders.FACEBOOK]: {
+    clientId: string;
+    clientSecret: string;
+    fieldsMap?: Record<string, string>;
+  };
+};
+
+export type AuthProviderOptions<
+  T extends AuthProviders = keyof AuthProviderOptionsMap | AuthProviders
+> = T extends keyof AuthProviderOptionsMap
+  ? AuthProviderOptionsMap[T]
+  : Record<string, never>;
+
+export type AuthProviderRegisterOptionsMap = {
+  [AuthProviders.PASSWORD]: {
+    confirmEmail?: boolean;
+  };
+};
+
+export type AuthProviderRegisterOptions<
+  T extends AuthProviders = keyof AuthProviderRegisterOptionsMap | AuthProviders
+> = T extends keyof AuthProviderRegisterOptionsMap
+  ? AuthProviderRegisterOptionsMap[T]
+  : Record<string, never>;
+
+export type AccountAuthConfigurationMap = {
+  [AuthProviders.PASSWORD]: {
+    password: string;
+  };
+  [AuthProviders.FACEBOOK]: {
+    userId: string;
+  };
+};
+
+export type AccountAuthConfiguration<
+  T extends AuthProviders = keyof AccountAuthConfigurationMap | AuthProviders
+> = T extends keyof AccountAuthConfigurationMap
+  ? AccountAuthConfigurationMap[T]
+  : Record<string, never>;
+
+export type AuthProviderCredentialsMap = {
+  [AuthProviders.PASSWORD]: {
+    email: string;
+    password: string;
+  };
+};
+
+export type AuthProviderCredentials<
+  T extends AuthProviders = keyof AuthProviderCredentialsMap | AuthProviders
+> = T extends keyof AuthProviderCredentialsMap
+  ? AuthProviderCredentialsMap[T]
+  : Record<string, never>;
+
+export type AuthMethodOptionsMap = {
+  [AuthMethods.REDIRECT]: {
+    redirect?: string;
+  };
+};
+
+export type AuthMethodOptions<
+  T extends AuthMethods = keyof AuthMethodOptionsMap | AuthMethods
+> = T extends keyof AuthMethodOptionsMap
+  ? AuthMethodOptionsMap[T]
+  : Record<string, never>;
+
+export type AuthProviderConfigurePayloadMap = {
+  [AuthProviders.PASSWORD]:
+    | {
+        password: string;
+      }
+    | string;
+};
+
+export type AuthProviderConfigurePayload<
+  T extends AuthProviders =
+    | keyof AuthProviderConfigurePayloadMap
+    | AuthProviders
+> = T extends keyof AuthProviderConfigurePayloadMap
+  ? AuthProviderConfigurePayloadMap[T]
+  : Record<string, never>;

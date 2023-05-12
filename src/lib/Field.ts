@@ -7,6 +7,7 @@ import { getDefaultFieldOptions } from "./utils";
 class Field<T extends FieldTypes = FieldTypes> {
   __definition: FieldDefinition<T>;
   __path: string;
+  nextFieldEqObject: boolean = true;
 
   constructor(definition: FieldDefinition<T>, path: string) {
     this.__definition = definition;

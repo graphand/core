@@ -13,6 +13,7 @@ import defaultFieldsMap from "./defaultFieldsMap";
 import defaultValidatorsMap from "./defaultValidatorsMap";
 import Data from "./Data";
 import { defineFieldsProperties } from "./utils";
+import Validator from "./Validator";
 
 const cache: Map<typeof Model, Set<any>> = new Map();
 
@@ -20,6 +21,11 @@ export const mockAdapter = ({
   fieldsMap = defaultFieldsMap,
   validatorsMap = {
     ...defaultValidatorsMap,
+    [ValidatorTypes.SAMPLE]: class ValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
+      async validate(data) {
+        return true;
+      }
+    },
     // [ValidatorTypes.UNIQUE]: null,
   },
 }: {
