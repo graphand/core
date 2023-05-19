@@ -177,6 +177,18 @@ const controllersMap: Record<string, ControllerDefinition> = {
     scope: "project",
     secured: true,
   },
+  mediaPublic: {
+    path: "/medias/:id/public/:filename?",
+    methods: ["GET"],
+    scope: "project",
+    secured: false,
+  },
+  mediaPrivate: {
+    path: "/medias/:id/private/:filename?",
+    methods: ["GET"],
+    scope: "project",
+    secured: true,
+  },
 };
 
 export default controllersMap;

@@ -8,6 +8,7 @@ import Project from "./models/Project";
 import User from "./models/User";
 import Role from "./models/Role";
 import Organization from "./models/Organization";
+import Media from "./models/Media";
 import Token from "./models/Token";
 import Environment from "./models/Environment";
 import ModelList from "./lib/ModelList";
@@ -52,6 +53,7 @@ const models = {
   Role,
   Token,
   Environment,
+  Media,
 };
 
 export {
@@ -69,6 +71,7 @@ export {
   Environment,
   Role,
   DataModel,
+  Media,
   models,
   ModelEnvScopes,
   FieldTypes,

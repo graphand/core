@@ -414,29 +414,22 @@ export type ControllerDefinition = {
   secured: boolean;
 };
 
-export type ModelCreateEvent = {
-  operation?: "create";
-  model: string;
-  ids: Array<string>;
-  data: Array<any>;
-};
-
-export type ModelUpdateEvent = {
-  operation?: "update";
-  model: string;
-  ids: Array<string>;
-  data: Array<any>;
-};
-
-export type ModelDeleteEvent = {
-  operation?: "delete";
-  model: string;
-  ids: Array<string>;
-};
-
 export type ModelCrudEvent = {
-  __socketId?: string;
-} & (ModelCreateEvent | ModelUpdateEvent | ModelDeleteEvent);
+  operation?: "create" | "update" | "delete";
+  model: string;
+  ids: Array<string>;
+  data?: Array<any>;
+};
+
+export type FormProcessEvent = {
+  type?: "start" | "end" | "progress";
+  key: string;
+  files: Array<string>;
+  fields: Array<string>;
+  percentage?: number;
+  contentLength?: number;
+  receivedLength: number;
+};
 
 export type IdentityString = string;
 
