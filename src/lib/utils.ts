@@ -219,18 +219,22 @@ export const getNestedFieldsMap = (
   model: typeof Model,
   nestedField: Field<FieldTypes.NESTED>
 ) => {
-  const subfieldsEntries: Array<[string, Field]> = Object.entries(
-    nestedField.options.fields ?? {}
-  ).map(([slug, def]) => {
+  const adapter = model.getAdapter();
+  const map = new Map();
+
+  Object.entries(nestedField.options.fields ?? {}).forEach(([slug, def]) => {
     const field = getFieldFromDefinition(
       def,
-      model.getAdapter(),
+      adapter,
       nestedField.__path + "." + slug
     );
 
-    return [slug, field];
+    if (field) {
+      map.set(slug, field);
+    }
   });
-  return new Map(subfieldsEntries);
+
+  return map;
 };
 
 export const parseValidatorHook = (
@@ -271,13 +275,18 @@ export const createFieldsMap = (
     Object.assign(modelFields, assignFields);
   }
 
-  const fieldsEntries: Array<[string, Field]> = Object.entries(modelFields).map(
-    ([slug, def]) => {
-      return [slug, getFieldFromDefinition(def, model.getAdapter(false), slug)];
-    }
-  );
+  const map = new Map();
+  const adapter = model.getAdapter(false);
 
-  return new Map(fieldsEntries);
+  Object.entries(modelFields).forEach(([slug, def]) => {
+    const field = getFieldFromDefinition(def, adapter, slug);
+
+    if (field) {
+      map.set(slug, field);
+    }
+  });
+
+  return map;
 };
 
 export const createValidatorsArray = (
@@ -290,17 +299,18 @@ export const createValidatorsArray = (
     modelValidators = [...modelValidators, ...assignValidators];
   }
 
-  const entries: Array<[string, Validator]> = modelValidators.map((def) => {
-    const validator = getValidatorFromDefinition(
-      def,
-      model.getAdapter(false),
-      null
-    );
-    return [validator.getKey(), validator];
+  const obj = {};
+  const adapter = model.getAdapter(false);
+
+  modelValidators.forEach((def) => {
+    const validator = getValidatorFromDefinition(def, adapter, null);
+    const key = validator.getKey();
+    if (!obj[key]) {
+      obj[key] = validator;
+    }
   });
 
-  const map = new Map(entries);
-  return Array.from(map.values());
+  return Object.values(obj);
 };
 
 export const getFieldFromDefinition = <
@@ -428,21 +438,16 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
 ): ValidatorOptions<T> => {
   let options = {};
 
-  switch (type) {
-    case ValidatorTypes.LENGTH:
-      options = {
-        min: -Infinity,
-        max: Infinity,
-      };
-      break;
-    case ValidatorTypes.BOUNDARIES:
-      options = {
-        min: -Infinity,
-        max: Infinity,
-      };
-      break;
-    default:
-      break;
+  if (type === ValidatorTypes.LENGTH) {
+    options = {
+      min: -Infinity,
+      max: Infinity,
+    };
+  } else if (type === ValidatorTypes.BOUNDARIES) {
+    options = {
+      min: -Infinity,
+      max: Infinity,
+    };
   }
 
   return options as ValidatorOptions<T>;
@@ -452,35 +457,56 @@ export const isObjectId = (input: string) => /^[a-f\d]{24}$/i.test(input);
 
 export const defineFieldsProperties = (instance: Model) => {
   const { model } = instance;
-  if (!model.__fieldsProperties) {
-    const propEntries = [];
-    for (const slug of model.fieldsKeys) {
-      propEntries.push([
-        slug,
-        {
-          enumerable: true,
-          configurable: true,
-          get() {
-            return this.get(slug);
-          },
-          set(v) {
-            if (v === undefined) {
-              console.warn(
-                "cannot set undefined value with = operator. Please use .set method instead"
-              );
-              return;
-            }
+  for (const slug of model.fieldsKeys) {
+    Object.defineProperty(instance, slug, {
+      enumerable: true,
+      configurable: true,
+      get() {
+        return this.get(slug);
+      },
+      set(v) {
+        if (v === undefined) {
+          console.warn(
+            "cannot set undefined value with = operator. Please use .set method instead"
+          );
+          return;
+        }
 
-            return this.set(slug, v);
-          },
-        },
-      ]);
-    }
-
-    model.__fieldsProperties = Object.fromEntries(propEntries);
+        return this.set(slug, v);
+      },
+    });
   }
 
-  Object.defineProperties(instance, model.__fieldsProperties);
+  // const { model } = instance;
+  // if (!model.__fieldsProperties) {
+  //   const propEntries = [];
+  //   for (const slug of model.fieldsKeys) {
+  //     propEntries.push([
+  //       slug,
+  //       {
+  //         enumerable: true,
+  //         configurable: true,
+  //         get() {
+  //           return this.get(slug);
+  //         },
+  //         set(v) {
+  //           if (v === undefined) {
+  //             console.warn(
+  //               "cannot set undefined value with = operator. Please use .set method instead"
+  //             );
+  //             return;
+  //           }
+
+  //           return this.set(slug, v);
+  //         },
+  //       },
+  //     ]);
+  //   }
+
+  //   model.__fieldsProperties = Object.fromEntries(propEntries);
+  // }
+
+  // Object.defineProperties(instance, model.__fieldsProperties);
 };
 
 export const getAdaptedModel = <M extends typeof Model = typeof Model>(

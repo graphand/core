@@ -359,7 +359,10 @@ class Model {
       _value: any,
       _fieldsPaths: Array<{ key: string; field: Field }>
     ) => {
-      for (const [i, _fieldsPath] of _fieldsPaths.entries()) {
+      // const entries = _fieldsPaths.entries();
+      // for (const [i, _fieldsPath] of entries) {
+      for (let i = 0; i < _fieldsPaths.length; i++) {
+        const _fieldsPath = _fieldsPaths[i];
         if (!_fieldsPath) {
           return noFieldSymbol;
         }
@@ -501,7 +504,8 @@ class Model {
       let assignTo = _assignTo;
       let assignPath = _fieldsPaths.shift();
 
-      for (const [i, _fieldsPath] of _fieldsPaths.entries()) {
+      for (let i = 0; i < _fieldsPaths.length; i++) {
+        const _fieldsPath = _fieldsPaths[i];
         if (!_fieldsPath) {
           throw new CoreError({
             message: `Field ${_path} is not found in model ${this.model.slug}`,

@@ -17,6 +17,7 @@ class Media extends Model {
     { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "mimetype" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "originalname" } },
+    { type: ValidatorTypes.BOUNDARIES, options: { field: "size", min: 1 } },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
@@ -31,7 +32,7 @@ class Media extends Model {
   @fieldDecorator(FieldTypes.NUMBER)
   size: FieldDefinitionNumber;
 
-  @fieldDecorator(FieldTypes.BOOLEAN)
+  @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
   private: FieldDefinitionBoolean;
 
   file: any;

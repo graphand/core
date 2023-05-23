@@ -140,15 +140,17 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     from: Model,
     ctx: ExecutorCtx = {}
   ): any {
-    switch (format) {
-      case SerializerFormat.JSON:
-      case SerializerFormat.DOCUMENT:
-      case SerializerFormat.NEXT_FIELD:
-        return this._serializeJSON(value, format, from, ctx);
-      case SerializerFormat.OBJECT:
-      default:
-        return this._serializeObject(value, format, from, ctx);
+    if (
+      [
+        SerializerFormat.JSON,
+        SerializerFormat.DOCUMENT,
+        SerializerFormat.NEXT_FIELD,
+      ].includes(format)
+    ) {
+      return this._serializeJSON(value, format, from, ctx);
     }
+
+    return this._serializeObject(value, format, from, ctx);
   }
 }
 
@@ -244,31 +246,32 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
     const adapter = from.model.getAdapter();
 
     const _serializeJSON = (obj: object) => {
-      let formattedEntries = Object.entries(this.options.fields ?? {}).map(
-        ([slug, def]) => {
-          const field = getFieldFromDefinition(
-            def,
-            adapter,
-            [this.__path, slug].join(".")
-          );
+      const formattedEntries = [];
+      const fields = this.options.fields ?? {};
+      const entries = Object.entries(fields);
 
-          let value = obj[slug];
+      for (let i = 0; i < entries.length; i++) {
+        const [slug, def] = entries[i];
+        const field = getFieldFromDefinition(
+          def,
+          adapter,
+          [this.__path, slug].join(".")
+        );
 
-          if (value === undefined && "default" in field.options) {
-            value = field.options.default as typeof value;
-          }
+        let value = obj[slug];
 
-          if (value !== undefined && value !== null) {
-            value = field.serialize(value, format, from, ctx);
-          }
-
-          if (value === undefined) {
-            return null;
-          }
-
-          return [slug, value];
+        if (value === undefined && "default" in field.options) {
+          value = field.options.default as typeof value;
         }
-      );
+
+        if (value !== undefined && value !== null) {
+          value = field.serialize(value, format, from, ctx);
+        }
+
+        if (value !== undefined) {
+          formattedEntries.push([slug, value]);
+        }
+      }
 
       if (this.options.defaultField) {
         const defaultField = getFieldFromDefinition(
@@ -277,10 +280,10 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
           this.__path + ".__default"
         );
 
-        const defaultEntries = Object.keys(obj)
-          .filter((key) => !this.options.fields?.[key])
-          .map((slug) => {
-            let value = obj[slug];
+        const defaultEntries = [];
+        for (const key in obj) {
+          if (!this.options.fields?.[key]) {
+            let value = obj[key];
 
             if (value === undefined && "default" in defaultField.options) {
               value = defaultField.options.default as typeof value;
@@ -290,8 +293,9 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
               value = defaultField.serialize(value, format, from, ctx);
             }
 
-            return [slug, value];
-          });
+            defaultEntries.push([key, value]);
+          }
+        }
 
         Array.prototype.push.apply(formattedEntries, defaultEntries);
       }
@@ -363,15 +367,11 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       });
     };
 
-    switch (format) {
-      case SerializerFormat.JSON:
-      case SerializerFormat.DOCUMENT:
-        return _serializeJSON(value);
-      case SerializerFormat.OBJECT:
-      case SerializerFormat.NEXT_FIELD:
-      default:
-        return _serializeObject(value);
+    if ([SerializerFormat.JSON, SerializerFormat.DOCUMENT].includes(format)) {
+      return _serializeJSON(value);
     }
+
+    return _serializeObject(value);
   }
 }
 
