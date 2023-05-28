@@ -351,10 +351,13 @@ export type HookCallbackArgs<
   A extends keyof AdapterFetcher<T>,
   T extends typeof Model
 > = P extends "before"
-  ? { args: Parameters<AdapterFetcher<T>[A]>[0]; ctx: ExecutorCtx }
+  ? {
+      args: Parameters<AdapterFetcher<T>[A]>[0];
+      ctx: ExecutorCtx;
+      err?: Array<Error | Symbol>;
+    }
   : HookCallbackArgs<"before", A, T> & {
       res?: ReturnType<AdapterFetcher<T>[A]>;
-      err?: Error[];
     };
 
 export type Hook<
@@ -425,7 +428,6 @@ export type FormProcessEvent = {
   type?: "start" | "end" | "progress";
   key: string;
   files: Array<string>;
-  fields: Array<string>;
   percentage?: number;
   contentLength?: number;
   receivedLength: number;

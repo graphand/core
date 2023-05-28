@@ -13,8 +13,8 @@ class Media extends Model {
   static extendable = true;
   static slug = "medias";
   static scope = ModelEnvScopes.PROJECT;
+  static keyField = "name";
   static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "mimetype" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "originalname" } },
     { type: ValidatorTypes.BOUNDARIES, options: { field: "size", min: 1 } },

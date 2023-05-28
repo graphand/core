@@ -1033,6 +1033,31 @@ class Model {
     return adapter;
   }
 
+  static async executeHooks<
+    M extends typeof Model,
+    P extends HookPhase,
+    A extends keyof AdapterFetcher<M>
+  >(
+    this: M,
+    phase: P,
+    action: A,
+    payload: HookCallbackArgs<P, A, M>
+  ): Promise<void> {
+    await getRecursiveHooksFromModel(this, action, phase).reduce(
+      async (p, hook) => {
+        await p;
+
+        try {
+          await hook.fn.call(this, payload);
+        } catch (err) {
+          payload.err ??= [];
+          payload.err.push(err);
+        }
+      },
+      Promise.resolve()
+    );
+  }
+
   static async execute<
     M extends typeof Model,
     A extends keyof AdapterFetcher<M>,
@@ -1046,65 +1071,47 @@ class Model {
     const adapter = this.getAdapter();
     const fn = adapter.fetcher[action];
     const retryToken = Symbol();
-    const hooksBefore = getRecursiveHooksFromModel(this, action, "before");
 
     const ctx = { ...(bindCtx || {}), adapter, fn, retryToken } as ExecutorCtx;
 
-    const hookPayloadBefore: HookCallbackArgs<"before", A, M> = { args, ctx };
-
-    let beforeErr;
-    await hooksBefore.reduce(async (p, hook) => {
-      await p;
-      try {
-        await hook.fn.call(this, hookPayloadBefore);
-      } catch (err) {
-        beforeErr = Array.prototype.concat.apply(beforeErr ?? [], [err]);
-      }
-    }, Promise.resolve());
+    const payloadBefore: HookCallbackArgs<"before", A, M> = {
+      args,
+      ctx,
+      err: undefined,
+    };
 
     let res;
-    let err = beforeErr;
+    await this.executeHooks("before", action, payloadBefore);
 
-    if (!err?.length) {
+    if (!payloadBefore.err?.length) {
       try {
-        res = await fn.apply(fn, [
-          hookPayloadBefore.args,
-          hookPayloadBefore.ctx,
-        ]);
+        res = await fn.apply(fn, [args, ctx]);
       } catch (e) {
-        err ??= [];
-        err.push(e);
+        payloadBefore.err ??= [];
+        payloadBefore.err.push(e);
       }
     }
 
-    if (err?.includes(retryToken)) {
+    if (payloadBefore.err?.includes(retryToken)) {
       return await this.execute(action, args, bindCtx);
     }
 
-    const hookPayloadAfter = { ...hookPayloadBefore, res, err };
+    const payloadAfter: HookCallbackArgs<"after", A, M> = {
+      ...payloadBefore,
+      res,
+    };
 
-    const hooksAfter = getRecursiveHooksFromModel(this, action, "after");
-    await hooksAfter.reduce(async (p, hook) => {
-      await p;
-      try {
-        await hook.fn.call(this, hookPayloadAfter);
-      } catch (err) {
-        hookPayloadAfter.err = Array.prototype.concat.apply(
-          hookPayloadAfter.err ?? [],
-          [err]
-        );
-      }
-    }, Promise.resolve());
+    await this.executeHooks("after", action, payloadAfter);
 
-    if (hookPayloadAfter.err?.length) {
-      if (hookPayloadAfter.err.includes(retryToken)) {
+    if (payloadAfter.err?.length) {
+      if (payloadAfter.err.includes(retryToken)) {
         return await this.execute(action, args, bindCtx);
       }
 
-      throw hookPayloadAfter.err[0];
+      throw payloadAfter.err[0];
     }
 
-    return hookPayloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
+    return payloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
   }
 }
 
