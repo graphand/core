@@ -1041,7 +1041,8 @@ class Model {
     this: M,
     phase: P,
     action: A,
-    payload: HookCallbackArgs<P, A, M>
+    payload: HookCallbackArgs<P, A, M>,
+    abortToken?: symbol
   ): Promise<void> {
     await getRecursiveHooksFromModel(this, action, phase).reduce(
       async (p, hook) => {
@@ -1050,6 +1051,13 @@ class Model {
         try {
           await hook.fn.call(this, payload);
         } catch (err) {
+          if (abortToken === err) {
+            throw new CoreError({
+              code: ErrorCodes.EXECUTION_ABORTED,
+              message: `execution on model ${this.__name} has been aborted`,
+            });
+          }
+
           payload.err ??= [];
           payload.err.push(err);
         }
@@ -1066,13 +1074,21 @@ class Model {
     this: M,
     action: A,
     args: Args,
-    bindCtx?: ExecutorCtx
+    bindCtx: ExecutorCtx = {}
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const adapter = this.getAdapter();
     const fn = adapter.fetcher[action];
     const retryToken = Symbol();
+    const abortToken = Symbol();
+    bindCtx.retryTimes ??= 0;
 
-    const ctx = { ...(bindCtx || {}), adapter, fn, retryToken } as ExecutorCtx;
+    const ctx = {
+      ...bindCtx,
+      adapter,
+      fn,
+      retryToken,
+      abortToken,
+    } as ExecutorCtx;
 
     const payloadBefore: HookCallbackArgs<"before", A, M> = {
       args,
@@ -1081,7 +1097,7 @@ class Model {
     };
 
     let res;
-    await this.executeHooks("before", action, payloadBefore);
+    await this.executeHooks("before", action, payloadBefore, abortToken);
 
     if (!payloadBefore.err?.length) {
       try {
@@ -1093,6 +1109,7 @@ class Model {
     }
 
     if (payloadBefore.err?.includes(retryToken)) {
+      bindCtx.retryTimes++;
       return await this.execute(action, args, bindCtx);
     }
 
@@ -1101,10 +1118,11 @@ class Model {
       res,
     };
 
-    await this.executeHooks("after", action, payloadAfter);
+    await this.executeHooks("after", action, payloadAfter, abortToken);
 
     if (payloadAfter.err?.length) {
       if (payloadAfter.err.includes(retryToken)) {
+        bindCtx.retryTimes++;
         return await this.execute(action, args, bindCtx);
       }
 
