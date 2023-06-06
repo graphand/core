@@ -26,6 +26,7 @@ import ValidationFieldError from "./ValidationFieldError";
 import ValidationValidatorError from "./ValidationValidatorError";
 import ValidationError from "./ValidationError";
 import CoreError from "./CoreError";
+import SerializerFormat from "../enums/serializer-format";
 
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
@@ -380,42 +381,41 @@ export const validateDocs = async (
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
 
-  for (const [slug, field] of fieldsEntries) {
+  const fieldValidations = fieldsEntries.map(([slug, field]) => {
     const list = bindDuplicatesValues
       ? Array.from(new Set(docs.map((doc) => doc[slug])))
       : docs.map((doc) => doc[slug]);
 
-    for (const values of list) {
-      try {
-        const validated = await field.validate(values, ctx, slug);
-        if (!validated) {
-          throw null;
+    return Promise.all(
+      list.map(async (values) => {
+        try {
+          const validated = await field.validate(values, ctx, slug);
+          if (!validated) {
+            throw null;
+          }
+        } catch (err) {
+          const e = new ValidationFieldError({
+            slug,
+            field,
+            validationError: err instanceof ValidationError ? err : null,
+          });
+
+          errorsFieldsSet.add(e);
         }
-      } catch (err) {
-        const e = new ValidationFieldError({
-          slug,
-          field,
-          validationError: err instanceof ValidationError ? err : null,
-        });
+      })
+    );
+  });
 
-        errorsFieldsSet.add(e);
-      }
-    }
-  }
-
-  for (const validator of validators) {
-    try {
-      const validated = await validator.validate(docs, ctx);
-
+  const validatorValidations = validators.map((validator) => {
+    return validator.validate(docs, ctx).then((validated) => {
       if (!validated) {
-        throw null;
+        const e = new ValidationValidatorError({ validator });
+        errorsValidatorsSet.add(e);
       }
-    } catch (err) {
-      const e = new ValidationValidatorError({ validator });
+    });
+  });
 
-      errorsValidatorsSet.add(e);
-    }
-  }
+  await Promise.all([...fieldValidations, ...validatorValidations]);
 
   if (errorsFieldsSet.size || errorsValidatorsSet.size) {
     throw new ValidationError({
@@ -436,77 +436,49 @@ export const getDefaultFieldOptions = <T extends FieldTypes>(
 export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
   type: T
 ): ValidatorOptions<T> => {
-  let options = {};
-
-  if (type === ValidatorTypes.LENGTH) {
-    options = {
-      min: -Infinity,
-      max: Infinity,
-    };
-  } else if (type === ValidatorTypes.BOUNDARIES) {
-    options = {
-      min: -Infinity,
-      max: Infinity,
-    };
+  switch (type) {
+    case ValidatorTypes.LENGTH:
+    case ValidatorTypes.BOUNDARIES:
+      return {
+        min: -Infinity,
+        max: Infinity,
+      } as ValidatorOptions<T>;
+    default:
+      return {} as ValidatorOptions<T>;
   }
-
-  return options as ValidatorOptions<T>;
 };
 
 export const isObjectId = (input: string) => /^[a-f\d]{24}$/i.test(input);
 
 export const defineFieldsProperties = (instance: Model) => {
   const { model } = instance;
-  for (const slug of model.fieldsKeys) {
-    Object.defineProperty(instance, slug, {
-      enumerable: true,
-      configurable: true,
-      get() {
-        return this.get(slug);
-      },
-      set(v) {
-        if (v === undefined) {
-          console.warn(
-            "cannot set undefined value with = operator. Please use .set method instead"
-          );
-          return;
-        }
 
-        return this.set(slug, v);
-      },
-    });
+  if (!model.__fieldsProperties) {
+    const properties = {};
+    for (const slug of model.fieldsKeys) {
+      properties[slug] = {
+        enumerable: true,
+        configurable: true,
+        get() {
+          return this.get(slug);
+        },
+        set(v) {
+          if (v === undefined) {
+            console.warn(
+              "cannot set undefined value with = operator. Please use .set method instead"
+            );
+            return;
+          }
+
+          return this.set(slug, v);
+        },
+      };
+    }
+
+    model.__fieldsProperties = properties;
   }
 
-  // const { model } = instance;
-  // if (!model.__fieldsProperties) {
-  //   const propEntries = [];
-  //   for (const slug of model.fieldsKeys) {
-  //     propEntries.push([
-  //       slug,
-  //       {
-  //         enumerable: true,
-  //         configurable: true,
-  //         get() {
-  //           return this.get(slug);
-  //         },
-  //         set(v) {
-  //           if (v === undefined) {
-  //             console.warn(
-  //               "cannot set undefined value with = operator. Please use .set method instead"
-  //             );
-  //             return;
-  //           }
-
-  //           return this.set(slug, v);
-  //         },
-  //       },
-  //     ]);
-  //   }
-
-  //   model.__fieldsProperties = Object.fromEntries(propEntries);
-  // }
-
-  // Object.defineProperties(instance, model.__fieldsProperties);
+  Object.defineProperties(instance, model.__fieldsProperties);
 };
 
 export const getAdaptedModel = <M extends typeof Model = typeof Model>(
@@ -533,4 +505,177 @@ export const getAdaptedModel = <M extends typeof Model = typeof Model>(
   }
 
   return adaptedModel;
+};
+
+export const _getter = (opts: {
+  _value: any;
+  _fieldsPaths: Array<{ key: string; field: Field }>;
+  _lastField?: Field;
+  noFieldSymbol: Symbol;
+  format: SerializerFormat | string;
+  ctx: any;
+  from: Model;
+}) => {
+  let { _value, _lastField } = opts;
+  const { _fieldsPaths, noFieldSymbol, format, ctx, from } = opts;
+
+  const lastField = _fieldsPaths[_fieldsPaths.length - 1]?.field;
+
+  for (let i = 0; i < _fieldsPaths.length; i++) {
+    const _fieldsPath = _fieldsPaths[i];
+    if (!_fieldsPath) {
+      return noFieldSymbol;
+    }
+
+    const { key, field } = _fieldsPath;
+
+    if (
+      format !== SerializerFormat.DOCUMENT &&
+      _value === undefined &&
+      "default" in field.options
+    ) {
+      _value = field.options.default as typeof _value;
+    }
+
+    if (_value === undefined || _value === null) {
+      return _value;
+    }
+
+    let restPaths = _fieldsPaths.slice(i + 1);
+    const matchIndex = key.match(/\[(\d+)?\]/);
+    if (matchIndex) {
+      if (!Array.isArray(_value)) {
+        return noFieldSymbol;
+      }
+
+      if (matchIndex[1] === undefined) {
+        const adapter = from.model.getAdapter();
+        const _pathReplace = (p, fp) => {
+          return p.field.__path.replace(field.__path, fp);
+        };
+
+        return _value.map((v, fi) => {
+          const thisPath = field.__path.replace(/\[\]$/, `[${fi}]`);
+          const _restPaths = restPaths.map((p) => {
+            if (!p) {
+              return p;
+            }
+
+            return {
+              ...p,
+              field: getFieldFromDefinition(
+                p.field.__definition,
+                adapter,
+                _pathReplace(p, thisPath)
+              ),
+            };
+          });
+
+          const res = _getter({
+            ...opts,
+            _value: v,
+            _fieldsPaths: _restPaths,
+            _lastField: lastField,
+          });
+
+          return res === noFieldSymbol ? undefined : res;
+        });
+      }
+
+      const index = parseInt(matchIndex[1]);
+
+      if (_value.length <= index) {
+        return noFieldSymbol;
+      }
+
+      const res = _getter({
+        ...opts,
+        _value: _value[index],
+        _fieldsPaths: restPaths,
+        _lastField: lastField,
+      });
+
+      return res === noFieldSymbol ? undefined : res;
+    }
+
+    if (!_value || typeof _value !== "object") {
+      break;
+    }
+
+    _value = field.serialize(
+      _value[key],
+      SerializerFormat.NEXT_FIELD,
+      from,
+      ctx
+    );
+  }
+
+  _lastField ??= lastField;
+
+  if (
+    !_lastField ||
+    (_lastField?.nextFieldEqObject && format === SerializerFormat.OBJECT)
+  ) {
+    return _value;
+  }
+
+  return _lastField.serialize(_value, format, from, ctx);
+};
+
+export const _setter = (opts: {
+  _assignTo: any;
+  _value: any;
+  _fieldsPaths: Array<{ key: string | number; field: Field }>;
+  _throw: () => void;
+  ctx: any;
+  from: Model;
+}) => {
+  const { _assignTo, _fieldsPaths, _throw, _value, ctx, from } = opts;
+
+  let assignTo = _assignTo;
+  let assignPath = _fieldsPaths.shift();
+
+  for (let i = 0; i < _fieldsPaths.length; i++) {
+    const _fieldsPath = _fieldsPaths[i];
+    if (!_fieldsPath) {
+      _throw();
+    }
+
+    assignTo[assignPath.key] ??= {};
+    assignTo = assignTo[assignPath.key];
+    assignPath = _fieldsPath;
+
+    if (assignPath.key === "[]") {
+      const restPaths = _fieldsPaths.slice(i + 1);
+
+      const assignToArr = Array.isArray(assignTo) ? assignTo : [];
+      if (assignToArr.length) {
+        assignTo = assignToArr.map((v, index) => {
+          return _setter({
+            ...opts,
+            _assignTo: assignTo,
+            _fieldsPaths: [
+              { key: index, field: assignPath.field },
+              ...restPaths,
+            ],
+          });
+        });
+      }
+
+      return assignTo;
+    }
+  }
+
+  if (assignPath?.field && assignTo && typeof assignTo === "object") {
+    assignTo[assignPath.key] = assignPath.field.serialize(
+      _value,
+      SerializerFormat.DOCUMENT,
+      from,
+      ctx
+    );
+
+    return assignTo[assignPath.key];
+  }
+
+  return null;
 };

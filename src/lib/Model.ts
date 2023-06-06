@@ -26,8 +26,9 @@ import {
   getRecursiveHooksFromModel,
   validateDocs,
   defineFieldsProperties,
-  getFieldFromDefinition,
   getAdaptedModel,
+  _getter,
+  _setter,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
@@ -318,13 +319,11 @@ class Model {
   ) {
     let fieldsPaths;
     let firstField;
-    let lastField;
 
     if (path.includes(".")) {
       const pathArr = path.split(".");
       fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
       firstField = fieldsPaths.shift()?.field;
-      lastField = fieldsPaths[fieldsPaths.length - 1]?.field || firstField;
     } else {
       fieldsPaths = [];
       firstField = this.model.fieldsMap.get(path);
@@ -355,110 +354,20 @@ class Model {
 
     value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, this, ctx);
 
-    const _getter = (
-      _value: any,
-      _fieldsPaths: Array<{ key: string; field: Field }>
-    ) => {
-      // const entries = _fieldsPaths.entries();
-      // for (const [i, _fieldsPath] of entries) {
-      for (let i = 0; i < _fieldsPaths.length; i++) {
-        const _fieldsPath = _fieldsPaths[i];
-        if (!_fieldsPath) {
-          return noFieldSymbol;
-        }
-
-        if (
-          format !== SerializerFormat.DOCUMENT &&
-          _value === undefined &&
-          "default" in firstField.options
-        ) {
-          _value = firstField.options.default as typeof _value;
-        }
-
-        if (_value === undefined || _value === null) {
-          return _value;
-        }
-
-        const { key, field } = _fieldsPath;
-
-        const restPaths = _fieldsPaths.slice(i + 1);
-        const matchIndex = key.match(/\[(\d+)?\]/);
-        if (matchIndex) {
-          if (!Array.isArray(_value)) {
-            return noFieldSymbol;
-          }
-
-          if (matchIndex[1] === undefined) {
-            const _pathReplace = (p, fp) => {
-              return p.field.__path.replace(field.__path, fp);
-            };
-            const adapter = this.model.getAdapter();
-
-            return _value.map((v, fi) => {
-              const thisPath = field.__path.replace(/\[\]$/, `[${fi}]`);
-              const _restPaths = restPaths.map((p) => {
-                if (!p) {
-                  return p;
-                }
-
-                return {
-                  ...p,
-                  field: getFieldFromDefinition(
-                    p.field.__definition,
-                    adapter,
-                    _pathReplace(p, thisPath)
-                  ),
-                };
-              });
-
-              const res = _getter(v, _restPaths);
-              return res === noFieldSymbol ? undefined : res;
-            });
-          }
-
-          const index = parseInt(matchIndex[1]);
-
-          if (_value.length <= index) {
-            return noFieldSymbol;
-          }
-
-          const res = _getter(_value[index], restPaths);
-          if (res === noFieldSymbol) {
-            return undefined;
-          }
-
-          return res;
-        }
-
-        if (!_value || typeof _value !== "object") {
-          break;
-        }
-
-        _value = field.serialize(
-          _value[key],
-          SerializerFormat.NEXT_FIELD,
-          this,
-          ctx
-        );
-      }
-
-      if (format === SerializerFormat.OBJECT && lastField.nextFieldEqObject) {
-        return _value;
-      }
-
-      return lastField.serialize(_value, format, this, ctx);
-    };
-
     if (value === undefined) {
       return undefined;
     }
 
-    let res = _getter(value, fieldsPaths);
-    if (res === noFieldSymbol) {
-      res = undefined;
-    }
+    let res = _getter({
+      _value: value,
+      _fieldsPaths: fieldsPaths,
+      format,
+      ctx,
+      noFieldSymbol,
+      from: this,
+    });
 
-    return res;
+    return res === noFieldSymbol ? undefined : res;
   }
 
   /**
@@ -477,15 +386,18 @@ class Model {
   ) {
     const _path = path as string;
     let fieldsPaths;
+    const _throw = () => {
+      throw new CoreError({
+        message: `Field ${_path} is not found in model ${this.model.slug}`,
+      });
+    };
 
     if (_path.includes(".")) {
       const pathArr = _path.split(".");
       fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
 
       if (fieldsPaths.includes(null)) {
-        throw new CoreError({
-          message: `Field ${_path} is not found in model ${this.model.slug}`,
-        });
+        _throw();
       }
     } else {
       fieldsPaths = [
@@ -496,58 +408,14 @@ class Model {
       ];
     }
 
-    const _setter = (
-      _assignTo: any = {},
-      _value: any,
-      _fieldsPaths: Array<{ key: string | number; field: Field }>
-    ) => {
-      let assignTo = _assignTo;
-      let assignPath = _fieldsPaths.shift();
-
-      for (let i = 0; i < _fieldsPaths.length; i++) {
-        const _fieldsPath = _fieldsPaths[i];
-        if (!_fieldsPath) {
-          throw new CoreError({
-            message: `Field ${_path} is not found in model ${this.model.slug}`,
-          });
-        }
-
-        assignTo[assignPath.key] ??= {};
-        assignTo = assignTo[assignPath.key];
-        assignPath = _fieldsPath;
-
-        if (assignPath.key === "[]") {
-          const restPaths = _fieldsPaths.slice(i + 1);
-
-          const assignToArr = Array.isArray(assignTo) ? assignTo : [];
-          if (assignToArr.length) {
-            assignTo = assignToArr.map((v, index) => {
-              return _setter(assignTo, _value, [
-                { key: index, field: assignPath.field },
-                ...restPaths,
-              ]);
-            });
-          }
-
-          return assignTo;
-        }
-      }
-
-      if (assignPath?.field && assignTo && typeof assignTo === "object") {
-        assignTo[assignPath.key] = assignPath.field.serialize(
-          value,
-          SerializerFormat.DOCUMENT,
-          this,
-          ctx
-        );
-
-        return assignTo[assignPath.key];
-      }
-
-      return null;
-    };
-
-    return _setter(this.__doc, value, fieldsPaths);
+    return _setter({
+      _assignTo: this.__doc,
+      _value: value,
+      _fieldsPaths: fieldsPaths,
+      _throw,
+      ctx,
+      from: this,
+    });
   }
 
   /**
