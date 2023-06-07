@@ -646,11 +646,9 @@ export const _setter = (opts: {
     assignPath = _fieldsPath;
 
     if (assignPath.key === "[]") {
-      const restPaths = _fieldsPaths.slice(i + 1);
-
-      const assignToArr = Array.isArray(assignTo) ? assignTo : [];
-      if (assignToArr.length) {
-        assignTo = assignToArr.map((v, index) => {
+      if (Array.isArray(assignTo) && assignTo.length) {
+        const restPaths = _fieldsPaths.slice(i + 1);
+        assignTo = assignTo.map((_, index) => {
           return _setter({
             ...opts,
             _assignTo: assignTo,

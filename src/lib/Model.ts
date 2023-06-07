@@ -33,8 +33,6 @@ import {
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
 
-const noFieldSymbol = Symbol("noField");
-
 class Model {
   static extendable: boolean = false;
   static single: boolean = false;
@@ -354,9 +352,11 @@ class Model {
 
     value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, this, ctx);
 
-    if (value === undefined) {
-      return undefined;
+    if (value === undefined || value === null) {
+      return value;
     }
+
+    const noFieldSymbol = Symbol("noField");
 
     let res = _getter({
       _value: value,
@@ -619,6 +619,13 @@ class Model {
     payload: InputModelPayload<T>,
     ctx?: ExecutorCtx
   ): Promise<InstanceType<T>> {
+    if (Array.isArray(payload)) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_PARAMS,
+        message: `Payload is an array, use createMultiple instead`,
+      });
+    }
+
     await this.initialize();
 
     if (this.single) {
@@ -944,16 +951,12 @@ class Model {
     args: Args,
     bindCtx: ExecutorCtx = {}
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
-    const adapter = this.getAdapter();
-    const fn = adapter.fetcher[action];
     const retryToken = Symbol();
     const abortToken = Symbol();
     bindCtx.retryTimes ??= 0;
 
     const ctx = {
       ...bindCtx,
-      adapter,
-      fn,
       retryToken,
       abortToken,
     } as ExecutorCtx;
@@ -969,6 +972,7 @@ class Model {
 
     if (!payloadBefore.err?.length) {
       try {
+        const fn = this.getAdapter().fetcher[action];
         res = await fn.apply(fn, [args, ctx]);
       } catch (e) {
         payloadBefore.err ??= [];

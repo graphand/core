@@ -1,7 +1,11 @@
 import DataModel from "../../models/DataModel";
 import { faker } from "@faker-js/faker";
 import Data from "../../lib/Data";
-import { mockAdapter, mockModel } from "../../lib/test-utils";
+import {
+  generateRandomString,
+  mockAdapter,
+  mockModel,
+} from "../../lib/test-utils";
 import CoreError from "../../lib/CoreError";
 import FieldTypes from "../../enums/field-types";
 import Model from "../../lib/Model";
@@ -74,7 +78,7 @@ describe("Data", () => {
   });
 
   it("should throw error at initializing if no adapter", async () => {
-    const slug = faker.animal.type();
+    const slug = generateRandomString();
 
     const model = Data.getFromSlug(slug);
 
@@ -83,7 +87,7 @@ describe("Data", () => {
 
   it("should not throw error at initializing if datamodel exists", async () => {
     const DM = DataModel.withAdapter(adapter);
-    const slug = faker.lorem.word();
+    const slug = generateRandomString();
     await DM.create({ slug });
 
     const model = Data.getFromSlug(slug).withAdapter(adapter);

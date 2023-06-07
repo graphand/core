@@ -9,6 +9,7 @@ import User from "./models/User";
 import Role from "./models/Role";
 import Organization from "./models/Organization";
 import Media from "./models/Media";
+import Sockethook from "./models/Sockethook";
 import Token from "./models/Token";
 import Environment from "./models/Environment";
 import ModelList from "./lib/ModelList";
@@ -54,6 +55,7 @@ const models = {
   Token,
   Environment,
   Media,
+  Sockethook,
 };
 
 export {
@@ -72,6 +74,7 @@ export {
   Role,
   DataModel,
   Media,
+  Sockethook,
   models,
   ModelEnvScopes,
   FieldTypes,
