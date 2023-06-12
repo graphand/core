@@ -11,6 +11,7 @@ import type PromiseModel from "./lib/PromiseModel";
 import type PromiseModelList from "./lib/PromiseModelList";
 import AuthProviders from "./enums/auth-providers";
 import AuthMethods from "./enums/auth-methods";
+import Sockethook from "./models/Sockethook";
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT
@@ -431,6 +432,38 @@ export type FormProcessEvent = {
   percentage?: number;
   contentLength?: number;
   receivedLength: number;
+};
+
+export type SockethookEvent<
+  P extends HookPhase,
+  A extends keyof AdapterFetcher<T>,
+  T extends typeof Model
+> = {
+  operation: string;
+  hook: ModelDocument<Sockethook> & {
+    phase: P;
+    action: A;
+    on: T["slug"];
+  };
+  data: HookCallbackArgs<P, A, T>;
+};
+
+export type SockethookResponse<
+  P extends HookPhase,
+  A extends keyof AdapterFetcher<T>,
+  T extends typeof Model
+> = {
+  operation: string;
+  args?: Parameters<AdapterFetcher<T>[A]>[0];
+  err?: Array<{
+    message: string;
+  }>;
+};
+
+export type SockethookJoinOne = {
+  name: string;
+  signature?: string;
+  hostname?: string;
 };
 
 export type IdentityString = string;

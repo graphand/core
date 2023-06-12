@@ -973,7 +973,7 @@ class Model {
     if (!payloadBefore.err?.length) {
       try {
         const fn = this.getAdapter().fetcher[action];
-        res = await fn.apply(fn, [args, ctx]);
+        res = await fn.apply(fn, [payloadBefore.args, ctx]);
       } catch (e) {
         payloadBefore.err ??= [];
         payloadBefore.err.push(e);
