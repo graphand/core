@@ -460,6 +460,17 @@ export type SockethookResponse<
   }>;
 };
 
+export type SockethookHandler<
+  P extends HookPhase,
+  A extends keyof AdapterFetcher<T>,
+  T extends typeof Model
+> = (
+  data: SockethookEvent<P, A, T>["data"]
+) =>
+  | void
+  | Omit<SockethookResponse<P, A, T>, "operation">
+  | Promise<void | Omit<SockethookResponse<P, A, T>, "operation">>;
+
 export type SockethookJoinOne = {
   name: string;
   signature?: string;

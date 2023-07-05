@@ -227,11 +227,11 @@ class Model {
       return;
     }
 
-    this.keyField = datamodel?.keyField ?? this.keyField;
-    this.single = datamodel?.single ?? this.single;
+    this.keyField = datamodel.keyField;
+    this.single = datamodel.single;
 
-    this.__fieldsMap = createFieldsMap(this, datamodel?.fields);
-    this.__validatorsArray = createValidatorsArray(this, datamodel?.validators);
+    this.__fieldsMap = createFieldsMap(this, datamodel.fields);
+    this.__validatorsArray = createValidatorsArray(this, datamodel.validators);
 
     delete this.__fieldsProperties;
     delete this.__fieldsKeys;
