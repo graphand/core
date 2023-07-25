@@ -189,6 +189,12 @@ const controllersMap: Record<string, ControllerDefinition> = {
     scope: "project",
     secured: true,
   },
+  statusSockethook: {
+    path: "/sockethooks/:id/status",
+    methods: ["GET", "POST"],
+    scope: "project",
+    secured: true,
+  },
 };
 
 export default controllersMap;

@@ -474,7 +474,6 @@ export type SockethookHandler<
 export type SockethookJoinOne = {
   name: string;
   signature?: string;
-  hostname?: string;
 };
 
 export type IdentityString = string;
