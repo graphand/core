@@ -178,13 +178,13 @@ const controllersMap: Record<string, ControllerDefinition> = {
     secured: true,
   },
   mediaPublic: {
-    path: "/medias/public/:idOrName?",
+    path: "/medias/public/:id?",
     methods: ["GET"],
     scope: "project",
     secured: false,
   },
   mediaPrivate: {
-    path: "/medias/private/:idOrName?",
+    path: "/medias/private/:id?",
     methods: ["GET"],
     scope: "project",
     secured: true,

@@ -26,6 +26,14 @@ class CoreError extends Error {
     return this.__definition.message ?? "Unknown error";
   }
 
+  set code(code) {
+    this.__definition.code = code;
+  }
+
+  set message(message) {
+    this.__definition.message = message;
+  }
+
   toJSON() {
     return {
       type: "CoreError",
