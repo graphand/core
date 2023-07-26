@@ -561,3 +561,25 @@ export type AuthProviderConfigurePayload<
 > = T extends keyof AuthProviderConfigurePayloadMap
   ? AuthProviderConfigurePayloadMap[T]
   : Record<string, never>;
+
+export type SockethookStatus = {
+  status: "OK" | "KO";
+  target: {
+    _id: string;
+    name: string;
+  };
+  responseTime?: number;
+  sockets: {
+    selected: {
+      id: string;
+      hostname: string;
+    } | null;
+    connected: {
+      list: Array<{
+        id: string;
+        hostname: string;
+      }>;
+      count: number;
+    };
+  };
+};
