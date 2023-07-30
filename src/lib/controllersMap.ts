@@ -141,11 +141,17 @@ const controllersMap: Record<string, ControllerDefinition> = {
     scope: "project",
     secured: false,
   },
-  genToken: {
+  genTokenToken: {
     path: "/tokens/:id/gen",
     methods: ["POST"],
     scope: "project",
     secured: true,
+  },
+  genKeyToken: {
+    path: "/keys/:id/gen",
+    methods: ["POST"],
+    scope: "project",
+    secured: false,
   },
   registerUser: {
     path: "/auth/register",

@@ -36,6 +36,12 @@ class PromiseModelList<T extends Model> extends Thenable<ModelList<T>> {
 
     return [];
   }
+
+  get [Symbol.toStringTag]() {
+    return `PromiseModelList<${this.model.__name}>(${JSON.stringify(
+      this.__query
+    )})`;
+  }
 }
 
 export default PromiseModelList;

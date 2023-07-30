@@ -3,35 +3,25 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import Role from "./Role";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
-class Token extends Model {
-  static __name = "Token";
+class Key extends Model {
+  static __name = "Key";
 
-  static slug = "tokens";
+  static slug = "keys";
   static scope = ModelEnvScopes.PROJECT;
   static keyField = "name";
   static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "value" } },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.DATE)
-  expiration: FieldDefinitionDate;
-
-  @fieldDecorator(FieldTypes.NUMBER)
-  maxGen: FieldDefinitionNumber;
-
-  @fieldDecorator(FieldTypes.NUMBER, { default: 0 })
-  generation: FieldDefinitionNumber;
-
-  @fieldDecorator(FieldTypes.RELATION, { ref: Role.slug })
-  role: FieldDefinitionRelation<Role>;
+  @fieldDecorator(FieldTypes.TEXT)
+  value: FieldDefinitionDate;
 }
 
-export default Token;
+export default Key;

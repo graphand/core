@@ -7,6 +7,7 @@ import AuthProvider from "./models/AuthProvider";
 import Project from "./models/Project";
 import User from "./models/User";
 import Role from "./models/Role";
+import Key from "./models/Key";
 import Organization from "./models/Organization";
 import Media from "./models/Media";
 import Sockethook from "./models/Sockethook";
@@ -56,6 +57,7 @@ const models = {
   Environment,
   Media,
   Sockethook,
+  Key,
 };
 
 export {
@@ -75,6 +77,7 @@ export {
   DataModel,
   Media,
   Sockethook,
+  Key,
   models,
   ModelEnvScopes,
   FieldTypes,
