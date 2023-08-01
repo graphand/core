@@ -34,6 +34,7 @@ import ValidationValidatorError from "./lib/ValidationValidatorError";
 import defaultFieldsMap from "./lib/defaultFieldsMap";
 import AuthProviders from "./enums/auth-providers";
 import AuthMethods from "./enums/auth-methods";
+import IdentityTypes from "./enums/identity-types";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -92,6 +93,7 @@ export {
   ValidationError,
   AuthProviders,
   AuthMethods,
+  IdentityTypes,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,

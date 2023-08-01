@@ -18,6 +18,7 @@ import { FieldOptions, ValidatorDefinition } from "../types";
 import PromiseModelList from "./PromiseModelList";
 import PromiseModel from "./PromiseModel";
 import ModelList from "./ModelList";
+import IdentityTypes from "../enums/identity-types";
 
 class DefaultFieldId extends Field<FieldTypes.ID> {
   serialize(value: any): any {
@@ -383,9 +384,7 @@ class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
 
     const [type, id] = value.split(":");
 
-    const allowedTypes = ["user", "account", "token"];
-
-    return allowedTypes.includes(type) && isObjectId(id);
+    return Object.values(IdentityTypes).includes(type) && isObjectId(id);
   }
 
   serialize(value: any, format: SerializerFormat, from: Model): any {
