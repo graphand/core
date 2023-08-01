@@ -30,7 +30,14 @@ class Organization extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
+  @fieldDecorator(FieldTypes.ARRAY, {
+    items: {
+      type: FieldTypes.RELATION,
+      options: {
+        ref: User.slug,
+      },
+    },
+  })
   _users: FieldDefinitionRelation<User>;
 }
 
