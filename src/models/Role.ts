@@ -26,7 +26,7 @@ class Role extends Model {
   slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.BOOLEAN)
-  admin: FieldDefinitionBoolean;
+  _admin: FieldDefinitionBoolean;
 
   @fieldDecorator(FieldTypes.ARRAY, {
     items: {

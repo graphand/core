@@ -32,9 +32,6 @@ class Project extends Model {
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.TEXT, { default: "free" })
-  plan: FieldDefinitionText;
-
   @fieldDecorator(FieldTypes.RELATION, { ref: Organization.slug })
   organization: FieldDefinitionRelation<Organization>;
 
@@ -46,6 +43,9 @@ class Project extends Model {
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Account.slug })
   owner: FieldDefinitionRelation<Account>;
+
+  @fieldDecorator(FieldTypes.TEXT, { default: "free" })
+  _plan: FieldDefinitionText;
 }
 
 export default Project;

@@ -15,25 +15,25 @@ class Media extends Model {
   static scope = ModelEnvScopes.PROJECT;
   static keyField = "name";
   static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "mimetype" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "originalname" } },
-    { type: ValidatorTypes.BOUNDARIES, options: { field: "size", min: 1 } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "_mimetype" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "_originalname" } },
+    { type: ValidatorTypes.BOUNDARIES, options: { field: "_size", min: 1 } },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.TEXT)
-  mimetype: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  originalname: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.NUMBER)
-  size: FieldDefinitionNumber;
-
   @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
   private: FieldDefinitionBoolean;
+
+  @fieldDecorator(FieldTypes.TEXT)
+  _mimetype: FieldDefinitionText;
+
+  @fieldDecorator(FieldTypes.TEXT)
+  _originalname: FieldDefinitionText;
+
+  @fieldDecorator(FieldTypes.NUMBER)
+  _size: FieldDefinitionNumber;
 
   file: any;
 }

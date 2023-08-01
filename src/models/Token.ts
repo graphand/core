@@ -27,11 +27,11 @@ class Token extends Model {
   @fieldDecorator(FieldTypes.NUMBER)
   maxGen: FieldDefinitionNumber;
 
-  @fieldDecorator(FieldTypes.NUMBER, { default: 0 })
-  generation: FieldDefinitionNumber;
-
   @fieldDecorator(FieldTypes.RELATION, { ref: Role.slug })
   role: FieldDefinitionRelation<Role>;
+
+  @fieldDecorator(FieldTypes.NUMBER, { default: 0 })
+  _generation: FieldDefinitionNumber;
 }
 
 export default Token;

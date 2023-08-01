@@ -39,7 +39,7 @@ class Account extends Model {
   role: FieldDefinitionRelation<Role>;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
-  user: FieldDefinitionRelation<User>;
+  _user: FieldDefinitionRelation<User>;
 
   // @fieldDecorator(FieldTypes.NESTED)
   // _auth: FieldDefinitionNested<{

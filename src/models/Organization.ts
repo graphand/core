@@ -31,7 +31,7 @@ class Organization extends Model {
   slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
-  users: FieldDefinitionRelation<User>;
+  _users: FieldDefinitionRelation<User>;
 }
 
 export default Organization;
