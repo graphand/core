@@ -269,7 +269,6 @@ export const createFieldsMap = (
     delete modelFields._createdBy;
     delete modelFields._updatedAt;
     delete modelFields._updatedBy;
-    delete modelFields.__system;
   }
 
   if (assignFields) {

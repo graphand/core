@@ -9,6 +9,13 @@ Voici les concepts de base de cette librairie :
 Chaque modèle (`src/models/*.ts`) est une classe qui étend la classe de base `Model` (qui contient elle même les méthodes de base nécessaires au fonctionnement de core telles que les actions de crud, getters, setters, etc.)
 Pour être utilisés correctement, les modèles ont besoin d'un adaptateur (classe `Adapter`) qui définit la manière dont le modèle interagit avec les données dans son contexte (fonctionnement différent sur le client et sur le serveur).
 
+### Scope du modèle
+
+Chaque modèle est associé à un scope (global, project ou env).
+Le scope global est utilisé pour les modèles accessibles globalement dans graphand (`User`, `Project`, `Organization`, etc.)
+Les autres scopes sont liés à un projet: le scope `project` est utilisé pour les modèles accessibles sans différenciation dans tous les environnements du projet (`Key`, `Media`, etc.) alors que le scope `env` est utilisé pour les modèles déclinés en fonction de l'environnement (`Account`, `DataModel`, etc.).
+Ainsi, les médias (modèle `Media`) sont accessibles dans tout le projet, sans différenciation d'un environnement à l'autre (si un média est modifié ou supprimé, il le sera sur tous les environnements) alors que les comptes (modèle `Account`) seront liés à un environnement (si un compte est modifié ou supprimé sur un environnement, il ne sera pas modifié sur les autres et inversement).
+
 ## Adaptateur : classe `Adapter`
 
 Le rôle de cette librairie est donc de fixer les bases de la structure de Graphand. Ensuite, les actions dépendantes du contexte (serveur/client) doivent être paramétrées pour que core fonctionne correctement.
@@ -67,6 +74,8 @@ AdaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ai
 ```
 
 **Ces hooks sont appelés avec les paramètres de la fonction en question et peuvent les modifier. En théorie, ces hooks peuvent permettrent d'étendre le fonctionnement du fetcher et de couvrir tous les cas de figure à la manière d'un plugin.**
+
+**Les hooks executés sont ceux du modèle concerné ainsi que ceux des modèles parents. Ainsi, lorsqu'un hook est ajouté à la classe Model, il sera executé sur n'importe quel modèle (Account, Project, etc.)**
 
 ### `Adapter.prototype.fieldsMap`
 

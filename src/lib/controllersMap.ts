@@ -2,7 +2,7 @@ import { ControllerDefinition } from "../types";
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 
-const controllersMap: Record<string, ControllerDefinition> = {
+const controllersMap = {
   modelCount: {
     path: "/:model/count",
     methods: ["GET", "POST"],
@@ -201,6 +201,39 @@ const controllersMap: Record<string, ControllerDefinition> = {
     scope: "project",
     secured: true,
   },
+  subscriptionsWebhook: {
+    path: "/subscriptions/stripe-webhook",
+    methods: ["POST"],
+    scope: "global",
+    secured: false,
+  },
+  subscriptionsUpgrade: {
+    path: "/subscriptions/upgrade",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
+  subscriptionsOrganization: {
+    path: "/subscriptions/organization",
+    methods: ["GET", "POST"],
+    scope: "global",
+    secured: true,
+  },
+  subscriptionsInfos: {
+    path: "/subscriptions/infos",
+    methods: ["GET", "POST"],
+    scope: "project",
+    secured: true,
+  },
+  subscriptionsInvoices: {
+    path: "/subscriptions/invoices",
+    methods: ["GET", "POST"],
+    scope: "global",
+    secured: true,
+  },
 };
 
-export default controllersMap;
+export default controllersMap as Record<
+  keyof typeof controllersMap,
+  ControllerDefinition
+>;

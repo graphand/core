@@ -46,6 +46,10 @@ class DefaultFieldDate extends Field<FieldTypes.DATE> {
 
 class DefaultFieldText extends Field<FieldTypes.TEXT> {
   async validate(value) {
+    if (value === null || value === undefined) {
+      return true;
+    }
+
     if (this.options.options?.length && this.options.strict) {
       if (Array.isArray(value)) {
         return value.every((i) => this.options.options.includes(i));

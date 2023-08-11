@@ -72,9 +72,6 @@ class Model {
   @fieldDecorator(FieldTypes.IDENTITY)
   _updatedBy;
 
-  @fieldDecorator(FieldTypes.BOOLEAN)
-  __system;
-
   constructor(doc: any = {}) {
     if (!doc || typeof doc !== "object") {
       throw new CoreError({
