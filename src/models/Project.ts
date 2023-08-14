@@ -8,7 +8,6 @@ import Account from "./Account";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 import Patterns from "../enums/patterns";
-import Plans from "../enums/plans";
 
 @modelDecorator()
 class Project extends Model {
@@ -41,56 +40,6 @@ class Project extends Model {
 
   @fieldDecorator(FieldTypes.NUMBER, { default: 2592000 })
   refreshTokenLifetime: FieldDefinitionNumber;
-
-  @fieldDecorator(FieldTypes.RELATION, { ref: Account.slug })
-  owner: FieldDefinitionRelation<Account>;
-
-  @fieldDecorator(FieldTypes.NESTED, {
-    fields: {
-      plan: {
-        type: FieldTypes.TEXT,
-        options: {
-          options: Object.values(Plans),
-          strict: true,
-        },
-      },
-      customLimits: {
-        type: FieldTypes.NESTED,
-        options: {
-          fields: {
-            accounts: {
-              type: FieldTypes.NUMBER,
-              options: {},
-            },
-            storage: {
-              type: FieldTypes.NUMBER,
-              options: {},
-            },
-            maxMediaSize: {
-              type: FieldTypes.NUMBER,
-              options: {},
-            },
-            apiCalls: {
-              type: FieldTypes.NUMBER,
-              options: {},
-            },
-            apiBandwidth: {
-              type: FieldTypes.NUMBER,
-              options: {},
-            },
-            maxAggregationTime: {
-              type: FieldTypes.NUMBER,
-              options: {},
-            },
-            blockingSockethooks: {
-              type: FieldTypes.BOOLEAN,
-            },
-          },
-        },
-      },
-    },
-  })
-  _subscription: FieldDefinitionNested<any>;
 }
 
 export default Project;

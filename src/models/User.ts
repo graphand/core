@@ -25,6 +25,12 @@ class User extends Model {
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
+  firstname: FieldDefinitionText;
+
+  @fieldDecorator(FieldTypes.TEXT)
+  lastname: FieldDefinitionText;
+
+  @fieldDecorator(FieldTypes.TEXT)
   email: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)

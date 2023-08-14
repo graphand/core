@@ -213,22 +213,16 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
-  subscriptionsOrganization: {
-    path: "/subscriptions/organization",
-    methods: ["GET", "POST"],
-    scope: "global",
-    secured: true,
-  },
-  subscriptionsInfos: {
-    path: "/subscriptions/infos",
+  subscriptionsCurrent: {
+    path: "/subscriptions/current",
     methods: ["GET", "POST"],
     scope: "project",
     secured: true,
   },
-  subscriptionsInvoices: {
-    path: "/subscriptions/invoices",
+  subscriptionsPortal: {
+    path: "/subscriptions/portal",
     methods: ["GET", "POST"],
-    scope: "global",
+    scope: "project",
     secured: true,
   },
 };
