@@ -1703,4 +1703,54 @@ describe("Test Model", () => {
       expect(afterCreateFn2).toHaveBeenCalledTimes(0);
     });
   });
+
+  describe("Model allowMultipleOperations", () => {
+    it("should throw error when trying to updateMultiple on models with allowMultipleOperations = false", async () => {
+      const TestModel = mockModel({
+        allowMultipleOperations: false,
+      }).withAdapter(mockAdapter());
+
+      await expect(TestModel.update({}, {})).rejects.toThrow(
+        "Cannot run updateMultiple operation"
+      );
+    });
+  });
+
+  it("should be able to updateMultiple on models with allowMultipleOperations = false and query as string (=updateOne)", async () => {
+    const TestModel = mockModel({
+      allowMultipleOperations: false,
+    }).withAdapter(mockAdapter());
+
+    await expect(TestModel.update("", {})).resolves.toBeDefined();
+  });
+
+  it("should throw error when trying to deleteMultiple on models with allowMultipleOperations = false", async () => {
+    const TestModel = mockModel({
+      allowMultipleOperations: false,
+    }).withAdapter(mockAdapter());
+
+    await expect(TestModel.delete({}, {})).rejects.toThrow(
+      "Cannot run deleteMultiple operation"
+    );
+  });
+
+  it("should be able to deleteMultiple on models with allowMultipleOperations = false and query as string (=deleteOne)", async () => {
+    const TestModel = mockModel({
+      allowMultipleOperations: false,
+    }).withAdapter(mockAdapter());
+
+    await expect(TestModel.delete("", {})).resolves.toBeDefined();
+  });
+
+  it("should be able to updateMultiple on models with allowMultipleOperations = true (default)", async () => {
+    const TestModel = mockModel().withAdapter(mockAdapter());
+
+    await expect(TestModel.update({}, {})).resolves.toBeDefined();
+  });
+
+  it("should be able to deleteMultiple on models with allowMultipleOperations = true (default)", async () => {
+    const TestModel = mockModel().withAdapter(mockAdapter());
+
+    await expect(TestModel.update({}, {})).resolves.toBeDefined();
+  });
 });

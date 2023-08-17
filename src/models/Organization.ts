@@ -14,6 +14,7 @@ class Organization extends Model {
 
   static slug = "organizations";
   static scope = ModelEnvScopes.GLOBAL;
+  static allowMultipleOperations = false;
   static validators: ValidatorsDefinition = [
     { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "slug" } },

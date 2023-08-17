@@ -34,15 +34,16 @@ import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
 
 class Model {
-  static extendable: boolean = false;
-  static single: boolean = false;
-  static exposed: boolean = true;
-  static systemFields: boolean = true;
-  static slug: string;
-  static scope: ModelEnvScopes;
-  static fields: FieldsDefinition;
-  static validators: ValidatorsDefinition;
-  static keyField?: string;
+  static extendable: boolean = false; // Whether the model can be extended with a DataModel with its slug
+  static single: boolean = false; // Single model (only one instance of the model can exist)
+  static exposed: boolean = true; // Whether the model is exposed in the API or not
+  static systemFields: boolean = true; // Include system field (_id, _createdAt, _createdBy, _updatedAt, _updatedBy) in the model fields
+  static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
+  static slug: string; // The slug of the model used to identify it
+  static scope: ModelEnvScopes; // The scope of the model (global/project). Project scope could be global on project (project) or specific to an environment (env)
+  static fields: FieldsDefinition; // The fields of the model
+  static validators: ValidatorsDefinition; // The validators of the model
+  static keyField?: string; // The key field of the model (used to identify instances of the model, in addition to _id)
 
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
@@ -55,7 +56,7 @@ class Model {
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
 
-  __doc: DocumentDefinition;
+  __doc: DocumentDefinition; // The document (raw data) of the instance
 
   @fieldDecorator(FieldTypes.ID)
   _id: FieldDefinitionId;
@@ -718,15 +719,22 @@ class Model {
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
+    if (this.single) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot use update on a single model, use instance of the model instead`,
+      });
+    }
+
     if (typeof query === "string") {
       const updated = await this.execute("updateOne", [query, update], ctx);
       return [updated];
     }
 
-    if (this.single) {
+    if (!this.allowMultipleOperations) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use update on a single model, use instance of the model instead`,
+        message: `Cannot run updateMultiple operation on model ${this.slug}`,
       });
     }
 
@@ -790,6 +798,13 @@ class Model {
       }
 
       return [];
+    }
+
+    if (!this.allowMultipleOperations) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot run deleteMultiple operation on model ${this.slug}`,
+      });
     }
 
     return await this.execute("deleteMultiple", [query], ctx);

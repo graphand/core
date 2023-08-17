@@ -4,7 +4,6 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import Organization from "./Organization";
-import Account from "./Account";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 import Patterns from "../enums/patterns";
@@ -15,6 +14,7 @@ class Project extends Model {
 
   static slug = "projects";
   static scope = ModelEnvScopes.GLOBAL;
+  static allowMultipleOperations = false;
   static validators: ValidatorsDefinition = [
     { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "slug" } },

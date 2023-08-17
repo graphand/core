@@ -179,6 +179,7 @@ export const mockAdapter = ({
 
 export const mockModel = ({
   scope = ModelEnvScopes.ENV,
+  allowMultipleOperations = true,
   single = false,
   fields = {
     title: {
@@ -196,6 +197,7 @@ export const mockModel = ({
   ],
 }: {
   scope?: ModelEnvScopes;
+  allowMultipleOperations?: boolean;
   fields?: FieldsDefinition;
   validators?: ValidatorsDefinition;
   single?: boolean;
@@ -209,6 +211,7 @@ export const mockModel = ({
     static scope = scope;
     static fields = fields;
     static validators = validators;
+    static allowMultipleOperations = allowMultipleOperations;
 
     constructor(doc) {
       super(doc);
