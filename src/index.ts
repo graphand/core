@@ -12,6 +12,7 @@ import Organization from "./models/Organization";
 import Media from "./models/Media";
 import Sockethook from "./models/Sockethook";
 import Token from "./models/Token";
+import Terms from "./models/Terms";
 import Environment from "./models/Environment";
 import ModelList from "./lib/ModelList";
 import ModelEnvScopes from "./enums/model-env-scopes";
@@ -35,6 +36,7 @@ import defaultFieldsMap from "./lib/defaultFieldsMap";
 import AuthProviders from "./enums/auth-providers";
 import AuthMethods from "./enums/auth-methods";
 import IdentityTypes from "./enums/identity-types";
+import Patterns from "./enums/patterns";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -44,6 +46,8 @@ import {
   defineFieldsProperties,
   getAdaptedModel,
 } from "./lib/utils";
+import { modelDecorator } from "./lib/modelDecorator";
+import { fieldDecorator } from "./lib/fieldDecorator";
 
 const models = {
   Account,
@@ -59,6 +63,7 @@ const models = {
   Media,
   Sockethook,
   Key,
+  Terms,
 };
 
 export {
@@ -79,6 +84,7 @@ export {
   Media,
   Sockethook,
   Key,
+  Terms,
   models,
   ModelEnvScopes,
   FieldTypes,
@@ -94,6 +100,7 @@ export {
   AuthProviders,
   AuthMethods,
   IdentityTypes,
+  Patterns,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,
@@ -106,6 +113,8 @@ export {
   getNestedFieldsMap,
   defineFieldsProperties,
   getAdaptedModel,
+  modelDecorator,
+  fieldDecorator,
 };
 
 export * from "./types";

@@ -77,6 +77,11 @@ AdaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ai
 
 **Les hooks executés sont ceux du modèle concerné ainsi que ceux des modèles parents. Ainsi, lorsqu'un hook est ajouté à la classe Model, il sera executé sur n'importe quel modèle (Account, Project, etc.)**
 
+Le payload envoyé aux hooks inclus le contexte de l'exécution (type `ExecutorCtx`) qui contient des informations utiles telles que :
+
+- `retryToken`: Si ce symbol est émis par l'un des hooks (`throw ctx.retryToken`), alors l'opération sera relancée après l'exécution des hooks de la phase en cours (`before` ou `after`)
+- `abortToken`: Si ce symbol est émis par l'un des hooks (`throw ctx.abortToken`), alors l'opération sera immédiatement stoppée. Même l'exécution des hooks de la phase en cours sera arretée contrairement au `retryToken`.
+
 ### `Adapter.prototype.fieldsMap`
 
 `fieldsMap` est un objet qui lie chaque type champ existant sur graphand à la classe de son type.
@@ -132,3 +137,33 @@ Même si les validateurs sont désactivés via cette variable, ils peuvent toujo
 
 Ici, le serveur exécue systématiquement les validateurs lorsqu'un élément est ajouté ou modifié (D'où `ServerAdapter.prototype.runValidators = true`).
 En revanche, le client n'exécute pas les validateurs car c'est le serveur qui gère cette partie (`ClientAdapter.prototype.runValidators = false`). Le client peut tout de même exécuter les validateurs si besoin (avant l'envoi d'un formulaire par exemple) avec la méthode `Model.validate`.
+
+## Modèles
+
+### Account
+
+### AccountAuthProvider
+
+### AuthProvider
+
+### DataModel
+
+### Environment
+
+### Key
+
+### Media
+
+### Organization
+
+### Project
+
+### Role
+
+### Sockethook
+
+### Terms
+
+### Token
+
+### User

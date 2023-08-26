@@ -225,6 +225,29 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
+  organizationInvite: {
+    path: "/organizations/:id/invite",
+    methods: ["POST"],
+    scope: "global",
+    secured: true,
+  },
+  organizationJoin: {
+    path: "/organizations/:id/join",
+    methods: ["POST"],
+    scope: "global",
+    secured: true,
+  },
+  organizationConsent: {
+    path: "/organizations/:id/consent",
+    methods: ["POST"],
+    scope: "global",
+    secured: true,
+  },
+  termsLatest: {
+    path: "/terms/latest",
+    methods: ["GET"],
+    scope: "global",
+  },
 };
 
 export default controllersMap as Record<

@@ -7,6 +7,7 @@ import { ValidatorsDefinition } from "../types";
 import User from "./User";
 import ValidatorTypes from "../enums/validator-types";
 import Patterns from "../enums/patterns";
+import Terms from "./Terms";
 
 @modelDecorator()
 class Organization extends Model {
@@ -47,6 +48,17 @@ class Organization extends Model {
     options: {
       model: User;
     };
+  }>;
+
+  @fieldDecorator(FieldTypes.NESTED, {
+    fields: {
+      terms: { type: FieldTypes.RELATION, options: { ref: Terms.slug } },
+      user: { type: FieldTypes.RELATION, options: { ref: User.slug } },
+    },
+  })
+  _consent: FieldDefinitionNested<{
+    terms: FieldDefinitionRelation<Terms>;
+    user: FieldDefinitionRelation<User>;
   }>;
 }
 
