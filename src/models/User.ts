@@ -35,6 +35,9 @@ class User extends Model {
 
   @fieldDecorator(FieldTypes.TEXT)
   password: FieldDefinitionText;
+
+  @fieldDecorator(FieldTypes.TEXT)
+  pendingEmail: FieldDefinitionText;
 }
 
 export default User;
