@@ -259,6 +259,13 @@ const controllersMap = {
     path: "/terms/latest",
     methods: ["GET"],
     scope: "global",
+    secured: false,
+  },
+  recoverPassword: {
+    path: "/auth/recover-password/:id?",
+    methods: ["POST"],
+    scope: "global",
+    secured: false,
   },
 };
 
