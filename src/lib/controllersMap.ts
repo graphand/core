@@ -262,7 +262,7 @@ const controllersMap = {
     secured: false,
   },
   recoverPassword: {
-    path: "/auth/recover-password/:id?",
+    path: "/recover-password/:id?",
     methods: ["POST"],
     scope: "global",
     secured: false,
