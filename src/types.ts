@@ -526,6 +526,9 @@ export type AuthProviderCredentialsMap = {
     email: string;
     password: string;
   };
+  [AuthProviders.GRAPHAND]: {
+    accountToken?: string; // a jwt token containing the identity of the account to link to user
+  };
 };
 
 export type AuthProviderCredentials<

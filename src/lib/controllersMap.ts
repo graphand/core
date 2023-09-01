@@ -159,6 +159,12 @@ const controllersMap = {
     scope: "project",
     secured: false,
   },
+  oauth: {
+    path: "/auth/oauth",
+    methods: ["GET", "POST"],
+    scope: "global",
+    secured: false,
+  },
   registerUser: {
     path: "/auth/register",
     methods: ["POST"],
