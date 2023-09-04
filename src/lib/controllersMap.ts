@@ -76,7 +76,7 @@ const controllersMap = {
     secured: true,
   },
   confirmEmail: {
-    path: "/users/confirm-email",
+    path: "/confirm-email",
     methods: ["POST"],
     scope: "global",
     secured: false,

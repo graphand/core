@@ -15,6 +15,8 @@ class User extends Model {
   static slug = "users";
   static scope = ModelEnvScopes.GLOBAL;
   static validators: ValidatorsDefinition = [
+    { type: ValidatorTypes.REQUIRED, options: { field: "firstname" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "lastname" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "email" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "password" } },
     { type: ValidatorTypes.UNIQUE, options: { field: "email" } },
