@@ -7,6 +7,7 @@ import AuthProvider from "./models/AuthProvider";
 import Project from "./models/Project";
 import User from "./models/User";
 import Role from "./models/Role";
+import SearchConfig from "./models/SearchConfig";
 import Key from "./models/Key";
 import Organization from "./models/Organization";
 import Media from "./models/Media";
@@ -37,6 +38,7 @@ import AuthProviders from "./enums/auth-providers";
 import AuthMethods from "./enums/auth-methods";
 import IdentityTypes from "./enums/identity-types";
 import Patterns from "./enums/patterns";
+import SearchConfigStatus from "./enums/search-config-status";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -58,6 +60,7 @@ const models = {
   User,
   Organization,
   Role,
+  SearchConfig,
   Token,
   Environment,
   Media,
@@ -80,6 +83,7 @@ export {
   Token,
   Environment,
   Role,
+  SearchConfig,
   DataModel,
   Media,
   Sockethook,
@@ -101,6 +105,7 @@ export {
   AuthMethods,
   IdentityTypes,
   Patterns,
+  SearchConfigStatus,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,

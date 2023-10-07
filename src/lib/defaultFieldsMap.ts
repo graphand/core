@@ -84,7 +84,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ) => {
     if (!value) {
       return null;
@@ -117,7 +117,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ) => {
     const adapter = from.model.getAdapter();
 
@@ -143,7 +143,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ): any {
     if (
       [
@@ -240,7 +240,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ): any {
     value = Array.isArray(value) ? value[0] : value;
 
@@ -263,18 +263,18 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
           [this.__path, slug].join(".")
         );
 
-        let value = obj[slug];
+        let v = obj[slug];
 
-        if (value === undefined && "default" in field.options) {
-          value = field.options.default as typeof value;
+        if (v === undefined && "default" in field.options) {
+          v = field.options.default as typeof v;
         }
 
-        if (value !== undefined && value !== null) {
-          value = field.serialize(value, format, from, ctx);
+        if (v !== undefined && v !== null) {
+          v = field.serialize(v, format, from, ctx);
         }
 
-        if (value !== undefined) {
-          formattedEntries.push([slug, value]);
+        if (v !== undefined) {
+          formattedEntries.push([slug, v]);
         }
       }
 
@@ -288,17 +288,17 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
         const defaultEntries = [];
         for (const key in obj) {
           if (!this.options.fields?.[key]) {
-            let value = obj[key];
+            let v = obj[key];
 
-            if (value === undefined && "default" in defaultField.options) {
-              value = defaultField.options.default as typeof value;
+            if (v === undefined && "default" in defaultField.options) {
+              v = defaultField.options.default as typeof v;
             }
 
-            if (value !== undefined && value !== null) {
-              value = defaultField.serialize(value, format, from, ctx);
+            if (v !== undefined && v !== null) {
+              v = defaultField.serialize(v, format, from, ctx);
             }
 
-            defaultEntries.push([key, value]);
+            defaultEntries.push([key, v]);
           }
         }
 
@@ -350,7 +350,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
               );
           }
 
-          let field = propField ?? defaultField;
+          let field: Field = propField ?? defaultField;
           let value = target[prop];
 
           if (field) {
@@ -442,7 +442,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ) {
     const adapter = from.model.getAdapter();
 
@@ -497,7 +497,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     value: any,
     format: SerializerFormat,
     from: Model,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ): any {
     if (this.options.items?.type === FieldTypes.RELATION) {
       return this._serializeRelationArray(

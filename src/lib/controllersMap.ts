@@ -267,6 +267,24 @@ const controllersMap = {
     scope: "global",
     secured: false,
   },
+  searchQuery: {
+    path: "/search/:id/query",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
+  searchCount: {
+    path: "/search/:id/count",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
+  searchSync: {
+    path: "/search/:id/sync",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
 };
 
 export default controllersMap as Record<

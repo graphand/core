@@ -13,7 +13,8 @@ import type {
 import type FieldTypes from "./enums/field-types";
 
 declare global {
-  export type ExecutorCtx = any;
+  export type ExecutorCtx = Record<string, any>;
+  export type SerializerCtx = Record<string, any>;
 
   export type FieldDefinitionId<
     D extends FieldDefinitionOptions<FieldTypes.ID> = DefaultFieldDefinitionOptions<FieldTypes.ID>

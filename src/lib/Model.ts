@@ -421,17 +421,21 @@ class Model {
    * @param format
    * @param ctx
    * @param clean - if true, the result object will be cleaned from undefined values
+   * @param fieldsKeys - an array of fields to serialize. If not provided, all fields will be serialized
    * @example
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
   serialize(
     format: SerializerFormat | string,
-    ctx: ExecutorCtx = {},
-    clean = false
+    ctx: SerializerCtx = {},
+    clean = false,
+    fieldsKeys?: Array<string>
   ) {
     defineFieldsProperties(this);
 
-    const entries = this.model.fieldsKeys
+    const keys = fieldsKeys ?? this.model.fieldsKeys;
+
+    const entries = keys
       .map((slug) => {
         const v = this.get(slug, format, ctx);
         if (clean && v === undefined) {
