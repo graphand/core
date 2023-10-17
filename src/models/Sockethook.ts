@@ -10,7 +10,6 @@ import ValidatorTypes from "../enums/validator-types";
 class Sockethook extends Model {
   static __name = "Sockethook";
 
-  static extendable = false;
   static slug = "sockethooks";
   static scope = ModelEnvScopes.ENV;
   static keyField = "name";

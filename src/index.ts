@@ -4,6 +4,7 @@ import DataModel from "./models/DataModel";
 import Account from "./models/Account";
 import AccountAuthProvider from "./models/AccountAuthProvider";
 import AuthProvider from "./models/AuthProvider";
+import Job from "./models/Job";
 import Project from "./models/Project";
 import User from "./models/User";
 import Role from "./models/Role";
@@ -39,6 +40,8 @@ import AuthMethods from "./enums/auth-methods";
 import IdentityTypes from "./enums/identity-types";
 import Patterns from "./enums/patterns";
 import SearchConfigStatus from "./enums/search-config-status";
+import JobTypes from "./enums/job-types";
+import JobStatus from "./enums/job-status";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -56,17 +59,18 @@ const models = {
   AccountAuthProvider,
   AuthProvider,
   DataModel,
-  Project,
-  User,
+  Environment,
+  Job,
+  Key,
+  Media,
   Organization,
+  Project,
   Role,
   SearchConfig,
-  Token,
-  Environment,
-  Media,
   Sockethook,
-  Key,
   Terms,
+  Token,
+  User,
 };
 
 export {
@@ -76,20 +80,21 @@ export {
   Account,
   AccountAuthProvider,
   AuthProvider,
-  Data,
-  Project,
-  User,
-  Organization,
-  Token,
+  DataModel,
   Environment,
+  Job,
+  Key,
+  Media,
+  Organization,
+  Project,
   Role,
   SearchConfig,
-  DataModel,
-  Media,
   Sockethook,
-  Key,
   Terms,
+  Token,
+  User,
   models,
+  Data,
   ModelEnvScopes,
   FieldTypes,
   PromiseModel,
@@ -106,6 +111,8 @@ export {
   IdentityTypes,
   Patterns,
   SearchConfigStatus,
+  JobTypes,
+  JobStatus,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,

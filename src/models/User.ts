@@ -11,7 +11,6 @@ import Patterns from "../enums/patterns";
 class User extends Model {
   static __name = "User";
 
-  static extendable = false;
   static slug = "users";
   static scope = ModelEnvScopes.GLOBAL;
   static validators: ValidatorsDefinition = [
