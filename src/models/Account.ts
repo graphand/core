@@ -13,6 +13,7 @@ import Patterns from "../enums/patterns";
 class Account extends Model {
   static __name = "Account";
 
+  static searchable = true;
   static extendable = true;
   static slug = "accounts";
   static scope = ModelEnvScopes.ENV;

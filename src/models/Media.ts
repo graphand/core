@@ -10,6 +10,7 @@ import FieldTypes from "../enums/field-types";
 class Media extends Model {
   static __name = "Media";
 
+  static searchable = true;
   static extendable = true;
   static slug = "medias";
   static scope = ModelEnvScopes.PROJECT;

@@ -6,6 +6,7 @@ import Adapter from "./Adapter";
 
 @modelDecorator()
 class Data extends Model {
+  static searchable = true;
   static extendable = true;
   static scope = ModelEnvScopes.ENV;
 

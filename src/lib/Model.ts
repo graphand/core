@@ -35,6 +35,7 @@ import ErrorCodes from "../enums/error-codes";
 
 class Model {
   static extendable: boolean = false; // Whether the model can be extended with a DataModel with its slug
+  static searchable: boolean = false; // Whether the model is usable as a search config source
   static single: boolean = false; // Single model (only one instance of the model can exist)
   static exposed: boolean = true; // Whether the model is exposed in the API or not
   static systemFields: boolean = true; // Include system field (_id, _createdAt, _createdBy, _updatedAt, _updatedBy) in the model fields
