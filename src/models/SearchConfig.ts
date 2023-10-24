@@ -22,7 +22,7 @@ class SearchConfig extends Model {
       options: { field: "slug", pattern: Patterns.SLUG },
     },
     { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "mappingConfig" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "properties" } },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)
@@ -37,59 +37,11 @@ class SearchConfig extends Model {
   @fieldDecorator(FieldTypes.NESTED)
   filter: FieldDefinitionNested<any>;
 
-  @fieldDecorator(FieldTypes.NESTED, {
-    fields: {
-      properties: {
-        type: FieldTypes.NESTED,
-      },
-      settings: {
-        type: FieldTypes.NESTED,
-      },
-    },
-    validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "properties" } },
-    ],
-  })
-  mappingConfig: FieldDefinitionNested<any>;
+  @fieldDecorator(FieldTypes.NESTED)
+  properties: FieldDefinitionNested<any>; // mappings.properties
 
-  @fieldDecorator(FieldTypes.NESTED, {
-    fields: {
-      defaultQuery: {
-        type: FieldTypes.TEXT,
-      },
-      defaultFilters: {
-        type: FieldTypes.NESTED,
-      },
-    },
-  })
-  queryDefaults: FieldDefinitionNested<any>;
-
-  @fieldDecorator(FieldTypes.NESTED, {
-    fields: {
-      tokenizer: {
-        type: FieldTypes.TEXT,
-      },
-      filter: {
-        type: FieldTypes.TEXT,
-      },
-      charFilter: {
-        type: FieldTypes.TEXT,
-      },
-    },
-  })
-  customAnalyzers: FieldDefinitionNested<any>;
-
-  @fieldDecorator(FieldTypes.NESTED, {
-    fields: {
-      field: {
-        type: FieldTypes.TEXT,
-      },
-      weight: {
-        type: FieldTypes.NUMBER,
-      },
-    },
-  })
-  boostingFields: FieldDefinitionNested<any>;
+  @fieldDecorator(FieldTypes.NESTED)
+  analysis: FieldDefinitionNested<any>; // settings.analysis
 
   @fieldDecorator(FieldTypes.TEXT, {
     options: Object.values(SearchConfigStatus),
