@@ -285,6 +285,12 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
+  searchReset: {
+    path: "/search/:id/reset",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
 };
 
 export default controllersMap as Record<
