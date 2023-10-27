@@ -14,7 +14,6 @@ class SearchConfig extends Model {
 
   static slug = "searchConfigs";
   static scope = ModelEnvScopes.ENV;
-  static allowMultipleOperations = false;
   static keyField = "slug";
   static validators: ValidatorsDefinition = [
     {
