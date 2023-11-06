@@ -8,6 +8,8 @@ import Validator from "./Validator";
 class Adapter {
   static __modelsMap: Map<string, typeof Model>;
 
+  cacheFieldsMap: Map<string, Field>;
+  cacheValidatorsMap: Map<string, Validator>;
   fetcher: AdapterFetcher;
   fieldsMap: { [T in FieldTypes]?: typeof Field<T> };
   validatorsMap: { [T in ValidatorTypes]?: typeof Validator<T> };

@@ -2,66 +2,52 @@ import { ControllerDefinition } from "../types";
 import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 
+const _getModelScope: ControllerDefinition["scope"] = ({ model }) => {
+  const _model = Model.getFromSlug(model);
+
+  if (!_model) return "global";
+  if (_model.controllersScope) return _model.controllersScope;
+  if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
+
+  return "project";
+};
+
 const controllersMap = {
   modelCount: {
     path: "/:model/count",
     methods: ["GET", "POST"],
     secured: true,
-    scope: ({ model }) => {
-      const _model = Model.getFromSlug(model);
-      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
-      return "project";
-    },
+    scope: _getModelScope,
   },
   modelCreate: {
     path: "/:model",
     methods: ["POST"],
     secured: true,
-    scope: ({ model }) => {
-      const _model = Model.getFromSlug(model);
-      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
-      return "project";
-    },
+    scope: _getModelScope,
   },
   modelDelete: {
     path: "/:model/:id?",
     methods: ["DELETE"],
     secured: true,
-    scope: ({ model }) => {
-      const _model = Model.getFromSlug(model);
-      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
-      return "project";
-    },
+    scope: _getModelScope,
   },
   modelQuery: {
     path: "/:model/query",
     methods: ["GET", "POST"],
     secured: true,
-    scope: ({ model }) => {
-      const _model = Model.getFromSlug(model);
-      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
-      return "project";
-    },
+    scope: _getModelScope,
   },
   modelRead: {
     path: "/:model/:id?",
     methods: ["GET"],
     secured: true,
-    scope: ({ model }) => {
-      const _model = Model.getFromSlug(model);
-      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
-      return "project";
-    },
+    scope: _getModelScope,
   },
   modelUpdate: {
     path: "/:model/:id?",
     methods: ["PATCH"],
     secured: true,
-    scope: ({ model }) => {
-      const _model = Model.getFromSlug(model);
-      if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
-      return "project";
-    },
+    scope: _getModelScope,
   },
   currentAccount: {
     path: "/accounts/current",
@@ -287,6 +273,12 @@ const controllersMap = {
   },
   searchReset: {
     path: "/search/:id/reset",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
+  backup: {
+    path: "/backup",
     methods: ["POST"],
     scope: "project",
     secured: true,

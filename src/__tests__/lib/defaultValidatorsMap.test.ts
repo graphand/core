@@ -21,6 +21,16 @@ describe("test validatorsMap", () => {
         title: {
           type: FieldTypes.TEXT,
         },
+        obj: {
+          type: FieldTypes.NESTED,
+          options: {
+            fields: {
+              title: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        },
       },
       validators: [
         {
@@ -109,6 +119,16 @@ describe("test validatorsMap", () => {
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
         }
+      });
+
+      it("createMultiple with nested field title in every item of list should not throw error", async () => {
+        const title = faker.lorem.word();
+        const list = await model.createMultiple([
+          { title, obj: { title } },
+          { title, obj: { title } },
+        ]);
+        expect(list).toBeInstanceOf(Array);
+        expect(list.every((i) => i instanceof model)).toBeTruthy();
       });
     });
 
@@ -803,6 +823,150 @@ describe("test validatorsMap", () => {
         await expect(model.create({ title: 2 })).resolves.toBeInstanceOf(model);
         await expect(model.create({ title: 3 })).resolves.toBeInstanceOf(model);
       });
+    });
+  });
+
+  describe("unique validator", () => {
+    const model = mockModel({
+      fields: {
+        title: {
+          type: FieldTypes.TEXT,
+        },
+        arr: {
+          type: FieldTypes.ARRAY,
+          options: {
+            items: {
+              type: FieldTypes.TEXT,
+            },
+            validators: [
+              {
+                type: ValidatorTypes.UNIQUE,
+              },
+            ],
+          },
+        },
+        arrObj: {
+          type: FieldTypes.ARRAY,
+          options: {
+            items: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  label: {
+                    type: FieldTypes.TEXT,
+                  },
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.UNIQUE,
+                    options: {
+                      field: "label",
+                    },
+                  },
+                ],
+              },
+            },
+            validators: [
+              {
+                type: ValidatorTypes.UNIQUE,
+              },
+            ],
+          },
+        },
+      },
+      validators: [
+        {
+          type: ValidatorTypes.UNIQUE,
+          options: {
+            field: "title",
+          },
+        },
+      ],
+    }).withAdapter(adapter);
+
+    beforeAll(async () => {
+      await model.initialize();
+    });
+
+    it("no value should not throw error", async () => {
+      const list = await model.createMultiple([{}, {}]);
+      expect(list).toBeInstanceOf(Array);
+    });
+
+    it("same value should throw error", async () => {
+      await expect(
+        model.createMultiple([
+          {
+            title: "title",
+          },
+          {
+            title: "title",
+          },
+        ])
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("same value in array should throw error", async () => {
+      await expect(
+        model.create({
+          arr: ["value", "value"],
+        })
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("same value in nested array field should throw error", async () => {
+      await expect(
+        model.create({
+          arrObj: [
+            {
+              label: "value",
+            },
+            {
+              label: "value",
+            },
+          ],
+        })
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("same value in array in different instances should throw error", async () => {
+      await expect(
+        model.createMultiple([
+          {
+            arr: ["value1", "value2"],
+          },
+          {
+            arr: ["value3", "value1"],
+          },
+        ])
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("same value in nested array field in different instances should throw error", async () => {
+      await expect(
+        model.createMultiple([
+          {
+            arrObj: [
+              {
+                label: "value1",
+              },
+              {
+                label: "value2",
+              },
+            ],
+          },
+          {
+            arrObj: [
+              {
+                label: "value3",
+              },
+              {
+                label: "value1",
+              },
+            ],
+          },
+        ])
+      ).rejects.toBeInstanceOf(ValidationError);
     });
   });
 });

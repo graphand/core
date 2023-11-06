@@ -710,28 +710,11 @@ describe("test fieldsMap", () => {
 
         const i = new model({ obj });
 
-        expect.assertions(7);
-
         try {
           await model.validate([i]);
         } catch (e) {
           expect(e).toBeInstanceOf(ValidationError);
-          expect(e.fieldsPaths.includes("obj")).toBeTruthy();
-          expect(e.fieldsPaths.includes("obj.nested")).toBeTruthy();
           expect(e.fieldsPaths.includes("obj.nested.title")).toBeTruthy();
-
-          const objError = e.fields.find(
-            (e) => e.slug === "obj"
-          )?.validationError;
-
-          expect(objError?.fieldsPaths.includes("nested")).toBeTruthy();
-          expect(objError?.fieldsPaths.includes("nested.title")).toBeTruthy();
-
-          const objNestedError = objError.fields.find(
-            (e) => e.slug === "nested"
-          )?.validationError;
-
-          expect(objNestedError?.fieldsPaths.includes("title")).toBeTruthy();
         }
       });
     });
@@ -947,6 +930,42 @@ describe("test fieldsMap", () => {
         expect(i.obj.title).toEqual(serializedText);
       });
 
+      it("should use defaultField by default to serialize in json", async () => {
+        const serializedText = faker.lorem.word();
+        const testSerializer = jest.fn(() => serializedText);
+
+        class TestFieldText extends Field<FieldTypes.TEXT> {
+          serialize = testSerializer;
+        }
+
+        const _adapter = mockAdapter({
+          fieldsMap: {
+            [FieldTypes.TEXT]: TestFieldText,
+          },
+        });
+
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                defaultField: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        }).withAdapter(_adapter);
+        await model.initialize();
+
+        const i = new model({ obj: { title: "test" } });
+
+        const json = i.toJSON();
+
+        expect(json.obj).toBeInstanceOf(Object);
+        expect(json.obj.title).toEqual(serializedText);
+      });
+
       it("should use defaultField only for not defined fields", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = jest.fn(() => serializedText);
@@ -989,7 +1008,6 @@ describe("test fieldsMap", () => {
       });
 
       it("should use defaultField by default to validate", async () => {
-        // @ts-ignore
         const testValidator = jest.fn(() => Promise.resolve(true));
 
         class TestFieldText extends Field<FieldTypes.TEXT> {

@@ -8,6 +8,7 @@ import {
   AdapterFetcher,
   DocumentDefinition,
   FieldsDefinition,
+  FieldsPathItem,
   Hook,
   HookCallbackArgs,
   HookPhase,
@@ -24,11 +25,11 @@ import {
   createValidatorsArray,
   getFieldsPathsFromPath,
   getRecursiveHooksFromModel,
-  validateDocs,
   defineFieldsProperties,
   getAdaptedModel,
   _getter,
   _setter,
+  validateModel,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
@@ -42,9 +43,11 @@ class Model {
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
   static slug: string; // The slug of the model used to identify it
   static scope: ModelEnvScopes; // The scope of the model (global/project). Project scope could be global on project (project) or specific to an environment (env)
+  static controllersScope: "global" | "project"; // The scope for CRUD controllers. Default calculated from model.scope
   static fields: FieldsDefinition; // The fields of the model
   static validators: ValidatorsDefinition; // The validators of the model
   static keyField?: string; // The key field of the model (used to identify instances of the model, in addition to _id)
+  static freeMode: boolean = false; // Whether the model is free
 
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
@@ -312,25 +315,37 @@ class Model {
   get(
     path: string,
     format: SerializerFormat | string = SerializerFormat.OBJECT,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ) {
-    let fieldsPaths;
-    let firstField;
+    let fieldsPaths: Array<FieldsPathItem>;
+
+    ctx.outputFormat = format;
 
     if (path.includes(".")) {
       const pathArr = path.split(".");
       fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
-      firstField = fieldsPaths.shift()?.field;
     } else {
-      fieldsPaths = [];
-      firstField = this.model.fieldsMap.get(path);
+      const field = this.model.fieldsMap.get(path);
+      if (field) {
+        fieldsPaths = [
+          {
+            field,
+            key: path,
+          },
+        ];
+      }
     }
 
-    if (!firstField) {
+    if (!fieldsPaths?.length) {
+      if (this.model.freeMode) {
+        return this.__doc[path];
+      }
+
       return undefined;
     }
 
-    let value: any = this.__doc[firstField.__path];
+    const firstField = fieldsPaths[0].field;
+    let value = this.__doc[firstField.path];
 
     if (
       format !== SerializerFormat.DOCUMENT &&
@@ -344,29 +359,29 @@ class Model {
       return value;
     }
 
-    // In case of a single field path (i._id for example), return the value directly
-    if (!fieldsPaths.length) {
+    if (fieldsPaths.length === 1) {
       return firstField.serialize(value, format, this, ctx);
+    } else {
+      const noFieldSymbol = Symbol("noField");
+
+      const _value = firstField.serialize(
+        value,
+        SerializerFormat.NEXT_FIELD,
+        this,
+        ctx
+      );
+
+      let res = _getter({
+        _value,
+        _fieldsPaths: fieldsPaths.splice(1),
+        format,
+        ctx,
+        noFieldSymbol,
+        from: this,
+      });
+
+      return res === noFieldSymbol ? undefined : res;
     }
-
-    value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, this, ctx);
-
-    if (value === undefined || value === null) {
-      return value;
-    }
-
-    const noFieldSymbol = Symbol("noField");
-
-    let res = _getter({
-      _value: value,
-      _fieldsPaths: fieldsPaths,
-      format,
-      ctx,
-      noFieldSymbol,
-      from: this,
-    });
-
-    return res === noFieldSymbol ? undefined : res;
   }
 
   /**
@@ -435,19 +450,18 @@ class Model {
     defineFieldsProperties(this);
 
     const keys = fieldsKeys ?? this.model.fieldsKeys;
+    const res: any = {};
 
-    const entries = keys
-      .map((slug) => {
-        const v = this.get(slug, format, ctx);
-        if (clean && v === undefined) {
-          return null;
-        }
+    keys.forEach((slug) => {
+      const v = this.get(slug, format, ctx);
+      if (clean && v === undefined) {
+        return;
+      }
 
-        return [slug, v];
-      })
-      .filter(Boolean);
+      res[slug] = v;
+    });
 
-    return Object.fromEntries(entries);
+    return res;
   }
 
   /**
@@ -503,11 +517,13 @@ class Model {
     let payload = parsed;
 
     if (cleanPayload) {
-      const payloadEntries = model.fieldsKeys.map((slug) => {
-        return [slug, parsed[slug]];
+      const cleaned: any = {};
+
+      model.fieldsKeys.forEach((slug) => {
+        cleaned[slug] = parsed[slug];
       });
 
-      payload = Object.fromEntries(payloadEntries);
+      payload = cleaned;
     }
 
     return new model(payload);
@@ -845,7 +861,7 @@ class Model {
   /**
    * Validate multiple documents with the current model validators.
    * This method will throw an error if one of the input documents is invalid.
-   * @param input - An array of documents to validate
+   * @param list - An array of documents to validate
    * @example
    * const instances = await Model.createMultiple([
    * { title: "apple" },
@@ -855,19 +871,10 @@ class Model {
    */
   static async validate<T extends typeof Model>(
     this: T,
-    input: Array<InstanceType<T> | DocumentDefinition>,
+    list: Array<InstanceType<T> | InputModelPayload<T>>,
     ctx: ExecutorCtx = {}
   ) {
-    const docs = input.map((i) => (i instanceof Model ? i.__doc : i));
-
-    return await validateDocs(
-      docs,
-      {
-        validators: this.validatorsArray,
-        fieldsEntries: Array.from(this.fieldsMap.entries()),
-      },
-      { ...ctx, model: this }
-    );
+    return await validateModel(this, list, ctx);
   }
 
   /**
