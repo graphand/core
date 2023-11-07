@@ -1,5 +1,9 @@
 import { ObjectId } from "bson";
-import { mockAdapter, mockModel } from "../../lib/test-utils";
+import {
+  generateRandomString,
+  mockAdapter,
+  mockModel,
+} from "../../lib/test-utils";
 import FieldTypes from "../../enums/field-types";
 import { faker } from "@faker-js/faker";
 import Field from "../../lib/Field";
@@ -7,7 +11,7 @@ import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
 import ValidationError from "../../lib/ValidationError";
 import PromiseModel from "../../lib/PromiseModel";
-import { getFieldFromDefinition, models } from "../../index";
+import { DataModel, getFieldFromDefinition, models } from "../../index";
 import PromiseModelList from "../../lib/PromiseModelList";
 import SerializerFormat from "../../enums/serializer-format";
 
@@ -277,6 +281,22 @@ describe("test fieldsMap", () => {
       const i = new model({ obj });
       expect(i.obj).toBeInstanceOf(Object);
       expect(Array.isArray(i.obj)).toBeFalsy();
+    });
+
+    it("Should returns undefined if no value", async () => {
+      const model = DataModel.withAdapter(adapter);
+
+      const i = await model.create({
+        slug: generateRandomString(),
+        fields: {
+          test: {
+            type: FieldTypes.NESTED,
+          },
+        },
+      });
+      expect(i.get("fields.test.options", SerializerFormat.JSON)).toBe(
+        undefined
+      );
     });
 
     describe("Proxy", () => {

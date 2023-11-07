@@ -43,6 +43,10 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return [this.__path, this.options.field].filter(Boolean).join(".");
   }
 
+  getKey() {
+    return this.getFullPath() + this.type;
+  }
+
   async validate(docs: Array<DocumentDefinition>, ctx: any) {
     return false;
   }

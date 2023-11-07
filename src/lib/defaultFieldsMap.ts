@@ -188,7 +188,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
         return value;
       }
 
-      return null;
+      return value === undefined ? value : null;
     }
 
     const adapter = from.model.getAdapter();

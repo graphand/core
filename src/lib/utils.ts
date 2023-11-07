@@ -758,6 +758,8 @@ export const validateModel = async <T extends typeof Model>(
   const instances = list.map((i) =>
     i instanceof Model ? i : new model({ ...i })
   ) as Array<InstanceType<T>>;
+
+  const fieldsValidatorsKeys = new Set<string>();
   const fieldsValidators: Array<[Validator, Array<InstanceType<T>>]> = [];
 
   ctx.model = model;
@@ -771,16 +773,6 @@ export const validateModel = async <T extends typeof Model>(
         if (!validated) {
           throw null;
         }
-
-        // if ([FieldTypes.NESTED, FieldTypes.ARRAY].includes(type)) {
-        //   const values = on
-        //     .map((i) => i.get(path, SerializerFormat.VALIDATION))
-        //     .flat(Infinity)
-        //     .filter(Boolean);
-
-        //   if (values?.length) {
-        //   }
-        // }
 
         if (type === FieldTypes.NESTED) {
           const values = on
@@ -876,30 +868,40 @@ export const validateModel = async <T extends typeof Model>(
               }
             }
 
-            Array.prototype.push.apply(
-              fieldsValidators,
-              getNestedValidatorsArray(model, _field).map((v) => [v, on])
-            );
+            getNestedValidatorsArray(model, _field).forEach((v) => {
+              const key = v.getKey();
+              if (!fieldsValidatorsKeys.has(key)) {
+                fieldsValidators.push([v, on]);
+                fieldsValidatorsKeys.add(key);
+              }
+            });
           }
         }
 
         if (type === FieldTypes.ARRAY) {
           const _field = field as Field<FieldTypes.ARRAY>;
-          const values = on
-            .map((i) => i.get(path, SerializerFormat.VALIDATION))
+          const entries = on
+            .map((i) => [i, i.get(path, SerializerFormat.VALIDATION)])
+            .filter((e) => Boolean(e[1]));
+          const values = entries
+            .map((e) => e[1])
             .flat(Infinity)
             .filter(Boolean);
 
           if (values?.length) {
             const validators = getArrayValidatorsArray(model, _field);
+            const _on = entries.map((e) => e[0]);
 
-            Array.prototype.push.apply(
-              fieldsValidators,
-              validators.map((v) => [v, on])
-            );
+            validators.forEach((v) => {
+              const key = v.getKey();
+              if (!fieldsValidatorsKeys.has(key)) {
+                fieldsValidators.push([v, _on]);
+                fieldsValidatorsKeys.add(key);
+              }
+            });
 
             const fields = getArrayItemsFieldsMap(model, _field);
-            await _processFields(Array.from(fields.values()), on);
+            await _processFields(Array.from(fields.values()), _on);
           }
         }
       } catch (err) {
@@ -935,20 +937,29 @@ export const validateModel = async <T extends typeof Model>(
     );
   };
 
-  await Promise.all([
-    _processFields(getNestedFieldsArrayForModel(model)),
-    _processValidators(model.validatorsArray.map((v) => [v, instances])),
-  ]);
+  const _verify = () => {
+    if (errorsFieldsSet.size || errorsValidatorsSet.size) {
+      throw new ValidationError({
+        fields: [...errorsFieldsSet],
+        validators: [...errorsValidatorsSet],
+      });
+    }
+  };
 
-  if (fieldsValidators.length) {
-    await _processValidators(fieldsValidators);
+  await _processFields(getNestedFieldsArrayForModel(model));
+
+  _verify();
+
+  if (model.validatorsArray?.length) {
+    await _processValidators(model.validatorsArray.map((v) => [v, instances]));
+
+    _verify();
   }
 
-  if (errorsFieldsSet.size || errorsValidatorsSet.size) {
-    throw new ValidationError({
-      fields: [...errorsFieldsSet],
-      validators: [...errorsValidatorsSet],
-    });
+  if (fieldsValidatorsKeys.size) {
+    await _processValidators(fieldsValidators);
+
+    _verify();
   }
 
   return true;

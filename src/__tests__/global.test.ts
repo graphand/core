@@ -683,4 +683,81 @@ describe("Global tests", () => {
   //     ])
   //   ).rejects.toThrow(ValidationError);
   // });
+
+  it("should be able to create multiple datamodels at once", async () => {
+    const adapter = mockAdapter();
+
+    await expect(
+      DataModel.withAdapter(adapter).validate([
+        {
+          slug: generateRandomString(),
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {},
+            },
+            subtitle: {
+              type: FieldTypes.TEXT,
+              options: {},
+            },
+          },
+        },
+        {
+          slug: generateRandomString(),
+        },
+      ])
+    ).resolves.toBeTruthy();
+
+    await expect(
+      DataModel.withAdapter(adapter).validate([
+        {
+          slug: generateRandomString(),
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {},
+            },
+          },
+          validators: [
+            {
+              type: "required",
+              options: { field: "title" },
+            },
+          ],
+        },
+        {
+          slug: generateRandomString(),
+          fields: {},
+        },
+      ])
+    ).resolves.toBeTruthy();
+
+    await expect(
+      DataModel.withAdapter(adapter).validate([
+        {
+          slug: generateRandomString(),
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {},
+            },
+          },
+          validators: [
+            {
+              type: "required",
+              options: { field: "title" },
+            },
+          ],
+        },
+        {
+          slug: generateRandomString(),
+          fields: {},
+          validators: [],
+        },
+      ])
+    ).resolves.toBeTruthy();
+  });
 });
