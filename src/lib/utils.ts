@@ -112,8 +112,7 @@ export const getFieldsPathsFromPath = (
             const itemsField = getFieldFromDefinition(
               options.items,
               adapter,
-              pathStr + `.[${index}]`,
-              pathStr + ".[]"
+              pathStr + `.[${index}]`
             );
 
             return [...fieldsPaths, { key: `[${index}]`, field: itemsField }];
@@ -403,8 +402,7 @@ export const getFieldFromDefinition = <
 >(
   def: FieldDefinition<T>,
   adapter: Adapter,
-  path: string,
-  cachePath?: string
+  path: string
 ) => {
   if (!def || typeof def !== "object") {
     return null;

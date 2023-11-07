@@ -335,8 +335,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
           const itemsField = getFieldFromDefinition(
             this.options.items,
             adapter,
-            this.__path + `.[${i}]`,
-            this.__path + ".[]"
+            this.__path + `.[${i}]`
           );
 
           return itemsField.serialize(v, format, from, ctx);
@@ -389,8 +388,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
       const itemsField = getFieldFromDefinition(
         this.options.items,
         adapter,
-        this.__path + `.[${i}]`,
-        this.__path + ".[]"
+        this.__path + `.[${i}]`
       );
 
       return itemsField.serialize(v, format, from, ctx);
