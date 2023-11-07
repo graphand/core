@@ -281,10 +281,9 @@ export type ValidatorDefinitionOmitField<
 export type ValidatorsDefinition = Array<ValidatorDefinition>;
 export type ValidatorsDefinitionOmitField = Array<ValidatorDefinitionOmitField>;
 
-export type FieldOptionsMap = {
+export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.ARRAY]: {
-    items: FieldDefinition;
-    unicity?: boolean;
+    items: FieldDefinition<T>;
     validators?: ValidatorsDefinitionOmitField;
   };
   [FieldTypes.TEXT]: {
@@ -392,10 +391,6 @@ export type FieldsRestriction = {
   fields: string[];
 };
 
-export type ValidateCtx = {
-  model: typeof Model;
-} & any;
-
 export type CoreErrorDefinition = {
   message?: string;
   code?: ErrorCodes | string;
@@ -409,12 +404,16 @@ export type ValidationFieldErrorDefinition = {
 
 export type ValidationValidatorErrorDefinition = {
   validator: Validator;
+  value?: string;
 };
 
 export type ControllerDefinition = {
   path: string;
   methods: Array<"GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS">;
-  scope: "global" | "project" | ((args: any) => "global" | "project");
+  scope:
+    | "global"
+    | "project"
+    | ((args: { model: string }) => "global" | "project");
   secured: boolean;
 };
 

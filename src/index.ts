@@ -4,6 +4,7 @@ import DataModel from "./models/DataModel";
 import Account from "./models/Account";
 import AccountAuthProvider from "./models/AccountAuthProvider";
 import AuthProvider from "./models/AuthProvider";
+import Backup from "./models/Backup";
 import Job from "./models/Job";
 import Project from "./models/Project";
 import User from "./models/User";
@@ -35,6 +36,7 @@ import controllersMap from "./lib/controllersMap";
 import ValidationFieldError from "./lib/ValidationFieldError";
 import ValidationValidatorError from "./lib/ValidationValidatorError";
 import defaultFieldsMap from "./lib/defaultFieldsMap";
+import defaultValidatorsMap from "./lib/defaultValidatorsMap";
 import AuthProviders from "./enums/auth-providers";
 import AuthMethods from "./enums/auth-methods";
 import IdentityTypes from "./enums/identity-types";
@@ -45,11 +47,13 @@ import JobStatus from "./enums/job-status";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
-  validateDocs,
   getFieldsPathsFromPath,
   getNestedFieldsMap,
   defineFieldsProperties,
   getAdaptedModel,
+  validateModel,
+  getNestedValidatorsArray,
+  getArrayValidatorsArray,
 } from "./lib/utils";
 import { modelDecorator } from "./lib/modelDecorator";
 import { fieldDecorator } from "./lib/fieldDecorator";
@@ -58,6 +62,7 @@ const models = {
   Account,
   AccountAuthProvider,
   AuthProvider,
+  Backup,
   DataModel,
   Environment,
   Job,
@@ -80,6 +85,7 @@ export {
   Account,
   AccountAuthProvider,
   AuthProvider,
+  Backup,
   DataModel,
   Environment,
   Job,
@@ -118,13 +124,16 @@ export {
   ValidationFieldError,
   ValidationValidatorError,
   controllersMap,
-  validateDocs,
   ErrorCodes,
   defaultFieldsMap,
+  defaultValidatorsMap,
   getFieldsPathsFromPath,
   getNestedFieldsMap,
   defineFieldsProperties,
   getAdaptedModel,
+  validateModel,
+  getNestedValidatorsArray,
+  getArrayValidatorsArray,
   modelDecorator,
   fieldDecorator,
 };

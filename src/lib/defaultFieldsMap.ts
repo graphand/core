@@ -5,16 +5,11 @@ import Model from "./Model";
 import Adapter from "./Adapter";
 import {
   getFieldFromDefinition,
-  getValidatorFromDefinition,
-  isObjectId,
-  validateDocs,
   getNestedFieldsMap,
+  isObjectId,
 } from "./utils";
-import Validator from "./Validator";
 import CoreError from "./CoreError";
-import ValidationFieldError from "./ValidationFieldError";
-import ValidationError from "./ValidationError";
-import { FieldOptions, ValidatorDefinition } from "../types";
+import { FieldOptions } from "../types";
 import PromiseModelList from "./PromiseModelList";
 import PromiseModel from "./PromiseModel";
 import ModelList from "./ModelList";
@@ -45,30 +40,34 @@ class DefaultFieldDate extends Field<FieldTypes.DATE> {
 }
 
 class DefaultFieldText extends Field<FieldTypes.TEXT> {
-  async validate(value) {
-    if (value === null || value === undefined) {
-      return true;
-    }
-
-    if (this.options.options?.length && this.options.strict) {
-      if (Array.isArray(value)) {
-        return value.every((i) => this.options.options.includes(i));
+  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+    const _isInvalid = (value: any) => {
+      if (value === null || value === undefined) {
+        return false;
       }
 
-      return this.options.options.includes(value);
-    }
+      if (this.options.options?.length && this.options.strict) {
+        return !this.options.options.includes(value);
+      }
 
-    return true;
+      return false;
+    };
+
+    const values = list
+      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
+      .flat(Infinity);
+
+    return !values.some(_isInvalid);
   }
 
   serialize(value: any, format: SerializerFormat, from: Model): any {
-    const res =
-      value && Array.isArray(value) ? String(value[0]) : String(value);
+    const res = Array.isArray(value) ? String(value[0]) : String(value);
 
     if (
       this.options.options?.length &&
       this.options.strict &&
-      !this.options.options.includes(res)
+      !this.options.options.includes(res) &&
+      format !== SerializerFormat.VALIDATION
     ) {
       return undefined;
     }
@@ -160,80 +159,19 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 }
 
 class DefaultFieldNested extends Field<FieldTypes.NESTED> {
-  async validate(value, ctx, slug) {
-    if (value === null || value === undefined) {
-      return true;
-    }
-
-    const model = ctx.model;
-
-    if (!model) {
-      throw new CoreError();
-    }
-
-    const adapter = model.getAdapter();
-
-    const arrValue = Array.isArray(value) ? value : [value];
-
-    const validators: Array<Validator> = (this.options.validators ?? []).map(
-      (def) => getValidatorFromDefinition(def, adapter, this.__path)
-    );
-
-    if (this.options.defaultField) {
-      const defaultField = getFieldFromDefinition(
-        this.options.defaultField,
-        adapter,
-        this.__path + ".__defaultField"
-      );
-
-      const defaultEntries = arrValue
-        .map((v) =>
-          Object.entries(v).filter(
-            ([slug]: [string, unknown]) => !this.options.fields?.[slug]
-          )
-        )
-        .flat();
-
-      const errorsFieldsSet = new Set<ValidationFieldError>();
-
-      if (defaultEntries?.length) {
-        await Promise.all(
-          defaultEntries.map(async ([_slug, value]) => {
-            try {
-              const validated = await defaultField.validate(value, ctx, _slug);
-              if (!validated) {
-                throw null;
-              }
-            } catch (err) {
-              const e = new ValidationFieldError({
-                slug: _slug,
-                field: defaultField,
-                validationError: err instanceof ValidationError ? err : null,
-              });
-
-              errorsFieldsSet.add(e);
-            }
-          })
-        );
+  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+    const _isInvalid = (value: any) => {
+      if (value === null || value === undefined) {
+        return false;
       }
 
-      if (errorsFieldsSet.size) {
-        throw new ValidationError({
-          fields: Array.from(errorsFieldsSet),
-        });
-      }
-    }
+      return typeof value !== "object";
+    };
 
-    const subfieldsMap = getNestedFieldsMap(model, this);
-
-    return validateDocs(
-      arrValue,
-      {
-        validators,
-        fieldsEntries: Array.from(subfieldsMap.entries()),
-      },
-      ctx
-    );
+    const values = list
+      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
+      .flat(Infinity);
+    return !values.some(_isInvalid);
   }
 
   serialize(
@@ -243,131 +181,96 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
     ctx: SerializerCtx = {}
   ): any {
     value = Array.isArray(value) ? value[0] : value;
+    const _field = this;
 
     if (!value || typeof value !== "object") {
-      return null;
+      if (ctx.outputFormat === SerializerFormat.VALIDATION) {
+        return value;
+      }
+
+      return value === undefined ? value : null;
     }
 
     const adapter = from.model.getAdapter();
+    const fieldsMap = getNestedFieldsMap(from.model, this);
+
+    const _get = (target: object, prop: string) => {
+      let targetField = fieldsMap.get(prop);
+      let value = target[prop];
+
+      if (!targetField) {
+        if (_field.options?.strict) {
+          return undefined;
+        }
+
+        if (!_field.options?.defaultField) {
+          return value;
+        }
+
+        targetField = getFieldFromDefinition(
+          _field.options.defaultField,
+          adapter,
+          [_field.__path, prop].join(".")
+        );
+      }
+
+      if (value === undefined && "default" in targetField.options) {
+        value = targetField.options.default as typeof value;
+      }
+
+      if (value !== undefined && value !== null) {
+        value = targetField.serialize(value, format, from, ctx);
+      }
+
+      return value;
+    };
 
     const _serializeJSON = (obj: object) => {
-      const formattedEntries = [];
-      const fields = this.options.fields ?? {};
-      const entries = Object.entries(fields);
+      const json = {};
 
-      for (let i = 0; i < entries.length; i++) {
-        const [slug, def] = entries[i];
-        const field = getFieldFromDefinition(
-          def,
-          adapter,
-          [this.__path, slug].join(".")
-        );
-
-        let v = obj[slug];
-
-        if (v === undefined && "default" in field.options) {
-          v = field.options.default as typeof v;
+      for (const [k, field] of fieldsMap) {
+        if (obj[k] === undefined || obj[k] === null) {
+          json[k] = obj[k];
+        } else {
+          json[k] = field.serialize(obj[k], format, from, ctx);
         }
+      }
 
-        if (v !== undefined && v !== null) {
-          v = field.serialize(v, format, from, ctx);
-        }
-
-        if (v !== undefined) {
-          formattedEntries.push([slug, v]);
-        }
+      if (this.options.strict) {
+        return json;
       }
 
       if (this.options.defaultField) {
-        const defaultField = getFieldFromDefinition(
-          this.options.defaultField,
-          adapter,
-          this.__path + ".__default"
-        );
+        const noField = Object.keys(obj).filter((k) => !fieldsMap.has(k));
 
-        const defaultEntries = [];
-        for (const key in obj) {
-          if (!this.options.fields?.[key]) {
-            let v = obj[key];
+        if (noField.length) {
+          noField.forEach((k) => {
+            if (obj[k] === undefined || obj[k] === null) {
+              json[k] = obj[k];
+            } else {
+              const tmpField = getFieldFromDefinition(
+                this.options.defaultField,
+                adapter,
+                [this.__path, k].join(".")
+              );
 
-            if (v === undefined && "default" in defaultField.options) {
-              v = defaultField.options.default as typeof v;
+              json[k] = tmpField.serialize(obj[k], format, from, ctx);
             }
-
-            if (v !== undefined && v !== null) {
-              v = defaultField.serialize(v, format, from, ctx);
-            }
-
-            defaultEntries.push([key, v]);
-          }
+          });
         }
-
-        Array.prototype.push.apply(formattedEntries, defaultEntries);
       }
 
-      const formatted = Object.fromEntries(formattedEntries.filter(Boolean));
-
-      if (this.options.strict) {
-        return formatted;
-      }
-
-      return { ...obj, ...formatted };
+      return { ...obj, ...json };
     };
 
     const _serializeObject = (obj: object) => {
-      const isStrict = this.options.strict ?? false;
-      const fields = this.options.fields ?? {};
-      const path = this.__path;
-      let defaultField;
-      const fieldsMap = new Map<string, Field>();
-
-      if (this.options.defaultField) {
-        defaultField = getFieldFromDefinition(
-          this.options.defaultField,
-          adapter,
-          this.__path + ".__default"
-        );
-      }
-
       return new Proxy(obj, {
         get(target, prop: string) {
           if (prop === "__isProxy") {
             return true;
           }
 
-          if (isStrict && !(prop in fields)) {
-            return undefined;
-          }
-
-          let propField;
-          if (prop in fields) {
-            propField =
-              fieldsMap.get(prop) ??
-              getFieldFromDefinition(
-                fields[prop],
-                adapter,
-                [path, prop].join(".")
-              );
-          }
-
-          let field: Field = propField ?? defaultField;
-          let value = target[prop];
-
-          if (field) {
-            fieldsMap.set(prop, field);
-          } else {
-            return isStrict ? undefined : value;
-          }
-
-          if (value === undefined && "default" in field.options) {
-            value = field.options.default as typeof value;
-          }
-
-          if (value !== undefined && value !== null) {
-            value = field.serialize(value, format, from, ctx);
-          }
-
-          return value;
+          return _get(target, prop);
         },
       });
     };
@@ -381,61 +284,27 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
 }
 
 class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
-  async validate(value) {
-    if (value === null || value === undefined) {
-      return true;
-    }
+  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+    const _isInvalid = (value: any) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
 
-    const [type, id] = value.split(":");
+      const [type, id] = value.split(":");
 
-    return Object.values(IdentityTypes).includes(type) && isObjectId(id);
-  }
+      return !Object.values(IdentityTypes).includes(type) || !isObjectId(id);
+    };
 
-  serialize(value: any, format: SerializerFormat, from: Model): any {
-    return value;
+    const values = list
+      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
+      .flat(Infinity);
+
+    return !values.some(_isInvalid);
   }
 }
 
 class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
   nextFieldEqObject = false;
-
-  async validate(value, ctx, slug) {
-    if (value === null || value === undefined) {
-      return true;
-    }
-
-    const model = ctx.model;
-
-    if (!model) {
-      throw new CoreError();
-    }
-
-    const adapter = model.getAdapter();
-
-    const arrValue = Array.isArray(value) ? value : [value];
-    const field = getFieldFromDefinition(
-      this.options.items,
-      adapter,
-      this.__path + ".[]"
-    );
-
-    const validators: Array<Validator> = (this.options.validators ?? []).map(
-      (def) => {
-        return getValidatorFromDefinition(
-          def as ValidatorDefinition,
-          adapter,
-          this.__path
-        );
-      }
-    );
-
-    await validateDocs(arrValue, { validators }, ctx);
-
-    return Promise.all([
-      ...arrValue.map((v) => field.validate(v, ctx, slug)),
-      validateDocs(arrValue, { validators }, ctx),
-    ]).then((results) => results.every((r) => r));
-  }
 
   _serializeRelationArray(
     options: FieldOptions<FieldTypes.RELATION>,
@@ -457,10 +326,12 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
         });
       }
 
+      let res;
+
       if (model.single) {
         value = Array.isArray(value) ? value : [value];
 
-        return value.map((v, i) => {
+        res = value.map((v, i) => {
           const itemsField = getFieldFromDefinition(
             this.options.items,
             adapter,
@@ -470,9 +341,11 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
           return itemsField.serialize(v, format, from, ctx);
         });
+      } else {
+        res = model.getList({ ids }, ctx);
       }
 
-      return model.getList({ ids }, ctx);
+      return res;
     } else if (
       value instanceof PromiseModelList ||
       value instanceof ModelList

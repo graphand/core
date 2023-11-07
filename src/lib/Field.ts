@@ -1,13 +1,13 @@
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
-import { FieldDefinition, FieldOptions, ValidateCtx } from "../types";
+import { FieldDefinition, FieldOptions } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import { getDefaultFieldOptions } from "./utils";
 
 class Field<T extends FieldTypes = FieldTypes> {
   __definition: FieldDefinition<T>;
   __path: string;
-  nextFieldEqObject: boolean = true;
+  nextFieldEqObject: boolean = true; // If false, the serializer returns a different value in NEXT_FIELD and OBJECT
 
   constructor(definition: FieldDefinition<T>, path: string) {
     this.__definition = definition;
@@ -30,7 +30,11 @@ class Field<T extends FieldTypes = FieldTypes> {
     ) as FieldOptions<T>;
   }
 
-  async validate(value: any, ctx: ValidateCtx, slug: string) {
+  get path() {
+    return this.__path;
+  }
+
+  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
     return true;
   }
 
@@ -38,7 +42,7 @@ class Field<T extends FieldTypes = FieldTypes> {
     value: any,
     format: SerializerFormat | string,
     from: Model,
-    ctx: ExecutorCtx = {}
+    ctx: SerializerCtx = {}
   ) {
     return value;
   }

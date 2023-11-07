@@ -32,29 +32,33 @@ class ValidationError extends CoreError {
   }
 
   get fieldsPaths(): Array<string> {
-    const _fieldsPaths: Array<Array<string>> = this.fields.map((err) => {
-      if (err.validationError) {
-        const nestedPaths = err.validationError.fieldsPaths.map(
-          (path) => `${err.slug}.${path}`
-        );
+    return [
+      ...this.fields.map((f) => f.field?.path),
+      ...this.validators.map((v) => v.validator.getFullPath()),
+    ];
+    // const _fieldsPaths: Array<Array<string>> = this.fields.map((err) => {
+    //   if (err.validationError) {
+    //     const nestedPaths = err.validationError.fieldsPaths.map(
+    //       (path) => `${err.slug}.${path}`
+    //     );
 
-        return [err.slug, ...nestedPaths];
-      }
+    //     return [err.slug, ...nestedPaths];
+    //   }
 
-      return [err.slug];
-    });
+    //   return [err.slug];
+    // });
 
-    const _validatorsPaths: Array<string | null> = this.validators.map(
-      (err) => {
-        if ("field" in err.validator.options) {
-          return err.validator.options.field as string;
-        }
+    // const _validatorsPaths: Array<string | null> = this.validators.map(
+    //   (err) => {
+    //     if ("field" in err.validator.options) {
+    //       return err.validator.options.field as string;
+    //     }
 
-        return null;
-      }
-    );
+    //     return null;
+    //   }
+    // );
 
-    return [..._validatorsPaths, ..._fieldsPaths.flat()].filter(Boolean);
+    // return [..._validatorsPaths, ..._fieldsPaths.flat()].filter(Boolean);
   }
 
   get message() {
@@ -69,11 +73,20 @@ class ValidationError extends CoreError {
       );
     }
     if (this.validators.length) {
-      reasons.push(
-        `${this.validators.length} model validator${
-          this.validators.length > 1 ? "s" : ""
-        } (${this.validators.map((v) => v.validator.type).join(", ")})`
-      );
+      let reason = `${this.validators.length} model validator${
+        this.validators.length > 1 ? "s" : ""
+      } (${this.validators.map((v) => v.validator.type).join(", ")})`;
+
+      const values = this.validators
+        .filter((v) => v.value !== undefined)
+        .map((v) => v.value);
+      if (values.length) {
+        reason += ` for value${values.length > 1 ? "s" : ""} ${values.join(
+          ", "
+        )}`;
+      }
+
+      reasons.push(reason);
     }
 
     if (reasons.length) {
@@ -103,14 +116,6 @@ class ValidationError extends CoreError {
     delete json.code;
 
     return json;
-  }
-
-  toLog() {
-    return {
-      message: this.message,
-      fields: this.fields.map((f) => f.toJSON()),
-      validators: this.validators.map((v) => v.toJSON()),
-    };
   }
 }
 

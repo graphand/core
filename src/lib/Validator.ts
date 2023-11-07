@@ -1,7 +1,6 @@
 import ValidatorTypes from "../enums/validator-types";
 import {
   DocumentDefinition,
-  ValidateCtx,
   ValidatorDefinition,
   ValidatorHook,
   ValidatorOptions,
@@ -10,11 +9,11 @@ import { getDefaultValidatorOptions } from "./utils";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
   __definition: ValidatorDefinition<T>;
-  __path: string;
+  __path: undefined | string;
 
   hooks: Array<ValidatorHook>;
 
-  constructor(definition: ValidatorDefinition<T>, path: string) {
+  constructor(definition: ValidatorDefinition<T>, path?: string) {
     this.__definition = definition;
     this.__path = path;
 
@@ -40,12 +39,16 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     ) as ValidatorOptions<T>;
   }
 
-  async validate(docs: Array<DocumentDefinition>, ctx: ValidateCtx) {
-    return false;
+  getFullPath() {
+    return [this.__path, this.options.field].filter(Boolean).join(".");
   }
 
   getKey() {
-    return [this.type, JSON.stringify(this.options)].join();
+    return this.getFullPath() + this.type;
+  }
+
+  async validate(docs: Array<DocumentDefinition>, ctx: any) {
+    return false;
   }
 
   toJSON() {

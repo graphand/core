@@ -676,6 +676,53 @@ describe("Test Model", () => {
 
       expect(created.get("obj")).toEqual(undefined);
     });
+
+    it("should not call useless serializer", async () => {
+      const serializeText = jest.fn((value: any): any => value);
+
+      const _adapter = mockAdapter({
+        fieldsMap: {
+          [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+            serialize = serializeText;
+          },
+        },
+      });
+
+      const model = mockModel({
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                field1: {
+                  type: FieldTypes.TEXT,
+                },
+                field2: {
+                  type: FieldTypes.TEXT,
+                },
+                field3: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(_adapter);
+
+      const created = await model.create({
+        obj: {
+          field1: "test1",
+          field2: "test2",
+          field3: "test3",
+        },
+      });
+
+      expect(serializeText).toBeCalledTimes(0);
+
+      created.get("obj.field1");
+
+      expect(serializeText).toBeCalledTimes(1);
+    });
   });
 
   describe("Model setter", () => {
@@ -1294,7 +1341,7 @@ describe("Test Model", () => {
       expect(testValidateValidator).toHaveBeenCalledTimes(1);
     });
 
-    it("Model should validate validators & fields once by value on createMultiple", async () => {
+    it("Model should validate validators & fields once on createMultiple", async () => {
       const testValidateField = jest.fn(() => Promise.resolve(true));
       const testValidateValidator = jest.fn(() => Promise.resolve(true));
 
@@ -1332,7 +1379,7 @@ describe("Test Model", () => {
         },
       ]);
 
-      expect(testValidateField).toHaveBeenCalledTimes(2);
+      expect(testValidateField).toHaveBeenCalledTimes(1);
       expect(testValidateValidator).toHaveBeenCalledTimes(1);
     });
   });
