@@ -5,9 +5,8 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 const _getModelScope: ControllerDefinition["scope"] = ({ model }) => {
   const _model = Model.getFromSlug(model);
 
-  if (!_model) return "global";
+  if (!_model || _model.scope === ModelEnvScopes.GLOBAL) return "global";
   if (_model.controllersScope) return _model.controllersScope;
-  if (_model.scope === ModelEnvScopes.GLOBAL) return "global";
 
   return "project";
 };
@@ -277,8 +276,14 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
-  backup: {
-    path: "/backup",
+  backupRestore: {
+    path: "/backups/:id/restore",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
+  backupGen: {
+    path: "/backups/gen",
     methods: ["POST"],
     scope: "project",
     secured: true,

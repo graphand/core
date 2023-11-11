@@ -32,6 +32,13 @@ class Job extends Model {
     strict: true;
   }>;
 
+  @fieldDecorator(FieldTypes.ARRAY, {
+    items: {
+      type: FieldTypes.TEXT,
+    },
+  })
+  _refs: Array<string>;
+
   @fieldDecorator(FieldTypes.DATE)
   _startedAt: FieldDefinitionDate;
 

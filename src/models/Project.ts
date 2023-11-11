@@ -40,6 +40,17 @@ class Project extends Model {
 
   @fieldDecorator(FieldTypes.NUMBER, { default: 2592000 })
   refreshTokenLifetime: FieldDefinitionNumber;
+
+  @fieldDecorator(FieldTypes.NESTED, {
+    fields: {
+      enabled: { type: FieldTypes.BOOLEAN, options: { default: false } },
+      cronExpression: { type: FieldTypes.TEXT },
+    },
+  })
+  backupSchedule: FieldDefinitionNested<{
+    enabled: FieldDefinitionBoolean;
+    cronExpression: FieldDefinitionText;
+  }>;
 }
 
 export default Project;
