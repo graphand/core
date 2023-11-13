@@ -44,6 +44,7 @@ import Patterns from "./enums/patterns";
 import SearchConfigStatus from "./enums/search-config-status";
 import JobTypes from "./enums/job-types";
 import JobStatus from "./enums/job-status";
+import BackupStatus from "./enums/backup-status";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -119,6 +120,7 @@ export {
   SearchConfigStatus,
   JobTypes,
   JobStatus,
+  BackupStatus,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,
