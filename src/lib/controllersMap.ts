@@ -252,6 +252,12 @@ const controllersMap = {
     scope: "global",
     secured: false,
   },
+  jobLogs: {
+    path: "/jobs/:id/logs",
+    methods: ["GET"],
+    scope: "project",
+    secured: true,
+  },
   searchQuery: {
     path: "/search/:id/query",
     methods: ["POST"],

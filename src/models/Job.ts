@@ -55,11 +55,6 @@ class Job extends Model {
     definition: any;
   }>;
 
-  @fieldDecorator(FieldTypes.NUMBER, {
-    default: 0,
-  })
-  _progress: number;
-
   @fieldDecorator(FieldTypes.NESTED)
   _result: Record<string, any>;
 }
