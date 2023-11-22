@@ -6,7 +6,7 @@ import FieldTypes from "../enums/field-types";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 import Project from "./Project";
-import BackupStatus from "../enums/backup-status";
+import Job from "./Job";
 
 @modelDecorator()
 class Backup extends Model {
@@ -17,21 +17,14 @@ class Backup extends Model {
   static controllersScope: "global" | "project" = "project";
   static allowMultipleOperations = false;
   static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "_project" } },
+    { type: ValidatorTypes.REQUIRED, options: { field: "_project" } }, // TODO: remove from core -> server only
   ];
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Project.slug })
   _project: FieldDefinitionRelation<Project>;
 
-  @fieldDecorator(FieldTypes.TEXT, {
-    options: Object.values(BackupStatus),
-    strict: true,
-    default: BackupStatus.PENDING,
-  })
-  _status: FieldDefinitionText<{
-    options: Array<BackupStatus>;
-    strict: true;
-  }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
+  _job: FieldDefinitionRelation<Job>;
 }
 
 export default Backup;

@@ -41,10 +41,8 @@ import AuthProviders from "./enums/auth-providers";
 import AuthMethods from "./enums/auth-methods";
 import IdentityTypes from "./enums/identity-types";
 import Patterns from "./enums/patterns";
-import SearchConfigStatus from "./enums/search-config-status";
 import JobTypes from "./enums/job-types";
 import JobStatus from "./enums/job-status";
-import BackupStatus from "./enums/backup-status";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -117,10 +115,8 @@ export {
   AuthMethods,
   IdentityTypes,
   Patterns,
-  SearchConfigStatus,
   JobTypes,
   JobStatus,
-  BackupStatus,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,

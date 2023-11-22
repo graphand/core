@@ -6,7 +6,7 @@ import FieldTypes from "../enums/field-types";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 import Patterns from "../enums/patterns";
-import SearchConfigStatus from "../enums/search-config-status";
+import Job from "./Job";
 
 @modelDecorator()
 class SearchConfig extends Model {
@@ -42,15 +42,8 @@ class SearchConfig extends Model {
   @fieldDecorator(FieldTypes.NESTED)
   analysis: FieldDefinitionNested<any>; // settings.analysis
 
-  @fieldDecorator(FieldTypes.TEXT, {
-    options: Object.values(SearchConfigStatus),
-    strict: true,
-    default: SearchConfigStatus.PENDING,
-  })
-  _status: FieldDefinitionText<{
-    options: Array<SearchConfigStatus>;
-    strict: true;
-  }>;
+  @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
+  _job: FieldDefinitionRelation<Job>;
 }
 
 export default SearchConfig;

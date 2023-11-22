@@ -6,6 +6,7 @@ import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import { ValidatorsDefinition } from "../types";
 import Patterns from "../enums/patterns";
+import Job from "./Job";
 
 @modelDecorator()
 class Environment extends Model {
@@ -30,6 +31,9 @@ class Environment extends Model {
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Environment.slug })
   base: FieldDefinitionRelation<Environment>;
+
+  @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
+  _job: FieldDefinitionRelation<Job>;
 }
 
 export default Environment;

@@ -138,10 +138,6 @@ Même si les validateurs sont désactivés via cette variable, ils peuvent toujo
 Ici, le serveur exécue systématiquement les validateurs lorsqu'un élément est ajouté ou modifié (D'où `ServerAdapter.prototype.runValidators = true`).
 En revanche, le client n'exécute pas les validateurs car c'est le serveur qui gère cette partie (`ClientAdapter.prototype.runValidators = false`). Le client peut tout de même exécuter les validateurs si besoin (avant l'envoi d'un formulaire par exemple) avec la méthode `Model.validate`.
 
-## Validation
-
-_TODO_
-
 ## Modèles
 
 ### Account
@@ -150,9 +146,13 @@ _TODO_
 
 ### AuthProvider
 
+### Backup
+
 ### DataModel
 
 ### Environment
+
+### Job
 
 ### Key
 
@@ -163,6 +163,8 @@ _TODO_
 ### Project
 
 ### Role
+
+### SearchConfig
 
 ### Sockethook
 

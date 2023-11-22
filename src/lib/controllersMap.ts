@@ -270,12 +270,6 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
-  searchSync: {
-    path: "/search/:id/sync",
-    methods: ["POST"],
-    scope: "project",
-    secured: true,
-  },
   searchReset: {
     path: "/search/:id/reset",
     methods: ["POST"],
@@ -284,12 +278,6 @@ const controllersMap = {
   },
   backupRestore: {
     path: "/backups/:id/restore",
-    methods: ["POST"],
-    scope: "project",
-    secured: true,
-  },
-  backupGen: {
-    path: "/backups/gen",
     methods: ["POST"],
     scope: "project",
     secured: true,

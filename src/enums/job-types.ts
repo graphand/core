@@ -1,6 +1,7 @@
 enum JobTypes {
   SYNC_SEARCH = "syncSearch",
-  CREATE_BACKUP = "createBackup",
+  INIT_BACKUP = "initBackup",
+  INIT_ENVIRONMENT = "initEnvironment",
   RESTORE_BACKUP = "restoreBackup",
 }
 
