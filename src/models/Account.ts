@@ -41,11 +41,6 @@ class Account extends Model {
 
   @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
   _user: FieldDefinitionRelation<User>;
-
-  // @fieldDecorator(FieldTypes.NESTED)
-  // _auth: FieldDefinitionNested<{
-  //   [provider in AuthProviders]: AccountAuthConfiguration<provider>;
-  // }>;
 }
 
 export default Account;

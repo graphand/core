@@ -41,6 +41,9 @@ class Role extends Model {
     definition: Role;
   }>;
 
+  @fieldDecorator(FieldTypes.BOOLEAN)
+  systemNotifications: FieldDefinitionBoolean;
+
   @fieldDecorator(FieldTypes.ARRAY, {
     items: {
       type: FieldTypes.NESTED,
