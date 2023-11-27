@@ -144,6 +144,12 @@ const controllersMap = {
     scope: "project",
     secured: false,
   },
+  genKeyPair: {
+    path: "/keys/gen-key-pair",
+    methods: ["POST"],
+    scope: "project",
+    secured: true,
+  },
   oauth: {
     path: "/auth/oauth",
     methods: ["GET", "POST"],
