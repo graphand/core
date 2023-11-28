@@ -18,10 +18,14 @@ class Backup extends Model {
   static allowMultipleOperations = false;
   static validators: ValidatorsDefinition = [
     { type: ValidatorTypes.REQUIRED, options: { field: "_project" } }, // TODO: remove from core -> server only
+    { type: ValidatorTypes.REQUIRED, options: { field: "_expireAt" } }, // TODO: remove from core -> server only
   ];
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Project.slug })
   _project: FieldDefinitionRelation<Project>;
+
+  @fieldDecorator(FieldTypes.DATE)
+  _expireAt: FieldDefinitionDate;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
   _job: FieldDefinitionRelation<Job>;
