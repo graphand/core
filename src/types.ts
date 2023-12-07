@@ -409,7 +409,7 @@ export type ValidationValidatorErrorDefinition = {
 
 export type ControllerDefinition = {
   path: string;
-  methods: Array<"GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS">;
+  methods: Array<"get" | "post" | "put" | "delete" | "patch" | "options">;
   scope:
     | "global"
     | "project"
