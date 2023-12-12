@@ -51,6 +51,9 @@ class Project extends Model {
     enabled: FieldDefinitionBoolean;
     cronExpression: FieldDefinitionText;
   }>;
+
+  @fieldDecorator(FieldTypes.TEXT)
+  version: FieldDefinitionText;
 }
 
 export default Project;
