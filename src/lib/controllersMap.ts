@@ -193,13 +193,13 @@ const controllersMap = {
     secured: true,
   },
   mediaPublic: {
-    path: "/medias/public/:id?",
+    path: "/medias/public/:id",
     methods: ["get"],
     scope: "project",
     secured: false,
   },
   mediaPrivate: {
-    path: "/medias/private/:id?",
+    path: "/medias/private/:id",
     methods: ["get"],
     scope: "project",
     secured: true,
