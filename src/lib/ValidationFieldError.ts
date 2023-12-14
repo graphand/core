@@ -1,24 +1,22 @@
 import { ValidationFieldErrorDefinition } from "../types";
 
 class ValidationFieldError {
-  __definition: ValidationFieldErrorDefinition;
+  #definition: ValidationFieldErrorDefinition;
 
   constructor(definition: ValidationFieldErrorDefinition) {
-    this.__definition = definition;
-
-    Object.defineProperty(this, "__definition", { enumerable: false });
+    this.#definition = definition;
   }
 
   get slug() {
-    return this.__definition.slug;
+    return this.#definition.slug;
   }
 
   get field() {
-    return this.__definition.field;
+    return this.#definition.field;
   }
 
   get validationError() {
-    return this.__definition.validationError;
+    return this.#definition.validationError;
   }
 
   toJSON() {

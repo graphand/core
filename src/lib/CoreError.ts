@@ -1,8 +1,12 @@
 import { CoreErrorDefinition } from "../types";
 import ErrorCodes from "../enums/error-codes";
 
+/**
+ * CoreError class is the base Error class for Graphand.
+ * It includes a message and a code (src/enums/error-codes.ts).
+ */
 class CoreError extends Error {
-  __definition: CoreErrorDefinition;
+  #definition: CoreErrorDefinition;
 
   constructor(definition: CoreErrorDefinition = {}) {
     super();
@@ -13,25 +17,25 @@ class CoreError extends Error {
       Error.captureStackTrace(this, constructor);
     }
 
-    this.__definition = definition;
+    this.#definition = definition;
 
     Object.defineProperty(this, "__definition", { enumerable: false });
   }
 
   get code() {
-    return this.__definition.code ?? ErrorCodes.UNKNOWN;
+    return this.#definition.code ?? ErrorCodes.UNKNOWN;
   }
 
   get message() {
-    return this.__definition.message ?? "Unknown error";
+    return this.#definition.message ?? "Unknown error";
   }
 
   set code(code) {
-    this.__definition.code = code;
+    this.#definition.code = code;
   }
 
   set message(message) {
-    this.__definition.message = message;
+    this.#definition.message = message;
   }
 
   toJSON() {

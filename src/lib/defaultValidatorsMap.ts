@@ -88,7 +88,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
         type: ValidatorTypes.REQUIRED,
         options: { field: this.options.field },
       },
-      this.__path
+      this.path
     );
 
     const ValidatorUnique = _getValidator(ValidatorTypes.UNIQUE);
@@ -97,7 +97,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
         type: ValidatorTypes.UNIQUE,
         options: { field: this.options.field },
       },
-      this.__path
+      this.path
     );
 
     const validates = await Promise.all([

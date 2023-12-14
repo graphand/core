@@ -69,7 +69,7 @@ export const mockAdapter = ({
         if (query.filter) {
           const filterEntries = Object.entries(query.filter);
           found = cache.find((r) =>
-            filterEntries.every(([key, value]) => r.__doc[key] === value)
+            filterEntries.every(([key, value]) => r.getDoc()[key] === value)
           );
         }
 
@@ -107,7 +107,7 @@ export const mockAdapter = ({
           if (query.filter) {
             const filterEntries = Object.entries(query.filter);
             found = cache.find((r) =>
-              filterEntries.every(([key, value]) => r.__doc[key] === value)
+              filterEntries.every(([key, value]) => r.getDoc()[key] === value)
             );
           }
         }
@@ -117,12 +117,12 @@ export const mockAdapter = ({
         }
 
         if (update.$set) {
-          Object.assign(found.__doc, update.$set);
+          Object.assign(found.getDoc(), update.$set);
         }
 
         if (update.$unset) {
           Object.keys(update.$unset).forEach((key) => {
-            delete found.__doc[key];
+            delete found.getDoc()[key];
           });
         }
 
@@ -136,13 +136,13 @@ export const mockAdapter = ({
         const list = Array.from(this.thisCache);
 
         if (update.$set) {
-          list.forEach((i) => Object.assign(i.__doc, update.$set));
+          list.forEach((i) => Object.assign(i.getDoc(), update.$set));
         }
 
         if (update.$unset) {
           list.forEach((i) => {
             Object.keys(update.$unset).forEach((key) => {
-              delete i.__doc[key];
+              delete i.getDoc()[key];
             });
           });
         }

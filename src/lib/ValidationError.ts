@@ -36,29 +36,6 @@ class ValidationError extends CoreError {
       ...this.fields.map((f) => f.field?.path),
       ...this.validators.map((v) => v.validator.getFullPath()),
     ];
-    // const _fieldsPaths: Array<Array<string>> = this.fields.map((err) => {
-    //   if (err.validationError) {
-    //     const nestedPaths = err.validationError.fieldsPaths.map(
-    //       (path) => `${err.slug}.${path}`
-    //     );
-
-    //     return [err.slug, ...nestedPaths];
-    //   }
-
-    //   return [err.slug];
-    // });
-
-    // const _validatorsPaths: Array<string | null> = this.validators.map(
-    //   (err) => {
-    //     if ("field" in err.validator.options) {
-    //       return err.validator.options.field as string;
-    //     }
-
-    //     return null;
-    //   }
-    // );
-
-    // return [..._validatorsPaths, ..._fieldsPaths.flat()].filter(Boolean);
   }
 
   get message() {

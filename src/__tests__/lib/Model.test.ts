@@ -754,7 +754,7 @@ describe("Test Model", () => {
       const created = await model.create({});
 
       created.set("test", 123);
-      expect(created.__doc.test).toEqual("123");
+      expect(created.getDoc().test).toEqual("123");
     });
 
     it("should set nested json field", async () => {

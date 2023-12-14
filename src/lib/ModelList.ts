@@ -1,11 +1,16 @@
 import { JSONQuery } from "../types";
 import Model from "./Model";
 
+/**
+ * ModelList is a class that extends the native Array class.
+ * It is used to return a list of instances.
+ * It could be used as an array (list.map(), list.filter(), etc.). and also exposes some useful properties and methods.
+ */
 class ModelList<T extends Model> extends Array<T> {
-  private __model: typeof Model;
-  private __query: JSONQuery;
-  private __count: number;
-  private __reloadPromise: Promise<void>;
+  #model: typeof Model; // Model class
+  #query: JSONQuery; // Query used to fetch the list (returned by the adapter)
+  #count: number; // Total count of the list (returned by the adapter)
+  #reloadPromise: Promise<void>; // Promise to wait for the reload to finish
 
   constructor(
     model: typeof Model,
@@ -15,37 +20,44 @@ class ModelList<T extends Model> extends Array<T> {
   ) {
     super(...list);
 
-    this.__model = model;
-    this.__query = query;
-    this.__count = count ?? list.length;
-
-    Object.defineProperty(this, "__model", { enumerable: false });
-    Object.defineProperty(this, "__query", { enumerable: false });
-    Object.defineProperty(this, "__count", { enumerable: false });
-    Object.defineProperty(this, "__loading", { enumerable: false });
+    this.#model = model;
+    this.#query = query;
+    this.#count = count;
   }
 
+  /**
+   * Returns the model class.
+   */
   get model() {
-    return this.__model;
+    return this.#model;
   }
 
+  /**
+   * Returns the query used to fetch the list (JSONQuery).
+   */
   get query() {
-    return this.__query || {};
+    return this.#query || {};
   }
 
+  /**
+   * Returns the total count of the list.
+   * If the count is not available, it returns the length of the list.
+   */
   get count() {
-    return this.__count || 0;
+    return this.#count || this.length || 0;
   }
 
+  /**
+   * Returns if the list is loading.
+   * When created, the list is not loading. The loading state is set to true when the reload() method is called.
+   */
   get loading() {
-    return Boolean(this.__reloadPromise);
+    return Boolean(this.#reloadPromise);
   }
 
-  get reloadPromise() {
-    return this.__reloadPromise || Promise.resolve();
-  }
-
-  // returns the last updated element in the list
+  /**
+   * Returns the last updated item of the list.
+   */
   get lastUpdated(): Model | undefined {
     let _maxUpdated: Model | undefined;
     let _maxUpdatedTime: number | undefined;
@@ -65,26 +77,34 @@ class ModelList<T extends Model> extends Array<T> {
     return _maxUpdated;
   }
 
+  /**
+   * Reload the list from the given model and query.
+   * Returns a promise that resolves when the list is reloaded.
+   */
   async reload() {
     const _this = this;
 
-    this.__reloadPromise ??= new Promise<void>(async (resolve, reject) => {
+    this.#reloadPromise ??= new Promise<void>(async (resolve, reject) => {
       try {
         const { model, query } = _this;
         const list = (await model.getList(query)) as ModelList<T>;
         _this.splice(0, _this.length, ...list);
-        _this.__count = list.count;
+        _this.#count = list.count;
         resolve();
       } catch (e) {
         reject(e);
       }
     }).finally(() => {
-      delete this.__reloadPromise;
+      this.#reloadPromise = undefined;
     });
 
-    return this.reloadPromise;
+    return this.#reloadPromise;
   }
 
+  /**
+   * Returns a native array with the items of the list.
+   * This method is useful to break the reference to the list (list.filter() will return an instance of ModelList but list.toArray().filter() will return an array).
+   */
   toArray() {
     const arr = [];
     for (const item of this) {
@@ -93,6 +113,9 @@ class ModelList<T extends Model> extends Array<T> {
     return arr;
   }
 
+  /**
+   * Returns an array of ids of the items of the list.
+   */
   getIds(): Array<string> {
     const ids = [];
     for (const item of this) {
@@ -101,10 +124,13 @@ class ModelList<T extends Model> extends Array<T> {
     return ids;
   }
 
+  /**
+   * Returns a JSON representation of the list.
+   */
   toJSON() {
     return {
       rows: this.toArray().map((r) => r.toJSON()),
-      count: this.__count,
+      count: this.#count,
     };
   }
 }

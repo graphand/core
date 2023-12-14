@@ -210,7 +210,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
         targetField = getFieldFromDefinition(
           _field.options.defaultField,
           adapter,
-          [_field.__path, prop].join(".")
+          [_field.path, prop].join(".")
         );
       }
 
@@ -251,7 +251,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
               const tmpField = getFieldFromDefinition(
                 this.options.defaultField,
                 adapter,
-                [this.__path, k].join(".")
+                [this.path, k].join(".")
               );
 
               json[k] = tmpField.serialize(obj[k], format, from, ctx);
@@ -335,7 +335,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
           const itemsField = getFieldFromDefinition(
             this.options.items,
             adapter,
-            this.__path + `.[${i}]`
+            this.path + `.[${i}]`
           );
 
           return itemsField.serialize(v, format, from, ctx);
@@ -388,7 +388,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
       const itemsField = getFieldFromDefinition(
         this.options.items,
         adapter,
-        this.__path + `.[${i}]`
+        this.path + `.[${i}]`
       );
 
       return itemsField.serialize(v, format, from, ctx);

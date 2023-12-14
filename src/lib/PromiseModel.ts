@@ -3,9 +3,13 @@ import { JSONQuery } from "../types";
 import Thenable from "./Thenable";
 import { isObjectId } from "./utils";
 
+/**
+ * PromiseModel is a class that extends the native Promise class.
+ * It is used to return a promise that resolves to a Model instance.
+ */
 class PromiseModel<T extends Model> extends Thenable<T> {
-  __model: typeof Model;
-  __query: string | JSONQuery;
+  #model: typeof Model;
+  #query: string | JSONQuery;
 
   constructor(
     params: ConstructorParameters<typeof Promise<T>>,
@@ -13,11 +17,8 @@ class PromiseModel<T extends Model> extends Thenable<T> {
     query: string | JSONQuery
   ) {
     super(params);
-    this.__model = model;
-    this.__query = query;
-
-    Object.defineProperty(this, "__model", { enumerable: false });
-    Object.defineProperty(this, "__query", { enumerable: false });
+    this.#model = model;
+    this.#query = query;
   }
 
   get _id() {
@@ -35,11 +36,11 @@ class PromiseModel<T extends Model> extends Thenable<T> {
   }
 
   get model() {
-    return this.__model;
+    return this.#model;
   }
 
   get query() {
-    return this.__query;
+    return this.#query;
   }
 
   get [Symbol.toStringTag]() {

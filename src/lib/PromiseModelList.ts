@@ -3,9 +3,13 @@ import ModelList from "./ModelList";
 import { JSONQuery } from "../types";
 import Thenable from "./Thenable";
 
+/**
+ * PromiseModelList is a class that extends the native Promise class.
+ * It is used to return a promise that resolves to a ModelList instance.
+ */
 class PromiseModelList<T extends Model> extends Thenable<ModelList<T>> {
-  __model: typeof Model;
-  __query: JSONQuery;
+  #model: typeof Model;
+  #query: JSONQuery;
 
   constructor(
     params: ConstructorParameters<typeof Promise<ModelList<T>>>,
@@ -14,19 +18,16 @@ class PromiseModelList<T extends Model> extends Thenable<ModelList<T>> {
   ) {
     super(params);
 
-    this.__model = model;
-    this.__query = query;
-
-    Object.defineProperty(this, "__model", { enumerable: false });
-    Object.defineProperty(this, "__query", { enumerable: false });
+    this.#model = model;
+    this.#query = query;
   }
 
   get model() {
-    return this.__model;
+    return this.#model;
   }
 
   get query() {
-    return this.__query;
+    return this.#query;
   }
 
   getIds() {
@@ -39,7 +40,7 @@ class PromiseModelList<T extends Model> extends Thenable<ModelList<T>> {
 
   get [Symbol.toStringTag]() {
     return `PromiseModelList<${this.model.__name}>(${JSON.stringify(
-      this.__query
+      this.#query
     )})`;
   }
 }

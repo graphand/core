@@ -1,20 +1,18 @@
 import { ValidationValidatorErrorDefinition } from "../types";
 
 class ValidationValidatorError {
-  __definition: ValidationValidatorErrorDefinition;
+  #definition: ValidationValidatorErrorDefinition;
 
   constructor(definition: ValidationValidatorErrorDefinition) {
-    this.__definition = definition;
-
-    Object.defineProperty(this, "__definition", { enumerable: false });
+    this.#definition = definition;
   }
 
   get validator() {
-    return this.__definition.validator;
+    return this.#definition.validator;
   }
 
   get value() {
-    return this.__definition.value;
+    return this.#definition.value;
   }
 
   toJSON() {

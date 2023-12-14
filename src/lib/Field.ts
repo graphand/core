@@ -5,19 +5,30 @@ import SerializerFormat from "../enums/serializer-format";
 import { getDefaultFieldOptions } from "./utils";
 
 class Field<T extends FieldTypes = FieldTypes> {
-  __definition: FieldDefinition<T>;
-  __path: string;
+  #definition: FieldDefinition<T>; // The field definition
+  #path: string; // The path of the field in the model
   nextFieldEqObject: boolean = true; // If false, the serializer returns a different value in NEXT_FIELD and OBJECT
 
   constructor(definition: FieldDefinition<T>, path: string) {
-    this.__definition = definition;
-    this.__path = path;
+    this.#definition = definition;
+    this.#path = path;
 
-    Object.defineProperty(this, "__definition", { enumerable: false });
+    Object.defineProperty(this, "__json", {
+      enumerable: true,
+      value: this.toJSON(),
+    });
   }
 
   get type() {
-    return this.__definition.type;
+    return this.#definition.type;
+  }
+
+  get path() {
+    return this.#path;
+  }
+
+  get definition() {
+    return this.#definition;
   }
 
   get options(): FieldOptions<T> {
@@ -26,12 +37,8 @@ class Field<T extends FieldTypes = FieldTypes> {
     return Object.assign(
       {},
       defaults,
-      this.__definition.options ?? {}
+      this.#definition.options ?? {}
     ) as FieldOptions<T>;
-  }
-
-  get path() {
-    return this.__path;
   }
 
   async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
@@ -51,7 +58,7 @@ class Field<T extends FieldTypes = FieldTypes> {
     return {
       type: this.type,
       options: this.options,
-      path: this.__path,
+      path: this.#path,
     };
   }
 }

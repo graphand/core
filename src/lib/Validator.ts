@@ -8,17 +8,15 @@ import {
 import { getDefaultValidatorOptions } from "./utils";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
-  __definition: ValidatorDefinition<T>;
-  __path: undefined | string;
+  #definition: ValidatorDefinition<T>;
+  #path: undefined | string;
 
   hooks: Array<ValidatorHook>;
 
   constructor(definition: ValidatorDefinition<T>, path?: string) {
-    this.__definition = definition;
-    this.__path = path;
+    this.#definition = definition;
+    this.#path = path;
 
-    Object.defineProperty(this, "hooks", { enumerable: false });
-    Object.defineProperty(this, "__definition", { enumerable: false });
     Object.defineProperty(this, "__json", {
       enumerable: true,
       value: this.toJSON(),
@@ -26,7 +24,11 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   }
 
   get type(): T {
-    return this.__definition.type as T;
+    return this.#definition.type as T;
+  }
+
+  get path() {
+    return this.#path;
   }
 
   get options(): ValidatorOptions<T> {
@@ -35,12 +37,12 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return Object.assign(
       {},
       defaults,
-      this.__definition.options ?? {}
+      this.#definition.options ?? {}
     ) as ValidatorOptions<T>;
   }
 
   getFullPath() {
-    return [this.__path, this.options.field].filter(Boolean).join(".");
+    return [this.#path, this.options.field].filter(Boolean).join(".");
   }
 
   getKey() {
@@ -55,7 +57,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return {
       type: this.type,
       options: this.options,
-      path: this.__path,
+      path: this.#path,
     };
   }
 }

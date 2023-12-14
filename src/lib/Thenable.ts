@@ -1,17 +1,18 @@
+/**
+ * This class is a wrapper for the native Promise class.
+ * It allows to create a promise and resolve it later.
+ */
 class Thenable<T extends any> {
-  __params: ConstructorParameters<typeof Promise<T>>;
-  __promise: Promise<T> | null = null;
+  #params: ConstructorParameters<typeof Promise<T>>;
+  #promise: Promise<T> | null = null;
 
   constructor(params: ConstructorParameters<typeof Promise<T>>) {
-    this.__params = Array.isArray(params) ? params : [params];
-
-    Object.defineProperty(this, "__params", { enumerable: false });
-    Object.defineProperty(this, "__promise", { enumerable: false });
+    this.#params = Array.isArray(params) ? params : [params];
   }
 
   get promise() {
-    this.__promise ??= new Promise<T>(...this.__params);
-    return this.__promise;
+    this.#promise ??= new Promise<T>(...this.#params);
+    return this.#promise;
   }
 
   then<TResult1 = T, TResult2 = never>(

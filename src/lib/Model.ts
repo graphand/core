@@ -60,7 +60,7 @@ class Model {
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
 
-  __doc: DocumentDefinition; // The document (raw data) of the instance
+  #doc: DocumentDefinition; // The document
 
   @fieldDecorator(FieldTypes.ID)
   _id: FieldDefinitionId;
@@ -84,10 +84,8 @@ class Model {
       });
     }
 
-    this.__doc = doc;
-    this.__doc._id ??= Date.now();
-
-    Object.defineProperty(this, "__doc", { enumerable: false });
+    this.#doc = doc;
+    this.#doc._id ??= Date.now();
   }
 
   /**
@@ -99,6 +97,21 @@ class Model {
   }
 
   /**
+   * Returns the current instance doc (raw data)
+   */
+  getDoc() {
+    return this.#doc;
+  }
+
+  /**
+   * Set the current instance doc (raw data)
+   * @param doc
+   */
+  setDoc(doc: any) {
+    this.#doc = doc;
+  }
+
+  /**
    * Clone the current model instance.
    * @example
    * const account = await models.Account.get();
@@ -106,7 +119,7 @@ class Model {
    * console.log(account === clonedAccount); // false
    */
   clone() {
-    const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
+    const clonedDoc = JSON.parse(JSON.stringify(this.#doc));
     return new this.model(clonedDoc);
   }
 
@@ -338,14 +351,14 @@ class Model {
 
     if (!fieldsPaths?.length) {
       if (this.model.freeMode) {
-        return this.__doc[path];
+        return this.#doc[path];
       }
 
       return undefined;
     }
 
     const firstField = fieldsPaths[0].field;
-    let value = this.__doc[firstField.path];
+    let value = this.#doc[firstField.path];
 
     if (
       format !== SerializerFormat.DOCUMENT &&
@@ -423,7 +436,7 @@ class Model {
     }
 
     return _setter({
-      _assignTo: this.__doc,
+      _assignTo: this.#doc,
       _value: value,
       _fieldsPaths: fieldsPaths,
       _throw,
@@ -495,7 +508,7 @@ class Model {
    * Serialize the current instance to a string
    */
   toString() {
-    return JSON.stringify(this.__doc);
+    return JSON.stringify(this.#doc);
   }
 
   /**
@@ -705,13 +718,13 @@ class Model {
       ctx
     );
 
-    if (!res?.__doc) {
+    if (!res?.getDoc?.()) {
       throw new CoreError({
         message: `Unable to update model: ${res instanceof Model}`,
       });
     }
 
-    this.__doc = res.__doc;
+    this.#doc = res.#doc;
 
     return this;
   }

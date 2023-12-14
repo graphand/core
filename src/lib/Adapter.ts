@@ -8,18 +8,19 @@ import Validator from "./Validator";
 class Adapter {
   static __modelsMap: Map<string, typeof Model>;
 
-  cacheFieldsMap: Map<string, Field>;
-  cacheValidatorsMap: Map<string, Validator>;
-  fetcher: AdapterFetcher;
-  fieldsMap: { [T in FieldTypes]?: typeof Field<T> };
-  validatorsMap: { [T in ValidatorTypes]?: typeof Validator<T> };
-  model: typeof Model;
-  runValidators: boolean;
+  fetcher: AdapterFetcher; // The adapter configuration = how the adapter should process
+  fieldsMap: { [T in FieldTypes]?: typeof Field<T> }; // The fields map of the current adapter instance to use
+  validatorsMap: { [T in ValidatorTypes]?: typeof Validator<T> }; // The validators map of the current adapter instance to use
+  model: typeof Model; // The model of the current adapter instance
+  runValidators: boolean; // If the adapter should run validators after a model create/update
 
   constructor(model: typeof Model) {
     this.model = model;
   }
 
+  /**
+   * Get the base adapter class to extend from.
+   */
   get base() {
     return this.constructor as typeof Adapter;
   }
