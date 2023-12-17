@@ -96,14 +96,14 @@ const controllersMap = {
     scope: "global",
     secured: false,
   },
-  ql: {
-    path: "/ql",
+  gdxQuery: {
+    path: "/gdx/query",
     methods: ["post"],
     scope: "project",
     secured: true,
   },
-  sync: {
-    path: "/sync",
+  gdxSync: {
+    path: "/gdx/sync",
     methods: ["post"],
     scope: "project",
     secured: true,
