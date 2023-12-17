@@ -328,7 +328,8 @@ class Model {
   get(
     path: string,
     format: SerializerFormat | string = SerializerFormat.OBJECT,
-    ctx: SerializerCtx = {}
+    ctx: SerializerCtx = {},
+    value?: any
   ) {
     let fieldsPaths: Array<FieldsPathItem>;
 
@@ -358,7 +359,7 @@ class Model {
     }
 
     const firstField = fieldsPaths[0].field;
-    let value = this.#doc[firstField.path];
+    value ??= this.#doc[firstField.path];
 
     if (
       format !== SerializerFormat.DOCUMENT &&
