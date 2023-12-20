@@ -140,40 +140,9 @@ En revanche, le client n'exécute pas les validateurs car c'est le serveur qui g
 
 ## Controleurs
 
-**TODO**
+Les controleurs sont décrits dans le fichier `controllersMap.ts`. Chaque controleur est décrit par les attributs suivants :
 
-## Modèles
-
-### Account
-
-### AccountAuthProvider
-
-### AuthProvider
-
-### Backup
-
-### DataModel
-
-### Environment
-
-### Job
-
-### Key
-
-### Media
-
-### Organization
-
-### Project
-
-### Role
-
-### SearchConfig
-
-### Sockethook
-
-### Terms
-
-### Token
-
-### User
+- `path`: le chemin de l'endpoint pour accéder au controleur. Les paramètres sont définis avec `:nomDuParametre` et peuvent être optionnels avec `:nomDuParametre?`
+- `methods`: les méthodes HTTP autorisées pour cet endpoint
+- `secured`: si `true`, l'accès à cet endpoint nécessite une authentification
+- `scope`: le scope de l'endpoint (global ou project). Si `global`, l'endpoint est accessible via l'instance globale de graphand. Si `project`, l'endpoint est accessible seulement sur une instance de projet. Si `scope` est une fonction, celle-ci sera appelée avec le modèle de la requête en paramètre et doit retourner `global` ou `project` en fonction du scope du modèle.
