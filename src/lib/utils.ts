@@ -944,31 +944,9 @@ export const getNestedFieldsArrayForModel = (
 ): Array<Field> => {
   const res: Array<Field> = [];
 
-  const _processFieldsMap = (fieldsMap: Map<string, Field>) => {
-    fieldsMap.forEach((field) => {
-      res.push(field);
-
-      if (field.type === FieldTypes.NESTED) {
-        const map = getNestedFieldsMap(
-          model,
-          field as Field<FieldTypes.NESTED>
-        );
-
-        _processFieldsMap(map);
-      }
-
-      if (field.type === FieldTypes.ARRAY) {
-        const map = getArrayItemsFieldsMap(
-          model,
-          field as Field<FieldTypes.ARRAY>
-        );
-
-        _processFieldsMap(map);
-      }
-    });
-  };
-
-  _processFieldsMap(model.fieldsMap);
+  crossFields({ model }, (field) => {
+    res.push(field);
+  });
 
   return res;
 };
@@ -1202,4 +1180,54 @@ export const validateModel = async <T extends typeof Model>(
   }
 
   return true;
+};
+
+/**
+ * The `crossFields` function recursively iterates over fields in a model and calls a callback function
+ * for each field.
+ * @param opts - - `model`: The model object that contains the fields.
+ * @param cb - The `cb` parameter is a callback function that takes a `field` parameter and returns
+ * either `void` or a `Promise<void>`. This callback function is called for each field in the
+ * `fieldsMap`.
+ * @returns The function `crossFields` is returning itself.
+ */
+export const crossFields = (
+  opts: {
+    model: typeof Model;
+    fieldsMap?: Map<string, Field>;
+  },
+  cb: (field: Field) => void | Promise<void>
+) => {
+  const { model } = opts;
+  const fieldsMap = opts.fieldsMap || opts.model.fieldsMap;
+
+  fieldsMap.forEach((field) => {
+    cb(field);
+
+    if (field.type === FieldTypes.ARRAY) {
+      crossFields(
+        {
+          model,
+          fieldsMap: getArrayItemsFieldsMap(
+            model,
+            field as Field<FieldTypes.ARRAY>
+          ),
+        },
+        cb
+      );
+    } else if (field.type === FieldTypes.NESTED) {
+      crossFields(
+        {
+          model,
+          fieldsMap: getNestedFieldsMap(
+            model,
+            field as Field<FieldTypes.NESTED>
+          ),
+        },
+        cb
+      );
+    }
+  });
+
+  return crossFields;
 };

@@ -51,8 +51,10 @@ import {
   defineFieldsProperties,
   getAdaptedModel,
   validateModel,
+  getArrayItemsFieldsMap,
   getNestedValidatorsArray,
   getArrayValidatorsArray,
+  crossFields,
 } from "./lib/utils";
 import { modelDecorator } from "./lib/modelDecorator";
 import { fieldDecorator } from "./lib/fieldDecorator";
@@ -132,8 +134,10 @@ export {
   validateModel,
   getNestedValidatorsArray,
   getArrayValidatorsArray,
+  getArrayItemsFieldsMap,
   modelDecorator,
   fieldDecorator,
+  crossFields,
 };
 
 export * from "./types";
