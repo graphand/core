@@ -1169,6 +1169,56 @@ describe("test fieldsMap", () => {
   });
 
   describe("Array field", () => {
+    it("Should throw error if is relation with invalid value", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "accounts",
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      await expect(
+        model.create({
+          arr: ["507f191e810c19729de860ea", "invalid"],
+        })
+      ).rejects.toThrow(ValidationError);
+    });
+
+    it("Should not throw error if is relation with valid value", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "accounts",
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      await expect(
+        model.create({
+          arr: ["507f191e810c19729de860ea"],
+        })
+      ).resolves.toBeInstanceOf(model);
+    });
+
     it("should returns valid serialized array from items option", async () => {
       const options = [
         faker.lorem.word(),
@@ -1237,6 +1287,7 @@ describe("test fieldsMap", () => {
       expect(i.arrRel.model?.getBaseClass()).toBe(models.Account);
       expect(i.arrRel.query).toEqual({
         ids: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
+        limit: 2,
       });
     });
 

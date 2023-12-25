@@ -79,6 +79,22 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   nextFieldEqObject = false;
 
+  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+    const _isInvalid = (value: any) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      return !isObjectId(value);
+    };
+
+    const values = list
+      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
+      .flat(Infinity);
+
+    return !values.some(_isInvalid);
+  }
+
   _serializeJSON = (
     value: any,
     format: SerializerFormat,
@@ -149,6 +165,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
         SerializerFormat.JSON,
         SerializerFormat.DOCUMENT,
         SerializerFormat.NEXT_FIELD,
+        SerializerFormat.VALIDATION,
       ].includes(format)
     ) {
       return this._serializeJSON(value, format, from, ctx);
@@ -341,7 +358,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
           return itemsField.serialize(v, format, from, ctx);
         });
       } else {
-        res = model.getList({ ids }, ctx);
+        res = model.getList({ ids, limit: ids.length }, ctx);
       }
 
       return res;

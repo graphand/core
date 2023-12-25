@@ -100,7 +100,7 @@ class DataModel extends Model {
   keyField: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.NESTED)
-  _doc: FieldDefinitionNested;
+  _doc: FieldDefinitionNested; // The related document if single is true
 }
 
 export default DataModel;
