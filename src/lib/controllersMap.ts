@@ -294,6 +294,12 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
+  environmentsMerge: {
+    path: "/environments/merge",
+    methods: ["post"],
+    scope: "project",
+    secured: true,
+  },
 };
 
 export default controllersMap as Record<
