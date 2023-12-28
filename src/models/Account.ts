@@ -41,6 +41,9 @@ class Account extends Model {
 
   @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
   _user: FieldDefinitionRelation<User>;
+
+  @fieldDecorator(FieldTypes.DATE)
+  _lastLoginAt: FieldDefinitionDate;
 }
 
 export default Account;
