@@ -27,9 +27,7 @@ class Data extends Model {
     slug: string,
     adapterClass?: typeof Adapter
   ): M {
-    let model: typeof Data = adapterClass?.__modelsMap?.get(
-      slug
-    ) as typeof Data;
+    let model: typeof Data = adapterClass?.modelsMap.get(slug) as typeof Data;
 
     if (!model) {
       model = class extends Data {
@@ -41,8 +39,7 @@ class Data extends Model {
       if (adapterClass) {
         model = model.withAdapter(adapterClass);
 
-        adapterClass.__modelsMap ??= new Map();
-        adapterClass.__modelsMap.set(slug, model);
+        adapterClass.modelsMap.set(slug, model);
       }
     }
 
@@ -70,8 +67,7 @@ class Data extends Model {
     if (adapterClass) {
       model = model.withAdapter(adapterClass);
 
-      adapterClass.__modelsMap ??= new Map();
-      adapterClass.__modelsMap.set(datamodel.slug, model);
+      adapterClass.modelsMap.set(datamodel.slug, model);
     }
 
     return model;

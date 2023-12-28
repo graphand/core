@@ -702,14 +702,13 @@ export const getAdaptedModel = <M extends typeof Model = typeof Model>(
   let adaptedModel: M;
 
   if (!override) {
-    adaptedModel = adapterClass.__modelsMap?.get(model.slug) as M;
+    adaptedModel = adapterClass.modelsMap.get(model.slug) as M;
   }
 
   if (!adaptedModel) {
     adaptedModel = model.withAdapter(adapterClass);
 
-    adapterClass.__modelsMap ??= new Map();
-    adapterClass.__modelsMap.set(model.slug, adaptedModel);
+    adapterClass.modelsMap.set(model.slug, adaptedModel);
   }
 
   return adaptedModel;

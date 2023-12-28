@@ -300,11 +300,10 @@ class Model {
     const models = require("../index").models as Record<string, typeof Model>;
     let model: M = Object.values(models).find((m) => m.slug === slug) as M;
     if (model) {
-      let adaptedModel = adapter?.__modelsMap?.get(model.slug) as M;
+      let adaptedModel = adapter?.modelsMap.get(model.slug) as M;
       if (!adaptedModel && adapter) {
         adaptedModel = model.withAdapter(adapter);
-        adapter.__modelsMap ??= new Map();
-        adapter.__modelsMap.set(model.slug, adaptedModel);
+        adapter.modelsMap.set(model.slug, adaptedModel);
       }
 
       model = adaptedModel || model;
@@ -923,8 +922,7 @@ class Model {
       adapter = new globalAdapter(this);
       baseClass.__globalAdapter = adapter;
 
-      globalAdapter.__modelsMap ??= new Map();
-      globalAdapter.__modelsMap.set(this.slug, this);
+      globalAdapter.modelsMap.set(this.slug, this);
     }
 
     if (!adapter && required) {

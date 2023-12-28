@@ -6,7 +6,7 @@ import ValidatorTypes from "../enums/validator-types";
 import Validator from "./Validator";
 
 class Adapter {
-  static __modelsMap: Map<string, typeof Model>;
+  static _modelsMap: Map<string, typeof Model>;
 
   fetcher: AdapterFetcher; // The adapter configuration = how the adapter should process
   fieldsMap: { [T in FieldTypes]?: typeof Field<T> }; // The fields map of the current adapter instance to use
@@ -16,6 +16,11 @@ class Adapter {
 
   constructor(model: typeof Model) {
     this.model = model;
+  }
+
+  static get modelsMap() {
+    this._modelsMap ??= new Map();
+    return this._modelsMap;
   }
 
   /**
