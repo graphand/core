@@ -1230,3 +1230,22 @@ export const crossFields = (
 
   return crossFields;
 };
+
+export const assignDataModel = async <T extends typeof Model>(
+  model: T,
+  datamodel: any
+) => {
+  if (datamodel.keyField) {
+    model.keyField = datamodel.keyField;
+  } else {
+    delete model.keyField;
+  }
+
+  model.single = Boolean(datamodel.single);
+
+  model.__fieldsMap = createFieldsMap(model, datamodel.fields);
+  model.__validatorsArray = createValidatorsArray(model, datamodel.validators);
+
+  delete model.__fieldsProperties;
+  delete model.__fieldsKeys;
+};

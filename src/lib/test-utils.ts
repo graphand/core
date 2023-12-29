@@ -202,7 +202,7 @@ export const mockModel = ({
   validators?: ValidatorsDefinition;
   single?: boolean;
 } = {}) => {
-  const uidSlug = Math.random().toString(36).substring(7);
+  const uidSlug = "a" + Math.random().toString(36).substring(7);
 
   class Test extends Data {
     static extendable = true;
@@ -221,14 +221,6 @@ export const mockModel = ({
 
     [slug: string]: any;
   }
-
-  // Test.__datamodel = new DataModel({
-  //   _id: new ObjectId().toString(),
-  //   slug: uidSlug,
-  //   single,
-  //   fields,
-  //   validators,
-  // });
 
   return Test;
 };

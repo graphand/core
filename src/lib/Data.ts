@@ -3,6 +3,7 @@ import { modelDecorator } from "./modelDecorator";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import DataModel from "../models/DataModel";
 import Adapter from "./Adapter";
+import { assignDataModel } from "./utils";
 
 /**
  * The Data class is a specific that is the base class for all data models.
@@ -50,25 +51,20 @@ class Data extends Model {
     datamodel: DataModel,
     adapterClass?: typeof Adapter
   ): typeof Data {
-    if (!adapterClass) {
-      adapterClass = datamodel.model.getAdapter(false)?.base;
-    }
-
     let model = class extends Data {
       static __name = datamodel.name;
 
-      static single = datamodel.single;
       static slug = datamodel.slug;
-      static fields = datamodel.fields;
-      static validators = [];
-      static keyField = datamodel.keyField || undefined;
     };
+
+    adapterClass ??= datamodel.model.getAdapter(false)?.base;
 
     if (adapterClass) {
       model = model.withAdapter(adapterClass);
-
       adapterClass.modelsMap.set(datamodel.slug, model);
     }
+
+    assignDataModel(model, datamodel);
 
     return model;
   }

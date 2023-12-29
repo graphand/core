@@ -30,6 +30,7 @@ import {
   _getter,
   _setter,
   validateModel,
+  assignDataModel,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
@@ -242,14 +243,7 @@ class Model {
       return;
     }
 
-    this.keyField = datamodel.keyField;
-    this.single = datamodel.single;
-
-    this.__fieldsMap = createFieldsMap(this, datamodel.fields);
-    this.__validatorsArray = createValidatorsArray(this, datamodel.validators);
-
-    delete this.__fieldsProperties;
-    delete this.__fieldsKeys;
+    assignDataModel(this, datamodel);
   }
 
   /**
@@ -734,7 +728,7 @@ class Model {
    * That method returns an array of updated instances (not a ModelList).
    * Use this instead of calling Model.prototype.update multiple times.
    * @param query - a JSONQuery object (or a string) that contains the filter to apply and other settings
-   * @param update- The mongodb update object to apply (Contains only update operators expressions - https://www.mongodb.com/docs/manual/reference/operator/update/#update-operators-1)
+   * @param update - The mongodb update object to apply (Contains only update operators expressions - https://www.mongodb.com/docs/manual/reference/operator/update/#update-operators-1)
    * @example
    * const instances = await Model.createMultiple([
    * { title: "apple" },

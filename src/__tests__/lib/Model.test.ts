@@ -1,4 +1,8 @@
-import { mockAdapter, mockModel } from "../../lib/test-utils";
+import {
+  mockAdapter,
+  mockModel,
+  generateRandomString,
+} from "../../lib/test-utils";
 import Field from "../../lib/Field";
 import Model from "../../lib/Model";
 import FieldTypes from "../../enums/field-types";
@@ -9,7 +13,6 @@ import {
   CoreError,
   DataModel,
   ErrorCodes,
-  models,
   PromiseModelList,
   SerializerFormat,
 } from "../../index";
@@ -1760,6 +1763,112 @@ describe("Test Model", () => {
       await expect(TestModel.update({}, {})).rejects.toThrow(
         "Cannot run updateMultiple operation"
       );
+    });
+  });
+
+  describe("Model reload", () => {
+    it("should load fields from datamodel", async () => {
+      const dm = await DataModel.withAdapter(adapter).create({
+        slug: generateRandomString(),
+        fields: {
+          field1: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      const TestModel = Data.getFromDatamodel(dm);
+
+      expect(TestModel.slug).toEqual(dm.slug);
+
+      await TestModel.reloadModel();
+
+      expect(TestModel.fieldsKeys).toContain("field1");
+
+      dm.getDoc().fields = {
+        field2: {
+          type: FieldTypes.TEXT,
+        },
+      };
+
+      await TestModel.reloadModel();
+
+      expect(TestModel.fieldsKeys).not.toContain("field1");
+      expect(TestModel.fieldsKeys).toContain("field2");
+    });
+
+    it("should load fields from single datamodel", async () => {
+      const dm = await DataModel.withAdapter(adapter).create({
+        slug: generateRandomString(),
+        single: true,
+        fields: {
+          field1: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      const TestModel = Data.getFromDatamodel(dm);
+
+      expect(TestModel.single).toBeTruthy();
+
+      expect(TestModel.slug).toEqual(dm.slug);
+
+      await TestModel.reloadModel();
+
+      expect(TestModel.fieldsKeys).toContain("field1");
+
+      dm.getDoc().fields = {
+        field2: {
+          type: FieldTypes.TEXT,
+        },
+      };
+
+      await TestModel.reloadModel();
+
+      expect(TestModel.fieldsKeys).not.toContain("field1");
+      expect(TestModel.fieldsKeys).toContain("field2");
+    });
+
+    it("should support for keyField change", async () => {
+      const dm = await DataModel.withAdapter(adapter).create({
+        slug: generateRandomString(),
+        keyField: "field1",
+        fields: {
+          field1: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        validators: [
+          {
+            type: "required",
+            options: { field: "field1" },
+          },
+        ],
+      });
+
+      const TestModel = Data.getFromDatamodel(dm);
+
+      await TestModel.reloadModel();
+
+      expect(TestModel.keyField).toEqual("field1");
+
+      expect(TestModel.fieldsKeys).toContain("field1");
+
+      dm.getDoc().keyField = "field2";
+      dm.getDoc().fields = {
+        field2: {
+          type: FieldTypes.TEXT,
+        },
+      };
+
+      await TestModel.reloadModel();
+
+      expect(TestModel.keyField).toEqual("field2");
+
+      expect(TestModel.fieldsKeys).not.toContain("field1");
+
+      expect(TestModel.fieldsKeys).toContain("field2");
     });
   });
 
