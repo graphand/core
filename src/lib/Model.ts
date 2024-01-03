@@ -214,7 +214,7 @@ class Model {
    */
   static async reloadModel(opts?: {
     datamodel?: DataModel;
-    ctx?: ExecutorCtx;
+    ctx?: TransactionCtx;
   }) {
     let datamodel = opts?.datamodel;
     const adapter = this.getAdapter();
@@ -397,7 +397,7 @@ class Model {
     this: T,
     path: S,
     value: S extends keyof T ? T[S] | any : any,
-    ctx: ExecutorCtx = {}
+    ctx: TransactionCtx = {}
   ) {
     const _path = path as string;
     let fieldsPaths;
@@ -540,7 +540,7 @@ class Model {
   static async count<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: ExecutorCtx
+    ctx?: TransactionCtx
   ): Promise<number> {
     await this.initialize();
 
@@ -561,7 +561,7 @@ class Model {
   static get<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: ExecutorCtx
+    ctx?: TransactionCtx
   ): PromiseModel<InstanceType<T>> {
     const model = this;
 
@@ -597,7 +597,7 @@ class Model {
   static getList<T extends typeof Model>(
     this: T,
     query: JSONQuery = {},
-    ctx?: ExecutorCtx
+    ctx?: TransactionCtx
   ): PromiseModelList<InstanceType<T>> {
     const model = this;
 
@@ -637,7 +637,7 @@ class Model {
   static async create<T extends typeof Model>(
     this: T,
     payload: InputModelPayload<T>,
-    ctx?: ExecutorCtx
+    ctx?: TransactionCtx
   ): Promise<InstanceType<T>> {
     if (Array.isArray(payload)) {
       throw new CoreError({
@@ -675,7 +675,7 @@ class Model {
   static async createMultiple<T extends typeof Model>(
     this: T,
     payload: Array<InputModelPayload<T>>,
-    ctx?: ExecutorCtx
+    ctx?: TransactionCtx
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
@@ -699,7 +699,7 @@ class Model {
    * await instance.update({ $unset: { title: true } });
    * console.log(instance.title); // undefined
    */
-  async update(update: any, ctx?: ExecutorCtx): Promise<this> {
+  async update(update: any, ctx?: TransactionCtx): Promise<this> {
     const res = await this.model.execute(
       "updateOne",
       [String(this._id), update],
@@ -737,7 +737,7 @@ class Model {
     this: T,
     query: string | JSONQuery = {},
     update: any,
-    ctx?: ExecutorCtx
+    ctx?: TransactionCtx
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
@@ -769,7 +769,7 @@ class Model {
    * const instance = await Model.create({ title: "apple" });
    * await instance.delete();
    */
-  async delete(ctx?: ExecutorCtx): Promise<this> {
+  async delete(ctx?: TransactionCtx): Promise<this> {
     await this.model.initialize();
 
     if (this.model.single) {
@@ -802,7 +802,7 @@ class Model {
   static async delete<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: ExecutorCtx
+    ctx?: TransactionCtx
   ): Promise<string[]> {
     await this.initialize();
 
@@ -873,7 +873,7 @@ class Model {
   static async validate<T extends typeof Model>(
     this: T,
     list: Array<InstanceType<T> | InputModelPayload<T>>,
-    ctx: ExecutorCtx = {}
+    ctx: TransactionCtx = {}
   ) {
     return await validateModel(this, list, ctx);
   }
@@ -973,7 +973,7 @@ class Model {
     this: M,
     action: A,
     args: Args,
-    bindCtx: ExecutorCtx = {}
+    bindCtx: TransactionCtx = {}
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const retryToken = Symbol();
     const abortToken = Symbol();
@@ -983,7 +983,7 @@ class Model {
       ...bindCtx,
       retryToken,
       abortToken,
-    } as ExecutorCtx;
+    } as TransactionCtx;
 
     const payloadBefore: HookCallbackArgs<"before", A, M> = {
       args,

@@ -6,7 +6,7 @@ import Model from "./Model";
 import DataModel from "../models/DataModel";
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const path = this.getFullPath();
     const values = list.map((i) => i.get(path)).flat(Infinity);
 
@@ -17,7 +17,7 @@ class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
 }
 
 class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))
@@ -47,7 +47,7 @@ class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
 }
 
 class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))
@@ -66,7 +66,7 @@ class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
 }
 
 class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const model = ctx.model;
     const adapter = model?.getAdapter();
     const validatorsMap = adapter?.validatorsMap ?? {};
@@ -110,7 +110,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
 }
 
 class DefaultValidatorDatamodelKeyField extends Validator<ValidatorTypes.DATAMODEL_KEY_FIELD> {
-  async validate(list: Array<DataModel>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<DataModel>, ctx: TransactionCtx = {}) {
     return list.every((i) => {
       const keyField = i?.keyField;
 
@@ -138,7 +138,7 @@ class DefaultValidatorDatamodelKeyField extends Validator<ValidatorTypes.DATAMOD
 }
 
 class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))
@@ -162,7 +162,7 @@ class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
 }
 
 class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))

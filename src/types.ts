@@ -186,41 +186,41 @@ export type UpdateFilter = {
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (
     args: [query: string | JSONQuery],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<number | null>;
   get: (
     args: [query: string | JSONQuery],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<InstanceType<T> | null>;
   getList: (
     args: [query: JSONQuery],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<ModelList<InstanceType<T>>>;
   createOne: (
     args: [payload: InputModelPayload<T>],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<InstanceType<T>>;
   createMultiple: (
     args: [payload: Array<InputModelPayload<T>>],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<Array<InstanceType<T>>>;
   updateOne: (
     args: [query: string | JSONQuery, update: UpdateFilter],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<InstanceType<T>>;
   updateMultiple: (
     args: [query: JSONQuery, update: UpdateFilter],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<Array<InstanceType<T>>>;
   deleteOne: (
     args: [query: string | JSONQuery],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<boolean>;
   deleteMultiple: (
     args: [query: JSONQuery],
-    ctx: ExecutorCtx
+    ctx: TransactionCtx
   ) => Promise<string[]>;
-  initialize?: (args: never, ctx: ExecutorCtx) => Promise<void>;
+  initialize?: (args: never, ctx: TransactionCtx) => Promise<void>;
 };
 
 export type Module<T extends typeof Model = any> = (model: T) => void;
@@ -353,7 +353,7 @@ export type HookCallbackArgs<
 > = P extends "before"
   ? {
       args: Parameters<AdapterFetcher<T>[A]>[0];
-      ctx: ExecutorCtx;
+      ctx: TransactionCtx;
       err?: Array<Error | Symbol>;
     }
   : HookCallbackArgs<"before", A, T> & {

@@ -12,7 +12,7 @@ import type {
 } from "./dist/types";
 
 declare global {
-  export type ExecutorCtx = any;
+  export type TransactionCtx = any;
 
   export type FieldDefinitionId<
     D extends FieldDefinitionOptions<FieldTypes.ID> = DefaultFieldDefinitionOptions<FieldTypes.ID>

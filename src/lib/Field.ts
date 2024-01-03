@@ -41,7 +41,7 @@ class Field<T extends FieldTypes = FieldTypes> {
     ) as FieldOptions<T>;
   }
 
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     return true;
   }
 

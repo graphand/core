@@ -959,7 +959,7 @@ export const getNestedFieldsArrayForModel = (
  * @param list - The `list` parameter is an array that contains instances of the model or input
  * payloads for creating new instances. It can be an array of `InstanceType<T>` or
  * `InputModelPayload<T>`.
- * @param {ExecutorCtx} ctx - The `ctx` parameter is an optional object that represents the execution
+ * @param {TransactionCtx} ctx - The `ctx` parameter is an optional object that represents the execution
  * context. It can contain any additional information or variables that may be needed during the
  * validation process.
  * @returns The function `validateModel` returns a Promise that resolves to a boolean value (`true`).
@@ -967,7 +967,7 @@ export const getNestedFieldsArrayForModel = (
 export const validateModel = async <T extends typeof Model>(
   model: T,
   list: Array<InstanceType<T> | InputModelPayload<T>>,
-  ctx: ExecutorCtx = {}
+  ctx: TransactionCtx = {}
 ) => {
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
@@ -1255,7 +1255,7 @@ export const getModelInitPromise = (
   model: typeof Model,
   opts: {
     datamodel?: DataModel;
-    ctx?: ExecutorCtx;
+    ctx?: TransactionCtx;
   } = {}
 ) => {
   const { datamodel, ctx } = opts;

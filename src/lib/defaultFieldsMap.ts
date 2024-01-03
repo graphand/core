@@ -40,7 +40,7 @@ class DefaultFieldDate extends Field<FieldTypes.DATE> {
 }
 
 class DefaultFieldText extends Field<FieldTypes.TEXT> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;
@@ -79,7 +79,7 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   nextFieldEqObject = false;
 
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;
@@ -176,7 +176,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 }
 
 class DefaultFieldNested extends Field<FieldTypes.NESTED> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;
@@ -301,7 +301,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
 }
 
 class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
-  async validate(list: Array<Model>, ctx: ExecutorCtx = {}) {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;

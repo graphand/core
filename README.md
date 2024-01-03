@@ -77,7 +77,7 @@ AdaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ai
 
 **Les hooks executés sont ceux du modèle concerné ainsi que ceux des modèles parents. Ainsi, lorsqu'un hook est ajouté à la classe Model, il sera executé sur n'importe quel modèle (Account, Project, etc.)**
 
-Le payload envoyé aux hooks inclus le contexte de l'exécution (type `ExecutorCtx`) qui contient des informations utiles telles que :
+Le payload envoyé aux hooks inclus le contexte de l'exécution (type `TransactionCtx`) qui contient des informations utiles telles que :
 
 - `retryToken`: Si ce symbol est émis par l'un des hooks (`throw ctx.retryToken`), alors l'opération sera relancée après l'exécution des hooks de la phase en cours (`before` ou `after`)
 - `abortToken`: Si ce symbol est émis par l'un des hooks (`throw ctx.abortToken`), alors l'opération sera immédiatement stoppée. Même l'exécution des hooks de la phase en cours sera arretée contrairement au `retryToken`.
