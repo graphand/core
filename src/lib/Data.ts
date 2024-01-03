@@ -3,7 +3,7 @@ import { modelDecorator } from "./modelDecorator";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import DataModel from "../models/DataModel";
 import Adapter from "./Adapter";
-import { assignDataModel } from "./utils";
+import { assignDataModel, getModelInitPromise } from "./utils";
 
 /**
  * The Data class is a specific that is the base class for all data models.
@@ -49,7 +49,7 @@ class Data extends Model {
 
   static getFromDatamodel(
     datamodel: DataModel,
-    adapterClass?: typeof Adapter
+    adapterClass?: typeof Adapter | false
   ): typeof Data {
     let model = class extends Data {
       static __name = datamodel.name;
@@ -65,6 +65,10 @@ class Data extends Model {
     }
 
     assignDataModel(model, datamodel);
+
+    if (adapterClass) {
+      model.__initPromise = getModelInitPromise(model, { datamodel });
+    }
 
     return model;
   }

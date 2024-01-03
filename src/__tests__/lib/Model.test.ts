@@ -114,11 +114,6 @@ describe("Test Model", () => {
 
       expect(hookBefore).toBeCalledTimes(1);
       expect(hookAfter).toBeCalledTimes(1);
-
-      await model.initialize(true);
-
-      expect(hookBefore).toBeCalledTimes(2);
-      expect(hookAfter).toBeCalledTimes(2);
     });
 
     it("Model initialization with hook error should throw error", async () => {
@@ -131,6 +126,49 @@ describe("Test Model", () => {
       model.hook("before", "initialize", hookBefore);
 
       await expect(model.initialize()).rejects.toThrowError("test");
+    });
+
+    it("Model initialization should use __initOptions", async () => {
+      const _model = mockModel();
+      const model = _model.withAdapter(adapter);
+
+      const initFn = jest.spyOn(model, "reloadModel");
+
+      expect(initFn).toBeCalledTimes(0);
+
+      await model.initialize();
+
+      expect(initFn).toBeCalledTimes(1);
+
+      await model.initialize();
+
+      expect(initFn).toBeCalledTimes(1);
+
+      const lastCallArgs = initFn.mock.calls[0][0];
+
+      expect(lastCallArgs.datamodel).toBeUndefined();
+      expect(lastCallArgs.ctx).toBeUndefined();
+
+      const model2 = model.clone({
+        datamodel: new DataModel({
+          keyField: "test",
+        }),
+      });
+
+      const initFn2 = jest.spyOn(model2, "reloadModel");
+
+      expect(initFn2).toBeCalledTimes(1);
+
+      await model2.initialize();
+
+      expect(initFn2).toBeCalledTimes(2);
+
+      const lastCall2Args = initFn2.mock.calls[1][0];
+
+      expect(lastCall2Args?.datamodel).toBeInstanceOf(DataModel);
+
+      expect(model.keyField).toBeUndefined();
+      expect(model2.keyField).toEqual("test");
     });
   });
 

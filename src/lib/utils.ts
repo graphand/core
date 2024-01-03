@@ -26,6 +26,7 @@ import CoreError from "./CoreError";
 import SerializerFormat from "../enums/serializer-format";
 import ValidationFieldError from "./ValidationFieldError";
 import ValidationError from "./ValidationError";
+import type DataModel from "../models/DataModel";
 
 /**
  * The function `getRecursiveFieldsFromModel` retrieves all fields from a model and its base classes
@@ -1233,7 +1234,7 @@ export const crossFields = (
 
 export const assignDataModel = async <T extends typeof Model>(
   model: T,
-  datamodel: any
+  datamodel: DataModel
 ) => {
   if (datamodel.keyField) {
     model.keyField = datamodel.keyField;
@@ -1248,4 +1249,48 @@ export const assignDataModel = async <T extends typeof Model>(
 
   delete model.__fieldsProperties;
   delete model.__fieldsKeys;
+};
+
+export const getModelInitPromise = (
+  model: typeof Model,
+  opts: {
+    datamodel?: DataModel;
+    ctx?: ExecutorCtx;
+  } = {}
+) => {
+  const { datamodel, ctx } = opts;
+
+  return new Promise<void>(async (resolve, reject) => {
+    try {
+      const hooksBefore = getRecursiveHooksFromModel(
+        model,
+        "initialize",
+        "before"
+      );
+
+      await hooksBefore.reduce(async (p, hook) => {
+        await p;
+        return hook.fn.call(model);
+      }, Promise.resolve());
+
+      if (model.extendable) {
+        await model.reloadModel({ datamodel, ctx });
+      }
+
+      const hooksAfter = getRecursiveHooksFromModel(
+        model,
+        "initialize",
+        "after"
+      );
+
+      await hooksAfter.reduce(async (p, hook) => {
+        await p;
+        return hook.fn.call(model);
+      }, Promise.resolve());
+    } catch (e) {
+      reject(e);
+    }
+
+    resolve();
+  });
 };

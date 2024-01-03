@@ -31,9 +31,11 @@ import {
   _setter,
   validateModel,
   assignDataModel,
+  getModelInitPromise,
 } from "./utils";
 import CoreError from "./CoreError";
 import ErrorCodes from "../enums/error-codes";
+import type DataModel from "../models/DataModel";
 
 class Model {
   static extendable: boolean = false; // Whether the model can be extended with a DataModel with its slug
@@ -52,6 +54,7 @@ class Model {
 
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
+  static __initOptions: Parameters<typeof getModelInitPromise>[1];
   static __initPromise: Promise<void>;
   static __localAdapter: Adapter;
   static __globalAdapter: Adapter;
@@ -141,6 +144,21 @@ class Model {
     return this.__baseClass ?? this;
   }
 
+  static clone<T extends typeof Model>(
+    this: T,
+    initOptions?: Parameters<typeof getModelInitPromise>[1]
+  ): T {
+    const _this = this;
+    // @ts-ignore
+    const cloned = class extends _this {
+      static __name = _this.__name;
+    };
+
+    cloned.__initOptions = initOptions;
+
+    return cloned;
+  }
+
   /**
    * Returns a new model class with the given adapter.
    * @param adapterClass
@@ -173,77 +191,53 @@ class Model {
 
   /**
    * Returns a promises that resolves when the model is initialized.
-   * @param force - Force model initialization even if it's already initialized.
-   * @param ctx
    */
-  static async initialize(force: boolean = false, ctx?: ExecutorCtx) {
-    const model = this;
-
-    if (this.hasOwnProperty("__initPromise") && !force) {
+  static async initialize() {
+    if (this.hasOwnProperty("__initPromise")) {
       return this.__initPromise;
     }
 
-    this.__initPromise = new Promise(async (resolve, reject) => {
-      try {
-        const hooksBefore = getRecursiveHooksFromModel(
-          model,
-          "initialize",
-          "before"
-        );
+    let opts = {};
+    if (this.hasOwnProperty("__initOptions")) {
+      opts = this.__initOptions;
+    }
 
-        await hooksBefore.reduce(async (p, hook) => {
-          await p;
-          return hook.fn.call(model, { ctx });
-        }, Promise.resolve());
+    this.__initPromise = getModelInitPromise(this, opts);
 
-        if (model.extendable) {
-          await model.reloadModel(ctx);
-        }
-
-        const hooksAfter = getRecursiveHooksFromModel(
-          model,
-          "initialize",
-          "after"
-        );
-
-        await hooksAfter.reduce(async (p, hook) => {
-          await p;
-          return hook.fn.call(model, { ctx });
-        }, Promise.resolve());
-      } catch (e) {
-        reject(e);
-      }
-
-      resolve();
-    });
-
-    await this.__initPromise;
+    return this.__initPromise;
   }
 
   /**
    * Reload model from its definition (fields, validators, etc).
    * If the model is not extendable (Role, Token, etc.), this method does nothing.
-   * @param ctx
    * @returns
    */
-  static async reloadModel(ctx?: ExecutorCtx) {
+  static async reloadModel(opts?: {
+    datamodel?: DataModel;
+    ctx?: ExecutorCtx;
+  }) {
+    let datamodel = opts?.datamodel;
     const adapter = this.getAdapter();
 
-    const DataModel = require("../models/DataModel").default;
-    const datamodel = await getAdaptedModel(DataModel, adapter.base).get(
-      {
-        filter: {
-          slug: this.slug,
+    if (!datamodel) {
+      const DataModelClass = require("../models/DataModel").default;
+      datamodel = await getAdaptedModel(DataModelClass, adapter.base).get(
+        {
+          filter: {
+            slug: this.slug,
+          },
         },
-      },
-      ctx
-    );
+        opts?.ctx
+      );
+    }
 
     if (!datamodel) {
       return;
     }
 
     assignDataModel(this, datamodel);
+
+    return datamodel;
   }
 
   /**
