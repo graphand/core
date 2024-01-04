@@ -11,7 +11,7 @@ import Validator from "../../lib/Validator";
 import ValidatorTypes from "../../enums/validator-types";
 import ValidationError from "../../lib/ValidationError";
 import PromiseModel from "../../lib/PromiseModel";
-import { DataModel, getFieldFromDefinition, models } from "../../index";
+import { DataModel, Model, models } from "../../index";
 import PromiseModelList from "../../lib/PromiseModelList";
 import SerializerFormat from "../../enums/serializer-format";
 
@@ -1070,6 +1070,253 @@ describe("test fieldsMap", () => {
         await model.validate([i]);
 
         expect(testValidator).toBeCalledTimes(2);
+      });
+    });
+
+    describe("consistency", () => {
+      const _testConsistency = (model: typeof Model, obj: any, f = "obj") => {
+        const i = new model({ [f]: obj });
+
+        const obj1 = i.get(f, SerializerFormat.JSON);
+        const obj2 = new model({ [f]: obj1 }).get(f, SerializerFormat.JSON);
+
+        expect(obj1).toEqual(obj2);
+      };
+
+      it("should be consistent with nested text field", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  title: {
+                    type: FieldTypes.TEXT,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, {
+          title: faker.lorem.word(),
+        });
+      });
+
+      it("should be consistent with nested number field", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  value: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, {
+          value: Math.random(),
+        });
+      });
+
+      it("should be consistent with nested boolean field", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  value: {
+                    type: FieldTypes.BOOLEAN,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, {
+          value: Math.random() > 0.5,
+        });
+      });
+
+      it("should be consistent with nested date field", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  value: {
+                    type: FieldTypes.DATE,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, {
+          value: new Date(),
+        });
+      });
+
+      it("should be consistent with nested identity field", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  value: {
+                    type: FieldTypes.IDENTITY,
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, {
+          value: new ObjectId(),
+        });
+      });
+
+      it("should be consistent with nested relation field", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  value: {
+                    type: FieldTypes.RELATION,
+                    options: {
+                      ref: "accounts",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, {
+          value: new ObjectId().toString(),
+        });
+      });
+
+      it("should be consistent with nested array field", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      value: {
+                        type: FieldTypes.NUMBER,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, [
+          {
+            value: Math.random(),
+          },
+        ]);
+      });
+
+      it("should be consistent with nested array field in nested object", async () => {
+        const model = mockModel({
+          fields: {
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  arr: {
+                    type: FieldTypes.ARRAY,
+                    options: {
+                      items: {
+                        type: FieldTypes.NESTED,
+                        options: {
+                          fields: {
+                            value: {
+                              type: FieldTypes.NUMBER,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, {
+          arr: [
+            {
+              value: Math.random(),
+            },
+          ],
+        });
+      });
+
+      it("should be consistent with nested array field in nested array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      arr: {
+                        type: FieldTypes.ARRAY,
+                        options: {
+                          items: {
+                            type: FieldTypes.NUMBER,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).withAdapter(adapter);
+        await model.initialize();
+
+        _testConsistency(model, [
+          {
+            arr: [Math.random()],
+          },
+        ]);
       });
     });
   });
