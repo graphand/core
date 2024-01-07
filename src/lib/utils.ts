@@ -765,11 +765,8 @@ export const _getter = (opts: {
 
     const { key, field } = _fieldsPath;
 
-    if (
-      format !== SerializerFormat.DOCUMENT &&
-      _value === undefined &&
-      "default" in field.options
-    ) {
+    const defaults = ctx?.defaults ?? format !== SerializerFormat.DOCUMENT;
+    if (defaults && _value === undefined && "default" in field.options) {
       _value = field.options.default as typeof _value;
     }
 

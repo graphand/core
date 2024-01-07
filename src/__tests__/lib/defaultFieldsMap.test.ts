@@ -299,6 +299,53 @@ describe("test fieldsMap", () => {
       );
     });
 
+    it("Should not bind default values in document format", async () => {
+      const model = mockModel({
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              default: { test: 1 },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({});
+
+      expect(i.get("obj")).toEqual({ test: 1 });
+      expect(i.get("obj", SerializerFormat.DOCUMENT)).toEqual(undefined);
+    });
+
+    it("Should not bind default values in document format in nested fields", async () => {
+      const model = mockModel({
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                foo: {
+                  type: FieldTypes.TEXT,
+                  options: {
+                    default: "bar",
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({
+        obj: {},
+      });
+
+      expect(i.get("obj.foo")).toEqual("bar");
+      expect(i.get("obj.foo", SerializerFormat.DOCUMENT)).toEqual(undefined);
+    });
+
     describe("Proxy", () => {
       it("Should returns an object proxy", async () => {
         const model = mockModel({
@@ -1371,11 +1418,12 @@ describe("test fieldsMap", () => {
       }).withAdapter(adapter);
       await model.initialize();
 
-      const i = new model({ rel: "507f191e810c19729de860ea" });
+      const _id = String(new ObjectId());
+      const i = new model({ rel: _id });
 
       expect(i.rel).toBeInstanceOf(PromiseModel);
       expect(i.rel.model?.getBaseClass()).toBe(models.Account);
-      expect(i.rel.query).toEqual("507f191e810c19729de860ea");
+      expect(i.rel.query).toEqual(_id);
     });
 
     it("should returns null if value is null", async () => {
@@ -1412,6 +1460,25 @@ describe("test fieldsMap", () => {
       const i = new model({ rel: "invalid" });
 
       expect(i.rel).toBe(null);
+    });
+
+    it("should returns string in JSON format", async () => {
+      const model = mockModel({
+        fields: {
+          rel: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: "accounts",
+            },
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const _id = String(new ObjectId());
+      const i = new model({ rel: _id });
+
+      expect(i.get("rel", SerializerFormat.JSON)).toEqual(_id);
     });
   });
 
@@ -1534,7 +1601,6 @@ describe("test fieldsMap", () => {
       expect(i.arrRel.model?.getBaseClass()).toBe(models.Account);
       expect(i.arrRel.query).toEqual({
         ids: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
-        limit: 2,
       });
     });
 

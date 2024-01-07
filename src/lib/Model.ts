@@ -348,11 +348,8 @@ class Model {
     const firstField = fieldsPaths[0].field;
     value ??= this.#doc[firstField.path];
 
-    if (
-      format !== SerializerFormat.DOCUMENT &&
-      value === undefined &&
-      "default" in firstField.options
-    ) {
+    const defaults = ctx?.defaults ?? format !== SerializerFormat.DOCUMENT;
+    if (defaults && value === undefined && "default" in firstField.options) {
       value = firstField.options.default as typeof value;
     }
 

@@ -199,9 +199,10 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
   ): any {
     value = Array.isArray(value) ? value[0] : value;
     const _field = this;
+    const oFormat = ctx.outputFormat || format;
 
     if (!value || typeof value !== "object") {
-      if (ctx.outputFormat === SerializerFormat.VALIDATION) {
+      if (oFormat === SerializerFormat.VALIDATION) {
         return value;
       }
 
@@ -231,7 +232,8 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
         );
       }
 
-      if (value === undefined && "default" in targetField.options) {
+      const defaults = ctx?.defaults ?? oFormat !== SerializerFormat.DOCUMENT;
+      if (defaults && value === undefined && "default" in targetField.options) {
         value = targetField.options.default as typeof value;
       }
 
@@ -358,7 +360,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
           return itemsField.serialize(v, format, from, ctx);
         });
       } else {
-        res = model.getList({ ids, limit: ids.length }, ctx);
+        res = model.getList({ ids }, ctx);
       }
 
       return res;
