@@ -1947,4 +1947,20 @@ describe("Test Model", () => {
 
     await expect(TestModel.update({}, {})).resolves.toBeDefined();
   });
+
+  it("should return right model constructor", async () => {
+    const TestModel = mockModel().withAdapter(mockAdapter());
+
+    const i = await TestModel.create({});
+
+    expect(i.model).toBe(TestModel);
+  });
+
+  it("should return right model constructor when model is cloned", async () => {
+    const TestModelCloned = mockModel().withAdapter(mockAdapter()).clone();
+
+    const i = await TestModelCloned.create({});
+
+    expect(i.model).toBe(TestModelCloned);
+  });
 });

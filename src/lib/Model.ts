@@ -149,14 +149,22 @@ class Model {
     initOptions?: Parameters<typeof getModelInitPromise>[1]
   ): T {
     const _this = this;
+
     // @ts-ignore
-    const cloned = class extends _this {
+    const modelCloned = class extends _this {
       static __name = _this.__name;
+      static __initOptions = initOptions;
     };
 
-    cloned.__initOptions = initOptions;
+    Object.defineProperty(modelCloned, "name", { value: this.__name });
 
-    return cloned;
+    if (this.__localAdapter) {
+      const adapterClass = this.__localAdapter.base;
+      modelCloned.__localAdapter = new adapterClass(modelCloned);
+      modelCloned.__globalAdapter = modelCloned.__localAdapter;
+    }
+
+    return modelCloned;
   }
 
   /**
