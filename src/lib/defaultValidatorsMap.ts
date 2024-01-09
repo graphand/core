@@ -4,6 +4,25 @@ import ValidatorTypes from "../enums/validator-types";
 import FieldTypes from "../enums/field-types";
 import Model from "./Model";
 import DataModel from "../models/DataModel";
+import Patterns from "../enums/patterns";
+
+const systemModels = [
+  "accounts_authProviders",
+  "authProviders",
+  "backups",
+  "datamodels",
+  "environments",
+  "jobs",
+  "keys",
+  "organizations",
+  "projects",
+  "roles",
+  "searchConfigs",
+  "sockethooks",
+  "terms",
+  "tokens",
+  "users",
+];
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
   async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
@@ -81,6 +100,15 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
       return v || Validator;
     };
 
+    const ValidatorRegex = _getValidator(ValidatorTypes.REGEX);
+    const validatorRegex = new ValidatorRegex(
+      {
+        type: ValidatorTypes.REGEX,
+        options: { field: this.options.field, pattern: Patterns.SLUG },
+      },
+      this.path
+    );
+
     const ValidatorRequired = _getValidator(ValidatorTypes.REQUIRED);
     const validatorRequired = new ValidatorRequired(
       {
@@ -100,6 +128,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
     );
 
     const validates = await Promise.all([
+      validatorRegex.validate(list, ctx),
       validatorRequired.validate(list, ctx),
       validatorUnique.validate(list, ctx),
     ]);
@@ -110,29 +139,37 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
 
 class DefaultValidatorDatamodelKeyField extends Validator<ValidatorTypes.DATAMODEL_KEY_FIELD> {
   async validate(list: Array<DataModel>, ctx: TransactionCtx = {}) {
-    return list.every((i) => {
-      const keyField = i?.keyField;
+    const _isInvalid = (i: DataModel) => {
+      const keyField = i.get("keyField");
 
       if (!keyField) {
+        return false;
+      }
+
+      const fields = i.get("fields");
+
+      if (!fields) {
         return true;
       }
 
-      const keyFieldField = i.fields?.[keyField];
+      const keyFieldField = fields[keyField];
 
       if (!keyFieldField) {
-        return false;
+        return true;
       }
 
       if (keyFieldField.type !== FieldTypes.TEXT) {
-        return false;
+        return true;
       }
 
       if (keyFieldField.options?.default) {
-        return false;
+        return true;
       }
 
-      return true;
-    });
+      return false;
+    };
+
+    return !list.some(_isInvalid);
   }
 }
 
@@ -180,12 +217,55 @@ class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
   }
 }
 
+class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+    const values = list
+      .map((i) => i.get("slug"))
+      .filter((v) => ![null, undefined].includes(v));
+
+    if (!values?.length) return true;
+
+    const _isInvalid = (slug: string) => {
+      return systemModels.includes(slug);
+    };
+
+    return !values.some(_isInvalid);
+  }
+}
+
+class DefaultValidatorDatamodelFields extends Validator<ValidatorTypes.DATAMODEL_FIELDS> {
+  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+    const _isInvalid = (i: DataModel) => {
+      const fields = i.get("fields");
+
+      if (!fields) {
+        return false;
+      }
+
+      const keys = Object.keys(fields);
+
+      const regex = new RegExp(Patterns.SLUG);
+      for (const key of keys) {
+        if (!regex.test(key)) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    return !list.some(_isInvalid);
+  }
+}
+
 const defaultValidatorsMap: Adapter["validatorsMap"] = {
   [ValidatorTypes.REQUIRED]: DefaultValidatorRequired,
   [ValidatorTypes.UNIQUE]: DefaultValidatorUnique,
   [ValidatorTypes.REGEX]: DefaultValidatorRegex,
   [ValidatorTypes.KEY_FIELD]: DefaultValidatorKeyField,
   [ValidatorTypes.DATAMODEL_KEY_FIELD]: DefaultValidatorDatamodelKeyField,
+  [ValidatorTypes.DATAMODEL_SLUG]: DefaultValidatorDatamodelSlug,
+  [ValidatorTypes.DATAMODEL_FIELDS]: DefaultValidatorDatamodelFields,
   [ValidatorTypes.LENGTH]: DefaultValidatorLength,
   [ValidatorTypes.BOUNDARIES]: DefaultValidatorBoundaries,
 };

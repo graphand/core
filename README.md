@@ -127,6 +127,10 @@ Les types de champs sont tous dans l'enum `ValidatorTypes` :
 - _ValidatorTypes.SAMPLE_
 - _ValidatorTypes.KEY_FIELD_
 - _ValidatorTypes.DATAMODEL_KEY_FIELD_
+- _ValidatorTypes.DATAMODEL_SLUG_
+- _ValidatorTypes.DATAMODEL_FIELDS_
+
+Les validateurs `DATAMODEL_KEY_FIELD`, `DATAMODEL_SLUG` et `DATAMODEL_FIELDS` sont des validateurs spéciaux qui sont utilisés seulement par le modèle `DataModel` pour vérifier que les champs `keyField`, `slug` et `fields` sont valides.
 
 ### `Adapter.prototype.runValidators`
 

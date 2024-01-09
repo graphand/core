@@ -5,7 +5,6 @@ import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import { ValidatorsDefinition } from "../types";
-import Patterns from "../enums/patterns";
 import Job from "./Job";
 
 @modelDecorator()
@@ -16,10 +15,6 @@ class Environment extends Model {
   static scope = ModelEnvScopes.PROJECT;
   static keyField = "name";
   static validators: ValidatorsDefinition = [
-    {
-      type: ValidatorTypes.REGEX,
-      options: { field: "name", pattern: Patterns.SLUG },
-    },
     {
       type: ValidatorTypes.REGEX,
       options: { field: "name", pattern: "^(?!master$|main$).*$" },

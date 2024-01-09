@@ -480,6 +480,18 @@ describe("test validatorsMap", () => {
       const i = await model.create({ title: "validKey" });
       expect(i).toBeInstanceOf(model);
     });
+
+    it("create with invalid format keyField should throw error", async () => {
+      await expect(
+        model.create({ title: "invalid key" })
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("create multiple with duplicated keyField should throw error", async () => {
+      await expect(
+        model.createMultiple([{ title: "test" }, { title: "test" }])
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
   });
 
   describe("datamodelKeyField validator", () => {

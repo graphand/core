@@ -5,7 +5,6 @@ import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import { ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
-import Patterns from "../enums/patterns";
 import Job from "./Job";
 
 @modelDecorator()
@@ -16,10 +15,6 @@ class SearchConfig extends Model {
   static scope = ModelEnvScopes.ENV;
   static keyField = "slug";
   static validators: ValidatorsDefinition = [
-    {
-      type: ValidatorTypes.REGEX,
-      options: { field: "slug", pattern: Patterns.SLUG },
-    },
     { type: ValidatorTypes.REQUIRED, options: { field: "source" } },
     { type: ValidatorTypes.REQUIRED, options: { field: "properties" } },
   ];

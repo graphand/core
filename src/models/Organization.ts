@@ -6,7 +6,6 @@ import FieldTypes from "../enums/field-types";
 import { ValidatorsDefinition } from "../types";
 import User from "./User";
 import ValidatorTypes from "../enums/validator-types";
-import Patterns from "../enums/patterns";
 import Terms from "./Terms";
 
 @modelDecorator()
@@ -15,15 +14,10 @@ class Organization extends Model {
 
   static slug = "organizations";
   static scope = ModelEnvScopes.GLOBAL;
+  static keyField = "slug";
   static allowMultipleOperations = false;
   static validators: ValidatorsDefinition = [
     { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "slug" } },
-    { type: ValidatorTypes.UNIQUE, options: { field: "slug" } },
-    {
-      type: ValidatorTypes.REGEX,
-      options: { field: "slug", pattern: Patterns.SLUG },
-    },
   ];
 
   @fieldDecorator(FieldTypes.TEXT)

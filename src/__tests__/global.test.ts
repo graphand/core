@@ -1,3 +1,4 @@
+import { ObjectId } from "bson";
 import ValidatorTypes from "../enums/validator-types";
 import FieldTypes from "../enums/field-types";
 import ValidationError from "../lib/ValidationError";
@@ -7,6 +8,8 @@ import {
   mockModel,
 } from "../lib/test-utils";
 import DataModel from "../models/DataModel";
+import { Account, Data, Environment, models } from "..";
+import { faker } from "@faker-js/faker";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -758,6 +761,130 @@ describe("Global tests", () => {
           validators: [],
         },
       ])
+    ).resolves.toBeTruthy();
+  });
+
+  it("should not be able to create datamodel with non-extendable core model name", async () => {
+    const adapter = mockAdapter();
+
+    const extendableModels = Object.values(models)
+      .filter((model) => model.extendable)
+      .map((model) => model.slug);
+
+    const nonExtendableModels = Object.values(models)
+      .filter((model) => !model.extendable)
+      .map((model) => model.slug);
+
+    for (const slug of extendableModels) {
+      await expect(
+        DataModel.withAdapter(adapter).validate([{ slug }])
+      ).resolves.toBeTruthy();
+    }
+
+    for (const slug of nonExtendableModels) {
+      await expect(
+        DataModel.withAdapter(adapter).validate([{ slug }])
+      ).rejects.toThrow(ValidationError);
+    }
+  });
+
+  it("should not be able to create datamodel with invalid field name", async () => {
+    const adapter = mockAdapter();
+
+    await expect(
+      DataModel.withAdapter(adapter).validate([
+        {
+          slug: generateRandomString(),
+          fields: {
+            "invalid name": {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      ])
+    ).rejects.toThrow(ValidationError);
+
+    await expect(
+      DataModel.withAdapter(adapter).validate([
+        {
+          slug: generateRandomString(),
+          fields: {
+            _invalidName: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      ])
+    ).rejects.toThrow(ValidationError);
+  });
+
+  it("should be able to update model fields", async () => {
+    const adapter = mockAdapter();
+
+    const slug = generateRandomString();
+    const dm = await DataModel.withAdapter(adapter).create({
+      slug,
+      fields: {
+        title: {
+          type: FieldTypes.TEXT,
+          options: {
+            default: "defaultTitle",
+          },
+        },
+      },
+    });
+
+    const model = Data.getFromDatamodel(dm);
+    const i: any = await model.create({});
+
+    expect(i.title).toBe("defaultTitle");
+
+    await dm.update({
+      $set: {
+        slug,
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "newDefaultTitle",
+            },
+          },
+        },
+      },
+    });
+
+    await model.reloadModel();
+
+    expect(i.title).toBe("newDefaultTitle");
+  });
+
+  it("should not be able to create an environment with master or main as name", async () => {
+    const adapter = mockAdapter();
+
+    await expect(
+      Environment.withAdapter(adapter).create({
+        name: "master",
+      })
+    ).rejects.toThrow(ValidationError);
+
+    await expect(
+      Environment.withAdapter(adapter).create({
+        name: "main",
+      })
+    ).rejects.toThrow(ValidationError);
+
+    await expect(
+      Environment.withAdapter(adapter).create({
+        name: "test",
+      })
+    ).resolves.toBeTruthy();
+  });
+
+  it("should be able to create a datamodel with one letter as slug", async () => {
+    const adapter = mockAdapter();
+
+    await expect(
+      DataModel.withAdapter(adapter).create({ slug: "a" })
     ).resolves.toBeTruthy();
   });
 });

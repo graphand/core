@@ -15,7 +15,6 @@ class Role extends Model {
   static slug = "roles";
   static scope = ModelEnvScopes.ENV;
   static keyField = "slug";
-  // TODO remove validators on slug as keyField is slug
   static validators: ValidatorsDefinition = [
     {
       type: ValidatorTypes.REGEX,
