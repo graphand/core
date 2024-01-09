@@ -547,13 +547,21 @@ class Model {
     query: string | JSONQuery = {},
     ctx?: TransactionCtx
   ): Promise<number> {
-    await this.initialize();
+    const model = this;
+    return new Promise<number>(async (resolve, reject) => {
+      try {
+        await model.initialize();
 
-    if (this.single) {
-      return 1;
-    }
+        if (model.single) {
+          return resolve(1);
+        }
 
-    return this.execute("count", [query], ctx);
+        const count = await model.execute("count", [query], ctx);
+        resolve(count);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   /**
@@ -569,14 +577,13 @@ class Model {
     ctx?: TransactionCtx
   ): PromiseModel<InstanceType<T>> {
     const model = this;
-
-    return new PromiseModel(
+    return new PromiseModel<InstanceType<T>>(
       [
         async (resolve, reject) => {
           try {
             await model.initialize();
 
-            const i = await this.execute("get", [query], ctx);
+            const i = await model.execute("get", [query], ctx);
             resolve(i);
           } catch (e) {
             reject(e);
@@ -605,7 +612,6 @@ class Model {
     ctx?: TransactionCtx
   ): PromiseModelList<InstanceType<T>> {
     const model = this;
-
     return new PromiseModelList<InstanceType<T>>(
       [
         async (resolve, reject) => {
@@ -619,7 +625,7 @@ class Model {
               });
             }
 
-            const list = await this.execute("getList", [query], ctx);
+            const list = await model.execute("getList", [query], ctx);
             resolve(list);
           } catch (e) {
             reject(e);

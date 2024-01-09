@@ -51,6 +51,7 @@ export const mockAdapter = ({
 
       return cacheModel;
     }
+
     fetcher: AdapterFetcher = {
       count: jest.fn(() => Promise.resolve(this.thisCache.size)),
       get: jest.fn(([query]) => {
