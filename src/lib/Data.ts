@@ -3,7 +3,7 @@ import { modelDecorator } from "./modelDecorator";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import DataModel from "../models/DataModel";
 import Adapter from "./Adapter";
-import { assignDataModel, getModelInitPromise } from "./utils";
+import { assignDatamodel, getModelInitPromise } from "./utils";
 
 /**
  * The Data class is a specific that is the base class for all data models.
@@ -64,7 +64,7 @@ class Data extends Model {
       adapterClass.modelsMap.set(datamodel.slug, model);
     }
 
-    assignDataModel(model, datamodel);
+    assignDatamodel(model, datamodel);
 
     if (adapterClass) {
       model.__initPromise = getModelInitPromise(model, { datamodel });

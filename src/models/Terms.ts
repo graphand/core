@@ -3,18 +3,20 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { ValidatorsDefinition } from "../types";
+import { ModelDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Terms extends Model {
   static __name = "Terms";
-
   static slug = "terms";
+  static definition: ModelDefinition = {
+    validators: [
+      { type: ValidatorTypes.REQUIRED, options: { field: "content" } },
+    ],
+  };
+
   static scope = ModelEnvScopes.GLOBAL;
-  static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "content" } },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   content: FieldDefinitionText;

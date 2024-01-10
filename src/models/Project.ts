@@ -4,21 +4,23 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import Organization from "./Organization";
-import { ValidatorsDefinition } from "../types";
+import { ModelDefinition, ValidatorsDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Project extends Model {
   static __name = "Project";
-
   static slug = "projects";
+  static definition: ModelDefinition = {
+    keyField: "slug",
+    validators: [
+      { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
+      { type: ValidatorTypes.REQUIRED, options: { field: "organization" } },
+    ],
+  };
+
   static scope = ModelEnvScopes.GLOBAL;
-  static keyField = "slug";
   static allowMultipleOperations = false;
-  static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "organization" } },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;

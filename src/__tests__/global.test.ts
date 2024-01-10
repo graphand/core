@@ -597,6 +597,37 @@ describe("Global tests", () => {
     ).rejects.toThrow(ValidationError);
   });
 
+  it("should be able to extend Media model definition", async () => {
+    const adapter = mockAdapter();
+    await DataModel.withAdapter(adapter).create({
+      slug: models.Media.slug,
+      fields: {
+        title: {
+          type: FieldTypes.TEXT,
+          options: {},
+        },
+      },
+    });
+
+    const mediaModel = models.Media.withAdapter(adapter);
+    await mediaModel.initialize();
+
+    expect(mediaModel.fieldsMap.get("title")).toBeTruthy();
+  });
+
+  it("should not be able to override Media model validators", async () => {
+    const adapter = mockAdapter();
+    await DataModel.withAdapter(adapter).create({
+      slug: models.Media.slug,
+      validators: [],
+    });
+
+    const mediaModel = models.Media.withAdapter(adapter);
+    await mediaModel.initialize();
+
+    expect(mediaModel.validatorsArray.length).toBeGreaterThan(0);
+  });
+
   // TODO: fix this test
   // it("should detect unique fields on nested field in array with multiple documents and different values in nested array", async () => {
   //   const adapter = mockAdapter();
@@ -860,31 +891,23 @@ describe("Global tests", () => {
 
   it("should not be able to create an environment with master or main as name", async () => {
     const adapter = mockAdapter();
+    const _Environment = Environment.withAdapter(adapter);
 
-    await expect(
-      Environment.withAdapter(adapter).create({
-        name: "master",
-      })
-    ).rejects.toThrow(ValidationError);
+    await expect(_Environment.create({ name: "master" })).rejects.toThrow(
+      ValidationError
+    );
 
-    await expect(
-      Environment.withAdapter(adapter).create({
-        name: "main",
-      })
-    ).rejects.toThrow(ValidationError);
+    await expect(_Environment.create({ name: "main" })).rejects.toThrow(
+      ValidationError
+    );
 
-    await expect(
-      Environment.withAdapter(adapter).create({
-        name: "test",
-      })
-    ).resolves.toBeTruthy();
+    await expect(_Environment.create({ name: "test" })).resolves.toBeTruthy();
   });
 
   it("should be able to create a datamodel with one letter as slug", async () => {
     const adapter = mockAdapter();
+    const _DataModel = DataModel.withAdapter(adapter);
 
-    await expect(
-      DataModel.withAdapter(adapter).create({ slug: "a" })
-    ).resolves.toBeTruthy();
+    await expect(_DataModel.create({ slug: "a" })).resolves.toBeTruthy();
   });
 });

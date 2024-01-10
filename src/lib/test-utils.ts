@@ -70,7 +70,7 @@ export const mockAdapter = ({
         if (query.filter) {
           const filterEntries = Object.entries(query.filter);
           found = cache.find((r) =>
-            filterEntries.every(([key, value]) => r.getDoc()[key] === value)
+            filterEntries.every(([key, value]) => r.get(key) === value)
           );
         }
 
@@ -171,7 +171,6 @@ export const mockAdapter = ({
     };
 
     fieldsMap = fieldsMap;
-
     validatorsMap = validatorsMap;
   }
 
@@ -181,6 +180,7 @@ export const mockAdapter = ({
 export const mockModel = ({
   scope = ModelEnvScopes.ENV,
   allowMultipleOperations = true,
+  extendable = false,
   single = false,
   fields = {
     title: {
@@ -199,20 +199,24 @@ export const mockModel = ({
 }: {
   scope?: ModelEnvScopes;
   allowMultipleOperations?: boolean;
+  extendable?: boolean;
   fields?: FieldsDefinition;
   validators?: ValidatorsDefinition;
   single?: boolean;
 } = {}) => {
   const uidSlug = "a" + Math.random().toString(36).substring(7);
 
-  class Test extends Data {
-    static extendable = true;
-    static single = single;
+  class Test extends Model {
+    static extendable = extendable;
     static slug = uidSlug;
     static scope = scope;
-    static fields = fields;
-    static validators = validators;
     static allowMultipleOperations = allowMultipleOperations;
+    static definition = {
+      single,
+      keyField: undefined,
+      fields,
+      validators,
+    };
 
     constructor(doc) {
       super(doc);

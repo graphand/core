@@ -3,25 +3,27 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { modelDecorator } from "../lib/modelDecorator";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import FieldTypes from "../enums/field-types";
-import { AdapterFetcher, HookPhase, ValidatorsDefinition } from "../types";
+import { AdapterFetcher, HookPhase, ModelDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Sockethook extends Model {
   static __name = "Sockethook";
-
   static slug = "sockethooks";
+  static definition: ModelDefinition = {
+    keyField: "name",
+    validators: [
+      { type: ValidatorTypes.REQUIRED, options: { field: "on" } },
+      { type: ValidatorTypes.REQUIRED, options: { field: "phase" } },
+      { type: ValidatorTypes.REQUIRED, options: { field: "action" } },
+      {
+        type: ValidatorTypes.BOUNDARIES,
+        options: { field: "order", min: 0 },
+      },
+    ],
+  };
+
   static scope = ModelEnvScopes.ENV;
-  static keyField = "name";
-  static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "on" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "phase" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "action" } },
-    {
-      type: ValidatorTypes.BOUNDARIES,
-      options: { field: "order", min: 0 },
-    },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;

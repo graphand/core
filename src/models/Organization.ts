@@ -3,7 +3,7 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { ValidatorsDefinition } from "../types";
+import { ModelDefinition } from "../types";
 import User from "./User";
 import ValidatorTypes from "../enums/validator-types";
 import Terms from "./Terms";
@@ -11,14 +11,14 @@ import Terms from "./Terms";
 @modelDecorator()
 class Organization extends Model {
   static __name = "Organization";
-
   static slug = "organizations";
+  static definition: ModelDefinition = {
+    keyField: "slug",
+    validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "name" } }],
+  };
+
   static scope = ModelEnvScopes.GLOBAL;
-  static keyField = "slug";
   static allowMultipleOperations = false;
-  static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "name" } },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;

@@ -7,15 +7,14 @@ import FieldTypes from "../enums/field-types";
 import {
   AdapterFetcher,
   DocumentDefinition,
-  FieldsDefinition,
   FieldsPathItem,
   Hook,
   HookCallbackArgs,
   HookPhase,
   InputModelPayload,
   JSONQuery,
+  ModelDefinition,
   Module,
-  ValidatorsDefinition,
 } from "../types";
 import SerializerFormat from "../enums/serializer-format";
 import Adapter from "./Adapter";
@@ -30,7 +29,7 @@ import {
   _getter,
   _setter,
   validateModel,
-  assignDataModel,
+  assignDatamodel,
   getModelInitPromise,
 } from "./utils";
 import CoreError from "./CoreError";
@@ -40,17 +39,14 @@ import type DataModel from "../models/DataModel";
 class Model {
   static extendable: boolean = false; // Whether the model can be extended with a DataModel with its slug
   static searchable: boolean = false; // Whether the model is usable as a search config source
-  static single: boolean = false; // Single model (only one instance of the model can exist)
   static exposed: boolean = true; // Whether the model is exposed in the API or not
   static systemFields: boolean = true; // Include system field (_id, _createdAt, _createdBy, _updatedAt, _updatedBy) in the model fields
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
   static slug: string; // The slug of the model used to identify it
   static scope: ModelEnvScopes; // The scope of the model (global/project). Project scope could be global on project (project) or specific to an environment (env)
   static controllersScope: "global" | "project"; // The scope for CRUD controllers. Default calculated from model.scope
-  static fields: FieldsDefinition; // The fields of the model
-  static validators: ValidatorsDefinition; // The validators of the model
-  static keyField?: string; // The key field of the model (used to identify instances of the model, in addition to _id)
   static freeMode: boolean = false; // Whether the model is free
+  static definition: ModelDefinition; // The definition of the model
 
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
@@ -63,6 +59,7 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
+  static __dm: string | null; // The id of the datamodel that initialized the model if extendable. null if datamodel not found
 
   #doc: DocumentDefinition; // The document
 
@@ -100,11 +97,39 @@ class Model {
     return this.constructor as typeof Model;
   }
 
+  static isSingle() {
+    return Boolean(this.definition?.single);
+  }
+
+  static getKeyField() {
+    return (
+      this.getBaseClass().definition?.keyField ??
+      this.definition?.keyField ??
+      "_id"
+    );
+  }
+
   /**
    * Returns the current instance doc (raw data)
    */
   getDoc() {
     return this.#doc;
+  }
+
+  getKey(format?: SerializerFormat) {
+    const keyField = this.model.getKeyField();
+
+    if (!keyField) {
+      throw new CoreError({
+        message: `Invalid keyField for model ${this.model.slug} : ${keyField}`,
+      });
+    }
+
+    return this.get(this.model.getKeyField(), format);
+  }
+
+  getId(format?: SerializerFormat) {
+    return this.get("_id", format);
   }
 
   /**
@@ -127,32 +152,14 @@ class Model {
     return new this.model(clonedDoc);
   }
 
-  /**
-   * Returns the base class of the model.
-   * When a model is extended with an adapter, the base class is the original model.
-   * @example
-   * const Account = models.Account.withAdapter(MyAdapter);
-   * console.log(Account === models.Account); // false
-   * console.log(Account.getBaseClass() === models.Account); // true
-   * console.log(models.Account.getBaseClass() === models.Account); // true
-   */
-  static getBaseClass() {
-    if (!this.__localAdapter) {
-      return this;
-    }
-
-    return this.__baseClass ?? this;
-  }
-
   static clone<T extends typeof Model>(
     this: T,
     initOptions?: Parameters<typeof getModelInitPromise>[1]
   ): T {
-    const _this = this;
+    const baseClass = this.getBaseClass();
 
     // @ts-ignore
-    const modelCloned = class extends _this {
-      static __name = _this.__name;
+    const modelCloned = class extends baseClass {
       static __initOptions = initOptions;
     };
 
@@ -165,6 +172,18 @@ class Model {
     }
 
     return modelCloned;
+  }
+
+  /**
+   * The function returns the base class of a given model class. If the the current model class is adapted (withAdapter),
+   * the base class will be the class that was initially adapted.
+   */
+  static getBaseClass<T extends typeof Model>(this: T): T {
+    if (this.hasOwnProperty("__baseClass") && this.__baseClass) {
+      return this.__baseClass as T;
+    }
+
+    return this;
   }
 
   /**
@@ -239,11 +258,7 @@ class Model {
       );
     }
 
-    if (!datamodel) {
-      return;
-    }
-
-    assignDataModel(this, datamodel);
+    assignDatamodel(this, datamodel);
 
     return datamodel;
   }
@@ -552,7 +567,7 @@ class Model {
       try {
         await model.initialize();
 
-        if (model.single) {
+        if (model.isSingle()) {
           return resolve(1);
         }
 
@@ -618,7 +633,7 @@ class Model {
           try {
             await model.initialize();
 
-            if (model.single) {
+            if (model.isSingle()) {
               throw new CoreError({
                 code: ErrorCodes.INVALID_OPERATION,
                 message: `Cannot use getList on a single model, use get instead`,
@@ -659,7 +674,7 @@ class Model {
 
     await this.initialize();
 
-    if (this.single) {
+    if (this.isSingle()) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use create on a single model, instance is already created`,
@@ -690,7 +705,7 @@ class Model {
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
-    if (this.single) {
+    if (this.isSingle()) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use createMultiple on a single model, instance is already created`,
@@ -752,7 +767,7 @@ class Model {
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
-    if (this.single) {
+    if (this.isSingle()) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use update on a single model, use instance of the model instead`,
@@ -783,7 +798,7 @@ class Model {
   async delete(ctx?: TransactionCtx): Promise<this> {
     await this.model.initialize();
 
-    if (this.model.single) {
+    if (this.model.isSingle()) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use delete on a single model, delete the model itself instead`,
@@ -817,7 +832,7 @@ class Model {
   ): Promise<string[]> {
     await this.initialize();
 
-    if (this.single) {
+    if (this.isSingle()) {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use delete on a single model, delete the model itself instead`,
@@ -901,7 +916,7 @@ class Model {
       return adapter;
     }
 
-    const baseClass = this.getBaseClass();
+    const baseClass = this.__baseClass ?? this;
     const globalAdapter = globalThis.__GLOBAL_ADAPTER__ as typeof Adapter;
 
     if (

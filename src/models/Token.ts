@@ -4,19 +4,19 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import Role from "./Role";
-import { ValidatorsDefinition } from "../types";
+import { ModelDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
 class Token extends Model {
   static __name = "Token";
-
   static slug = "tokens";
+  static definition: ModelDefinition = {
+    keyField: "name",
+    validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "role" } }],
+  };
+
   static scope = ModelEnvScopes.PROJECT;
-  static keyField = "name";
-  static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "role" } },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;

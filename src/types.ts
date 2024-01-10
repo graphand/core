@@ -585,3 +585,10 @@ export type SockethookStatus = {
     };
   };
 };
+
+export type ModelDefinition = {
+  keyField?: string;
+  single?: boolean;
+  fields?: FieldsDefinition;
+  validators?: ValidatorsDefinition;
+};

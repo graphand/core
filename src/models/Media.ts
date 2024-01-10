@@ -2,24 +2,26 @@ import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { modelDecorator } from "../lib/modelDecorator";
 import ValidatorTypes from "../enums/validator-types";
-import { ValidatorsDefinition } from "../types";
+import { ModelDefinition } from "../types";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import FieldTypes from "../enums/field-types";
 
 @modelDecorator()
 class Media extends Model {
   static __name = "Media";
+  static slug = "medias";
+  static definition: ModelDefinition = {
+    keyField: "name",
+    validators: [
+      { type: ValidatorTypes.REQUIRED, options: { field: "_mimetype" } },
+      { type: ValidatorTypes.REQUIRED, options: { field: "_originalname" } },
+      { type: ValidatorTypes.BOUNDARIES, options: { field: "_size", min: 1 } },
+    ],
+  };
 
   static searchable = true;
   static extendable = true;
-  static slug = "medias";
   static scope = ModelEnvScopes.PROJECT;
-  static keyField = "name";
-  static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.REQUIRED, options: { field: "_mimetype" } },
-    { type: ValidatorTypes.REQUIRED, options: { field: "_originalname" } },
-    { type: ValidatorTypes.BOUNDARIES, options: { field: "_size", min: 1 } },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;

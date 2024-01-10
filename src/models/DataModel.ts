@@ -4,8 +4,8 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import {
   FieldsDefinition,
+  ModelDefinition,
   ValidatorDefinition,
-  ValidatorsDefinition,
 } from "../types";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
@@ -13,15 +13,17 @@ import ValidatorTypes from "../enums/validator-types";
 @modelDecorator()
 class DataModel extends Model {
   static __name = "DataModel";
-
   static slug = "datamodels";
+  static definition: ModelDefinition = {
+    keyField: "slug",
+    validators: [
+      { type: ValidatorTypes.DATAMODEL_KEY_FIELD },
+      { type: ValidatorTypes.DATAMODEL_SLUG },
+      { type: ValidatorTypes.DATAMODEL_FIELDS },
+    ],
+  };
+
   static scope = ModelEnvScopes.ENV;
-  static keyField = "slug";
-  static validators: ValidatorsDefinition = [
-    { type: ValidatorTypes.DATAMODEL_KEY_FIELD },
-    { type: ValidatorTypes.DATAMODEL_SLUG },
-    { type: ValidatorTypes.DATAMODEL_FIELDS },
-  ];
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;

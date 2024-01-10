@@ -1,24 +1,72 @@
-import { getFieldsPathsFromPath } from "../../lib/utils";
+import { crossModelTree, getFieldsPathsFromPath } from "../../lib/utils";
 import Model from "../../lib/Model";
 import FieldTypes from "../../enums/field-types";
-import { FieldsDefinition } from "../../types";
+import { FieldsDefinition, ModelDefinition } from "../../types";
+import { mockAdapter } from "../../lib/test-utils";
+import Account from "../../models/Account";
 
 describe("test utils", () => {
+  describe("crossModelTree", () => {
+    // it("should ...", () => {
+    //   const adapter = mockAdapter();
+    //   const model1 = Model.withAdapter(adapter);
+    //   const model1bis = class extends model1 {};
+    //   const model1bisbis = class extends model1bis {};
+    //   const model2 = model1bisbis.withAdapter(adapter);
+    //   const called = [];
+    //   crossModelTree(model2, (model) => called.push(model));
+    //   expect(called).toHaveLength(3);
+    //   expect(called).toContain(model2);
+    //   expect(called).not.toContain(model1bis);
+    //   expect(called).toContain(model1);
+    //   expect(called).toContain(Model);
+    // });
+    // it("should ...", () => {
+    //   const adapter = mockAdapter();
+    //   const model1 = Model.withAdapter(adapter);
+    //   const model1bis = class extends model1 {};
+    //   const model2 = model1bis.withAdapter(adapter);
+    //   const called = [];
+    //   crossModelTree(model2, (model) => called.push(model));
+    //   expect(called).toHaveLength(3);
+    //   expect(called).toContain(model2);
+    //   expect(called).not.toContain(model1bis);
+    //   expect(called).toContain(model1);
+    //   expect(called).toContain(Model);
+    // });
+    // it("should ...", () => {
+    //   const adapter = mockAdapter();
+    //   const model1 = Model.withAdapter(adapter);
+    //   const model1bis = class extends model1 {};
+    //   const model1bisbis = class extends model1bis {};
+    //   const called = [];
+    //   crossModelTree(model1bisbis, (model) => called.push(model));
+    //   expect(called).toHaveLength(2);
+    //   expect(called).not.toContain(model1bis);
+    //   expect(called).toContain(model1);
+    //   expect(called).toContain(Model);
+    // });
+  });
+
   describe("getFieldsPathsFromPath", () => {
     it("should returns single array entry for one field", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.ARRAY,
-            options: {
-              __label: "field1",
-              items: {
-                type: FieldTypes.TEXT,
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
 
       const fPath = getFieldsPathsFromPath(model, "field1");
 
@@ -30,23 +78,21 @@ describe("test utils", () => {
 
     it("should decode nested array fields", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.ARRAY,
-            options: {
-              __label: "field1",
-              items: {
-                type: FieldTypes.ARRAY,
-                options: {
-                  __label: "field1bis",
-                  items: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      fields: {
-                        field2: {
-                          type: FieldTypes.TEXT,
-                          options: {
-                            __label: "field2",
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.NESTED,
+                      options: {
+                        fields: {
+                          field2: {
+                            type: FieldTypes.TEXT,
+                            options: {},
                           },
                         },
                       },
@@ -56,8 +102,17 @@ describe("test utils", () => {
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.__label =
+        "field1bis";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.items.options.__label =
+        "field1bisbis";
 
       const fPath1 = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -91,21 +146,26 @@ describe("test utils", () => {
 
     it("should decode array items field", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.ARRAY,
-            options: {
-              __label: "field1",
-              items: {
-                type: FieldTypes.TEXT,
-                options: {
-                  __label: "field1bis",
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                  options: {},
                 },
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.__label =
+        "field1bis";
 
       const fPath = getFieldsPathsFromPath(model, "field1.[]");
 
@@ -119,21 +179,26 @@ describe("test utils", () => {
 
     it("should decode array items field with index", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.ARRAY,
-            options: {
-              __label: "field1",
-              items: {
-                type: FieldTypes.TEXT,
-                options: {
-                  __label: "field1bis",
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                  options: {},
                 },
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.__label =
+        "field1bis";
 
       const fPath = getFieldsPathsFromPath(model, "field1.[0]");
 
@@ -147,23 +212,28 @@ describe("test utils", () => {
 
     it("should decode json fields field", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.NESTED,
-            options: {
-              __label: "field1",
-              fields: {
-                field2: {
-                  type: FieldTypes.TEXT,
-                  options: {
-                    __label: "field2",
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  field2: {
+                    type: FieldTypes.TEXT,
+                    options: {},
                   },
                 },
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-ignore
+      model.definition.fields.field1.options.fields.field2.options.__label =
+        "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -177,20 +247,18 @@ describe("test utils", () => {
 
     it("should decode json in array items field", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.ARRAY,
-            options: {
-              __label: "field1",
-              items: {
-                type: FieldTypes.NESTED,
-                options: {
-                  __label: "field1bis",
-                  fields: {
-                    field2: {
-                      type: FieldTypes.TEXT,
-                      options: {
-                        __label: "field2",
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      field2: {
+                        type: FieldTypes.TEXT,
+                        options: {},
                       },
                     },
                   },
@@ -198,8 +266,17 @@ describe("test utils", () => {
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.__label =
+        "field1bis";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.fields.field2.options.__label =
+        "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -226,20 +303,18 @@ describe("test utils", () => {
 
     it("should return null field for invalid path", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.ARRAY,
-            options: {
-              __label: "field1",
-              items: {
-                type: FieldTypes.NESTED,
-                options: {
-                  __label: "field1bis",
-                  fields: {
-                    field2: {
-                      type: FieldTypes.TEXT,
-                      options: {
-                        __label: "field2",
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      field2: {
+                        type: FieldTypes.TEXT,
+                        options: {},
                       },
                     },
                   },
@@ -247,8 +322,17 @@ describe("test utils", () => {
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.__label =
+        "field1bis";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.fields.field2.options.__label =
+        "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2.field3");
 
@@ -278,35 +362,29 @@ describe("test utils", () => {
 
     it("should decode complex schema fields", () => {
       const model = class extends Model {
-        static fields = {
-          field1: {
-            type: FieldTypes.ARRAY,
-            options: {
-              __label: "field1",
-              items: {
-                type: FieldTypes.NESTED,
-                options: {
-                  __label: "field1bis",
-                  fields: {
-                    field2: {
-                      type: FieldTypes.TEXT,
-                      options: {
-                        __label: "field2",
+        static definition: ModelDefinition = {
+          fields: {
+            field1: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      field2: {
+                        type: FieldTypes.TEXT,
+                        options: {},
                       },
-                    },
-                    field3: {
-                      type: FieldTypes.ARRAY,
-                      options: {
-                        __label: "field3",
-                        items: {
-                          type: FieldTypes.NESTED,
-                          options: {
-                            __label: "field3bis",
-                            fields: {
-                              field4: {
-                                type: FieldTypes.TEXT,
-                                options: {
-                                  __label: "field4",
+                      field3: {
+                        type: FieldTypes.ARRAY,
+                        options: {
+                          items: {
+                            type: FieldTypes.NESTED,
+                            options: {
+                              fields: {
+                                field4: {
+                                  type: FieldTypes.TEXT,
+                                  options: {},
                                 },
                               },
                             },
@@ -319,8 +397,26 @@ describe("test utils", () => {
               },
             },
           },
-        } as FieldsDefinition;
+        };
       };
+
+      // @ts-ignore
+      model.definition.fields.field1.options.__label = "field1";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.__label =
+        "field1bis";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.fields.field2.options.__label =
+        "field2";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.fields.field3.options.__label =
+        "field3";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.fields.field3.options.items.options.__label =
+        "field3bis";
+      // @ts-ignore
+      model.definition.fields.field1.options.items.options.fields.field3.options.items.options.fields.field4.options.__label =
+        "field4";
 
       const fPath = getFieldsPathsFromPath(model, "field1");
 

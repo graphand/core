@@ -347,7 +347,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
       let res;
 
-      if (model.single) {
+      if (model.isSingle()) {
         value = Array.isArray(value) ? value : [value];
 
         res = value.map((v, i) => {

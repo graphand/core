@@ -13,6 +13,8 @@ import {
   CoreError,
   DataModel,
   ErrorCodes,
+  Media,
+  ModelDefinition,
   PromiseModelList,
   SerializerFormat,
 } from "../../index";
@@ -128,9 +130,12 @@ describe("Test Model", () => {
       await expect(model.initialize()).rejects.toThrowError("test");
     });
 
-    it("Model initialization should use __initOptions", async () => {
-      const _model = mockModel();
-      const model = _model.withAdapter(adapter);
+    it("Model initialization should use initOptions", async () => {
+      const base = class extends Model {
+        static extendable: boolean = true;
+      };
+
+      const model = base.withAdapter(adapter);
 
       const initFn = jest.spyOn(model, "reloadModel");
 
@@ -157,18 +162,103 @@ describe("Test Model", () => {
 
       const initFn2 = jest.spyOn(model2, "reloadModel");
 
-      expect(initFn2).toBeCalledTimes(1);
+      expect(initFn2).toBeCalledTimes(0);
 
       await model2.initialize();
 
-      expect(initFn2).toBeCalledTimes(2);
+      expect(initFn2).toBeCalledTimes(1);
 
-      const lastCall2Args = initFn2.mock.calls[1][0];
+      const lastCall2Args = initFn2.mock.calls[0][0];
 
       expect(lastCall2Args?.datamodel).toBeInstanceOf(DataModel);
 
-      expect(model.keyField).toBeUndefined();
-      expect(model2.keyField).toEqual("test");
+      expect(model.getKeyField()).toEqual("_id");
+      expect(model2.getKeyField()).toEqual("test");
+    });
+
+    it("Model clone should override fields", async () => {
+      const model = class extends Data {
+        static slug = "test";
+        static definition: ModelDefinition = {
+          fields: {
+            test: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        };
+      }.withAdapter(adapter);
+
+      const fieldTest = model.fieldsMap.get("test");
+      expect(fieldTest).toBeInstanceOf(Field);
+      expect(fieldTest.type).toEqual(FieldTypes.TEXT);
+
+      const dm = await DataModel.withAdapter(adapter).create({
+        slug: "test",
+        fields: {
+          test: {
+            type: FieldTypes.NUMBER,
+          },
+          test2: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      const model2 = model.clone({
+        datamodel: dm,
+      });
+
+      await model2.initialize();
+
+      expect(model2.fieldsMap?.get("test2")).toBeInstanceOf(Field);
+      const fieldTest2 = model2.fieldsMap.get("test");
+      expect(fieldTest2).toBeInstanceOf(Field);
+      expect(fieldTest2.type).toEqual(FieldTypes.NUMBER);
+    });
+
+    it("Model.keyField is not overriden by datamodel if declared in inherited class", async () => {
+      const model = class extends Data {
+        static slug = "test";
+        static definition: ModelDefinition = {
+          keyField: "test",
+        };
+      }.withAdapter(adapter);
+
+      const dm = await DataModel.withAdapter(adapter).create({
+        slug: "test",
+        keyField: "test2",
+        fields: {
+          test2: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      const model2 = class extends model {
+        static slug = "test";
+      }.withAdapter(adapter);
+
+      await model2.initialize();
+
+      expect(model2.getKeyField()).toEqual("test");
+    });
+
+    it("Medias keyField is not overriden by datamodel", async () => {
+      const dm = await DataModel.withAdapter(adapter).create({
+        slug: Media.slug,
+        keyField: "test2",
+        fields: {
+          test2: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      const model = Media.withAdapter(adapter);
+      await model.initialize();
+
+      expect(model.fieldsMap.get("test2")).toBeInstanceOf(Field);
+      expect(model.getKeyField()).toEqual("name");
     });
   });
 
@@ -1179,7 +1269,7 @@ describe("Test Model", () => {
           },
         },
       });
-      BaseModelWithKeyField.keyField = "title";
+      BaseModelWithKeyField.definition.keyField = "title";
       const TestModel = BaseModelWithKeyField.withAdapter(adapter);
 
       const keyFieldValidator = TestModel.validatorsArray.find(
@@ -1200,7 +1290,7 @@ describe("Test Model", () => {
           { type: ValidatorTypes.REQUIRED, options: { field: "title" } },
         ],
       });
-      BaseModelWithKeyField.keyField = "title";
+      BaseModelWithKeyField.definition.keyField = "title";
       const TestModel = BaseModelWithKeyField.withAdapter(adapter);
 
       const validators = TestModel.validatorsArray;
@@ -1493,7 +1583,7 @@ describe("Test Model", () => {
   });
 
   describe("Model baseClass", () => {
-    it("should keep baseClass when withAdapter", () => {
+    it("should keep baseClass with withAdapter", () => {
       let model = BaseModel;
 
       expect(model.getBaseClass()).toBe(BaseModel);
@@ -1848,7 +1938,7 @@ describe("Test Model", () => {
 
       const TestModel = Data.getFromDatamodel(dm);
 
-      expect(TestModel.single).toBeTruthy();
+      expect(TestModel.isSingle()).toBeTruthy();
 
       expect(TestModel.slug).toEqual(dm.slug);
 
@@ -1889,7 +1979,7 @@ describe("Test Model", () => {
 
       await TestModel.reloadModel();
 
-      expect(TestModel.keyField).toEqual("field1");
+      expect(TestModel.getKeyField()).toEqual("field1");
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
@@ -1902,7 +1992,7 @@ describe("Test Model", () => {
 
       await TestModel.reloadModel();
 
-      expect(TestModel.keyField).toEqual("field2");
+      expect(TestModel.getKeyField()).toEqual("field2");
 
       expect(TestModel.fieldsKeys).not.toContain("field1");
 

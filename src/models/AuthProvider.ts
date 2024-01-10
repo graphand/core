@@ -3,17 +3,23 @@ import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
-import { AuthProviderRegisterOptions, AuthProviderOptions } from "../types";
+import {
+  AuthProviderRegisterOptions,
+  AuthProviderOptions,
+  ModelDefinition,
+} from "../types";
 import AuthProviders from "../enums/auth-providers";
 import Role from "./Role";
 
 @modelDecorator()
 class AuthProvider<T extends AuthProviders = AuthProviders> extends Model {
   static __name = "AuthProvider";
-
   static slug = "authProviders";
+  static definition: ModelDefinition = {
+    keyField: "type",
+  };
+
   static scope = ModelEnvScopes.ENV;
-  static keyField = "type";
 
   @fieldDecorator(FieldTypes.TEXT, {
     options: Object.values(AuthProviders),

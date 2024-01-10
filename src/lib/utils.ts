@@ -28,6 +28,23 @@ import ValidationFieldError from "./ValidationFieldError";
 import ValidationError from "./ValidationError";
 import type DataModel from "../models/DataModel";
 
+export const crossModelTree = (
+  _model: typeof Model,
+  cb: (model: typeof Model) => void
+) => {
+  let model = _model;
+
+  do {
+    // model = model.getBaseClass();
+    cb(model);
+
+    // @ts-ignore
+    model = model.__proto__;
+  } while (model && model !== Model);
+
+  cb(Model);
+};
+
 /**
  * The function `getRecursiveFieldsFromModel` retrieves all fields from a model and its base classes
  * recursively.
@@ -38,18 +55,15 @@ import type DataModel from "../models/DataModel";
 export const getRecursiveFieldsFromModel = (
   model: typeof Model
 ): FieldsDefinition => {
-  const fields = {};
+  let fields = {};
 
-  do {
-    const baseClass = model.getBaseClass();
-    if (baseClass.hasOwnProperty("fields")) {
-      const _modelFields = baseClass.fields || {};
-      Object.assign(fields, _modelFields);
+  crossModelTree(model, (m) => {
+    if (m.hasOwnProperty("definition")) {
+      const _modelFields = m.definition.fields || {};
+
+      fields = { ..._modelFields, ...fields };
     }
-
-    // @ts-ignore
-    model = baseClass.__proto__;
-  } while (model?.getBaseClass);
+  });
 
   return fields;
 };
@@ -65,22 +79,17 @@ export const getRecursiveValidatorsFromModel = (
   model: typeof Model
 ): ValidatorsDefinition => {
   const validators: ValidatorsDefinition = [];
-  const keyField = !model.single && model.keyField;
+  const keyField = model.getKeyField();
 
-  do {
-    const baseClass = model.getBaseClass();
-
-    if (baseClass.hasOwnProperty("validators")) {
-      const _modelValidators = baseClass.validators || [];
+  crossModelTree(model, (m) => {
+    if (m.hasOwnProperty("definition")) {
+      const _modelValidators = m.definition.validators || [];
 
       Array.prototype.push.apply(validators, _modelValidators);
     }
+  });
 
-    // @ts-ignore
-    model = baseClass.__proto__;
-  } while (model?.getBaseClass);
-
-  if (keyField) {
+  if (keyField && keyField !== "_id") {
     validators.push({
       type: ValidatorTypes.KEY_FIELD,
       options: { field: keyField },
@@ -118,7 +127,7 @@ export const getFieldsPathsFromPath = (
   pathArr = Array.isArray(pathArr) ? pathArr : pathArr.split(".");
 
   const firstFieldKey = pathArr.shift();
-  const firstField = model.fieldsMap.get(firstFieldKey);
+  const firstField = model.fieldsMap?.get(firstFieldKey);
   const adapter = model.getAdapter(false);
 
   return pathArr.reduce(
@@ -212,11 +221,9 @@ export const getRecursiveHooksFromModel = <
 ): Array<Hook<any, A, T>> => {
   const _hooks = [];
 
-  do {
-    const baseClass = model.getBaseClass();
-
-    if (baseClass.hasOwnProperty("__hooks")) {
-      const _modelHooks = Array.from(baseClass.__hooks || []).filter(
+  crossModelTree(model, (m) => {
+    if (m.hasOwnProperty("__hooks")) {
+      const _modelHooks = Array.from(m.__hooks || []).filter(
         (hook) => hook.action === action && hook.phase === phase
       );
 
@@ -225,27 +232,21 @@ export const getRecursiveHooksFromModel = <
       }
     }
 
-    if (
-      baseClass.hasOwnProperty("__validatorsArray") &&
-      baseClass.__validatorsArray
-    ) {
-      const _validatorsHooks = baseClass.__validatorsArray
-        .map((validator) => {
-          return validator.hooks
-            ?.filter((hook) => hook[1] === action && hook[0] === phase)
-            .map((hook) => parseValidatorHook(hook, validator));
-        })
-        .flat()
-        .filter(Boolean);
+    // if (m.hasOwnProperty("__validatorsArray") && m.__validatorsArray) {
+    //   const _validatorsHooks = m.__validatorsArray
+    //     .map((validator) => {
+    //       return validator.hooks
+    //         ?.filter((hook) => hook[1] === action && hook[0] === phase)
+    //         .map((hook) => parseValidatorHook(hook, validator));
+    //     })
+    //     .flat()
+    //     .filter(Boolean);
 
-      if (_validatorsHooks?.length) {
-        Array.prototype.push.apply(_hooks, _validatorsHooks);
-      }
-    }
-
-    // @ts-ignore
-    model = baseClass.__proto__;
-  } while (model?.getBaseClass);
+    //   if (_validatorsHooks?.length) {
+    //     Array.prototype.push.apply(_hooks, _validatorsHooks);
+    //   }
+    // }
+  });
 
   return _hooks.sort((a, b) => a.order - b.order);
 };
@@ -403,19 +404,12 @@ export const parseValidatorHook = (
 };
 
 /**
- * The `createFieldsMap` function creates a map of fields from a model, with the option to assign
- * additional fields.
+ * The `createFieldsMap` function creates a map of fields from a model/
  * @param model - The `model` parameter is the type of the model for which you want to create a fields
  * map. It is of type `typeof Model`.
- * @param {FieldsDefinition} [assignFields] - The `assignFields` parameter is an optional object that
- * contains additional fields to be added to the `modelFields` object. These additional fields will be
- * merged with the existing fields in the `modelFields` object using `Object.assign()`.
  * @returns The function `createFieldsMap` returns a `Map` object.
  */
-export const createFieldsMap = (
-  model: typeof Model,
-  assignFields?: FieldsDefinition
-) => {
+export const createFieldsMap = (model: typeof Model) => {
   const modelFields = getRecursiveFieldsFromModel(model);
 
   if (!model.systemFields) {
@@ -423,10 +417,6 @@ export const createFieldsMap = (
     delete modelFields._createdBy;
     delete modelFields._updatedAt;
     delete modelFields._updatedBy;
-  }
-
-  if (assignFields) {
-    Object.assign(modelFields, assignFields);
   }
 
   const map = new Map();
@@ -444,24 +434,16 @@ export const createFieldsMap = (
 };
 
 /**
- * The function `createValidatorsArray` takes a model and optional assigned validators, and returns an
- * array of validators based on the model and assigned validators.
+ * The function `createValidatorsArray` takes a model and returns an
+ * array of validators based on the model.
  * @param model - The `model` parameter is the type of the model for which validators are being
  * created. It is of type `typeof Model`.
- * @param {ValidatorsDefinition} [assignValidators] - The `assignValidators` parameter is an optional
- * parameter of type `ValidatorsDefinition`. It is used to assign additional validators to the
- * `modelValidators` array.
  * @returns The function `createValidatorsArray` returns an array of `Validator` objects.
  */
 export const createValidatorsArray = (
-  model: typeof Model,
-  assignValidators?: ValidatorsDefinition
+  model: typeof Model
 ): Array<Validator> => {
   let modelValidators = getRecursiveValidatorsFromModel(model);
-
-  if (assignValidators?.length) {
-    modelValidators = [...modelValidators, ...assignValidators];
-  }
 
   const adapter = model.getAdapter(false);
 
@@ -1229,23 +1211,29 @@ export const crossFields = (
   return crossFields;
 };
 
-export const assignDataModel = async <T extends typeof Model>(
+export const assignDatamodel = async <T extends typeof Model>(
   model: T,
   datamodel: DataModel
 ) => {
-  if (datamodel.keyField) {
-    model.keyField = datamodel.keyField;
-  } else {
-    delete model.keyField;
+  if (!datamodel) {
+    model.definition = {};
+    model.__dm = null;
+    return;
   }
 
-  model.single = Boolean(datamodel.single);
+  model.definition = {
+    single: Boolean(datamodel.single),
+    keyField: datamodel.keyField,
+    fields: datamodel.fields,
+    validators: datamodel.validators,
+  };
 
-  model.__fieldsMap = createFieldsMap(model, datamodel.fields);
-  model.__validatorsArray = createValidatorsArray(model, datamodel.validators);
+  model.__fieldsMap = createFieldsMap(model);
+  model.__validatorsArray = createValidatorsArray(model);
 
   delete model.__fieldsProperties;
   delete model.__fieldsKeys;
+  model.__dm = String(datamodel._id);
 };
 
 export const getModelInitPromise = (

@@ -9,7 +9,6 @@ import JobStatus from "../enums/job-status";
 @modelDecorator()
 class Job extends Model {
   static __name = "Job";
-
   static slug = "jobs";
   static scope = ModelEnvScopes.PROJECT;
 
