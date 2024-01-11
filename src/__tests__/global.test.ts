@@ -1,4 +1,3 @@
-import { ObjectId } from "bson";
 import ValidatorTypes from "../enums/validator-types";
 import FieldTypes from "../enums/field-types";
 import ValidationError from "../lib/ValidationError";
@@ -8,8 +7,7 @@ import {
   mockModel,
 } from "../lib/test-utils";
 import DataModel from "../models/DataModel";
-import { Account, Data, Environment, models } from "..";
-import { faker } from "@faker-js/faker";
+import { Data, Environment, models } from "..";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -19,27 +17,16 @@ describe("Global tests", () => {
     const model = DataModel.withAdapter(adapter);
 
     await expect(
-      model.validate([new model({ slug, fields: "toto" })])
+      model.validate([new model({ slug, definition: { fields: "toto" } })])
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
         new model({
           slug,
-          fields: {
-            field1: "toto",
-          },
-        }),
-      ])
-    ).rejects.toThrow(ValidationError);
-
-    await expect(
-      model.validate([
-        new model({
-          slug,
-          fields: {
-            field1: {
-              type: {},
+          definition: {
+            fields: {
+              field1: "toto",
             },
           },
         }),
@@ -50,9 +37,26 @@ describe("Global tests", () => {
       model.validate([
         new model({
           slug,
-          fields: {
-            field1: {
-              type: "invalid",
+          definition: {
+            fields: {
+              field1: {
+                type: {},
+              },
+            },
+          },
+        }),
+      ])
+    ).rejects.toThrow(ValidationError);
+
+    await expect(
+      model.validate([
+        new model({
+          slug,
+          definition: {
+            fields: {
+              field1: {
+                type: "invalid",
+              },
             },
           },
         }),
@@ -67,26 +71,30 @@ describe("Global tests", () => {
     const model = DataModel.withAdapter(adapter);
 
     await expect(
-      model.validate([new model({ slug, validators: "toto" })])
+      model.validate([new model({ slug, definition: { validators: "toto" } })])
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      model.validate([new model({ slug, validators: {} })])
+      model.validate([new model({ slug, definition: { validators: {} } })])
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      model.validate([new model({ slug, validators: ["required"] })])
+      model.validate([
+        new model({ slug, definition: { validators: ["required"] } }),
+      ])
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
         new model({
           slug,
-          validators: [
-            {
-              type: "invalid",
-            },
-          ],
+          definition: {
+            validators: [
+              {
+                type: "invalid",
+              },
+            ],
+          },
         }),
       ])
     ).rejects.toThrow(ValidationError);
@@ -102,72 +110,74 @@ describe("Global tests", () => {
       model.validate([
         new model({
           slug,
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {},
-            },
-            relSingle: {
-              type: FieldTypes.RELATION,
-              options: {
-                ref: "ref",
+          definition: {
+            fields: {
+              title: {
+                type: FieldTypes.TEXT,
+                options: {},
               },
-            },
-            relMultiple: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: "ref",
-                  },
+              relSingle: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: "ref",
                 },
               },
-            },
-            obj: {
-              type: FieldTypes.NESTED,
-              options: {
-                fields: {
-                  relSingle: {
+              relMultiple: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  items: {
                     type: FieldTypes.RELATION,
                     options: {
                       ref: "ref",
                     },
                   },
-                  relMultiple: {
-                    type: FieldTypes.ARRAY,
-                    options: {
-                      items: {
-                        type: FieldTypes.RELATION,
-                        options: {
-                          ref: "ref",
+                },
+              },
+              obj: {
+                type: FieldTypes.NESTED,
+                options: {
+                  fields: {
+                    relSingle: {
+                      type: FieldTypes.RELATION,
+                      options: {
+                        ref: "ref",
+                      },
+                    },
+                    relMultiple: {
+                      type: FieldTypes.ARRAY,
+                      options: {
+                        items: {
+                          type: FieldTypes.RELATION,
+                          options: {
+                            ref: "ref",
+                          },
                         },
                       },
                     },
                   },
                 },
               },
-            },
-            objArr: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.NESTED,
-                  options: {
-                    fields: {
-                      relSingle: {
-                        type: FieldTypes.RELATION,
-                        options: {
-                          ref: "ref",
+              objArr: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  items: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        relSingle: {
+                          type: FieldTypes.RELATION,
+                          options: {
+                            ref: "ref",
+                          },
                         },
-                      },
-                      relMultiple: {
-                        type: FieldTypes.ARRAY,
-                        options: {
-                          items: {
-                            type: FieldTypes.RELATION,
-                            options: {
-                              ref: "ref",
+                        relMultiple: {
+                          type: FieldTypes.ARRAY,
+                          options: {
+                            items: {
+                              type: FieldTypes.RELATION,
+                              options: {
+                                ref: "ref",
+                              },
                             },
                           },
                         },
@@ -601,10 +611,12 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     await DataModel.withAdapter(adapter).create({
       slug: models.Media.slug,
-      fields: {
-        title: {
-          type: FieldTypes.TEXT,
-          options: {},
+      definition: {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {},
+          },
         },
       },
     });
@@ -619,7 +631,9 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     await DataModel.withAdapter(adapter).create({
       slug: models.Media.slug,
-      validators: [],
+      definition: {
+        validators: [],
+      },
     });
 
     const mediaModel = models.Media.withAdapter(adapter);
@@ -725,15 +739,17 @@ describe("Global tests", () => {
       DataModel.withAdapter(adapter).validate([
         {
           slug: generateRandomString(),
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {},
-            },
-            subtitle: {
-              type: FieldTypes.TEXT,
-              options: {},
+          definition: {
+            keyField: "title",
+            fields: {
+              title: {
+                type: FieldTypes.TEXT,
+                options: {},
+              },
+              subtitle: {
+                type: FieldTypes.TEXT,
+                options: {},
+              },
             },
           },
         },
@@ -747,23 +763,27 @@ describe("Global tests", () => {
       DataModel.withAdapter(adapter).validate([
         {
           slug: generateRandomString(),
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {},
+          definition: {
+            keyField: "title",
+            fields: {
+              title: {
+                type: FieldTypes.TEXT,
+                options: {},
+              },
             },
+            validators: [
+              {
+                type: "required",
+                options: { field: "title" },
+              },
+            ],
           },
-          validators: [
-            {
-              type: "required",
-              options: { field: "title" },
-            },
-          ],
         },
         {
           slug: generateRandomString(),
-          fields: {},
+          definition: {
+            fields: {},
+          },
         },
       ])
     ).resolves.toBeTruthy();
@@ -772,41 +792,45 @@ describe("Global tests", () => {
       DataModel.withAdapter(adapter).validate([
         {
           slug: generateRandomString(),
-          keyField: "title",
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {},
+          definition: {
+            keyField: "title",
+            fields: {
+              title: {
+                type: FieldTypes.TEXT,
+                options: {},
+              },
             },
+            validators: [
+              {
+                type: "required",
+                options: { field: "title" },
+              },
+            ],
           },
-          validators: [
-            {
-              type: "required",
-              options: { field: "title" },
-            },
-          ],
         },
         {
           slug: generateRandomString(),
-          fields: {},
-          validators: [],
+          definition: {
+            fields: {},
+            validators: [],
+          },
         },
       ])
     ).resolves.toBeTruthy();
   });
 
-  it("should not be able to create datamodel with non-extendable core model name", async () => {
+  it("should not be able to create datamodel with non-extensible core model name", async () => {
     const adapter = mockAdapter();
 
-    const extendableModels = Object.values(models)
-      .filter((model) => model.extendable)
+    const extensibleModels = Object.values(models)
+      .filter((model) => model.extensible)
       .map((model) => model.slug);
 
     const nonExtendableModels = Object.values(models)
-      .filter((model) => !model.extendable)
+      .filter((model) => !model.extensible)
       .map((model) => model.slug);
 
-    for (const slug of extendableModels) {
+    for (const slug of extensibleModels) {
       await expect(
         DataModel.withAdapter(adapter).validate([{ slug }])
       ).resolves.toBeTruthy();
@@ -826,9 +850,11 @@ describe("Global tests", () => {
       DataModel.withAdapter(adapter).validate([
         {
           slug: generateRandomString(),
-          fields: {
-            "invalid name": {
-              type: FieldTypes.TEXT,
+          definition: {
+            fields: {
+              "invalid name": {
+                type: FieldTypes.TEXT,
+              },
             },
           },
         },
@@ -839,9 +865,11 @@ describe("Global tests", () => {
       DataModel.withAdapter(adapter).validate([
         {
           slug: generateRandomString(),
-          fields: {
-            _invalidName: {
-              type: FieldTypes.TEXT,
+          definition: {
+            fields: {
+              _invalidName: {
+                type: FieldTypes.TEXT,
+              },
             },
           },
         },
@@ -855,11 +883,13 @@ describe("Global tests", () => {
     const slug = generateRandomString();
     const dm = await DataModel.withAdapter(adapter).create({
       slug,
-      fields: {
-        title: {
-          type: FieldTypes.TEXT,
-          options: {
-            default: "defaultTitle",
+      definition: {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "defaultTitle",
+            },
           },
         },
       },
@@ -873,11 +903,13 @@ describe("Global tests", () => {
     await dm.update({
       $set: {
         slug,
-        fields: {
-          title: {
-            type: FieldTypes.TEXT,
-            options: {
-              default: "newDefaultTitle",
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                default: "newDefaultTitle",
+              },
             },
           },
         },

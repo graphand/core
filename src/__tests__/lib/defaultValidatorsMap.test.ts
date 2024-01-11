@@ -500,9 +500,11 @@ describe("test validatorsMap", () => {
     it("datamodel without keyField should not throw error", async () => {
       const datamodel = DataModel.create({
         slug: generateRandomString(),
-        fields: {
-          title: {
-            type: FieldTypes.TEXT,
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
       });
@@ -513,12 +515,14 @@ describe("test validatorsMap", () => {
     it("datamodel with keyField and valid keyField field should not throw error", async () => {
       const datamodel = DataModel.create({
         slug: generateRandomString(),
-        fields: {
-          title: {
-            type: FieldTypes.TEXT,
+        definition: {
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
-        keyField: "title",
       });
 
       await expect(datamodel).resolves.toBeInstanceOf(DataModel);
@@ -527,7 +531,9 @@ describe("test validatorsMap", () => {
     it("datamodel with keyField and not existing field should throw error", async () => {
       const datamodel = DataModel.create({
         slug: generateRandomString(),
-        keyField: "title",
+        definition: {
+          keyField: "title",
+        },
       });
 
       await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
@@ -536,39 +542,45 @@ describe("test validatorsMap", () => {
     it("datamodel with keyField and invalid keyField field should throw error", async () => {
       const datamodel1 = DataModel.create({
         slug: generateRandomString(),
-        fields: {
-          title: {
-            type: FieldTypes.TEXT,
+        definition: {
+          keyField: "test",
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
-        keyField: "test",
       });
 
       await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
 
       const datamodel2 = DataModel.create({
         slug: generateRandomString(),
-        fields: {
-          title: {
-            type: FieldTypes.TEXT,
-            options: {
-              default: "default",
+        definition: {
+          fields: {
+            keyField: "title",
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                default: "default",
+              },
             },
           },
         },
-        keyField: "title",
       });
 
       await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
 
       const datamodel3 = DataModel.create({
         slug: generateRandomString(),
-        fields: {
-          title: {
-            type: FieldTypes.NUMBER,
+        definition: {
+          keyField: "title",
+          fields: {
+            title: {
+              type: FieldTypes.NUMBER,
+            },
           },
         },
-        keyField: "title",
       });
 
       await expect(datamodel3).rejects.toBeInstanceOf(ValidationError);

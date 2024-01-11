@@ -20,7 +20,7 @@ class Media extends Model {
   };
 
   static searchable = true;
-  static extendable = true;
+  static extensible = true;
   static scope = ModelEnvScopes.PROJECT;
 
   @fieldDecorator(FieldTypes.TEXT)

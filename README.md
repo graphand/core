@@ -9,6 +9,62 @@ Voici les concepts de base de cette librairie :
 Chaque modèle (`src/models/*.ts`) est une classe qui étend la classe de base `Model` (qui contient elle même les méthodes de base nécessaires au fonctionnement de core telles que les actions de crud, getters, setters, etc.)
 Pour être utilisés correctement, les modèles ont besoin d'un adaptateur (classe `Adapter`) qui définit la manière dont le modèle interagit avec les données dans son contexte (fonctionnement différent sur le client et sur le serveur).
 
+La définition d'un modèle (type `ModelDefinition`) est définie par le champ `Model.definition` et contient les attributs suivants :
+
+- `keyField`: le champ qui sert de clé primaire pour ce modèle (en plus de l'attribut `_id` qui est toujours présent)
+- `fields`: les champs de ce modèle (type `FieldsDefinition`)
+- `validators`: les validateurs de ce modèle (type `ValidatorsDefinition`)
+- `single`: si le modèle est un singleton (un seul élément de ce modèle peut exister)
+
+Si le modèle est extensible (`Model.extensible`), Graphand cherchera un datamodel ayant le même slug pour lui associer sa définition lors de l'initialisation du modèle (`Model.initialize`).
+Les modèles extensibles sont `Account`, `Media` et `Data`. Il est donc possible de créer un datamodel ayant le slug `accounts` pour étendre le modèle `Account` et ajouter des champs à ce modèle.
+Pour créer un modèle custom, il faut créer un datamodel et définir une classe qui étend le modèle de base `Data` avec le slug du datamodel.
+
+### Exemple
+
+````ts
+await DataModel.create({
+  slug: "list",
+  definition: {
+    keyField: "title",
+    fields: {
+      title: {
+        type: FieldTypes.TEXT,
+      },
+      description: {
+        type: FieldTypes.TEXT,
+      },
+    },
+    validators: [
+      {
+        type: ValidatorTypes.REQUIRED,
+        options: {
+          field: "title",
+        }
+      },
+    ]
+  },
+});
+
+class ListModel extends Data {
+  static slug = "list";
+}
+
+await ListModel.initialize(); // Charge la définition du datamodel "list" et l'associe au modèle
+
+console.log(ListModel.fieldsMap.has("title")); // true
+```
+
+### Champs
+
+Les champs du modèle sont définis dans `Model.definition.fields` ...
+TODO
+
+### Validateurs
+
+Les validateurs du modèle sont définis dans `Model.definition.validators` ...
+TODO
+
 ### Scope du modèle
 
 Chaque modèle est associé à un scope (global, project ou env).
@@ -32,7 +88,7 @@ C'est cette fonction qui est appelée under the hood par le client avec la méth
 class ServerAdapter extends Adapter {} // ServerAdapter décrit comment les modèles interagissent avec les données sur le serveur
 
 const AccountModel = Account.withAdapter(ServerAdapter); // maintenant AccountModel sait comment lire/écrire des données et est utilisable
-```
+````
 
 la variable globale **GLOBAL_ADAPTER** peut être utilisée pour définir un adaptateur par défaut pour tous les modèles. La méthode `Client.prototype.declareGlobally` utilise cette variable pour permettre d'utiliser les modèles avec l'adaptateur du client en question sans avoir à appeler `Client.prototype.getModel` à chaque fois.
 
@@ -126,11 +182,10 @@ Les types de champs sont tous dans l'enum `ValidatorTypes` :
 - _ValidatorTypes.REGEX_
 - _ValidatorTypes.SAMPLE_
 - _ValidatorTypes.KEY_FIELD_
-- _ValidatorTypes.DATAMODEL_KEY_FIELD_
 - _ValidatorTypes.DATAMODEL_SLUG_
-- _ValidatorTypes.DATAMODEL_FIELDS_
+- _ValidatorTypes.DATAMODEL_DEFINITION_
 
-Les validateurs `DATAMODEL_KEY_FIELD`, `DATAMODEL_SLUG` et `DATAMODEL_FIELDS` sont des validateurs spéciaux qui sont utilisés seulement par le modèle `DataModel` pour vérifier que les champs `keyField`, `slug` et `fields` sont valides.
+Les validateurs `DATAMODEL_SLUG` et `DATAMODEL_DEFINITION_` sont des validateurs spéciaux qui sont utilisés seulement par le modèle `DataModel` pour vérifier que les champs `slug` et `definition` sont valides.
 
 ### `Adapter.prototype.runValidators`
 

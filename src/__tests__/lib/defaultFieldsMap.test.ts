@@ -70,6 +70,21 @@ describe("test fieldsMap", () => {
       expect(typeof i.title).toBe("string");
     });
 
+    it("Should not be able to save an _id in a TEXT field", async () => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      }).withAdapter(adapter);
+      await model.initialize();
+
+      const i = new model({ title: String(new ObjectId()) });
+
+      await expect(model.validate([i])).rejects.toThrow(ValidationError);
+    });
+
     describe("options.options", () => {
       it("Should returns value within options", async () => {
         const options = [
@@ -288,15 +303,17 @@ describe("test fieldsMap", () => {
 
       const i = await model.create({
         slug: generateRandomString(),
-        fields: {
-          test: {
-            type: FieldTypes.NESTED,
+        definition: {
+          fields: {
+            test: {
+              type: FieldTypes.NESTED,
+            },
           },
         },
       });
-      expect(i.get("fields.test.options", SerializerFormat.JSON)).toBe(
-        undefined
-      );
+      expect(
+        i.get("definition.fields.test.options", SerializerFormat.JSON)
+      ).toBe(undefined);
     });
 
     it("Should not bind default values in document format", async () => {

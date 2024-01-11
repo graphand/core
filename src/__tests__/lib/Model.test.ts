@@ -17,7 +17,7 @@ import {
   ModelDefinition,
   PromiseModelList,
   SerializerFormat,
-} from "../../index";
+} from "../..";
 import {
   getRecursiveValidatorsFromModel,
   getAdaptedModel,
@@ -132,7 +132,7 @@ describe("Test Model", () => {
 
     it("Model initialization should use initOptions", async () => {
       const base = class extends Model {
-        static extendable: boolean = true;
+        static extensible: boolean = true;
       };
 
       const model = base.withAdapter(adapter);
@@ -156,7 +156,9 @@ describe("Test Model", () => {
 
       const model2 = model.clone({
         datamodel: new DataModel({
-          keyField: "test",
+          definition: {
+            keyField: "test",
+          },
         }),
       });
 
@@ -194,12 +196,14 @@ describe("Test Model", () => {
 
       const dm = await DataModel.withAdapter(adapter).create({
         slug: "test",
-        fields: {
-          test: {
-            type: FieldTypes.NUMBER,
-          },
-          test2: {
-            type: FieldTypes.TEXT,
+        definition: {
+          fields: {
+            test: {
+              type: FieldTypes.NUMBER,
+            },
+            test2: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
       });
@@ -226,10 +230,12 @@ describe("Test Model", () => {
 
       const dm = await DataModel.withAdapter(adapter).create({
         slug: "test",
-        keyField: "test2",
-        fields: {
-          test2: {
-            type: FieldTypes.TEXT,
+        definition: {
+          keyField: "test2",
+          fields: {
+            test2: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
       });
@@ -246,10 +252,12 @@ describe("Test Model", () => {
     it("Medias keyField is not overriden by datamodel", async () => {
       const dm = await DataModel.withAdapter(adapter).create({
         slug: Media.slug,
-        keyField: "test2",
-        fields: {
-          test2: {
-            type: FieldTypes.TEXT,
+        definition: {
+          keyField: "test2",
+          fields: {
+            test2: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
       });
@@ -1898,9 +1906,11 @@ describe("Test Model", () => {
     it("should load fields from datamodel", async () => {
       const dm = await DataModel.withAdapter(adapter).create({
         slug: generateRandomString(),
-        fields: {
-          field1: {
-            type: FieldTypes.TEXT,
+        definition: {
+          fields: {
+            field1: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
       });
@@ -1913,7 +1923,7 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      dm.getDoc().fields = {
+      dm.definition.fields = {
         field2: {
           type: FieldTypes.TEXT,
         },
@@ -1928,10 +1938,12 @@ describe("Test Model", () => {
     it("should load fields from single datamodel", async () => {
       const dm = await DataModel.withAdapter(adapter).create({
         slug: generateRandomString(),
-        single: true,
-        fields: {
-          field1: {
-            type: FieldTypes.TEXT,
+        definition: {
+          single: true,
+          fields: {
+            field1: {
+              type: FieldTypes.TEXT,
+            },
           },
         },
       });
@@ -1946,7 +1958,7 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      dm.getDoc().fields = {
+      dm.definition.fields = {
         field2: {
           type: FieldTypes.TEXT,
         },
@@ -1961,18 +1973,20 @@ describe("Test Model", () => {
     it("should support for keyField change", async () => {
       const dm = await DataModel.withAdapter(adapter).create({
         slug: generateRandomString(),
-        keyField: "field1",
-        fields: {
-          field1: {
-            type: FieldTypes.TEXT,
+        definition: {
+          keyField: "field1",
+          fields: {
+            field1: {
+              type: FieldTypes.TEXT,
+            },
           },
+          validators: [
+            {
+              type: "required",
+              options: { field: "field1" },
+            },
+          ],
         },
-        validators: [
-          {
-            type: "required",
-            options: { field: "field1" },
-          },
-        ],
       });
 
       const TestModel = Data.getFromDatamodel(dm);
@@ -1983,8 +1997,8 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      dm.getDoc().keyField = "field2";
-      dm.getDoc().fields = {
+      dm.definition.keyField = "field2";
+      dm.definition.fields = {
         field2: {
           type: FieldTypes.TEXT,
         },

@@ -180,7 +180,7 @@ export const mockAdapter = ({
 export const mockModel = ({
   scope = ModelEnvScopes.ENV,
   allowMultipleOperations = true,
-  extendable = false,
+  extensible = false,
   single = false,
   fields = {
     title: {
@@ -199,7 +199,7 @@ export const mockModel = ({
 }: {
   scope?: ModelEnvScopes;
   allowMultipleOperations?: boolean;
-  extendable?: boolean;
+  extensible?: boolean;
   fields?: FieldsDefinition;
   validators?: ValidatorsDefinition;
   single?: boolean;
@@ -207,7 +207,7 @@ export const mockModel = ({
   const uidSlug = "a" + Math.random().toString(36).substring(7);
 
   class Test extends Model {
-    static extendable = extendable;
+    static extensible = extensible;
     static slug = uidSlug;
     static scope = scope;
     static allowMultipleOperations = allowMultipleOperations;

@@ -7,13 +7,13 @@ import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 import User from "./User";
 import Patterns from "../enums/patterns";
-import { ModelDefinition } from "src/types";
+import { ModelDefinition } from "../types";
 
 @modelDecorator()
 class Account extends Model {
   static __name = "Account";
   static searchable = true;
-  static extendable = true;
+  static extensible = true;
   static scope = ModelEnvScopes.ENV;
 
   static slug = "accounts";

@@ -7,45 +7,24 @@ import Account from "../../models/Account";
 
 describe("test utils", () => {
   describe("crossModelTree", () => {
-    // it("should ...", () => {
-    //   const adapter = mockAdapter();
-    //   const model1 = Model.withAdapter(adapter);
-    //   const model1bis = class extends model1 {};
-    //   const model1bisbis = class extends model1bis {};
-    //   const model2 = model1bisbis.withAdapter(adapter);
-    //   const called = [];
-    //   crossModelTree(model2, (model) => called.push(model));
-    //   expect(called).toHaveLength(3);
-    //   expect(called).toContain(model2);
-    //   expect(called).not.toContain(model1bis);
-    //   expect(called).toContain(model1);
-    //   expect(called).toContain(Model);
-    // });
-    // it("should ...", () => {
-    //   const adapter = mockAdapter();
-    //   const model1 = Model.withAdapter(adapter);
-    //   const model1bis = class extends model1 {};
-    //   const model2 = model1bis.withAdapter(adapter);
-    //   const called = [];
-    //   crossModelTree(model2, (model) => called.push(model));
-    //   expect(called).toHaveLength(3);
-    //   expect(called).toContain(model2);
-    //   expect(called).not.toContain(model1bis);
-    //   expect(called).toContain(model1);
-    //   expect(called).toContain(Model);
-    // });
-    // it("should ...", () => {
-    //   const adapter = mockAdapter();
-    //   const model1 = Model.withAdapter(adapter);
-    //   const model1bis = class extends model1 {};
-    //   const model1bisbis = class extends model1bis {};
-    //   const called = [];
-    //   crossModelTree(model1bisbis, (model) => called.push(model));
-    //   expect(called).toHaveLength(2);
-    //   expect(called).not.toContain(model1bis);
-    //   expect(called).toContain(model1);
-    //   expect(called).toContain(Model);
-    // });
+    it("should cross model parents until Model class", () => {
+      const adapter = mockAdapter();
+      const model1 = Model.withAdapter(adapter);
+      const model1bis = class extends model1 {};
+      const model1bisbis = class extends model1bis {};
+      const model2 = class extends model1bisbis {};
+
+      const called = [];
+
+      crossModelTree(model2, (model) => called.push(model));
+
+      expect(called).toContain(model2);
+      expect(called).toContain(model1bisbis);
+      expect(called).toContain(model1bis);
+      expect(called).toContain(model1);
+      expect(called).toContain(Model);
+      expect(called).toHaveLength(5);
+    });
   });
 
   describe("getFieldsPathsFromPath", () => {

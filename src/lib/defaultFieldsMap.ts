@@ -50,6 +50,10 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
         return !this.options.options.includes(value);
       }
 
+      if (isObjectId(value)) {
+        return true;
+      }
+
       return false;
     };
 

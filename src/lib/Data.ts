@@ -12,7 +12,7 @@ import { assignDatamodel, getModelInitPromise } from "./utils";
 @modelDecorator()
 class Data extends Model {
   static searchable = true;
-  static extendable = true; // A data class is extendable as it should be linked to a datamodel with the same slug
+  static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
   static scope = ModelEnvScopes.ENV;
 
   /**

@@ -5,6 +5,7 @@ import FieldTypes from "../enums/field-types";
 import Model from "./Model";
 import DataModel from "../models/DataModel";
 import Patterns from "../enums/patterns";
+import { isValidDefinition } from "./utils";
 
 const systemModels = [
   "accounts_authProviders",
@@ -137,42 +138,6 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
   }
 }
 
-class DefaultValidatorDatamodelKeyField extends Validator<ValidatorTypes.DATAMODEL_KEY_FIELD> {
-  async validate(list: Array<DataModel>, ctx: TransactionCtx = {}) {
-    const _isInvalid = (i: DataModel) => {
-      const keyField = i.get("keyField");
-
-      if (!keyField) {
-        return false;
-      }
-
-      const fields = i.get("fields");
-
-      if (!fields) {
-        return true;
-      }
-
-      const keyFieldField = fields[keyField];
-
-      if (!keyFieldField) {
-        return true;
-      }
-
-      if (keyFieldField.type !== FieldTypes.TEXT) {
-        return true;
-      }
-
-      if (keyFieldField.options?.default) {
-        return true;
-      }
-
-      return false;
-    };
-
-    return !list.some(_isInvalid);
-  }
-}
-
 class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
   async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
     const path = this.getFullPath();
@@ -233,28 +198,29 @@ class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_S
   }
 }
 
-class DefaultValidatorDatamodelFields extends Validator<ValidatorTypes.DATAMODEL_FIELDS> {
+class DefaultValidatorDatamodelDefinition extends Validator<ValidatorTypes.DATAMODEL_DEFINITION> {
   async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
-    const _isInvalid = (i: DataModel) => {
-      const fields = i.get("fields");
+    // const _isInvalid = (m: DataModel) => {
+    //   if (!isValidDefinition(m.definition)) {
+    //     return true;
+    //   }
 
-      if (!fields) {
-        return false;
-      }
+    //   const doc = m.getDoc() ?? {};
+    //   const keys = Object.keys(doc);
+    //   if (
+    //     ["fields", "validators", "keyField", "single"].some((k) =>
+    //       keys.includes(k)
+    //     )
+    //   ) {
+    //     console.warn(
+    //       `DataModel ${m.slug} has deprecated fields out of definition: ` +
+    //         JSON.stringify(doc)
+    //     );
+    //     return false;
+    //   }
+    // };
 
-      const keys = Object.keys(fields);
-
-      const regex = new RegExp(Patterns.SLUG);
-      for (const key of keys) {
-        if (!regex.test(key)) {
-          return true;
-        }
-      }
-
-      return false;
-    };
-
-    return !list.some(_isInvalid);
+    return !list.some((m: DataModel) => !isValidDefinition(m.definition));
   }
 }
 
@@ -263,9 +229,8 @@ const defaultValidatorsMap: Adapter["validatorsMap"] = {
   [ValidatorTypes.UNIQUE]: DefaultValidatorUnique,
   [ValidatorTypes.REGEX]: DefaultValidatorRegex,
   [ValidatorTypes.KEY_FIELD]: DefaultValidatorKeyField,
-  [ValidatorTypes.DATAMODEL_KEY_FIELD]: DefaultValidatorDatamodelKeyField,
   [ValidatorTypes.DATAMODEL_SLUG]: DefaultValidatorDatamodelSlug,
-  [ValidatorTypes.DATAMODEL_FIELDS]: DefaultValidatorDatamodelFields,
+  [ValidatorTypes.DATAMODEL_DEFINITION]: DefaultValidatorDatamodelDefinition,
   [ValidatorTypes.LENGTH]: DefaultValidatorLength,
   [ValidatorTypes.BOUNDARIES]: DefaultValidatorBoundaries,
 };

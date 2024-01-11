@@ -9,6 +9,7 @@ import {
   Hook,
   HookPhase,
   InputModelPayload,
+  ModelDefinition,
   ValidatorDefinition,
   ValidatorHook,
   ValidatorOptions,
@@ -27,6 +28,7 @@ import SerializerFormat from "../enums/serializer-format";
 import ValidationFieldError from "./ValidationFieldError";
 import ValidationError from "./ValidationError";
 import type DataModel from "../models/DataModel";
+import Patterns from "../enums/patterns";
 
 export const crossModelTree = (
   _model: typeof Model,
@@ -1221,12 +1223,7 @@ export const assignDatamodel = async <T extends typeof Model>(
     return;
   }
 
-  model.definition = {
-    single: Boolean(datamodel.single),
-    keyField: datamodel.keyField,
-    fields: datamodel.fields,
-    validators: datamodel.validators,
-  };
+  model.definition = datamodel.getDoc()?.definition ?? {};
 
   model.__fieldsMap = createFieldsMap(model);
   model.__validatorsArray = createValidatorsArray(model);
@@ -1258,7 +1255,7 @@ export const getModelInitPromise = (
         return hook.fn.call(model);
       }, Promise.resolve());
 
-      if (model.extendable) {
+      if (model.extensible) {
         await model.reloadModel({ datamodel, ctx });
       }
 
@@ -1278,4 +1275,39 @@ export const getModelInitPromise = (
 
     resolve();
   });
+};
+
+export const isValidDefinition = (definition: ModelDefinition) => {
+  const fields = definition?.fields;
+
+  if (fields) {
+    const keys = Object.keys(fields || {});
+
+    const regex = new RegExp(Patterns.SLUG);
+    for (const key of keys) {
+      if (!regex.test(key)) {
+        return false;
+      }
+    }
+  }
+
+  const keyField = definition?.keyField;
+
+  if (keyField) {
+    const keyFieldField = fields?.[keyField];
+
+    if (!keyFieldField) {
+      return false;
+    }
+
+    if (keyFieldField.type !== FieldTypes.TEXT) {
+      return false;
+    }
+
+    if (keyFieldField.options?.default) {
+      return false;
+    }
+  }
+
+  return true;
 };

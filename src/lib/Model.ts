@@ -37,7 +37,7 @@ import ErrorCodes from "../enums/error-codes";
 import type DataModel from "../models/DataModel";
 
 class Model {
-  static extendable: boolean = false; // Whether the model can be extended with a DataModel with its slug
+  static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
   static searchable: boolean = false; // Whether the model is usable as a search config source
   static exposed: boolean = true; // Whether the model is exposed in the API or not
   static systemFields: boolean = true; // Include system field (_id, _createdAt, _createdBy, _updatedAt, _updatedBy) in the model fields
@@ -59,7 +59,7 @@ class Model {
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
   static __baseClass: typeof Model;
-  static __dm: string | null; // The id of the datamodel that initialized the model if extendable. null if datamodel not found
+  static __dm: string | null; // The id of the datamodel that initialized the model if extensible. null if datamodel not found
 
   #doc: DocumentDefinition; // The document
 
@@ -236,7 +236,7 @@ class Model {
 
   /**
    * Reload model from its definition (fields, validators, etc).
-   * If the model is not extendable (Role, Token, etc.), this method does nothing.
+   * If the model is not extensible (Role, Token, etc.), this method does nothing.
    * @returns
    */
   static async reloadModel(opts?: {
@@ -265,7 +265,7 @@ class Model {
 
   /**
    * Returns the fields map of the model.
-   * The fields map could be incomplete if the model is extendable and is not initialized.
+   * The fields map could be incomplete if the model is extensible and is not initialized.
    */
   static get fieldsMap() {
     this.__fieldsMap ??= createFieldsMap(this);
@@ -283,7 +283,7 @@ class Model {
 
   /**
    * Returns an array of all validators of the model and its parents.
-   * The validators array could be incomplete if the model is extendable and is not initialized.
+   * The validators array could be incomplete if the model is extensible and is not initialized.
    */
   static get validatorsArray() {
     this.__validatorsArray ??= createValidatorsArray(this);

@@ -2,11 +2,7 @@ import Model from "../lib/Model";
 import ModelEnvScopes from "../enums/model-env-scopes";
 import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
-import {
-  FieldsDefinition,
-  ModelDefinition,
-  ValidatorDefinition,
-} from "../types";
+import { ModelDefinition } from "../types";
 import FieldTypes from "../enums/field-types";
 import ValidatorTypes from "../enums/validator-types";
 
@@ -17,9 +13,8 @@ class DataModel extends Model {
   static definition: ModelDefinition = {
     keyField: "slug",
     validators: [
-      { type: ValidatorTypes.DATAMODEL_KEY_FIELD },
       { type: ValidatorTypes.DATAMODEL_SLUG },
-      { type: ValidatorTypes.DATAMODEL_FIELDS },
+      { type: ValidatorTypes.DATAMODEL_DEFINITION },
     ],
   };
 
@@ -32,71 +27,79 @@ class DataModel extends Model {
   slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.NESTED, {
-    defaultField: {
-      type: FieldTypes.NESTED,
-      options: {
-        fields: {
-          type: {
-            type: FieldTypes.TEXT,
-            options: {
-              options: Object.values(FieldTypes),
-              strict: true,
-            },
-          },
-          options: {
+    fields: {
+      fields: {
+        type: FieldTypes.NESTED,
+        options: {
+          defaultField: {
             type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                type: {
+                  type: FieldTypes.TEXT,
+                  options: {
+                    options: Object.values(FieldTypes),
+                    strict: true,
+                  },
+                },
+                options: {
+                  type: FieldTypes.NESTED,
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: {
+                    field: "type",
+                  },
+                },
+              ],
+            },
           },
         },
-        validators: [
-          {
-            type: ValidatorTypes.REQUIRED,
+      },
+      validators: {
+        type: FieldTypes.ARRAY,
+        options: {
+          items: {
+            type: FieldTypes.NESTED,
             options: {
-              field: "type",
+              fields: {
+                type: {
+                  type: FieldTypes.TEXT,
+                  options: {
+                    options: Object.values(ValidatorTypes),
+                    strict: true,
+                  },
+                },
+                options: {
+                  type: FieldTypes.NESTED,
+                },
+              },
+              validators: [
+                {
+                  type: ValidatorTypes.REQUIRED,
+                  options: {
+                    field: "type",
+                  },
+                },
+              ],
             },
           },
-        ],
+        },
+      },
+      single: {
+        type: FieldTypes.BOOLEAN,
+        options: {
+          default: false,
+        },
+      },
+      keyField: {
+        type: FieldTypes.TEXT,
       },
     },
   })
-  fields: FieldDefinitionNested<FieldsDefinition>;
-
-  @fieldDecorator(FieldTypes.ARRAY, {
-    items: {
-      type: FieldTypes.NESTED,
-      options: {
-        fields: {
-          type: {
-            type: FieldTypes.TEXT,
-            options: {
-              options: Object.values(ValidatorTypes),
-              strict: true,
-            },
-          },
-          options: {
-            type: FieldTypes.NESTED,
-          },
-        },
-        validators: [
-          {
-            type: ValidatorTypes.REQUIRED,
-            options: {
-              field: "type",
-            },
-          },
-        ],
-      },
-    },
-  })
-  validators: FieldDefinitionArray<{
-    type: FieldTypes.NESTED;
-    definition: ValidatorDefinition;
-  }>;
-
-  @fieldDecorator(FieldTypes.BOOLEAN, { default: false })
-  single: FieldDefinitionBoolean;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  keyField: FieldDefinitionText;
+  definition: FieldDefinitionNested<ModelDefinition>;
 
   @fieldDecorator(FieldTypes.NESTED)
   _doc: FieldDefinitionNested; // The related document if single is true
