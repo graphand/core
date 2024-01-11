@@ -47,13 +47,13 @@ class Model {
   static controllersScope: "global" | "project"; // The scope for CRUD controllers. Default calculated from model.scope
   static freeMode: boolean = false; // Whether the model is free
   static definition: ModelDefinition; // The definition of the model
+  static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
 
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
   static __initOptions: Parameters<typeof getModelInitPromise>[1];
   static __initPromise: Promise<void>;
-  static __localAdapter: Adapter;
-  static __globalAdapter: Adapter;
+  static __adapter: Adapter;
   static __fieldsMap: Map<string, Field>;
   static __validatorsArray: Array<Validator>;
   static __fieldsKeys: string[];
@@ -165,10 +165,10 @@ class Model {
 
     Object.defineProperty(modelCloned, "name", { value: this.__name });
 
-    if (this.__localAdapter) {
-      const adapterClass = this.__localAdapter.base;
-      modelCloned.__localAdapter = new adapterClass(modelCloned);
-      modelCloned.__globalAdapter = modelCloned.__localAdapter;
+    if (this.__adapter) {
+      const adapterClass = this.__adapter.base;
+      const adapter = new adapterClass(modelCloned);
+      modelCloned.__adapter = adapter;
     }
 
     return modelCloned;
@@ -208,8 +208,8 @@ class Model {
 
     Object.defineProperty(modelWithAdapter, "name", { value: this.__name });
 
-    modelWithAdapter.__localAdapter = new adapterClass(modelWithAdapter);
-    modelWithAdapter.__globalAdapter = modelWithAdapter.__localAdapter;
+    const adapter = new adapterClass(modelWithAdapter);
+    modelWithAdapter.__adapter = adapter;
 
     modules?.forEach((module) => module(modelWithAdapter));
 
@@ -905,57 +905,51 @@ class Model {
   }
 
   /**
-   * Return the adapter of the current model.
-   * If the model has no adapter set (Model.withAdapter  has not been called), it will try to use the global adapter (globalThis.__GLOBAL_ADAPTER__) and set on the model for the next call.
-   * @param required - Whether to throw an error if model has no adapter and globalThis.__GLOBAL_ADAPTER__ is not defined
+   * The function `getAdapter` returns the adapter for a model class, throwing an error if no adapter
+   * is found and required is set to true.
+   * @param {T}  - - `T`: A generic type that extends `typeof Model`, which represents the class of a
+   * model.
+   * @param [required=true] - The `required` parameter is a boolean flag that indicates whether an
+   * adapter is required for the model. If `required` is set to `true` and no adapter is found, an
+   * error will be thrown. If `required` is set to `false` and no adapter is found, `null
+   * @returns the adapter object.
    */
   static getAdapter<T extends typeof Model>(this: T, required = true) {
-    let adapter = this.__localAdapter;
+    let adapter;
+    const baseClass = this.getBaseClass();
+    const adapterClass = baseClass?.adapterClass;
 
-    if (adapter) {
-      return adapter;
-    }
-
-    const baseClass = this.__baseClass ?? this;
-    const globalAdapter = globalThis.__GLOBAL_ADAPTER__ as typeof Adapter;
-
-    if (
-      baseClass.hasOwnProperty("__globalAdapter") &&
-      baseClass.__globalAdapter
-    ) {
-      if (baseClass.__globalAdapter.base === globalAdapter) {
-        adapter = baseClass.__globalAdapter;
-      } else {
-        console.warn(
-          `__GLOBAL_ADAPTER__ has changed. Updating adapter on model ${this.__name}`
-        );
-      }
-    }
-
-    if (!adapter && globalAdapter) {
-      adapter = new globalAdapter(this);
-      baseClass.__globalAdapter = adapter;
-
-      globalAdapter.modelsMap.set(this.slug, this);
+    if (this.hasOwnProperty("__adapter")) {
+      adapter = this.__adapter;
+    } else if (adapterClass) {
+      this.__adapter = new adapterClass(this);
+      adapter = this.__adapter;
     }
 
     if (!adapter && required) {
       throw new CoreError({
         code: ErrorCodes.INVALID_ADAPTER,
-        message: `invalid adapter on model ${this.__name}. Please define an adapter for this model or declare __GLOBAL_ADAPTER__`,
+        message: `invalid adapter on model ${this.__name}. Please define an adapter for this model or a global adapter class on Model.adapterClass`,
       });
     }
 
-    // if (
-    //   globalThis.__GLOBAL_ADAPTER__ &&
-    //   adapter?.base !== globalThis.__GLOBAL_ADAPTER__
-    // ) {
-    //   console.warn(
-    //     `__GLOBAL_ADAPTER__ is declared but model ${this.__name} is using a different adapter. This may result in unexpected behavior`
-    //   );
-    // }
-
     return adapter;
+  }
+
+  /**
+   * The function checks if the adapter class has changed for a given model.
+   * @param {T}  - - `T`: a generic type that extends `typeof Model`, which means it must be a subclass
+   * of the `Model` class.
+   * @returns a boolean value. It returns true if the adapter's base is not equal to the adapter class,
+   * and false otherwise.
+   */
+  static hasAdapterClassChanged<T extends typeof Model>(this: T) {
+    const adapter = this.getAdapter(false);
+    if (!adapter) {
+      return false;
+    }
+
+    return adapter.base !== this.adapterClass;
   }
 
   static async executeHooks<

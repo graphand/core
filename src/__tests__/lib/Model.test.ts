@@ -1605,6 +1605,17 @@ describe("Test Model", () => {
           expect(model.getBaseClass()).toBe(BaseModel);
         });
     });
+
+    it("should always return the base class", () => {
+      expect(BaseModel.withAdapter(adapter).getBaseClass()).toBe(BaseModel);
+
+      class CustomAccount extends Account {}
+
+      expect(CustomAccount.getBaseClass()).toBe(CustomAccount);
+      expect(CustomAccount.withAdapter(adapter).getBaseClass()).toBe(
+        CustomAccount
+      );
+    });
   });
 
   describe("Model unicity", () => {
@@ -1900,6 +1911,44 @@ describe("Test Model", () => {
         "Cannot run updateMultiple operation"
       );
     });
+
+    it("should be able to updateMultiple on models with allowMultipleOperations = false and query as string (=updateOne)", async () => {
+      const TestModel = mockModel({
+        allowMultipleOperations: false,
+      }).withAdapter(mockAdapter());
+
+      await expect(TestModel.update("", {})).resolves.toBeDefined();
+    });
+
+    it("should throw error when trying to deleteMultiple on models with allowMultipleOperations = false", async () => {
+      const TestModel = mockModel({
+        allowMultipleOperations: false,
+      }).withAdapter(mockAdapter());
+
+      await expect(TestModel.delete({}, {})).rejects.toThrow(
+        "Cannot run deleteMultiple operation"
+      );
+    });
+
+    it("should be able to deleteMultiple on models with allowMultipleOperations = false and query as string (=deleteOne)", async () => {
+      const TestModel = mockModel({
+        allowMultipleOperations: false,
+      }).withAdapter(mockAdapter());
+
+      await expect(TestModel.delete("", {})).resolves.toBeDefined();
+    });
+
+    it("should be able to updateMultiple on models with allowMultipleOperations = true (default)", async () => {
+      const TestModel = mockModel().withAdapter(mockAdapter());
+
+      await expect(TestModel.update({}, {})).resolves.toBeDefined();
+    });
+
+    it("should be able to deleteMultiple on models with allowMultipleOperations = true (default)", async () => {
+      const TestModel = mockModel().withAdapter(mockAdapter());
+
+      await expect(TestModel.update({}, {})).resolves.toBeDefined();
+    });
   });
 
   describe("Model reload", () => {
@@ -2014,57 +2063,73 @@ describe("Test Model", () => {
     });
   });
 
-  it("should be able to updateMultiple on models with allowMultipleOperations = false and query as string (=updateOne)", async () => {
-    const TestModel = mockModel({
-      allowMultipleOperations: false,
-    }).withAdapter(mockAdapter());
+  describe("Model clone", () => {
+    it("should return right model constructor", async () => {
+      const TestModel = mockModel().withAdapter(mockAdapter());
 
-    await expect(TestModel.update("", {})).resolves.toBeDefined();
+      const i = await TestModel.create({});
+
+      expect(i.model).toBe(TestModel);
+    });
+
+    it("should return right model constructor when model is cloned", async () => {
+      const TestModelCloned = mockModel().withAdapter(mockAdapter()).clone();
+
+      const i = await TestModelCloned.create({});
+
+      expect(i.model).toBe(TestModelCloned);
+    });
   });
 
-  it("should throw error when trying to deleteMultiple on models with allowMultipleOperations = false", async () => {
-    const TestModel = mockModel({
-      allowMultipleOperations: false,
-    }).withAdapter(mockAdapter());
+  describe("Model adapter", () => {
+    it("should return model adapter", async () => {
+      const TestModel = mockModel().withAdapter(adapter);
 
-    await expect(TestModel.delete({}, {})).rejects.toThrow(
-      "Cannot run deleteMultiple operation"
-    );
-  });
+      expect(TestModel.getAdapter()?.base).toBe(adapter);
+    });
 
-  it("should be able to deleteMultiple on models with allowMultipleOperations = false and query as string (=deleteOne)", async () => {
-    const TestModel = mockModel({
-      allowMultipleOperations: false,
-    }).withAdapter(mockAdapter());
+    it("should be able to use global adapter", async () => {
+      const GlobalModel = mockModel();
+      const _adapterClass = mockAdapter();
+      GlobalModel.adapterClass = _adapterClass;
 
-    await expect(TestModel.delete("", {})).resolves.toBeDefined();
-  });
+      class model extends GlobalModel {}
 
-  it("should be able to updateMultiple on models with allowMultipleOperations = true (default)", async () => {
-    const TestModel = mockModel().withAdapter(mockAdapter());
+      expect(model.getAdapter()?.base).toBe(_adapterClass);
+    });
 
-    await expect(TestModel.update({}, {})).resolves.toBeDefined();
-  });
+    it("should return the right adapter", async () => {
+      const adapter1 = mockAdapter();
+      const adapter2 = mockAdapter();
+      const adapterGlobal = mockAdapter();
 
-  it("should be able to deleteMultiple on models with allowMultipleOperations = true (default)", async () => {
-    const TestModel = mockModel().withAdapter(mockAdapter());
+      const model = mockModel();
+      model.adapterClass = adapterGlobal;
+      const model1 = model.withAdapter(adapter1);
+      const model2 = model.withAdapter(adapter2);
+      const model3 = class extends model2 {};
+      const model4 = model3.withAdapter(adapter1);
 
-    await expect(TestModel.update({}, {})).resolves.toBeDefined();
-  });
+      expect(model.getAdapter()?.base).toBe(adapterGlobal);
+      expect(model1.getAdapter()?.base).toBe(adapter1);
+      expect(model2.getAdapter()?.base).toBe(adapter2);
+      expect(model3.getAdapter()?.base).toBe(adapterGlobal);
+      expect(model4.getAdapter()?.base).toBe(adapter1);
+    });
 
-  it("should return right model constructor", async () => {
-    const TestModel = mockModel().withAdapter(mockAdapter());
+    it("should detect if model has changed on adapter", async () => {
+      const adapter1 = mockAdapter();
+      const adapter2 = mockAdapter();
 
-    const i = await TestModel.create({});
+      const GlobalModel = mockModel();
+      GlobalModel.adapterClass = adapter1;
 
-    expect(i.model).toBe(TestModel);
-  });
-
-  it("should return right model constructor when model is cloned", async () => {
-    const TestModelCloned = mockModel().withAdapter(mockAdapter()).clone();
-
-    const i = await TestModelCloned.create({});
-
-    expect(i.model).toBe(TestModelCloned);
+      const model1 = mockModel({ extendsModel: GlobalModel });
+      expect(model1.getAdapter()?.base).toBe(adapter1);
+      expect(model1.hasAdapterClassChanged()).toBeFalsy();
+      GlobalModel.adapterClass = adapter2;
+      expect(model1.getAdapter()?.base).not.toBe(adapter2);
+      expect(model1.hasAdapterClassChanged()).toBeTruthy();
+    });
   });
 });

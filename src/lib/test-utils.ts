@@ -178,6 +178,8 @@ export const mockAdapter = ({
 };
 
 export const mockModel = ({
+  slug,
+  extendsModel = Model,
   scope = ModelEnvScopes.ENV,
   allowMultipleOperations = true,
   extensible = false,
@@ -197,6 +199,8 @@ export const mockModel = ({
     },
   ],
 }: {
+  slug?: string;
+  extendsModel?: typeof Model;
   scope?: ModelEnvScopes;
   allowMultipleOperations?: boolean;
   extensible?: boolean;
@@ -204,11 +208,11 @@ export const mockModel = ({
   validators?: ValidatorsDefinition;
   single?: boolean;
 } = {}) => {
-  const uidSlug = "a" + Math.random().toString(36).substring(7);
+  slug ??= "a" + Math.random().toString(36).substring(7);
 
-  class Test extends Model {
+  class Test extends extendsModel {
     static extensible = extensible;
-    static slug = uidSlug;
+    static slug = slug;
     static scope = scope;
     static allowMultipleOperations = allowMultipleOperations;
     static definition = {
