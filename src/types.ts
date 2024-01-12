@@ -12,6 +12,33 @@ import type PromiseModelList from "./lib/PromiseModelList";
 import AuthProviders from "./enums/auth-providers";
 import AuthMethods from "./enums/auth-methods";
 import Sockethook from "./models/Sockethook";
+import SerializerFormat from "./enums/serializer-format";
+
+type Transaction<
+  M extends typeof Model = typeof Model,
+  A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
+  Args extends Parameters<AdapterFetcher[A]>[0] = Parameters<
+    AdapterFetcher[A]
+  >[0]
+> = {
+  model: M;
+  action: A;
+  args: Args;
+};
+
+export type BaseTransactionCtx = {
+  retryToken: Symbol;
+  abortToken: Symbol;
+  retryTimes: number;
+  transaction: Transaction;
+  disableValidation?: boolean;
+};
+
+export type BaseSerializerCtx = {
+  defaults?: boolean;
+  outputFormat?: string;
+  transactionCtx?: TransactionCtx;
+};
 
 export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
   T extends FieldTypes.TEXT

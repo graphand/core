@@ -9,12 +9,15 @@ import type {
   DefaultFieldNestedDefinition,
   FieldDefinitionOptions,
   DefaultFieldArrayDefinition,
+  BaseTransactionCtx,
+  BaseSerializerCtx,
 } from "./types";
 import type FieldTypes from "./enums/field-types";
+import Model from "./lib/Model";
 
 declare global {
-  export type TransactionCtx = Record<string, any>;
-  export type SerializerCtx = Record<string, any>;
+  export type TransactionCtx = BaseTransactionCtx;
+  export type SerializerCtx = BaseSerializerCtx;
 
   export type FieldDefinitionId<
     D extends FieldDefinitionOptions<FieldTypes.ID> = DefaultFieldDefinitionOptions<FieldTypes.ID>

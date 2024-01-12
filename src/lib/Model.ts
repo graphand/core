@@ -116,7 +116,7 @@ class Model {
     return this.#doc;
   }
 
-  getKey(format?: SerializerFormat) {
+  getKey(format?: string) {
     const keyField = this.model.getKeyField();
 
     if (!keyField) {
@@ -128,7 +128,7 @@ class Model {
     return this.get(this.model.getKeyField(), format);
   }
 
-  getId(format?: SerializerFormat) {
+  getId(format?: string) {
     return this.get("_id", format);
   }
 
@@ -337,13 +337,13 @@ class Model {
    */
   get(
     path: string,
-    format: SerializerFormat | string = SerializerFormat.OBJECT,
-    ctx: SerializerCtx = {},
+    format: string = SerializerFormat.OBJECT,
+    bindCtx: Partial<SerializerCtx> = {},
     value?: any
   ) {
     let fieldsPaths: Array<FieldsPathItem>;
 
-    ctx.outputFormat = format;
+    const ctx: SerializerCtx = { ...bindCtx, outputFormat: format };
 
     if (path.includes(".")) {
       const pathArr = path.split(".");
@@ -417,7 +417,7 @@ class Model {
     this: T,
     path: S,
     value: S extends keyof T ? T[S] | any : any,
-    ctx: TransactionCtx = {}
+    ctx?: TransactionCtx
   ) {
     const _path = path as string;
     let fieldsPaths;
@@ -463,8 +463,8 @@ class Model {
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
   serialize(
-    format: SerializerFormat | string,
-    ctx: SerializerCtx = {},
+    format: string,
+    bindCtx: Partial<SerializerCtx> = {},
     clean = false,
     fieldsKeys?: Array<string>
   ) {
@@ -474,7 +474,7 @@ class Model {
     const res: any = {};
 
     keys.forEach((slug) => {
-      const v = this.get(slug, format, ctx);
+      const v = this.get(slug, format, bindCtx);
       if (clean && v === undefined) {
         return;
       }
@@ -899,7 +899,7 @@ class Model {
   static async validate<T extends typeof Model>(
     this: T,
     list: Array<InstanceType<T> | InputModelPayload<T>>,
-    ctx: TransactionCtx = {}
+    ctx?: TransactionCtx
   ) {
     return await validateModel(this, list, ctx);
   }
@@ -993,16 +993,22 @@ class Model {
     this: M,
     action: A,
     args: Args,
-    bindCtx: TransactionCtx = {}
+    bindCtx: Partial<TransactionCtx> = {}
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const retryToken = Symbol();
     const abortToken = Symbol();
+    const transaction = {
+      model: this,
+      action,
+      args,
+    };
     bindCtx.retryTimes ??= 0;
 
     const ctx = {
       ...bindCtx,
       retryToken,
       abortToken,
+      transaction,
     } as TransactionCtx;
 
     const payloadBefore: HookCallbackArgs<"before", A, M> = {

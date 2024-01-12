@@ -1925,7 +1925,7 @@ describe("Test Model", () => {
         allowMultipleOperations: false,
       }).withAdapter(mockAdapter());
 
-      await expect(TestModel.delete({}, {})).rejects.toThrow(
+      await expect(TestModel.delete({})).rejects.toThrow(
         "Cannot run deleteMultiple operation"
       );
     });
@@ -1935,7 +1935,7 @@ describe("Test Model", () => {
         allowMultipleOperations: false,
       }).withAdapter(mockAdapter());
 
-      await expect(TestModel.delete("", {})).resolves.toBeDefined();
+      await expect(TestModel.delete("")).resolves.toBeDefined();
     });
 
     it("should be able to updateMultiple on models with allowMultipleOperations = true (default)", async () => {

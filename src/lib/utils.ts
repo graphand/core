@@ -732,8 +732,8 @@ export const _getter = (opts: {
   _fieldsPaths: Array<{ key: string; field: Field }>;
   _lastField?: Field;
   noFieldSymbol: Symbol;
-  format: SerializerFormat | string;
-  ctx: any;
+  format: string;
+  ctx: SerializerCtx;
   from: Model;
 }) => {
   let { _value, _lastField } = opts;
@@ -948,7 +948,7 @@ export const getNestedFieldsArrayForModel = (
 export const validateModel = async <T extends typeof Model>(
   model: T,
   list: Array<InstanceType<T> | InputModelPayload<T>>,
-  ctx: TransactionCtx = {}
+  ctx?: TransactionCtx
 ) => {
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
@@ -960,14 +960,12 @@ export const validateModel = async <T extends typeof Model>(
   const fieldsValidatorsKeys = new Set<string>();
   const fieldsValidators: Array<[Validator, Array<InstanceType<T>>]> = [];
 
-  ctx.model = model;
-
   const _processFields = async (fields: Array<Field>, on = instances) => {
     for (const field of fields) {
       const { type, path } = field;
 
       try {
-        const validated = await field.validate(on, ctx);
+        const validated = await field.validate(on, model, ctx);
         if (!validated) {
           throw null;
         }
@@ -1120,7 +1118,7 @@ export const validateModel = async <T extends typeof Model>(
     await Promise.all(
       validators.map(async ([validator, on]) => {
         try {
-          const validated = await validator.validate(on, ctx);
+          const validated = await validator.validate(on, model, ctx);
           if (!validated) {
             throw null;
           }

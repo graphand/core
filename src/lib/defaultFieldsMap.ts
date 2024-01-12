@@ -40,7 +40,7 @@ class DefaultFieldDate extends Field<FieldTypes.DATE> {
 }
 
 class DefaultFieldText extends Field<FieldTypes.TEXT> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;
@@ -64,7 +64,7 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
     return !values.some(_isInvalid);
   }
 
-  serialize(value: any, format: SerializerFormat, from: Model): any {
+  serialize(value: any, format: string): any {
     const res = Array.isArray(value) ? String(value[0]) : String(value);
 
     if (
@@ -83,7 +83,7 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   nextFieldEqObject = false;
 
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;
@@ -101,7 +101,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 
   _serializeJSON = (
     value: any,
-    format: SerializerFormat,
+    format: string,
     from: Model,
     ctx: SerializerCtx = {}
   ) => {
@@ -134,7 +134,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 
   _serializeObject = (
     value: any,
-    format: SerializerFormat,
+    format: string,
     from: Model,
     ctx: SerializerCtx = {}
   ) => {
@@ -155,12 +155,12 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 
     const _id = fieldId.serialize(value, format, from, ctx);
 
-    return model.get(_id, ctx);
+    return model.get(_id, ctx?.transactionCtx);
   };
 
   serialize(
     value: any,
-    format: SerializerFormat,
+    format: string,
     from: Model,
     ctx: SerializerCtx = {}
   ): any {
@@ -170,7 +170,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
         SerializerFormat.DOCUMENT,
         SerializerFormat.NEXT_FIELD,
         SerializerFormat.VALIDATION,
-      ].includes(format)
+      ].includes(format as SerializerFormat)
     ) {
       return this._serializeJSON(value, format, from, ctx);
     }
@@ -180,7 +180,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 }
 
 class DefaultFieldNested extends Field<FieldTypes.NESTED> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;
@@ -197,7 +197,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
 
   serialize(
     value: any,
-    format: SerializerFormat,
+    format: string,
     from: Model,
     ctx: SerializerCtx = {}
   ): any {
@@ -298,7 +298,11 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       });
     };
 
-    if ([SerializerFormat.JSON, SerializerFormat.DOCUMENT].includes(format)) {
+    if (
+      [SerializerFormat.JSON, SerializerFormat.DOCUMENT].includes(
+        format as SerializerFormat
+      )
+    ) {
       return _serializeJSON(value);
     }
 
@@ -307,7 +311,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
 }
 
 class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const _isInvalid = (value: any) => {
       if (value === null || value === undefined) {
         return false;
@@ -332,7 +336,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
   _serializeRelationArray(
     options: FieldOptions<FieldTypes.RELATION>,
     value: any,
-    format: SerializerFormat,
+    format: string,
     from: Model,
     ctx: SerializerCtx = {}
   ) {
@@ -364,7 +368,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
           return itemsField.serialize(v, format, from, ctx);
         });
       } else {
-        res = model.getList({ ids }, ctx);
+        res = model.getList({ ids }, ctx?.transactionCtx);
       }
 
       return res;
@@ -390,7 +394,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
 
   serialize(
     value: any,
-    format: SerializerFormat,
+    format: string,
     from: Model,
     ctx: SerializerCtx = {}
   ): any {

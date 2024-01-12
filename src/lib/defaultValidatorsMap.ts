@@ -1,7 +1,6 @@
 import Adapter from "./Adapter";
 import Validator from "./Validator";
 import ValidatorTypes from "../enums/validator-types";
-import FieldTypes from "../enums/field-types";
 import Model from "./Model";
 import DataModel from "../models/DataModel";
 import Patterns from "../enums/patterns";
@@ -26,7 +25,7 @@ const systemModels = [
 ];
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list.map((i) => i.get(path)).flat(Infinity);
 
@@ -37,7 +36,7 @@ class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
 }
 
 class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))
@@ -67,7 +66,7 @@ class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
 }
 
 class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))
@@ -86,8 +85,12 @@ class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
 }
 
 class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
-    const adapter = ctx.model?.getAdapter();
+  async validate(
+    list: Array<Model>,
+    model: typeof Model,
+    ctx?: TransactionCtx
+  ) {
+    const adapter = model?.getAdapter();
     const validatorsMap = adapter?.validatorsMap ?? {};
 
     const _getValidator = <T extends ValidatorTypes>(
@@ -129,9 +132,9 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
     );
 
     const validates = await Promise.all([
-      validatorRegex.validate(list, ctx),
-      validatorRequired.validate(list, ctx),
-      validatorUnique.validate(list, ctx),
+      validatorRegex.validate(list, model, ctx),
+      validatorRequired.validate(list, model, ctx),
+      validatorUnique.validate(list, model, ctx),
     ]);
 
     return validates.every(Boolean);
@@ -139,7 +142,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
 }
 
 class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))
@@ -163,7 +166,7 @@ class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
 }
 
 class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
       .map((i) => i.get(path))
@@ -183,7 +186,7 @@ class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
 }
 
 class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     const values = list
       .map((i) => i.get("slug"))
       .filter((v) => ![null, undefined].includes(v));
@@ -199,7 +202,7 @@ class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_S
 }
 
 class DefaultValidatorDatamodelDefinition extends Validator<ValidatorTypes.DATAMODEL_DEFINITION> {
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(list: Array<Model>) {
     // const _isInvalid = (m: DataModel) => {
     //   if (!isValidDefinition(m.definition)) {
     //     return true;

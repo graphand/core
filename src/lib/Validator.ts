@@ -5,6 +5,7 @@ import {
   ValidatorHook,
   ValidatorOptions,
 } from "../types";
+import Model from "./Model";
 import { getDefaultValidatorOptions } from "./utils";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
@@ -49,7 +50,11 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return this.getFullPath() + this.type;
   }
 
-  async validate(docs: Array<DocumentDefinition>, ctx: any) {
+  async validate(
+    docs: Array<DocumentDefinition>,
+    model: typeof Model,
+    ctx: any
+  ) {
     return false;
   }
 

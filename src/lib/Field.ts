@@ -41,16 +41,15 @@ class Field<T extends FieldTypes = FieldTypes> {
     ) as FieldOptions<T>;
   }
 
-  async validate(list: Array<Model>, ctx: TransactionCtx = {}) {
+  async validate(
+    list: Array<Model>,
+    model: typeof Model,
+    ctx?: TransactionCtx
+  ) {
     return true;
   }
 
-  serialize(
-    value: any,
-    format: SerializerFormat | string,
-    from: Model,
-    ctx: SerializerCtx = {}
-  ) {
+  serialize(value: any, format: string, from: Model, ctx: SerializerCtx = {}) {
     return value;
   }
 
