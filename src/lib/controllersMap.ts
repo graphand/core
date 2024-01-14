@@ -1,6 +1,6 @@
-import { ControllerDefinition } from "../types";
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
+import { ControllerDefinition } from "@/types";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
 
 const _getModelScope: ControllerDefinition["scope"] = ({ model }) => {
   const _model = Model.getFromSlug(model);

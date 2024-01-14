@@ -1,4 +1,4 @@
-import Model from "../lib/Model";
+import Model from "@/lib/Model";
 
 /**
  * This module add hooks to model class to run validators on create/update actions if the adapter enables it.

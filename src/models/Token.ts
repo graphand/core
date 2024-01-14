@@ -1,11 +1,11 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import { modelDecorator } from "../lib/modelDecorator";
-import FieldTypes from "../enums/field-types";
-import Role from "./Role";
-import { ModelDefinition } from "../types";
-import ValidatorTypes from "../enums/validator-types";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import { modelDecorator } from "@/lib/modelDecorator";
+import FieldTypes from "@/enums/field-types";
+import Role from "@/models/Role";
+import { ModelDefinition } from "@/types";
+import ValidatorTypes from "@/enums/validator-types";
 
 @modelDecorator()
 class Token extends Model {

@@ -10,6 +10,9 @@ module.exports = {
   },
   resolve: {
     extensions: [".webpack.js", ".web.js", ".ts", ".js"],
+    alias: {
+      "@": path.resolve(process.cwd(), "src/"),
+    },
   },
   module: {
     rules: [

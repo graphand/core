@@ -1,6 +1,6 @@
-import FieldTypes from "../enums/field-types";
-import Model from "./Model";
-import { FieldDefinition, FieldOptions } from "../types";
+import FieldTypes from "@/enums/field-types";
+import Model from "@/lib/Model";
+import { FieldDefinition, FieldOptions } from "@/types";
 
 /**
  * Decorator to define a field in a model.

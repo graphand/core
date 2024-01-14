@@ -1,10 +1,10 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import { modelDecorator } from "../lib/modelDecorator";
-import FieldTypes from "../enums/field-types";
-import JobTypes from "../enums/job-types";
-import JobStatus from "../enums/job-status";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import { modelDecorator } from "@/lib/modelDecorator";
+import FieldTypes from "@/enums/field-types";
+import JobTypes from "@/enums/job-types";
+import JobStatus from "@/enums/job-status";
 
 @modelDecorator()
 class Job extends Model {

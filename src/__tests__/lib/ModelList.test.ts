@@ -1,5 +1,5 @@
-import ModelList from "../../lib/ModelList";
-import { mockModel } from "../../lib/test-utils";
+import ModelList from "@/lib/ModelList";
+import { mockModel } from "@/lib/test-utils";
 
 describe("test ModelList", () => {
   let model;

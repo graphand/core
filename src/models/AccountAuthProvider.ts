@@ -1,13 +1,13 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import { modelDecorator } from "../lib/modelDecorator";
-import FieldTypes from "../enums/field-types";
-import ValidatorTypes from "../enums/validator-types";
-import { AccountAuthConfiguration, ModelDefinition } from "../types";
-import Account from "./Account";
-import AuthProvider from "./AuthProvider";
-import AuthProviders from "../enums/auth-providers";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import { modelDecorator } from "@/lib/modelDecorator";
+import FieldTypes from "@/enums/field-types";
+import ValidatorTypes from "@/enums/validator-types";
+import { AccountAuthConfiguration, ModelDefinition } from "@/types";
+import Account from "@/models/Account";
+import AuthProvider from "@/models/AuthProvider";
+import AuthProviders from "@/enums/auth-providers";
 
 @modelDecorator()
 class AccountAuthProvider<

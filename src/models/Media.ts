@@ -1,10 +1,10 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { modelDecorator } from "../lib/modelDecorator";
-import ValidatorTypes from "../enums/validator-types";
-import { ModelDefinition } from "../types";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import FieldTypes from "../enums/field-types";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { modelDecorator } from "@/lib/modelDecorator";
+import ValidatorTypes from "@/enums/validator-types";
+import { ModelDefinition } from "@/types";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import FieldTypes from "@/enums/field-types";
 
 @modelDecorator()
 class Media extends Model {

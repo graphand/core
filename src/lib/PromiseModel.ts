@@ -1,7 +1,7 @@
-import Model from "./Model";
-import { JSONQuery } from "../types";
-import Thenable from "./Thenable";
-import { isObjectId } from "./utils";
+import Model from "@/lib/Model";
+import { JSONQuery } from "@/types";
+import Thenable from "@/lib/Thenable";
+import { isObjectId } from "@/lib/utils";
 
 /**
  * PromiseModel is a class that extends the native Promise class.

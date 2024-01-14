@@ -1,12 +1,12 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import { modelDecorator } from "../lib/modelDecorator";
-import FieldTypes from "../enums/field-types";
-import { ModelDefinition } from "../types";
-import User from "./User";
-import ValidatorTypes from "../enums/validator-types";
-import Terms from "./Terms";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import { modelDecorator } from "@/lib/modelDecorator";
+import FieldTypes from "@/enums/field-types";
+import { ModelDefinition } from "@/types";
+import User from "@/models/User";
+import ValidatorTypes from "@/enums/validator-types";
+import Terms from "@/models/Terms";
 
 @modelDecorator()
 class Organization extends Model {

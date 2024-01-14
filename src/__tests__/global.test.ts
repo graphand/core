@@ -1,13 +1,12 @@
-import ValidatorTypes from "../enums/validator-types";
-import FieldTypes from "../enums/field-types";
-import ValidationError from "../lib/ValidationError";
-import {
-  generateRandomString,
-  mockAdapter,
-  mockModel,
-} from "../lib/test-utils";
-import DataModel from "../models/DataModel";
-import { Data, Environment, models } from "..";
+import ValidatorTypes from "@/enums/validator-types";
+import FieldTypes from "@/enums/field-types";
+import ValidationError from "@/lib/ValidationError";
+import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils";
+import DataModel from "@/models/DataModel";
+import Data from "@/lib/Data";
+import Environment from "@/models/Environment";
+import Media from "@/models/Media";
+import { models } from "..";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -610,7 +609,7 @@ describe("Global tests", () => {
   it("should be able to extend Media model definition", async () => {
     const adapter = mockAdapter();
     await DataModel.withAdapter(adapter).create({
-      slug: models.Media.slug,
+      slug: Media.slug,
       definition: {
         fields: {
           title: {
@@ -621,7 +620,7 @@ describe("Global tests", () => {
       },
     });
 
-    const mediaModel = models.Media.withAdapter(adapter);
+    const mediaModel = Media.withAdapter(adapter);
     await mediaModel.initialize();
 
     expect(mediaModel.fieldsMap.get("title")).toBeTruthy();
@@ -630,13 +629,13 @@ describe("Global tests", () => {
   it("should not be able to override Media model validators", async () => {
     const adapter = mockAdapter();
     await DataModel.withAdapter(adapter).create({
-      slug: models.Media.slug,
+      slug: Media.slug,
       definition: {
         validators: [],
       },
     });
 
-    const mediaModel = models.Media.withAdapter(adapter);
+    const mediaModel = Media.withAdapter(adapter);
     await mediaModel.initialize();
 
     expect(mediaModel.validatorsArray.length).toBeGreaterThan(0);

@@ -1,10 +1,10 @@
-import Adapter from "./Adapter";
-import Validator from "./Validator";
-import ValidatorTypes from "../enums/validator-types";
-import Model from "./Model";
-import DataModel from "../models/DataModel";
-import Patterns from "../enums/patterns";
-import { isValidDefinition } from "./utils";
+import Adapter from "@/lib/Adapter";
+import Validator from "@/lib/Validator";
+import ValidatorTypes from "@/enums/validator-types";
+import Model from "@/lib/Model";
+import DataModel from "@/models/DataModel";
+import Patterns from "@/enums/patterns";
+import { isValidDefinition } from "@/lib/utils";
 
 const systemModels = [
   "accounts_authProviders",
@@ -22,6 +22,7 @@ const systemModels = [
   "terms",
   "tokens",
   "users",
+  "mergeRequests",
 ];
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {

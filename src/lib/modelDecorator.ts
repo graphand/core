@@ -1,5 +1,5 @@
-import Model from "./Model";
-import { defineFieldsProperties } from "./utils";
+import Model from "@/lib/Model";
+import { defineFieldsProperties } from "@/lib/utils";
 
 /**
  * A decorator that extends the model class with the defineFieldsProperties function in the constructor

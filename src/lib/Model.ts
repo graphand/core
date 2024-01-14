@@ -1,9 +1,9 @@
-import ModelEnvScopes from "../enums/model-env-scopes";
-import Field from "./Field";
-import PromiseModel from "./PromiseModel";
-import PromiseModelList from "./PromiseModelList";
-import { fieldDecorator } from "./fieldDecorator";
-import FieldTypes from "../enums/field-types";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import Field from "@/lib/Field";
+import PromiseModel from "@/lib/PromiseModel";
+import PromiseModelList from "@/lib/PromiseModelList";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import FieldTypes from "@/enums/field-types";
 import {
   AdapterFetcher,
   DocumentDefinition,
@@ -15,10 +15,10 @@ import {
   JSONQuery,
   ModelDefinition,
   Module,
-} from "../types";
-import SerializerFormat from "../enums/serializer-format";
-import Adapter from "./Adapter";
-import Validator from "./Validator";
+} from "@/types";
+import SerializerFormat from "@/enums/serializer-format";
+import Adapter from "@/lib/Adapter";
+import Validator from "@/lib/Validator";
 import {
   createFieldsMap,
   createValidatorsArray,
@@ -31,10 +31,10 @@ import {
   validateModel,
   assignDatamodel,
   getModelInitPromise,
-} from "./utils";
-import CoreError from "./CoreError";
-import ErrorCodes from "../enums/error-codes";
-import type DataModel from "../models/DataModel";
+} from "@/lib/utils";
+import CoreError from "@/lib/CoreError";
+import ErrorCodes from "@/enums/error-codes";
+import type DataModel from "@/models/DataModel";
 
 class Model {
   static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
@@ -247,7 +247,7 @@ class Model {
     const adapter = this.getAdapter();
 
     if (!datamodel) {
-      const DataModelClass = require("../models/DataModel").default;
+      const DataModelClass = require("@/models/DataModel").default;
       datamodel = await getAdaptedModel(DataModelClass, adapter.base).get(
         {
           filter: {
@@ -308,7 +308,7 @@ class Model {
       adapter = this.getAdapter(false)?.base;
     }
 
-    const models = require("../index").models as Record<string, typeof Model>;
+    const models = require("@/index").models as Record<string, typeof Model>;
     let model: M = Object.values(models).find((m) => m.slug === slug) as M;
     if (model) {
       let adaptedModel = adapter?.modelsMap.get(model.slug) as M;
@@ -319,7 +319,7 @@ class Model {
 
       model = adaptedModel || model;
     } else if (fallbackData) {
-      const Data = require("./Data").default;
+      const Data = require("@/lib/Data").default;
       model = Data.__getFromSlug(slug, adapter);
     }
 

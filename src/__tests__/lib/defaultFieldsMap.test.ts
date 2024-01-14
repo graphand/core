@@ -1,19 +1,15 @@
 import { ObjectId } from "bson";
-import {
-  generateRandomString,
-  mockAdapter,
-  mockModel,
-} from "../../lib/test-utils";
-import FieldTypes from "../../enums/field-types";
+import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils";
+import FieldTypes from "@/enums/field-types";
 import { faker } from "@faker-js/faker";
-import Field from "../../lib/Field";
-import Validator from "../../lib/Validator";
-import ValidatorTypes from "../../enums/validator-types";
-import ValidationError from "../../lib/ValidationError";
-import PromiseModel from "../../lib/PromiseModel";
-import { DataModel, Model, models } from "../../index";
-import PromiseModelList from "../../lib/PromiseModelList";
-import SerializerFormat from "../../enums/serializer-format";
+import Field from "@/lib/Field";
+import Validator from "@/lib/Validator";
+import ValidatorTypes from "@/enums/validator-types";
+import ValidationError from "@/lib/ValidationError";
+import PromiseModel from "@/lib/PromiseModel";
+import { DataModel, Model, models } from "@/index";
+import PromiseModelList from "@/lib/PromiseModelList";
+import SerializerFormat from "@/enums/serializer-format";
 
 describe("test fieldsMap", () => {
   const adapter = mockAdapter({});

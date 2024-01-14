@@ -1,18 +1,17 @@
-import type Model from "./lib/Model";
-import type ModelList from "./lib/ModelList";
-import type FieldTypes from "./enums/field-types";
-import type RuleActions from "./enums/rule-actions";
-import type ValidatorTypes from "./enums/validator-types";
-import type Field from "./lib/Field";
-import type ErrorCodes from "./enums/error-codes";
-import type Validator from "./lib/Validator";
-import type ValidationError from "./lib/ValidationError";
-import type PromiseModel from "./lib/PromiseModel";
-import type PromiseModelList from "./lib/PromiseModelList";
-import AuthProviders from "./enums/auth-providers";
-import AuthMethods from "./enums/auth-methods";
-import Sockethook from "./models/Sockethook";
-import SerializerFormat from "./enums/serializer-format";
+import type Model from "@/lib/Model";
+import type ModelList from "@/lib/ModelList";
+import type FieldTypes from "@/enums/field-types";
+import type RuleActions from "@/enums/rule-actions";
+import type ValidatorTypes from "@/enums/validator-types";
+import type Field from "@/lib/Field";
+import type ErrorCodes from "@/enums/error-codes";
+import type Validator from "@/lib/Validator";
+import type ValidationError from "@/lib/ValidationError";
+import type PromiseModel from "@/lib/PromiseModel";
+import type PromiseModelList from "@/lib/PromiseModelList";
+import AuthProviders from "@/enums/auth-providers";
+import AuthMethods from "@/enums/auth-methods";
+import Sockethook from "@/models/Sockethook";
 
 type Transaction<
   M extends typeof Model = typeof Model,

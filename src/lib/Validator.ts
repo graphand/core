@@ -1,12 +1,12 @@
-import ValidatorTypes from "../enums/validator-types";
+import ValidatorTypes from "@/enums/validator-types";
 import {
   DocumentDefinition,
   ValidatorDefinition,
   ValidatorHook,
   ValidatorOptions,
-} from "../types";
-import Model from "./Model";
-import { getDefaultValidatorOptions } from "./utils";
+} from "@/types";
+import Model from "@/lib/Model";
+import { getDefaultValidatorOptions } from "@/lib/utils";
 
 class Validator<T extends ValidatorTypes = ValidatorTypes> {
   #definition: ValidatorDefinition<T>;

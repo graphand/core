@@ -1,5 +1,5 @@
-import { JSONQuery } from "../types";
-import Model from "./Model";
+import { JSONQuery } from "@/types";
+import Model from "@/lib/Model";
 
 /**
  * ModelList is a class that extends the native Array class.

@@ -1,4 +1,4 @@
-import { ValidationValidatorErrorDefinition } from "../types";
+import { ValidationValidatorErrorDefinition } from "@/types";
 
 class ValidationValidatorError {
   #definition: ValidationValidatorErrorDefinition;

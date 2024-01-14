@@ -1,4 +1,4 @@
-import Model from "./Model";
+import Model from "@/lib/Model";
 import {
   AdapterFetcher,
   FieldDefinition,
@@ -14,21 +14,21 @@ import {
   ValidatorHook,
   ValidatorOptions,
   ValidatorsDefinition,
-} from "../types";
-import FieldTypes from "../enums/field-types";
-import defaultFieldsMap from "./defaultFieldsMap";
-import Field from "./Field";
-import ValidatorTypes from "../enums/validator-types";
-import defaultValidatorsMap from "./defaultValidatorsMap";
-import Validator from "./Validator";
-import Adapter from "./Adapter";
-import ValidationValidatorError from "./ValidationValidatorError";
-import CoreError from "./CoreError";
-import SerializerFormat from "../enums/serializer-format";
-import ValidationFieldError from "./ValidationFieldError";
-import ValidationError from "./ValidationError";
-import type DataModel from "../models/DataModel";
-import Patterns from "../enums/patterns";
+} from "@/types";
+import FieldTypes from "@/enums/field-types";
+import defaultFieldsMap from "@/lib/defaultFieldsMap";
+import Field from "@/lib/Field";
+import ValidatorTypes from "@/enums/validator-types";
+import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
+import Validator from "@/lib/Validator";
+import Adapter from "@/lib/Adapter";
+import ValidationValidatorError from "@/lib/ValidationValidatorError";
+import CoreError from "@/lib/CoreError";
+import SerializerFormat from "@/enums/serializer-format";
+import ValidationFieldError from "@/lib/ValidationFieldError";
+import ValidationError from "@/lib/ValidationError";
+import type DataModel from "@/models/DataModel";
+import Patterns from "@/enums/patterns";
 
 export const crossModelTree = (
   _model: typeof Model,

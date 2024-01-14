@@ -1,4 +1,4 @@
-import { ValidationFieldErrorDefinition } from "../types";
+import { ValidationFieldErrorDefinition } from "@/types";
 
 class ValidationFieldError {
   #definition: ValidationFieldErrorDefinition;

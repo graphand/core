@@ -1,7 +1,7 @@
-import Model from "./Model";
-import ModelList from "./ModelList";
-import { JSONQuery } from "../types";
-import Thenable from "./Thenable";
+import Model from "@/lib/Model";
+import ModelList from "@/lib/ModelList";
+import { JSONQuery } from "@/types";
+import Thenable from "@/lib/Thenable";
 
 /**
  * PromiseModelList is a class that extends the native Promise class.

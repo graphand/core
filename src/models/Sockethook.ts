@@ -1,10 +1,10 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { modelDecorator } from "../lib/modelDecorator";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import FieldTypes from "../enums/field-types";
-import { AdapterFetcher, HookPhase, ModelDefinition } from "../types";
-import ValidatorTypes from "../enums/validator-types";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { modelDecorator } from "@/lib/modelDecorator";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import FieldTypes from "@/enums/field-types";
+import { AdapterFetcher, HookPhase, ModelDefinition } from "@/types";
+import ValidatorTypes from "@/enums/validator-types";
 
 @modelDecorator()
 class Sockethook extends Model {

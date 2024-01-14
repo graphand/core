@@ -1,13 +1,13 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import Role from "./Role";
-import { modelDecorator } from "../lib/modelDecorator";
-import FieldTypes from "../enums/field-types";
-import ValidatorTypes from "../enums/validator-types";
-import User from "./User";
-import Patterns from "../enums/patterns";
-import { ModelDefinition } from "../types";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import Role from "@/models/Role";
+import { modelDecorator } from "@/lib/modelDecorator";
+import FieldTypes from "@/enums/field-types";
+import ValidatorTypes from "@/enums/validator-types";
+import User from "@/models/User";
+import Patterns from "@/enums/patterns";
+import { ModelDefinition } from "@/types";
 
 @modelDecorator()
 class Account extends Model {

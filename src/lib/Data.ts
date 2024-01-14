@@ -1,9 +1,9 @@
-import Model from "./Model";
-import { modelDecorator } from "./modelDecorator";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import DataModel from "../models/DataModel";
-import Adapter from "./Adapter";
-import { assignDatamodel, getModelInitPromise } from "./utils";
+import Model from "@/lib/Model";
+import { modelDecorator } from "@/lib/modelDecorator";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import DataModel from "@/models/DataModel";
+import Adapter from "@/lib/Adapter";
+import { assignDatamodel, getModelInitPromise } from "@/lib/utils";
 
 /**
  * The Data class is a specific that is the base class for all data models.

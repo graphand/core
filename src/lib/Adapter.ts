@@ -1,9 +1,9 @@
-import { AdapterFetcher } from "../types";
-import Model from "./Model";
-import FieldTypes from "../enums/field-types";
-import Field from "./Field";
-import ValidatorTypes from "../enums/validator-types";
-import Validator from "./Validator";
+import { AdapterFetcher } from "@/types";
+import Model from "@/lib/Model";
+import FieldTypes from "@/enums/field-types";
+import Field from "@/lib/Field";
+import ValidatorTypes from "@/enums/validator-types";
+import Validator from "@/lib/Validator";
 
 class Adapter {
   static _modelsMap: Map<string, typeof Model>;

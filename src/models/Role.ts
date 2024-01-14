@@ -1,12 +1,12 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import { modelDecorator } from "../lib/modelDecorator";
-import FieldTypes from "../enums/field-types";
-import { FieldsRestriction, ModelDefinition, Rule } from "../types";
-import RuleActions from "../enums/rule-actions";
-import ValidatorTypes from "../enums/validator-types";
-import Patterns from "../enums/patterns";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import { modelDecorator } from "@/lib/modelDecorator";
+import FieldTypes from "@/enums/field-types";
+import { FieldsRestriction, ModelDefinition, Rule } from "@/types";
+import RuleActions from "@/enums/rule-actions";
+import ValidatorTypes from "@/enums/validator-types";
+import Patterns from "@/enums/patterns";
 
 @modelDecorator()
 class Role extends Model {

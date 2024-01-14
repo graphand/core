@@ -1,8 +1,8 @@
-import CoreError from "./CoreError";
-import ValidationFieldError from "./ValidationFieldError";
-import ValidationValidatorError from "./ValidationValidatorError";
-import { CoreErrorDefinition } from "../types";
-import ErrorCodes from "../enums/error-codes";
+import CoreError from "@/lib/CoreError";
+import ValidationFieldError from "@/lib/ValidationFieldError";
+import ValidationValidatorError from "@/lib/ValidationValidatorError";
+import { CoreErrorDefinition } from "@/types";
+import ErrorCodes from "@/enums/error-codes";
 
 class ValidationError extends CoreError {
   fields: Array<ValidationFieldError>;

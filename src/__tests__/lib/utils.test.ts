@@ -1,9 +1,8 @@
-import { crossModelTree, getFieldsPathsFromPath } from "../../lib/utils";
-import Model from "../../lib/Model";
-import FieldTypes from "../../enums/field-types";
-import { FieldsDefinition, ModelDefinition } from "../../types";
-import { mockAdapter } from "../../lib/test-utils";
-import Account from "../../models/Account";
+import { crossModelTree, getFieldsPathsFromPath } from "@/lib/utils";
+import Model from "@/lib/Model";
+import FieldTypes from "@/enums/field-types";
+import { ModelDefinition } from "@/types";
+import { mockAdapter } from "@/lib/test-utils";
 
 describe("test utils", () => {
   describe("crossModelTree", () => {

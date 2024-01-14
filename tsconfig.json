@@ -16,7 +16,10 @@
     "skipLibCheck": true,
     "preserveConstEnums": true,
     "declarationDir": "dist/types",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/node_modules/*"]

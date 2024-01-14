@@ -1,15 +1,15 @@
-import Model from "../lib/Model";
-import ModelEnvScopes from "../enums/model-env-scopes";
-import { fieldDecorator } from "../lib/fieldDecorator";
-import { modelDecorator } from "../lib/modelDecorator";
-import FieldTypes from "../enums/field-types";
+import Model from "@/lib/Model";
+import ModelEnvScopes from "@/enums/model-env-scopes";
+import { fieldDecorator } from "@/lib/fieldDecorator";
+import { modelDecorator } from "@/lib/modelDecorator";
+import FieldTypes from "@/enums/field-types";
 import {
   AuthProviderRegisterOptions,
   AuthProviderOptions,
   ModelDefinition,
-} from "../types";
-import AuthProviders from "../enums/auth-providers";
-import Role from "./Role";
+} from "@/types";
+import AuthProviders from "@/enums/auth-providers";
+import Role from "@/models/Role";
 
 @modelDecorator()
 class AuthProvider<T extends AuthProviders = AuthProviders> extends Model {

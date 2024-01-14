@@ -1,19 +1,19 @@
-import FieldTypes from "../enums/field-types";
-import Field from "./Field";
-import SerializerFormat from "../enums/serializer-format";
-import Model from "./Model";
-import Adapter from "./Adapter";
+import FieldTypes from "@/enums/field-types";
+import Field from "@/lib/Field";
+import SerializerFormat from "@/enums/serializer-format";
+import Model from "@/lib/Model";
+import Adapter from "@/lib/Adapter";
 import {
   getFieldFromDefinition,
   getNestedFieldsMap,
   isObjectId,
-} from "./utils";
-import CoreError from "./CoreError";
-import { FieldOptions } from "../types";
-import PromiseModelList from "./PromiseModelList";
-import PromiseModel from "./PromiseModel";
-import ModelList from "./ModelList";
-import IdentityTypes from "../enums/identity-types";
+} from "@/lib/utils";
+import CoreError from "@/lib/CoreError";
+import { FieldOptions } from "@/types";
+import PromiseModelList from "@/lib/PromiseModelList";
+import PromiseModel from "@/lib/PromiseModel";
+import ModelList from "@/lib/ModelList";
+import IdentityTypes from "@/enums/identity-types";
 
 class DefaultFieldId extends Field<FieldTypes.ID> {
   serialize(value: any): any {

@@ -1,29 +1,20 @@
-import {
-  mockAdapter,
-  mockModel,
-  generateRandomString,
-} from "../../lib/test-utils";
-import Field from "../../lib/Field";
-import Model from "../../lib/Model";
-import FieldTypes from "../../enums/field-types";
-import Validator from "../../lib/Validator";
-import ValidatorTypes from "../../enums/validator-types";
-import {
-  Account,
-  CoreError,
-  DataModel,
-  ErrorCodes,
-  Media,
-  ModelDefinition,
-  PromiseModelList,
-  SerializerFormat,
-} from "../..";
-import {
-  getRecursiveValidatorsFromModel,
-  getAdaptedModel,
-} from "../../lib/utils";
-import Data from "../../lib/Data";
-import PromiseModel from "../../lib/PromiseModel";
+import { mockAdapter, mockModel, generateRandomString } from "@/lib/test-utils";
+import Field from "@/lib/Field";
+import Model from "@/lib/Model";
+import FieldTypes from "@/enums/field-types";
+import Validator from "@/lib/Validator";
+import ValidatorTypes from "@/enums/validator-types";
+import Account from "@/models/Account";
+import CoreError from "@/lib/CoreError";
+import DataModel from "@/models/DataModel";
+import ErrorCodes from "@/enums/error-codes";
+import Media from "@/models/Media";
+import { ModelDefinition } from "@/types";
+import PromiseModelList from "@/lib/PromiseModelList";
+import SerializerFormat from "@/enums/serializer-format";
+import { getRecursiveValidatorsFromModel, getAdaptedModel } from "@/lib/utils";
+import Data from "@/lib/Data";
+import PromiseModel from "@/lib/PromiseModel";
 
 describe("Test Model", () => {
   let adapter = mockAdapter();

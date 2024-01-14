@@ -5,4 +5,7 @@ module.exports = {
   globalTeardown: "./src/__jest__/globalTeardown.ts",
   clearMocks: true,
   modulePathIgnorePatterns: ["dist", ".idea", "node_modules", "src/__jest__"],
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
 };
