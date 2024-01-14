@@ -25,7 +25,7 @@ class Token extends Model {
   expiration: FieldDefinitionDate;
 
   @fieldDecorator(FieldTypes.NUMBER)
-  accessTokenLifetime: FieldDefinitionNumber;
+  lifetime: FieldDefinitionNumber;
 
   @fieldDecorator(FieldTypes.NUMBER)
   maxGen: FieldDefinitionNumber;
