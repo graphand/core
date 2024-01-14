@@ -22,7 +22,7 @@ Pour créer un modèle custom, il faut créer un datamodel et définir une class
 
 ### Exemple
 
-````ts
+```ts
 await DataModel.create({
   slug: "list",
   definition: {
@@ -40,9 +40,9 @@ await DataModel.create({
         type: ValidatorTypes.REQUIRED,
         options: {
           field: "title",
-        }
+        },
       },
-    ]
+    ],
   },
 });
 
@@ -85,12 +85,29 @@ Pour fonctionner avec un adaptateur, les modèles doivent être appelé avec la 
 C'est cette fonction qui est appelée under the hood par le client avec la méthode `Client.prototype.getModel` et par le serveur avec la méthode `Controller.prototype.getModel` (avec leurs adaptateurs respectifs).
 
 ```ts
-class ServerAdapter extends Adapter {} // ServerAdapter décrit comment les modèles interagissent avec les données sur le serveur
+class ClientAdapter extends Adapter {} // ClientAdapter décrit comment les modèles interagissent avec les données sur le client
 
-const AccountModel = Account.withAdapter(ServerAdapter); // maintenant AccountModel sait comment lire/écrire des données et est utilisable
-````
+const AccountModel = Account.withAdapter(ClientAdapter); // maintenant AccountModel sait comment lire/écrire des données et est utilisable
 
-la variable globale **GLOBAL_ADAPTER** peut être utilisée pour définir un adaptateur par défaut pour tous les modèles. La méthode `Client.prototype.declareGlobally` utilise cette variable pour permettre d'utiliser les modèles avec l'adaptateur du client en question sans avoir à appeler `Client.prototype.getModel` à chaque fois.
+AccountModel.getList("..."); // exécute la méthode getList de l'adaptateur ClientAdapter
+```
+
+Si un modèle n'est pas adapté avec la méthode `Model.withAdapter`, un adapteur sera automatiquement instancié à partir de la classe `Model.adapterClass` du modèle en question.
+Par exemple, l'exemple ci-dessus peut-être réécrit de la manière suivante :
+
+```ts
+class CustomAdapter extends Adapter {}
+
+class CustomClass extends Data {
+  static slug = "example";
+  static adapterClass = CustomAdapter;
+}
+
+CustomClass.getList("...");
+```
+
+`adapterClass` est hérité par les classes enfants. Il est donc possible de définir un adapteur global à l'environnement avec `Model.adapterClass = CustomAdapter`.
+Ainsi, tous les modèles existants et futurs qiu héritent de `Model` utiliseront l'adaptateur `CustomAdapter` par défaut.
 
 Voici les méthodes et attributs que l'adaptateur permet de définir :
 

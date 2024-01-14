@@ -13,6 +13,7 @@ import SearchConfig from "./models/SearchConfig";
 import Key from "./models/Key";
 import Organization from "./models/Organization";
 import Media from "./models/Media";
+import MergeRequest from "./models/MergeRequest";
 import Sockethook from "./models/Sockethook";
 import Token from "./models/Token";
 import Terms from "./models/Terms";
@@ -69,6 +70,7 @@ const models = {
   Job,
   Key,
   Media,
+  MergeRequest,
   Organization,
   Project,
   Role,
@@ -92,6 +94,7 @@ export {
   Job,
   Key,
   Media,
+  MergeRequest,
   Organization,
   Project,
   Role,

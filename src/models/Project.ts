@@ -4,7 +4,7 @@ import { fieldDecorator } from "../lib/fieldDecorator";
 import { modelDecorator } from "../lib/modelDecorator";
 import FieldTypes from "../enums/field-types";
 import Organization from "./Organization";
-import { ModelDefinition, ValidatorsDefinition } from "../types";
+import { ModelDefinition } from "../types";
 import ValidatorTypes from "../enums/validator-types";
 
 @modelDecorator()
