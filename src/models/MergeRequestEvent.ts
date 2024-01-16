@@ -3,48 +3,42 @@ import ModelEnvScopes from "@/enums/model-env-scopes";
 import { fieldDecorator } from "@/lib/fieldDecorator";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
-import { MergeRequestOptions, ModelDefinition } from "@/types";
+import { MergeRequestEventData, ModelDefinition } from "@/types";
 import Job from "@/models/Job";
 import ValidatorTypes from "@/enums/validator-types";
 import MergeRequestTypes from "@/enums/merge-request-types";
+import MergeRequestEventTypes from "@/enums/merge-request-event-types";
+import MergeRequest from "@/models/MergeRequest";
 
 @modelDecorator()
-class MergeRequest<
-  T extends MergeRequestTypes = MergeRequestTypes
+class MergeRequestEvent<
+  T extends MergeRequestEventTypes = MergeRequestEventTypes
 > extends Model {
-  static __name = "MergeRequest";
-  static slug = "mergeRequests";
+  static __name = "MergeRequestEvent";
+  static slug = "mergeRequestEvents";
   static definition: ModelDefinition = {
     validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "options" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "target" } },
+      { type: ValidatorTypes.REQUIRED, options: { field: "request" } },
     ],
   };
 
   static scope = ModelEnvScopes.PROJECT;
 
-  @fieldDecorator(FieldTypes.TEXT)
-  description: FieldDefinitionText;
-
   @fieldDecorator(FieldTypes.TEXT, {
-    options: Object.values(MergeRequestTypes),
+    options: Object.values(MergeRequestEventTypes),
     strict: true,
     default: MergeRequestTypes.STATIC,
   })
   type: T;
-  // type: FieldDefinitionText<{
-  //   options: Array<MergeRequestTypes>;
-  //   strict: true;
-  // }>;
 
   @fieldDecorator(FieldTypes.NESTED)
-  options: FieldDefinitionNested<MergeRequestOptions<T>>;
+  data: FieldDefinitionNested<MergeRequestEventData<T>>;
 
-  @fieldDecorator(FieldTypes.TEXT)
-  target: FieldDefinitionText; // The target environment name
+  @fieldDecorator(FieldTypes.RELATION, { ref: MergeRequest.slug })
+  request: FieldDefinitionRelation<MergeRequest>;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
   _job: FieldDefinitionRelation<Job>;
 }
 
-export default MergeRequest;
+export default MergeRequestEvent;

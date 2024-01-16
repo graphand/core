@@ -25,10 +25,7 @@ class AuthProvider<T extends AuthProviders = AuthProviders> extends Model {
     options: Object.values(AuthProviders),
     strict: true,
   })
-  type: FieldDefinitionText<{
-    options: Array<AuthProviders>;
-    strict: true;
-  }>;
+  type: T;
 
   @fieldDecorator(FieldTypes.NESTED)
   options: FieldDefinitionNested<AuthProviderOptions<T>>;

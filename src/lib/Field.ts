@@ -1,7 +1,6 @@
 import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
 import { FieldDefinition, FieldOptions } from "@/types";
-import SerializerFormat from "@/enums/serializer-format";
 import { getDefaultFieldOptions } from "@/lib/utils";
 
 class Field<T extends FieldTypes = FieldTypes> {

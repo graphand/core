@@ -11,15 +11,21 @@
     "lib": ["es2019"],
     "target": "esnext",
     "outDir": "dist",
-    "baseUrl": ".",
+    "baseUrl": "src",
     "allowJs": true,
     "skipLibCheck": true,
     "preserveConstEnums": true,
     "declarationDir": "dist/types",
     "downlevelIteration": true,
     "paths": {
-      "@/*": ["src/*"]
-    }
+      "@/*": ["*"]
+    },
+    "plugins": [
+      {
+        "transform": "typescript-transform-paths",
+        "afterDeclarations": true
+      }
+    ]
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/node_modules/*"]

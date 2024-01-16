@@ -15,6 +15,7 @@ import Key from "@/models/Key";
 import Organization from "@/models/Organization";
 import Media from "@/models/Media";
 import MergeRequest from "@/models/MergeRequest";
+import MergeRequestEvent from "@/models/MergeRequestEvent";
 import Sockethook from "@/models/Sockethook";
 import Token from "@/models/Token";
 import Terms from "@/models/Terms";
@@ -45,6 +46,8 @@ import IdentityTypes from "@/enums/identity-types";
 import Patterns from "@/enums/patterns";
 import JobTypes from "@/enums/job-types";
 import JobStatus from "@/enums/job-status";
+import MergeRequestTypes from "@/enums/merge-request-types";
+import MergeRequestEventTypes from "@/enums/merge-request-event-types";
 import {
   getFieldFromDefinition,
   getValidatorFromDefinition,
@@ -60,6 +63,7 @@ import {
 } from "@/lib/utils";
 import { modelDecorator } from "@/lib/modelDecorator";
 import { fieldDecorator } from "@/lib/fieldDecorator";
+export * from "@/types";
 
 const models = {
   Account,
@@ -72,6 +76,7 @@ const models = {
   Key,
   Media,
   MergeRequest,
+  MergeRequestEvent,
   Organization,
   Project,
   Role,
@@ -96,6 +101,7 @@ export {
   Key,
   Media,
   MergeRequest,
+  MergeRequestEvent,
   Organization,
   Project,
   Role,
@@ -123,6 +129,8 @@ export {
   Patterns,
   JobTypes,
   JobStatus,
+  MergeRequestTypes,
+  MergeRequestEventTypes,
   getFieldFromDefinition,
   getValidatorFromDefinition,
   ValidationFieldError,
@@ -143,5 +151,3 @@ export {
   fieldDecorator,
   crossFields,
 };
-
-export * from "@/types";

@@ -6,6 +6,7 @@ import FieldTypes from "@/enums/field-types";
 import ValidatorTypes from "@/enums/validator-types";
 import { ModelDefinition } from "@/types";
 import Job from "@/models/Job";
+import MergeRequest from "@/models/MergeRequest";
 
 @modelDecorator()
 class Environment extends Model {
@@ -31,6 +32,9 @@ class Environment extends Model {
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
   _job: FieldDefinitionRelation<Job>;
+
+  @fieldDecorator(FieldTypes.RELATION, { ref: MergeRequest.slug })
+  _fromRequest: FieldDefinitionRelation<MergeRequest>;
 }
 
 export default Environment;

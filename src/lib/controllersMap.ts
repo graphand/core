@@ -294,9 +294,9 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
-  environmentsMerge: {
-    path: "/environments/merge",
-    methods: ["post"],
+  mrGDX: {
+    path: "/merge-requests/:id/gdx",
+    methods: ["get"],
     scope: "project",
     secured: true,
   },

@@ -11,7 +11,9 @@ import type PromiseModel from "@/lib/PromiseModel";
 import type PromiseModelList from "@/lib/PromiseModelList";
 import AuthProviders from "@/enums/auth-providers";
 import AuthMethods from "@/enums/auth-methods";
-import Sockethook from "@/models/Sockethook";
+import Sockethook from "models/Sockethook";
+import MergeRequestTypes from "@/enums/merge-request-types";
+import MergeRequestEventTypes from "./enums/merge-request-event-types";
 
 type Transaction<
   M extends typeof Model = typeof Model,
@@ -133,7 +135,7 @@ export type DefaultFieldDateDefinition<
 > = Date | undefined;
 
 export type DefaultFieldNestedDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.NESTED> = any
+  D extends FieldDefinitionOptions<FieldTypes.NESTED> = Record<string, any>
 > = D | undefined;
 
 export type DefaultFieldRelationDefinition<
@@ -504,6 +506,50 @@ export type SockethookJoinOne = {
 export type IdentityString = string;
 
 export type FieldsPathItem = { key: string; field: Field };
+
+export type MergeRequestOptionsMap = {
+  [MergeRequestTypes.STATIC]: {
+    gdx: Record<string, any>;
+  };
+  [MergeRequestTypes.QUERY]: {
+    source: string;
+    query: Record<string, JSONQuery | true>;
+  };
+};
+
+export type MergeRequestOptions<
+  T extends MergeRequestTypes = keyof MergeRequestOptionsMap | MergeRequestTypes
+> = T extends keyof MergeRequestOptionsMap
+  ? MergeRequestOptionsMap[T]
+  : Record<string, never>;
+
+export type MergeRequestEventDataMap = {
+  [MergeRequestEventTypes.COMMENT]: {
+    comment: string;
+  };
+  [MergeRequestEventTypes.PATCH]: {
+    apply: Record<string, any>;
+    comment?: string;
+  };
+  [MergeRequestEventTypes.SANDBOX]: {
+    name?: string;
+  };
+  [MergeRequestEventTypes.APPROVE]: {
+    close?: boolean;
+  };
+  [MergeRequestEventTypes.REJECT]: {
+    comment?: string;
+    close?: boolean;
+  };
+};
+
+export type MergeRequestEventData<
+  T extends MergeRequestEventTypes =
+    | keyof MergeRequestEventDataMap
+    | MergeRequestEventTypes
+> = T extends keyof MergeRequestEventDataMap
+  ? MergeRequestEventDataMap[T]
+  : Record<string, never>;
 
 export type AuthProviderOptionsMap = {
   [AuthProviders.FACEBOOK]: {
