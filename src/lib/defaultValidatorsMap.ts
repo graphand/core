@@ -23,6 +23,7 @@ const systemModels = [
   "tokens",
   "users",
   "mergeRequests",
+  "mergeRequestEvents",
 ];
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
