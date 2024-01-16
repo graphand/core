@@ -27,19 +27,12 @@ class MergeRequest<
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;
 
-  @fieldDecorator(FieldTypes.TEXT)
-  description: FieldDefinitionText;
-
   @fieldDecorator(FieldTypes.TEXT, {
     options: Object.values(MergeRequestTypes),
     strict: true,
     default: MergeRequestTypes.STATIC,
   })
   type: T;
-  // type: FieldDefinitionText<{
-  //   options: Array<MergeRequestTypes>;
-  //   strict: true;
-  // }>;
 
   @fieldDecorator(FieldTypes.NESTED)
   options: FieldDefinitionNested<MergeRequestOptions<T>>;
