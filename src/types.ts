@@ -531,9 +531,6 @@ export type MergeRequestEventDataMap = {
     apply: Record<string, any>;
     comment?: string;
   };
-  [MergeRequestEventTypes.SANDBOX]: {
-    name?: string;
-  };
   [MergeRequestEventTypes.APPROVE]: {
     close?: boolean;
   };

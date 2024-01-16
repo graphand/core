@@ -15,6 +15,7 @@ class MergeRequest<
   static __name = "MergeRequest";
   static slug = "mergeRequests";
   static definition: ModelDefinition = {
+    keyField: "slug",
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "options" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "target" } },
@@ -22,6 +23,9 @@ class MergeRequest<
   };
 
   static scope = ModelEnvScopes.PROJECT;
+
+  @fieldDecorator(FieldTypes.TEXT)
+  slug: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.TEXT)
   description: FieldDefinitionText;
