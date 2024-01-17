@@ -14,7 +14,7 @@ class PromiseModel<T extends Model> extends Thenable<T> {
   constructor(
     params: ConstructorParameters<typeof Promise<T>>,
     model: typeof Model,
-    query: string | JSONQuery
+    query: string | JSONQuery,
   ) {
     super(params);
     this.#model = model;

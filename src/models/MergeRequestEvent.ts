@@ -11,15 +11,11 @@ import MergeRequestEventTypes from "@/enums/merge-request-event-types";
 import MergeRequest from "@/models/MergeRequest";
 
 @modelDecorator()
-class MergeRequestEvent<
-  T extends MergeRequestEventTypes = MergeRequestEventTypes
-> extends Model {
+class MergeRequestEvent<T extends MergeRequestEventTypes = MergeRequestEventTypes> extends Model {
   static __name = "MergeRequestEvent";
   static slug = "mergeRequestEvents";
   static definition: ModelDefinition = {
-    validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "request" } },
-    ],
+    validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "request" } }],
   };
 
   static scope = ModelEnvScopes.PROJECT;

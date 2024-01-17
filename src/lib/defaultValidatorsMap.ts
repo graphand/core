@@ -29,11 +29,11 @@ const systemModels = [
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
   async validate(list: Array<Model>) {
     const path = this.getFullPath();
-    const values = list.map((i) => i.get(path)).flat(Infinity);
+    const values = list.map(i => i.get(path)).flat(Infinity);
 
     if (!values?.length) return true;
 
-    return !values.some((v) => [null, undefined, ""].includes(v));
+    return !values.some(v => [null, undefined, ""].includes(v));
   }
 }
 
@@ -41,16 +41,16 @@ class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
   async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
-      .map((i) => i.get(path))
+      .map(i => i.get(path))
       .flat(Infinity)
-      .filter((v) => ![null, undefined, ""].includes(v));
+      .filter(v => ![null, undefined, ""].includes(v));
 
     if (!values?.length) {
       return true;
     }
 
     const valueSet = new Set();
-    const hasTwice = values.some((v) => {
+    const hasTwice = values.some(v => {
       if (valueSet.has(v)) {
         return true;
       }
@@ -71,33 +71,24 @@ class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
   async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
-      .map((i) => i.get(path))
+      .map(i => i.get(path))
       .flat(Infinity)
-      .filter((v) => ![null, undefined, ""].includes(v));
+      .filter(v => ![null, undefined, ""].includes(v));
 
     if (!values?.length) return true;
 
-    const regex = new RegExp(
-      this.options.pattern,
-      this.options.options?.join("")
-    );
+    const regex = new RegExp(this.options.pattern, this.options.options?.join(""));
 
-    return !values.some((v) => !regex.test(v));
+    return !values.some(v => !regex.test(v));
   }
 }
 
 class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
-  async validate(
-    list: Array<Model>,
-    model: typeof Model,
-    ctx?: TransactionCtx
-  ) {
+  async validate(list: Array<Model>, model: typeof Model, ctx?: TransactionCtx) {
     const adapter = model?.getAdapter();
     const validatorsMap = adapter?.validatorsMap ?? {};
 
-    const _getValidator = <T extends ValidatorTypes>(
-      type: T
-    ): typeof Validator<T> => {
+    const _getValidator = <T extends ValidatorTypes>(type: T): typeof Validator<T> => {
       let v = validatorsMap[type];
       if (v === undefined) {
         v = defaultValidatorsMap[type];
@@ -112,7 +103,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
         type: ValidatorTypes.REGEX,
         options: { field: this.options.field, pattern: Patterns.SLUG },
       },
-      this.path
+      this.path,
     );
 
     const ValidatorRequired = _getValidator(ValidatorTypes.REQUIRED);
@@ -121,7 +112,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
         type: ValidatorTypes.REQUIRED,
         options: { field: this.options.field },
       },
-      this.path
+      this.path,
     );
 
     const ValidatorUnique = _getValidator(ValidatorTypes.UNIQUE);
@@ -130,7 +121,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
         type: ValidatorTypes.UNIQUE,
         options: { field: this.options.field },
       },
-      this.path
+      this.path,
     );
 
     const validates = await Promise.all([
@@ -147,15 +138,15 @@ class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
   async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
-      .map((i) => i.get(path))
+      .map(i => i.get(path))
       .flat(Infinity)
-      .filter((v) => ![null, undefined].includes(v));
+      .filter(v => ![null, undefined].includes(v));
 
     if (!values?.length) return true;
 
     const { min, max } = this.options;
 
-    return !values.some((v) => {
+    return !values.some(v => {
       let length = v?.length ?? 0;
 
       if (typeof v === "number") {
@@ -171,15 +162,15 @@ class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
   async validate(list: Array<Model>) {
     const path = this.getFullPath();
     const values = list
-      .map((i) => i.get(path))
+      .map(i => i.get(path))
       .flat(Infinity)
-      .filter((v) => ![null, undefined].includes(v));
+      .filter(v => ![null, undefined].includes(v));
 
     if (!values?.length) return true;
 
     const { min, max } = this.options;
 
-    return !values.some((v) => {
+    return !values.some(v => {
       const num = parseFloat(v);
 
       return num < min || num > max;
@@ -189,9 +180,7 @@ class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
 
 class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
   async validate(list: Array<Model>) {
-    const values = list
-      .map((i) => i.get("slug"))
-      .filter((v) => ![null, undefined].includes(v));
+    const values = list.map(i => i.get("slug")).filter(v => ![null, undefined].includes(v));
 
     if (!values?.length) return true;
 

@@ -83,11 +83,7 @@ describe("test fieldsMap", () => {
 
     describe("options.options", () => {
       it("Should returns value within options", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
+        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
@@ -108,11 +104,7 @@ describe("test fieldsMap", () => {
       });
 
       it("Should returns value not in options if strict mode is not enabled", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
+        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
@@ -133,11 +125,7 @@ describe("test fieldsMap", () => {
       });
 
       it("Should returns value within options if value is valid & strict mode is enabled", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
+        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
@@ -159,11 +147,7 @@ describe("test fieldsMap", () => {
       });
 
       it("Should returns null if value not in options and strict mode is enabled", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
+        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
@@ -185,11 +169,7 @@ describe("test fieldsMap", () => {
       });
 
       it("Should not throw error if value is in options and strict mode is enabled", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
+        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
@@ -211,11 +191,7 @@ describe("test fieldsMap", () => {
       });
 
       it("Should throw error if value not in options and strict mode is enabled", async () => {
-        const options = [
-          faker.lorem.word(),
-          faker.lorem.word(),
-          faker.lorem.word(),
-        ];
+        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
@@ -284,10 +260,7 @@ describe("test fieldsMap", () => {
       }).withAdapter(adapter);
       await model.initialize();
 
-      const obj = [
-        { title: faker.lorem.word() },
-        { title: faker.lorem.word() },
-      ];
+      const obj = [{ title: faker.lorem.word() }, { title: faker.lorem.word() }];
 
       const i = new model({ obj });
       expect(i.obj).toBeInstanceOf(Object);
@@ -307,9 +280,7 @@ describe("test fieldsMap", () => {
           },
         },
       });
-      expect(
-        i.get("definition.fields.test.options", SerializerFormat.JSON)
-      ).toBe(undefined);
+      expect(i.get("definition.fields.test.options", SerializerFormat.JSON)).toBe(undefined);
     });
 
     it("Should not bind default values in document format", async () => {
@@ -1392,13 +1363,9 @@ describe("test fieldsMap", () => {
       }).withAdapter(adapter);
       await model.initialize();
 
-      await expect(model.create({ identity: "invalid" })).rejects.toThrow(
-        ValidationError
-      );
+      await expect(model.create({ identity: "invalid" })).rejects.toThrow(ValidationError);
 
-      await expect(model.create({ identity: "account:test" })).rejects.toThrow(
-        ValidationError
-      );
+      await expect(model.create({ identity: "account:test" })).rejects.toThrow(ValidationError);
     });
 
     it("Should not throw error if is valid", async () => {
@@ -1412,7 +1379,7 @@ describe("test fieldsMap", () => {
       await model.initialize();
 
       await expect(
-        model.create({ identity: "account:507f191e810c19729de860ea" })
+        model.create({ identity: "account:507f191e810c19729de860ea" }),
       ).resolves.toBeInstanceOf(model);
     });
   });
@@ -1517,7 +1484,7 @@ describe("test fieldsMap", () => {
       await expect(
         model.create({
           arr: ["507f191e810c19729de860ea", "invalid"],
-        })
+        }),
       ).rejects.toThrow(ValidationError);
     });
 
@@ -1542,16 +1509,12 @@ describe("test fieldsMap", () => {
       await expect(
         model.create({
           arr: ["507f191e810c19729de860ea"],
-        })
+        }),
       ).resolves.toBeInstanceOf(model);
     });
 
     it("should returns valid serialized array from items option", async () => {
-      const options = [
-        faker.lorem.word(),
-        faker.lorem.word(),
-        faker.lorem.word(),
-      ];
+      const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
       const model = mockModel({
         fields: {
@@ -1642,10 +1605,7 @@ describe("test fieldsMap", () => {
       const jsonArrRel = i.get("arrRel", SerializerFormat.JSON);
 
       expect(jsonArrRel).toBeInstanceOf(Array);
-      expect(jsonArrRel).toEqual([
-        "507f191e810c19729de860ea",
-        "507f191e810c19729de860eb",
-      ]);
+      expect(jsonArrRel).toEqual(["507f191e810c19729de860ea", "507f191e810c19729de860eb"]);
     });
 
     it("should returns array of objects for json field", async () => {
@@ -1768,9 +1728,7 @@ describe("test fieldsMap", () => {
 
       expect(i.get("arrRel")).toBeInstanceOf(PromiseModelList);
       expect(i.get("arrRel.[]")).toBeInstanceOf(Array);
-      expect(
-        i.get("arrRel.[]").every((i) => i instanceof PromiseModel)
-      ).toBeTruthy();
+      expect(i.get("arrRel.[]").every(i => i instanceof PromiseModel)).toBeTruthy();
 
       expect(i.get("arrRel.[0]")).toBeInstanceOf(PromiseModel);
       expect(i.get("arrRel.[0]").query).toEqual(ids[0]);

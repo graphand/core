@@ -63,7 +63,7 @@ import {
 } from "@/lib/utils";
 import { modelDecorator } from "@/lib/modelDecorator";
 import { fieldDecorator } from "@/lib/fieldDecorator";
-export * from "@/types";
+export * from "./types";
 
 const models = {
   Account,

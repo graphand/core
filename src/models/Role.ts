@@ -127,9 +127,7 @@ class Role extends Model {
     const inheritedRoles = await this.inherits;
 
     if (inheritedRoles) {
-      const rolesRules = await Promise.all(
-        inheritedRoles.map((role) => role.getRulesInherited())
-      );
+      const rolesRules = await Promise.all(inheritedRoles.map(role => role.getRulesInherited()));
 
       rules = [...rules, ...rolesRules.flat()];
     }
@@ -138,20 +136,16 @@ class Role extends Model {
   }
 
   async getFieldsRestrictionsInherited(): Promise<Array<FieldsRestriction>> {
-    let fieldsRestrictions: Array<FieldsRestriction> =
-      this.fieldsRestrictions || [];
+    let fieldsRestrictions: Array<FieldsRestriction> = this.fieldsRestrictions || [];
 
     const inheritedRoles = await this.inherits;
 
     if (inheritedRoles) {
       const rolesFieldsRestrictions = await Promise.all(
-        inheritedRoles.map((role) => role.getFieldsRestrictionsInherited())
+        inheritedRoles.map(role => role.getFieldsRestrictionsInherited()),
       );
 
-      fieldsRestrictions = [
-        ...fieldsRestrictions,
-        ...rolesFieldsRestrictions.flat(),
-      ];
+      fieldsRestrictions = [...fieldsRestrictions, ...rolesFieldsRestrictions.flat()];
     }
 
     return fieldsRestrictions;

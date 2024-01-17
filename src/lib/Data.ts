@@ -26,7 +26,7 @@ class Data extends Model {
    */
   static __getFromSlug<M extends typeof Model = typeof Data>(
     slug: string,
-    adapterClass?: typeof Adapter
+    adapterClass?: typeof Adapter,
   ): M {
     let model: typeof Data = adapterClass?.modelsMap.get(slug) as typeof Data;
 
@@ -49,7 +49,7 @@ class Data extends Model {
 
   static getFromDatamodel(
     datamodel: DataModel,
-    adapterClass?: typeof Adapter | false
+    adapterClass?: typeof Adapter | false,
   ): typeof Data {
     let model = class extends Data {
       static __name = datamodel.name;

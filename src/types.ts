@@ -18,9 +18,7 @@ import MergeRequestEventTypes from "./enums/merge-request-event-types";
 type Transaction<
   M extends typeof Model = typeof Model,
   A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
-  Args extends Parameters<AdapterFetcher[A]>[0] = Parameters<
-    AdapterFetcher[A]
-  >[0]
+  Args extends Parameters<AdapterFetcher[A]>[0] = Parameters<AdapterFetcher[A]>[0],
 > = {
   model: M;
   action: A;
@@ -28,8 +26,8 @@ type Transaction<
 };
 
 export type BaseTransactionCtx = {
-  retryToken: Symbol;
-  abortToken: Symbol;
+  retryToken: symbol;
+  abortToken: symbol;
   retryTimes: number;
   transaction: Transaction;
   disableValidation?: boolean;
@@ -41,25 +39,24 @@ export type BaseSerializerCtx = {
   transactionCtx?: TransactionCtx;
 };
 
-export type DefaultFieldDefinitionOptions<T extends FieldTypes> =
-  T extends FieldTypes.TEXT
-    ? {
-        options: [];
-        strict: false;
-      }
-    : T extends FieldTypes.ARRAY
-    ? {
-        type: FieldTypes.TEXT;
-      }
-    : T extends FieldTypes.RELATION
-    ? {
-        model: null;
-      }
-    : {};
+export type DefaultFieldDefinitionOptions<T extends FieldTypes> = T extends FieldTypes.TEXT
+  ? {
+      options: [];
+      strict: false;
+    }
+  : T extends FieldTypes.ARRAY
+  ? {
+      type: FieldTypes.TEXT;
+    }
+  : T extends FieldTypes.RELATION
+  ? {
+      model: null;
+    }
+  : object;
 
 export type FieldDefinitionOptions<
   T extends FieldTypes,
-  S extends FieldTypes = FieldTypes
+  S extends FieldTypes = FieldTypes,
 > = T extends FieldTypes.TEXT
   ? {
       options?: Array<string>;
@@ -76,20 +73,18 @@ export type FieldDefinitionOptions<
   ? { [key: string]: any }
   : any;
 
-type PromiseModelOn<T extends Model> = PromiseModel<T> & {};
+type PromiseModelOn<T extends Model> = PromiseModel<T> & object;
 
 type string_ = string & Partial<any>;
 
 type FieldTextDefinitionSingleType<
   Options extends string[],
-  Strict extends boolean = false
-> = Strict extends true
-  ? Options[number]
-  : FieldTextDefinitionSingleType<Options, true> | string_;
+  Strict extends boolean = false,
+> = Strict extends true ? Options[number] : FieldTextDefinitionSingleType<Options, true> | string_;
 
 type FieldDefinitionType<
   T extends FieldTypes,
-  D extends FieldDefinitionOptions<T>
+  D extends FieldDefinitionOptions<T>,
 > = T extends FieldTypes.ID
   ? FieldDefinitionId<D>
   : T extends FieldTypes.TEXT
@@ -108,39 +103,36 @@ type FieldDefinitionType<
   ? FieldDefinitionArray<D>
   : never;
 
-export type DefaultFieldIdDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.ID>
-> = string;
+export type DefaultFieldIdDefinition<D extends FieldDefinitionOptions<FieldTypes.ID>> = string;
 
-export type DefaultFieldArrayDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.ARRAY>
-> = D["type"] extends FieldTypes.RELATION
-  ? PromiseModelList<D["definition"]>
-  : Array<FieldDefinitionType<D["type"], D["definition"]>>;
+export type DefaultFieldArrayDefinition<D extends FieldDefinitionOptions<FieldTypes.ARRAY>> =
+  D["type"] extends FieldTypes.RELATION
+    ? PromiseModelList<D["definition"]>
+    : Array<FieldDefinitionType<D["type"], D["definition"]>>;
 
-export type DefaultFieldTextDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.TEXT>
-> = FieldTextDefinitionSingleType<D["options"], D["strict"]> | undefined;
+export type DefaultFieldTextDefinition<D extends FieldDefinitionOptions<FieldTypes.TEXT>> =
+  | FieldTextDefinitionSingleType<D["options"], D["strict"]>
+  | undefined;
 
-export type DefaultFieldBooleanDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.BOOLEAN>
-> = boolean | undefined;
+export type DefaultFieldBooleanDefinition<D extends FieldDefinitionOptions<FieldTypes.BOOLEAN>> =
+  | boolean
+  | undefined;
 
-export type DefaultFieldNumberDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.NUMBER>
-> = number | undefined;
+export type DefaultFieldNumberDefinition<D extends FieldDefinitionOptions<FieldTypes.NUMBER>> =
+  | number
+  | undefined;
 
-export type DefaultFieldDateDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.DATE>
-> = Date | undefined;
+export type DefaultFieldDateDefinition<D extends FieldDefinitionOptions<FieldTypes.DATE>> =
+  | Date
+  | undefined;
 
 export type DefaultFieldNestedDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.NESTED> = Record<string, any>
+  D extends FieldDefinitionOptions<FieldTypes.NESTED> = Record<string, any>,
 > = D | undefined;
 
-export type DefaultFieldRelationDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.RELATION>
-> = PromiseModelOn<D> | undefined;
+export type DefaultFieldRelationDefinition<D extends FieldDefinitionOptions<FieldTypes.RELATION>> =
+  | PromiseModelOn<D>
+  | undefined;
 
 export type SortDirection =
   | 1
@@ -212,42 +204,27 @@ export type UpdateFilter = {
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
-  count: (
-    args: [query: string | JSONQuery],
-    ctx: TransactionCtx
-  ) => Promise<number | null>;
-  get: (
-    args: [query: string | JSONQuery],
-    ctx: TransactionCtx
-  ) => Promise<InstanceType<T> | null>;
-  getList: (
-    args: [query: JSONQuery],
-    ctx: TransactionCtx
-  ) => Promise<ModelList<InstanceType<T>>>;
+  count: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<number | null>;
+  get: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<InstanceType<T> | null>;
+  getList: (args: [query: JSONQuery], ctx: TransactionCtx) => Promise<ModelList<InstanceType<T>>>;
   createOne: (
     args: [payload: InputModelPayload<T>],
-    ctx: TransactionCtx
+    ctx: TransactionCtx,
   ) => Promise<InstanceType<T>>;
   createMultiple: (
     args: [payload: Array<InputModelPayload<T>>],
-    ctx: TransactionCtx
+    ctx: TransactionCtx,
   ) => Promise<Array<InstanceType<T>>>;
   updateOne: (
     args: [query: string | JSONQuery, update: UpdateFilter],
-    ctx: TransactionCtx
+    ctx: TransactionCtx,
   ) => Promise<InstanceType<T>>;
   updateMultiple: (
     args: [query: JSONQuery, update: UpdateFilter],
-    ctx: TransactionCtx
+    ctx: TransactionCtx,
   ) => Promise<Array<InstanceType<T>>>;
-  deleteOne: (
-    args: [query: string | JSONQuery],
-    ctx: TransactionCtx
-  ) => Promise<boolean>;
-  deleteMultiple: (
-    args: [query: JSONQuery],
-    ctx: TransactionCtx
-  ) => Promise<string[]>;
+  deleteOne: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<boolean>;
+  deleteMultiple: (args: [query: JSONQuery], ctx: TransactionCtx) => Promise<string[]>;
   initialize?: (args: never, ctx: TransactionCtx) => Promise<void>;
 };
 
@@ -277,13 +254,11 @@ export type ValidatorOptionsMapOmitField = {
 };
 
 export type ValidatorOptions<
-  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes
-> = T extends keyof ValidatorOptionsMap
-  ? ValidatorOptionsMap[T]
-  : Record<string, never>;
+  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes,
+> = T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : Record<string, never>;
 
 export type ValidatorDefinition<
-  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes
+  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes,
 > = T extends keyof ValidatorOptionsMap
   ? {
       type: T;
@@ -295,7 +270,7 @@ export type ValidatorDefinition<
     };
 
 export type ValidatorDefinitionOmitField<
-  T extends ValidatorTypes = keyof ValidatorOptionsMapOmitField | ValidatorTypes
+  T extends ValidatorTypes = keyof ValidatorOptionsMapOmitField | ValidatorTypes,
 > = T extends keyof ValidatorOptionsMapOmitField
   ? {
       type: T;
@@ -337,23 +312,19 @@ export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   };
 };
 
-export type FieldOptions<
-  T extends FieldTypes = keyof FieldOptionsMap | FieldTypes
-> = T extends keyof FieldOptionsMap
-  ? FieldOptionsMap[T]
-  : Record<string, never>;
+export type FieldOptions<T extends FieldTypes = keyof FieldOptionsMap | FieldTypes> =
+  T extends keyof FieldOptionsMap ? FieldOptionsMap[T] : Record<string, never>;
 
-export type FieldDefinition<
-  T extends FieldTypes = keyof FieldOptionsMap | FieldTypes
-> = T extends keyof FieldOptionsMap
-  ? {
-      type: T;
-      options?: FieldOptionsMap[T];
-    }
-  : {
-      type: T;
-      options?: Record<string, never>;
-    };
+export type FieldDefinition<T extends FieldTypes = keyof FieldOptionsMap | FieldTypes> =
+  T extends keyof FieldOptionsMap
+    ? {
+        type: T;
+        options?: FieldOptionsMap[T];
+      }
+    : {
+        type: T;
+        options?: Record<string, never>;
+      };
 
 export type FieldsDefinition = Record<string, FieldDefinition>;
 
@@ -377,22 +348,18 @@ export type HookPhase = "before" | "after";
 export type HookCallbackArgs<
   P extends HookPhase,
   A extends keyof AdapterFetcher<T>,
-  T extends typeof Model
+  T extends typeof Model,
 > = P extends "before"
   ? {
       args: Parameters<AdapterFetcher<T>[A]>[0];
       ctx: TransactionCtx;
-      err?: Array<Error | Symbol>;
+      err?: Array<Error | symbol>;
     }
   : HookCallbackArgs<"before", A, T> & {
       res?: ReturnType<AdapterFetcher<T>[A]>;
     };
 
-export type Hook<
-  P extends HookPhase,
-  A extends keyof AdapterFetcher<T>,
-  T extends typeof Model
-> = {
+export type Hook<P extends HookPhase, A extends keyof AdapterFetcher<T>, T extends typeof Model> = {
   phase: P;
   action: A;
   fn: (args: HookCallbackArgs<P, A, T>) => void;
@@ -402,7 +369,7 @@ export type Hook<
 export type ValidatorHook<
   P extends HookPhase = HookPhase,
   A extends keyof AdapterFetcher<T> = keyof AdapterFetcher<typeof Model>,
-  T extends typeof Model = typeof Model
+  T extends typeof Model = typeof Model,
 > = [P, A, (args: HookCallbackArgs<P, A, T>) => boolean];
 
 export type Rule = {
@@ -438,10 +405,7 @@ export type ValidationValidatorErrorDefinition = {
 export type ControllerDefinition = {
   path: string;
   methods: Array<"get" | "post" | "put" | "delete" | "patch" | "options">;
-  scope:
-    | "global"
-    | "project"
-    | ((args: { model: string }) => "global" | "project");
+  scope: "global" | "project" | ((args: { model: string }) => "global" | "project");
   secured: boolean;
 };
 
@@ -464,7 +428,7 @@ export type FormProcessEvent = {
 export type SockethookEvent<
   P extends HookPhase,
   A extends keyof AdapterFetcher<T>,
-  T extends typeof Model
+  T extends typeof Model,
 > = {
   operation: string;
   hook: ModelDocument<Sockethook> & {
@@ -478,7 +442,7 @@ export type SockethookEvent<
 export type SockethookResponse<
   P extends HookPhase,
   A extends keyof AdapterFetcher<T>,
-  T extends typeof Model
+  T extends typeof Model,
 > = {
   operation: string;
   args?: Parameters<AdapterFetcher<T>[A]>[0];
@@ -490,9 +454,9 @@ export type SockethookResponse<
 export type SockethookHandler<
   P extends HookPhase,
   A extends keyof AdapterFetcher<T>,
-  T extends typeof Model
+  T extends typeof Model,
 > = (
-  data: SockethookEvent<P, A, T>["data"]
+  data: SockethookEvent<P, A, T>["data"],
 ) =>
   | void
   | Omit<SockethookResponse<P, A, T>, "operation">
@@ -518,10 +482,8 @@ export type MergeRequestOptionsMap = {
 };
 
 export type MergeRequestOptions<
-  T extends MergeRequestTypes = keyof MergeRequestOptionsMap | MergeRequestTypes
-> = T extends keyof MergeRequestOptionsMap
-  ? MergeRequestOptionsMap[T]
-  : Record<string, never>;
+  T extends MergeRequestTypes = keyof MergeRequestOptionsMap | MergeRequestTypes,
+> = T extends keyof MergeRequestOptionsMap ? MergeRequestOptionsMap[T] : Record<string, never>;
 
 export type MergeRequestEventDataMap = {
   [MergeRequestEventTypes.COMMENT]: {
@@ -541,12 +503,8 @@ export type MergeRequestEventDataMap = {
 };
 
 export type MergeRequestEventData<
-  T extends MergeRequestEventTypes =
-    | keyof MergeRequestEventDataMap
-    | MergeRequestEventTypes
-> = T extends keyof MergeRequestEventDataMap
-  ? MergeRequestEventDataMap[T]
-  : Record<string, never>;
+  T extends MergeRequestEventTypes = keyof MergeRequestEventDataMap | MergeRequestEventTypes,
+> = T extends keyof MergeRequestEventDataMap ? MergeRequestEventDataMap[T] : Record<string, never>;
 
 export type AuthProviderOptionsMap = {
   [AuthProviders.FACEBOOK]: {
@@ -557,10 +515,8 @@ export type AuthProviderOptionsMap = {
 };
 
 export type AuthProviderOptions<
-  T extends AuthProviders = keyof AuthProviderOptionsMap | AuthProviders
-> = T extends keyof AuthProviderOptionsMap
-  ? AuthProviderOptionsMap[T]
-  : Record<string, never>;
+  T extends AuthProviders = keyof AuthProviderOptionsMap | AuthProviders,
+> = T extends keyof AuthProviderOptionsMap ? AuthProviderOptionsMap[T] : Record<string, never>;
 
 export type AuthProviderRegisterOptionsMap = {
   [AuthProviders.PASSWORD]: {
@@ -569,7 +525,7 @@ export type AuthProviderRegisterOptionsMap = {
 };
 
 export type AuthProviderRegisterOptions<
-  T extends AuthProviders = keyof AuthProviderRegisterOptionsMap | AuthProviders
+  T extends AuthProviders = keyof AuthProviderRegisterOptionsMap | AuthProviders,
 > = T extends keyof AuthProviderRegisterOptionsMap
   ? AuthProviderRegisterOptionsMap[T]
   : Record<string, never>;
@@ -584,7 +540,7 @@ export type AccountAuthConfigurationMap = {
 };
 
 export type AccountAuthConfiguration<
-  T extends AuthProviders = keyof AccountAuthConfigurationMap | AuthProviders
+  T extends AuthProviders = keyof AccountAuthConfigurationMap | AuthProviders,
 > = T extends keyof AccountAuthConfigurationMap
   ? AccountAuthConfigurationMap[T]
   : Record<string, never>;
@@ -600,7 +556,7 @@ export type AuthProviderCredentialsMap = {
 };
 
 export type AuthProviderCredentials<
-  T extends AuthProviders = keyof AuthProviderCredentialsMap | AuthProviders
+  T extends AuthProviders = keyof AuthProviderCredentialsMap | AuthProviders,
 > = T extends keyof AuthProviderCredentialsMap
   ? AuthProviderCredentialsMap[T]
   : Record<string, never>;
@@ -611,11 +567,8 @@ export type AuthMethodOptionsMap = {
   };
 };
 
-export type AuthMethodOptions<
-  T extends AuthMethods = keyof AuthMethodOptionsMap | AuthMethods
-> = T extends keyof AuthMethodOptionsMap
-  ? AuthMethodOptionsMap[T]
-  : Record<string, never>;
+export type AuthMethodOptions<T extends AuthMethods = keyof AuthMethodOptionsMap | AuthMethods> =
+  T extends keyof AuthMethodOptionsMap ? AuthMethodOptionsMap[T] : Record<string, never>;
 
 export type AuthProviderConfigurePayloadMap = {
   [AuthProviders.PASSWORD]:
@@ -626,9 +579,7 @@ export type AuthProviderConfigurePayloadMap = {
 };
 
 export type AuthProviderConfigurePayload<
-  T extends AuthProviders =
-    | keyof AuthProviderConfigurePayloadMap
-    | AuthProviders
+  T extends AuthProviders = keyof AuthProviderConfigurePayloadMap | AuthProviders,
 > = T extends keyof AuthProviderConfigurePayloadMap
   ? AuthProviderConfigurePayloadMap[T]
   : Record<string, never>;

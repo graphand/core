@@ -30,7 +30,7 @@ describe("test ModelList", () => {
     const ids = list.getIds();
 
     expect(ids.length).toEqual(list.length);
-    ids.forEach((id) => {
+    ids.forEach(id => {
       expect(typeof id).toBe("string");
     });
   });

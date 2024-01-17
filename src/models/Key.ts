@@ -12,9 +12,7 @@ class Key extends Model {
   static slug = "keys";
   static definition: ModelDefinition = {
     keyField: "name",
-    validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "value" } },
-    ],
+    validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "value" } }],
   };
 
   static scope = ModelEnvScopes.PROJECT;

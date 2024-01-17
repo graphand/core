@@ -43,11 +43,9 @@ describe("test validatorsMap", () => {
     });
 
     const _containsValidator = (e: ValidationError) => {
-      return e.validators.some((err) => {
+      return e.validators.some(err => {
         const v = err.validator as Validator<ValidatorTypes.REQUIRED>;
-        return (
-          v.type === ValidatorTypes.REQUIRED && v.options.field === "title"
-        );
+        return v.type === ValidatorTypes.REQUIRED && v.options.field === "title";
       });
     };
 
@@ -101,7 +99,7 @@ describe("test validatorsMap", () => {
         const title = faker.lorem.word();
         const list = await model.createMultiple([{ title }, { title }]);
         expect(list).toBeInstanceOf(Array);
-        expect(list.every((i) => i instanceof model)).toBeTruthy();
+        expect(list.every(i => i instanceof model)).toBeTruthy();
       });
 
       it("createMultiple with one null or empty field title in list should throw error", async () => {
@@ -124,7 +122,7 @@ describe("test validatorsMap", () => {
           { title, obj: { title } },
         ]);
         expect(list).toBeInstanceOf(Array);
-        expect(list.every((i) => i instanceof model)).toBeTruthy();
+        expect(list.every(i => i instanceof model)).toBeTruthy();
       });
     });
 
@@ -175,10 +173,7 @@ describe("test validatorsMap", () => {
 
         try {
           const _model = model as typeof Model;
-          await _model.update(
-            { filter: { _id: i._id } },
-            { $set: { title: null } }
-          );
+          await _model.update({ filter: { _id: i._id } }, { $set: { title: null } });
         } catch (_e: any) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
@@ -193,10 +188,7 @@ describe("test validatorsMap", () => {
 
         try {
           const _model = model as typeof Model;
-          await _model.update(
-            { filter: { _id: i._id } },
-            { $unset: { title: true } }
-          );
+          await _model.update({ filter: { _id: i._id } }, { $unset: { title: true } });
         } catch (_e: any) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
@@ -212,11 +204,11 @@ describe("test validatorsMap", () => {
         const _model = model as typeof Model;
         const res = await _model.update(
           { filter: { _id: i._id } },
-          { $set: { title: updateTitle } }
+          { $set: { title: updateTitle } },
         );
 
         expect(res).toBeInstanceOf(Array);
-        expect(res.every((i) => i instanceof _model)).toBeTruthy();
+        expect(res.every(i => i instanceof _model)).toBeTruthy();
       });
     });
 
@@ -299,7 +291,7 @@ describe("test validatorsMap", () => {
             {
               arr: [faker.lorem.word()],
             },
-          ])
+          ]),
         ).resolves.toBeTruthy();
 
         await expect(
@@ -307,7 +299,7 @@ describe("test validatorsMap", () => {
             {
               arr: [faker.lorem.word(), ""],
             },
-          ])
+          ]),
         ).rejects.toBeInstanceOf(ValidationError);
       });
     });
@@ -315,7 +307,7 @@ describe("test validatorsMap", () => {
 
   describe("regex validator", () => {
     const _mockModelWithRegexValidator = async (
-      options: Partial<ValidatorOptions<ValidatorTypes.REGEX>> = {}
+      options: Partial<ValidatorOptions<ValidatorTypes.REGEX>> = {},
     ) => {
       const model = mockModel({
         fields: {
@@ -434,7 +426,7 @@ describe("test validatorsMap", () => {
           {
             arr: [faker.internet.email()],
           },
-        ])
+        ]),
       ).resolves.toBeTruthy();
 
       await expect(
@@ -442,7 +434,7 @@ describe("test validatorsMap", () => {
           {
             arr: [faker.internet.email(), "invalidEmail"],
           },
-        ])
+        ]),
       ).rejects.toBeInstanceOf(ValidationError);
     });
   });
@@ -478,14 +470,12 @@ describe("test validatorsMap", () => {
     });
 
     it("create with invalid format keyField should throw error", async () => {
-      await expect(
-        model.create({ title: "invalid key" })
-      ).rejects.toBeInstanceOf(ValidationError);
+      await expect(model.create({ title: "invalid key" })).rejects.toBeInstanceOf(ValidationError);
     });
 
     it("create multiple with duplicated keyField should throw error", async () => {
       await expect(
-        model.createMultiple([{ title: "test" }, { title: "test" }])
+        model.createMultiple([{ title: "test" }, { title: "test" }]),
       ).rejects.toBeInstanceOf(ValidationError);
     });
   });
@@ -585,7 +575,7 @@ describe("test validatorsMap", () => {
 
   describe("length validator", () => {
     const _mockModelWithRegexValidator = async (
-      options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {}
+      options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {},
     ) => {
       const model = mockModel({
         fields: {
@@ -614,15 +604,11 @@ describe("test validatorsMap", () => {
 
       await expect(model.create({})).resolves.toBeInstanceOf(model);
 
-      await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(
-        model
-      );
+      await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(model);
 
       await expect(model.create({ title: "" })).resolves.toBeInstanceOf(model);
 
-      await expect(
-        model.create({ title: faker.lorem.paragraph() })
-      ).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: faker.lorem.paragraph() })).resolves.toBeInstanceOf(model);
     });
 
     describe("min", () => {
@@ -633,23 +619,17 @@ describe("test validatorsMap", () => {
       });
 
       it("invalid length should throw error", async () => {
-        await expect(model.create({ title: "" })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: "" })).rejects.toThrow(ValidationError);
 
-        await expect(model.create({ title: 1 })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: 1 })).rejects.toThrow(ValidationError);
       });
 
       it("valid length should not throw error", async () => {
-        await expect(model.create({ title: "ab" })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: "ab" })).resolves.toBeInstanceOf(model);
 
-        await expect(
-          model.create({ title: faker.lorem.paragraph() })
-        ).resolves.toBeInstanceOf(model);
+        await expect(model.create({ title: faker.lorem.paragraph() })).resolves.toBeInstanceOf(
+          model,
+        );
       });
     });
 
@@ -661,27 +641,17 @@ describe("test validatorsMap", () => {
       });
 
       it("invalid length should throw error", async () => {
-        await expect(model.create({ title: "123456" })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: "123456" })).rejects.toThrow(ValidationError);
 
-        await expect(model.create({ title: 123456 })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: 123456 })).rejects.toThrow(ValidationError);
       });
 
       it("valid length should not throw error", async () => {
-        await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(model);
 
-        await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(model);
 
-        await expect(model.create({ title: 12345 })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: 12345 })).resolves.toBeInstanceOf(model);
       });
     });
 
@@ -693,50 +663,34 @@ describe("test validatorsMap", () => {
       });
 
       it("invalid length should throw error", async () => {
-        await expect(model.create({ title: "" })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: "" })).rejects.toThrow(ValidationError);
 
-        await expect(model.create({ title: 1 })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: 1 })).rejects.toThrow(ValidationError);
 
-        await expect(model.create({ title: "123456" })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: "123456" })).rejects.toThrow(ValidationError);
 
-        await expect(model.create({ title: 123456 })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: 123456 })).rejects.toThrow(ValidationError);
 
-        await expect(
-          model.create({ title: faker.lorem.paragraph() })
-        ).rejects.toThrow(ValidationError);
+        await expect(model.create({ title: faker.lorem.paragraph() })).rejects.toThrow(
+          ValidationError,
+        );
       });
 
       it("valid length should not throw error", async () => {
-        await expect(model.create({ title: "ab" })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: "ab" })).resolves.toBeInstanceOf(model);
 
-        await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: "test" })).resolves.toBeInstanceOf(model);
 
-        await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(model);
 
-        await expect(model.create({ title: 12345 })).resolves.toBeInstanceOf(
-          model
-        );
+        await expect(model.create({ title: 12345 })).resolves.toBeInstanceOf(model);
       });
     });
   });
 
   describe("boundaries validator", () => {
     const _mockModelWithRegexValidator = async (
-      options: Partial<ValidatorOptions<ValidatorTypes.BOUNDARIES>> = {}
+      options: Partial<ValidatorOptions<ValidatorTypes.BOUNDARIES>> = {},
     ) => {
       const model = mockModel({
         fields: {
@@ -778,9 +732,7 @@ describe("test validatorsMap", () => {
       });
 
       it("invalid length should throw error", async () => {
-        await expect(model.create({ title: 1 })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: 1 })).rejects.toThrow(ValidationError);
       });
 
       it("valid length should not throw error", async () => {
@@ -797,9 +749,7 @@ describe("test validatorsMap", () => {
       });
 
       it("invalid length should throw error", async () => {
-        await expect(model.create({ title: 6 })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: 6 })).rejects.toThrow(ValidationError);
       });
 
       it("valid length should not throw error", async () => {
@@ -816,27 +766,13 @@ describe("test validatorsMap", () => {
       });
 
       it("invalid length should throw error", async () => {
-        await expect(model.create({ title: -Infinity })).rejects.toThrow(
-          ValidationError
-        );
-        await expect(model.create({ title: -1 })).rejects.toThrow(
-          ValidationError
-        );
-        await expect(model.create({ title: 1 })).rejects.toThrow(
-          ValidationError
-        );
-        await expect(model.create({ title: 1.99999999999 })).rejects.toThrow(
-          ValidationError
-        );
-        await expect(model.create({ title: 5.000000001 })).rejects.toThrow(
-          ValidationError
-        );
-        await expect(model.create({ title: 6 })).rejects.toThrow(
-          ValidationError
-        );
-        await expect(model.create({ title: Infinity })).rejects.toThrow(
-          ValidationError
-        );
+        await expect(model.create({ title: -Infinity })).rejects.toThrow(ValidationError);
+        await expect(model.create({ title: -1 })).rejects.toThrow(ValidationError);
+        await expect(model.create({ title: 1 })).rejects.toThrow(ValidationError);
+        await expect(model.create({ title: 1.99999999999 })).rejects.toThrow(ValidationError);
+        await expect(model.create({ title: 5.000000001 })).rejects.toThrow(ValidationError);
+        await expect(model.create({ title: 6 })).rejects.toThrow(ValidationError);
+        await expect(model.create({ title: Infinity })).rejects.toThrow(ValidationError);
       });
 
       it("valid length should not throw error", async () => {
@@ -922,7 +858,7 @@ describe("test validatorsMap", () => {
           {
             title: "title",
           },
-        ])
+        ]),
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
@@ -930,7 +866,7 @@ describe("test validatorsMap", () => {
       await expect(
         model.create({
           arr: ["value", "value"],
-        })
+        }),
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
@@ -945,7 +881,7 @@ describe("test validatorsMap", () => {
               label: "value",
             },
           ],
-        })
+        }),
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
@@ -958,7 +894,7 @@ describe("test validatorsMap", () => {
           {
             arr: ["value3", "value1"],
           },
-        ])
+        ]),
       ).rejects.toBeInstanceOf(ValidationError);
     });
 
@@ -985,7 +921,7 @@ describe("test validatorsMap", () => {
               },
             ],
           },
-        ])
+        ]),
       ).rejects.toBeInstanceOf(ValidationError);
     });
   });

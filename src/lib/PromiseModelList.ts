@@ -14,7 +14,7 @@ class PromiseModelList<T extends Model> extends Thenable<ModelList<T>> {
   constructor(
     params: ConstructorParameters<typeof Promise<ModelList<T>>>,
     model: typeof Model,
-    query: JSONQuery
+    query: JSONQuery,
   ) {
     super(params);
 
@@ -39,9 +39,7 @@ class PromiseModelList<T extends Model> extends Thenable<ModelList<T>> {
   }
 
   get [Symbol.toStringTag]() {
-    return `PromiseModelList<${this.model.__name}>(${JSON.stringify(
-      this.#query
-    )})`;
+    return `PromiseModelList<${this.model.__name}>(${JSON.stringify(this.#query)})`;
   }
 }
 

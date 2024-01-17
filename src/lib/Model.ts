@@ -102,11 +102,7 @@ class Model {
   }
 
   static getKeyField() {
-    return (
-      this.getBaseClass().definition?.keyField ??
-      this.definition?.keyField ??
-      "_id"
-    );
+    return this.getBaseClass().definition?.keyField ?? this.definition?.keyField ?? "_id";
   }
 
   /**
@@ -154,11 +150,11 @@ class Model {
 
   static clone<T extends typeof Model>(
     this: T,
-    initOptions?: Parameters<typeof getModelInitPromise>[1]
+    initOptions?: Parameters<typeof getModelInitPromise>[1],
   ): T {
     const baseClass = this.getBaseClass();
 
-    // @ts-ignore
+    // @ts-expect-error decorator
     const modelCloned = class extends baseClass {
       static __initOptions = initOptions;
     };
@@ -197,11 +193,11 @@ class Model {
   static withAdapter<T extends typeof Model>(
     this: T,
     adapterClass: typeof Adapter,
-    modules?: Array<Module>
+    modules?: Array<Module>,
   ): T {
     const baseClass = this.getBaseClass();
 
-    // @ts-ignore
+    // @ts-expect-error decorator
     const modelWithAdapter = class extends this {
       static __baseClass = baseClass;
     };
@@ -211,7 +207,7 @@ class Model {
     const adapter = new adapterClass(modelWithAdapter);
     modelWithAdapter.__adapter = adapter;
 
-    modules?.forEach((module) => module(modelWithAdapter));
+    modules?.forEach(module => module(modelWithAdapter));
 
     return modelWithAdapter;
   }
@@ -239,10 +235,7 @@ class Model {
    * If the model is not extensible (Role, Token, etc.), this method does nothing.
    * @returns
    */
-  static async reloadModel(opts?: {
-    datamodel?: DataModel;
-    ctx?: TransactionCtx;
-  }) {
+  static async reloadModel(opts?: { datamodel?: DataModel; ctx?: TransactionCtx }) {
     let datamodel = opts?.datamodel;
     const adapter = this.getAdapter();
 
@@ -254,7 +247,7 @@ class Model {
             slug: this.slug,
           },
         },
-        opts?.ctx
+        opts?.ctx,
       );
     }
 
@@ -302,14 +295,14 @@ class Model {
   static getFromSlug<M extends typeof Model = typeof Model>(
     slug: string,
     adapter?: typeof Adapter,
-    fallbackData: boolean = true
+    fallbackData: boolean = true,
   ): M {
     if (!adapter) {
       adapter = this.getAdapter(false)?.base;
     }
 
     const models = require("@/index").models as Record<string, typeof Model>;
-    let model: M = Object.values(models).find((m) => m.slug === slug) as M;
+    let model: M = Object.values(models).find(m => m.slug === slug) as M;
     if (model) {
       let adaptedModel = adapter?.modelsMap.get(model.slug) as M;
       if (!adaptedModel && adapter) {
@@ -339,7 +332,7 @@ class Model {
     path: string,
     format: string = SerializerFormat.OBJECT,
     bindCtx: Partial<SerializerCtx> = {},
-    value?: any
+    value?: any,
   ) {
     let fieldsPaths: Array<FieldsPathItem>;
 
@@ -385,14 +378,9 @@ class Model {
     } else {
       const noFieldSymbol = Symbol("noField");
 
-      const _value = firstField.serialize(
-        value,
-        SerializerFormat.NEXT_FIELD,
-        this,
-        ctx
-      );
+      const _value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, this, ctx);
 
-      let res = _getter({
+      const res = _getter({
         _value,
         _fieldsPaths: fieldsPaths.splice(1),
         format,
@@ -417,7 +405,7 @@ class Model {
     this: T,
     path: S,
     value: S extends keyof T ? T[S] | any : any,
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ) {
     const _path = path as string;
     let fieldsPaths;
@@ -466,14 +454,14 @@ class Model {
     format: string,
     bindCtx: Partial<SerializerCtx> = {},
     clean = false,
-    fieldsKeys?: Array<string>
+    fieldsKeys?: Array<string>,
   ) {
     defineFieldsProperties(this);
 
     const keys = fieldsKeys ?? this.model.fieldsKeys;
     const res: any = {};
 
-    keys.forEach((slug) => {
+    keys.forEach(slug => {
       const v = this.get(slug, format, bindCtx);
       if (clean && v === undefined) {
         return;
@@ -528,26 +516,21 @@ class Model {
    * const modelStr = instance.toString();
    * const instance = Model.fromString(modelStr);
    */
-  static fromString<T extends typeof Model>(
-    this: T,
-    str: string,
-    cleanPayload = true
-  ) {
-    const model = this;
+  static fromString<T extends typeof Model>(this: T, str: string, cleanPayload = true) {
     const parsed = JSON.parse(str);
     let payload = parsed;
 
     if (cleanPayload) {
       const cleaned: any = {};
 
-      model.fieldsKeys.forEach((slug) => {
+      this.fieldsKeys.forEach(slug => {
         cleaned[slug] = parsed[slug];
       });
 
       payload = cleaned;
     }
 
-    return new model(payload);
+    return new this(payload);
   }
 
   /**
@@ -560,18 +543,17 @@ class Model {
   static async count<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ): Promise<number> {
-    const model = this;
     return new Promise<number>(async (resolve, reject) => {
       try {
-        await model.initialize();
+        await this.initialize();
 
-        if (model.isSingle()) {
+        if (this.isSingle()) {
           return resolve(1);
         }
 
-        const count = await model.execute("count", [query], ctx);
+        const count = await this.execute("count", [query], ctx);
         resolve(count);
       } catch (e) {
         reject(e);
@@ -589,16 +571,15 @@ class Model {
   static get<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ): PromiseModel<InstanceType<T>> {
-    const model = this;
     return new PromiseModel<InstanceType<T>>(
       [
         async (resolve, reject) => {
           try {
-            await model.initialize();
+            await this.initialize();
 
-            const i = await model.execute("get", [query], ctx);
+            const i = await this.execute("get", [query], ctx);
             resolve(i);
           } catch (e) {
             reject(e);
@@ -606,7 +587,7 @@ class Model {
         },
       ],
       this,
-      query
+      query,
     );
   }
 
@@ -624,23 +605,22 @@ class Model {
   static getList<T extends typeof Model>(
     this: T,
     query: JSONQuery = {},
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ): PromiseModelList<InstanceType<T>> {
-    const model = this;
     return new PromiseModelList<InstanceType<T>>(
       [
         async (resolve, reject) => {
           try {
-            await model.initialize();
+            await this.initialize();
 
-            if (model.isSingle()) {
+            if (this.isSingle()) {
               throw new CoreError({
                 code: ErrorCodes.INVALID_OPERATION,
                 message: `Cannot use getList on a single model, use get instead`,
               });
             }
 
-            const list = await model.execute("getList", [query], ctx);
+            const list = await this.execute("getList", [query], ctx);
             resolve(list);
           } catch (e) {
             reject(e);
@@ -648,7 +628,7 @@ class Model {
         },
       ],
       this,
-      query
+      query,
     );
   }
 
@@ -663,7 +643,7 @@ class Model {
   static async create<T extends typeof Model>(
     this: T,
     payload: InputModelPayload<T>,
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ): Promise<InstanceType<T>> {
     if (Array.isArray(payload)) {
       throw new CoreError({
@@ -701,7 +681,7 @@ class Model {
   static async createMultiple<T extends typeof Model>(
     this: T,
     payload: Array<InputModelPayload<T>>,
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
@@ -726,11 +706,7 @@ class Model {
    * console.log(instance.title); // undefined
    */
   async update(update: any, ctx?: TransactionCtx): Promise<this> {
-    const res = await this.model.execute(
-      "updateOne",
-      [String(this._id), update],
-      ctx
-    );
+    const res = await this.model.execute("updateOne", [String(this._id), update], ctx);
 
     if (!res?.getDoc?.()) {
       throw new CoreError({
@@ -763,7 +739,7 @@ class Model {
     this: T,
     query: string | JSONQuery = {},
     update: any,
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
@@ -828,7 +804,7 @@ class Model {
   static async delete<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ): Promise<string[]> {
     await this.initialize();
 
@@ -869,11 +845,13 @@ class Model {
    *  // will be triggered every time a single account is created with Account.create()
    * });
    */
-  static hook<
-    P extends HookPhase,
-    A extends keyof AdapterFetcher,
-    T extends typeof Model
-  >(this: T, phase: P, action: A, fn: Hook<P, A, T>["fn"], order: number = 0) {
+  static hook<P extends HookPhase, A extends keyof AdapterFetcher, T extends typeof Model>(
+    this: T,
+    phase: P,
+    action: A,
+    fn: Hook<P, A, T>["fn"],
+    order: number = 0,
+  ) {
     const baseClass = this.getBaseClass();
 
     if (!baseClass.hasOwnProperty("__hooks") || !baseClass.__hooks) {
@@ -899,7 +877,7 @@ class Model {
   static async validate<T extends typeof Model>(
     this: T,
     list: Array<InstanceType<T> | InputModelPayload<T>>,
-    ctx?: TransactionCtx
+    ctx?: TransactionCtx,
   ) {
     return await validateModel(this, list, ctx);
   }
@@ -955,45 +933,42 @@ class Model {
   static async executeHooks<
     M extends typeof Model,
     P extends HookPhase,
-    A extends keyof AdapterFetcher<M>
+    A extends keyof AdapterFetcher<M>,
   >(
     this: M,
     phase: P,
     action: A,
     payload: HookCallbackArgs<P, A, M>,
-    abortToken?: symbol
+    abortToken?: symbol,
   ): Promise<void> {
-    await getRecursiveHooksFromModel(this, action, phase).reduce(
-      async (p, hook) => {
-        await p;
+    await getRecursiveHooksFromModel(this, action, phase).reduce(async (p, hook) => {
+      await p;
 
-        try {
-          await hook.fn.call(this, payload);
-        } catch (err) {
-          if (abortToken === err) {
-            throw new CoreError({
-              code: ErrorCodes.EXECUTION_ABORTED,
-              message: `execution on model ${this.__name} has been aborted`,
-            });
-          }
-
-          payload.err ??= [];
-          payload.err.push(err);
+      try {
+        await hook.fn.call(this, payload);
+      } catch (err) {
+        if (abortToken === err) {
+          throw new CoreError({
+            code: ErrorCodes.EXECUTION_ABORTED,
+            message: `execution on model ${this.__name} has been aborted`,
+          });
         }
-      },
-      Promise.resolve()
-    );
+
+        payload.err ??= [];
+        payload.err.push(err);
+      }
+    }, Promise.resolve());
   }
 
   static async execute<
     M extends typeof Model,
     A extends keyof AdapterFetcher<M>,
-    Args extends Parameters<AdapterFetcher[A]>[0]
+    Args extends Parameters<AdapterFetcher[A]>[0],
   >(
     this: M,
     action: A,
     args: Args,
-    bindCtx: Partial<TransactionCtx> = {}
+    bindCtx: Partial<TransactionCtx> = {},
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     const retryToken = Symbol();
     const abortToken = Symbol();

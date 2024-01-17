@@ -10,9 +10,7 @@ import AuthProvider from "@/models/AuthProvider";
 import AuthProviders from "@/enums/auth-providers";
 
 @modelDecorator()
-class AccountAuthProvider<
-  T extends AuthProviders = AuthProviders
-> extends Model {
+class AccountAuthProvider<T extends AuthProviders = AuthProviders> extends Model {
   static __name = "AccountAuthProvider";
   static slug = "accounts_authProviders";
   static definition: ModelDefinition = {

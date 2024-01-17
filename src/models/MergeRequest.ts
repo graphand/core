@@ -9,9 +9,7 @@ import ValidatorTypes from "@/enums/validator-types";
 import MergeRequestTypes from "@/enums/merge-request-types";
 
 @modelDecorator()
-class MergeRequest<
-  T extends MergeRequestTypes = MergeRequestTypes
-> extends Model {
+class MergeRequest<T extends MergeRequestTypes = MergeRequestTypes> extends Model {
   static __name = "MergeRequest";
   static slug = "mergeRequests";
   static definition: ModelDefinition = {

@@ -1,10 +1,5 @@
 import ValidatorTypes from "@/enums/validator-types";
-import {
-  DocumentDefinition,
-  ValidatorDefinition,
-  ValidatorHook,
-  ValidatorOptions,
-} from "@/types";
+import { DocumentDefinition, ValidatorDefinition, ValidatorHook, ValidatorOptions } from "@/types";
 import Model from "@/lib/Model";
 import { getDefaultValidatorOptions } from "@/lib/utils";
 
@@ -35,11 +30,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   get options(): ValidatorOptions<T> {
     const defaults = getDefaultValidatorOptions(this.type);
 
-    return Object.assign(
-      {},
-      defaults,
-      this.#definition.options ?? {}
-    ) as ValidatorOptions<T>;
+    return Object.assign({}, defaults, this.#definition.options ?? {}) as ValidatorOptions<T>;
   }
 
   getFullPath() {
@@ -50,11 +41,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return this.getFullPath() + this.type;
   }
 
-  async validate(
-    docs: Array<DocumentDefinition>,
-    model: typeof Model,
-    ctx: any
-  ) {
+  async validate(docs: Array<DocumentDefinition>, model: typeof Model, ctx: any) {
     return false;
   }
 

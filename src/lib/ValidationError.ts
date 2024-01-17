@@ -33,8 +33,8 @@ class ValidationError extends CoreError {
 
   get fieldsPaths(): Array<string> {
     return [
-      ...this.fields.map((f) => f.field?.path),
-      ...this.validators.map((v) => v.validator.getFullPath()),
+      ...this.fields.map(f => f.field?.path),
+      ...this.validators.map(v => v.validator.getFullPath()),
     ];
   }
 
@@ -44,23 +44,19 @@ class ValidationError extends CoreError {
     const reasons = [];
     if (this.fields.length) {
       reasons.push(
-        `${this.fields.length} field${
-          this.fields.length > 1 ? "s" : ""
-        } validation (${this.fields.map((v) => v.slug).join(", ")})`
+        `${this.fields.length} field${this.fields.length > 1 ? "s" : ""} validation (${this.fields
+          .map(v => v.slug)
+          .join(", ")})`,
       );
     }
     if (this.validators.length) {
       let reason = `${this.validators.length} model validator${
         this.validators.length > 1 ? "s" : ""
-      } (${this.validators.map((v) => v.validator.type).join(", ")})`;
+      } (${this.validators.map(v => v.validator.type).join(", ")})`;
 
-      const values = this.validators
-        .filter((v) => v.value !== undefined)
-        .map((v) => v.value);
+      const values = this.validators.filter(v => v.value !== undefined).map(v => v.value);
       if (values.length) {
-        reason += ` for value${values.length > 1 ? "s" : ""} ${values.join(
-          ", "
-        )}`;
+        reason += ` for value${values.length > 1 ? "s" : ""} ${values.join(", ")}`;
       }
 
       reasons.push(reason);
@@ -71,9 +67,7 @@ class ValidationError extends CoreError {
     }
 
     if (this.fieldsPaths?.length) {
-      message += ` on path${
-        this.fieldsPaths.length > 1 ? "s" : ""
-      } ${this.fieldsPaths.join(", ")}`;
+      message += ` on path${this.fieldsPaths.length > 1 ? "s" : ""} ${this.fieldsPaths.join(", ")}`;
     }
 
     return message;
@@ -85,8 +79,8 @@ class ValidationError extends CoreError {
       type: "ValidationError",
       fieldsPaths: this.fieldsPaths,
       reason: {
-        fields: this.fields.map((f) => f.toJSON()),
-        validators: this.validators.map((v) => v.toJSON()),
+        fields: this.fields.map(f => f.toJSON()),
+        validators: this.validators.map(v => v.toJSON()),
       },
     };
 

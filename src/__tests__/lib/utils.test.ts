@@ -15,7 +15,7 @@ describe("test utils", () => {
 
       const called = [];
 
-      crossModelTree(model2, (model) => called.push(model));
+      crossModelTree(model2, model => called.push(model));
 
       expect(called).toContain(model2);
       expect(called).toContain(model1bisbis);
@@ -43,7 +43,7 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
 
       const fPath = getFieldsPathsFromPath(model, "field1");
@@ -83,14 +83,12 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.__label =
-        "field1bis";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.items.options.__label =
-        "field1bisbis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.items.options.__label = "field1bisbis";
 
       const fPath1 = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -139,11 +137,10 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.__label =
-        "field1bis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.__label = "field1bis";
 
       const fPath = getFieldsPathsFromPath(model, "field1.[]");
 
@@ -172,11 +169,10 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.__label =
-        "field1bis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.__label = "field1bis";
 
       const fPath = getFieldsPathsFromPath(model, "field1.[0]");
 
@@ -207,11 +203,10 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
-      // @ts-ignore
-      model.definition.fields.field1.options.fields.field2.options.__label =
-        "field2";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.fields.field2.options.__label = "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -247,14 +242,12 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.__label =
-        "field1bis";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.fields.field2.options.__label =
-        "field2";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2");
 
@@ -303,14 +296,12 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.__label =
-        "field1bis";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.fields.field2.options.__label =
-        "field2";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
 
       const fPath = getFieldsPathsFromPath(model, "field1.field2.field3");
 
@@ -378,21 +369,18 @@ describe("test utils", () => {
         };
       };
 
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.__label = "field1";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.__label =
-        "field1bis";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.fields.field2.options.__label =
-        "field2";
-      // @ts-ignore
-      model.definition.fields.field1.options.items.options.fields.field3.options.__label =
-        "field3";
-      // @ts-ignore
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.__label = "field1bis";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.fields.field2.options.__label = "field2";
+      // @ts-expect-error test
+      model.definition.fields.field1.options.items.options.fields.field3.options.__label = "field3";
+      // @ts-expect-error test
       model.definition.fields.field1.options.items.options.fields.field3.options.items.options.__label =
         "field3bis";
-      // @ts-ignore
+      // @ts-expect-error test
       model.definition.fields.field1.options.items.options.fields.field3.options.items.options.fields.field4.options.__label =
         "field4";
 
@@ -462,10 +450,7 @@ describe("test utils", () => {
       expect(fPath6[2].field).toHaveProperty("type", FieldTypes.ARRAY);
       expect(fPath6[2].field).toHaveProperty("options.__label", "field3");
 
-      const fPath7 = getFieldsPathsFromPath(
-        model,
-        "field1.[].field3.[].field4"
-      );
+      const fPath7 = getFieldsPathsFromPath(model, "field1.[].field3.[].field4");
 
       expect(fPath7).toBeInstanceOf(Array);
       expect(fPath7.length).toEqual(5);
@@ -480,10 +465,7 @@ describe("test utils", () => {
       expect(fPath7[4].field).toHaveProperty("type", FieldTypes.TEXT);
       expect(fPath7[4].field).toHaveProperty("options.__label", "field4");
 
-      const fPath8 = getFieldsPathsFromPath(
-        model,
-        "field1.[].field3.[].field4.field5"
-      );
+      const fPath8 = getFieldsPathsFromPath(model, "field1.[].field3.[].field4.field5");
 
       expect(fPath8).toBeInstanceOf(Array);
       expect(fPath8.length).toEqual(6);

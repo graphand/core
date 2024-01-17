@@ -1,9 +1,5 @@
 import Adapter from "@/lib/Adapter";
-import {
-  AdapterFetcher,
-  FieldsDefinition,
-  ValidatorsDefinition,
-} from "@/types";
+import { AdapterFetcher, FieldsDefinition, ValidatorsDefinition } from "@/types";
 import ModelList from "@/lib/ModelList";
 import FieldTypes from "@/enums/field-types";
 import ModelEnvScopes from "@/enums/model-env-scopes";
@@ -11,7 +7,6 @@ import Model from "@/lib/Model";
 import ValidatorTypes from "@/enums/validator-types";
 import defaultFieldsMap from "@/lib/defaultFieldsMap";
 import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
-import Data from "@/lib/Data";
 import { defineFieldsProperties } from "@/lib/utils";
 import Validator from "@/lib/Validator";
 
@@ -26,7 +21,6 @@ export const mockAdapter = ({
         return true;
       }
     },
-    // [ValidatorTypes.UNIQUE]: null,
   },
 }: {
   fieldsMap?: Adapter["fieldsMap"];
@@ -43,7 +37,7 @@ export const mockAdapter = ({
         cacheModel = new Set(
           Array(5)
             .fill(null)
-            .map(() => new this.model())
+            .map(() => new this.model()),
         );
 
         cache.set(cacheKey, cacheModel);
@@ -62,24 +56,20 @@ export const mockAdapter = ({
         const cache = Array.from(this.thisCache);
 
         if (typeof query === "string") {
-          return cache.find((r) => r._id === query);
+          return cache.find(r => r._id === query);
         }
 
         let found = cache[0];
 
         if (query.filter) {
           const filterEntries = Object.entries(query.filter);
-          found = cache.find((r) =>
-            filterEntries.every(([key, value]) => r.get(key) === value)
-          );
+          found = cache.find(r => filterEntries.every(([key, value]) => r.get(key) === value));
         }
 
         return Promise.resolve(found);
       }),
       getList: jest.fn(([query]) => {
-        return Promise.resolve(
-          new ModelList(this.model, Array.from(this.thisCache))
-        );
+        return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
       }),
       createOne: jest.fn(async ([payload]) => {
         const i = new this.model(payload);
@@ -87,8 +77,8 @@ export const mockAdapter = ({
         return Promise.resolve(i);
       }),
       createMultiple: jest.fn(([payload]) => {
-        const created = payload.map((p) => new this.model(p));
-        created.forEach((i) => this.thisCache.add(i));
+        const created = payload.map(p => new this.model(p));
+        created.forEach(i => this.thisCache.add(i));
         return Promise.resolve(created);
       }),
       updateOne: jest.fn(([query, update]) => {
@@ -101,14 +91,14 @@ export const mockAdapter = ({
         const cache = Array.from(this.thisCache);
 
         if (typeof query === "string") {
-          found = cache.find((r) => r._id === query);
+          found = cache.find(r => r._id === query);
         } else {
           found = cache[0];
 
           if (query.filter) {
             const filterEntries = Object.entries(query.filter);
-            found = cache.find((r) =>
-              filterEntries.every(([key, value]) => r.getDoc()[key] === value)
+            found = cache.find(r =>
+              filterEntries.every(([key, value]) => r.getDoc()[key] === value),
             );
           }
         }
@@ -122,7 +112,7 @@ export const mockAdapter = ({
         }
 
         if (update.$unset) {
-          Object.keys(update.$unset).forEach((key) => {
+          Object.keys(update.$unset).forEach(key => {
             delete found.getDoc()[key];
           });
         }
@@ -137,12 +127,12 @@ export const mockAdapter = ({
         const list = Array.from(this.thisCache);
 
         if (update.$set) {
-          list.forEach((i) => Object.assign(i.getDoc(), update.$set));
+          list.forEach(i => Object.assign(i.getDoc(), update.$set));
         }
 
         if (update.$unset) {
-          list.forEach((i) => {
-            Object.keys(update.$unset).forEach((key) => {
+          list.forEach(i => {
+            Object.keys(update.$unset).forEach(key => {
               delete i.getDoc()[key];
             });
           });
@@ -164,7 +154,7 @@ export const mockAdapter = ({
           return Promise.resolve(null);
         }
 
-        const ids = Array.from(this.thisCache).map((i) => i._id);
+        const ids = Array.from(this.thisCache).map(i => i._id);
         this.thisCache.clear();
         return Promise.resolve(ids);
       }),

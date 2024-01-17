@@ -7,7 +7,7 @@ import { defineFieldsProperties } from "@/lib/utils";
  */
 export const modelDecorator = () => {
   return <T extends typeof Model>(model: T): T => {
-    // @ts-ignore
+    // @ts-expect-error decorator
     return class extends model {
       constructor(doc) {
         super(doc);

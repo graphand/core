@@ -302,7 +302,4 @@ const controllersMap = {
   },
 };
 
-export default controllersMap as Record<
-  keyof typeof controllersMap,
-  ControllerDefinition
->;
+export default controllersMap as Record<keyof typeof controllersMap, ControllerDefinition>;

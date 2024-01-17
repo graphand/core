@@ -12,12 +12,7 @@ class ModelList<T extends Model> extends Array<T> {
   #count: number; // Total count of the list (returned by the adapter)
   #reloadPromise: Promise<void>; // Promise to wait for the reload to finish
 
-  constructor(
-    model: typeof Model,
-    list: Array<T> = [],
-    query?: JSONQuery,
-    count?: number
-  ) {
+  constructor(model: typeof Model, list: Array<T> = [], query?: JSONQuery, count?: number) {
     super(...list);
 
     this.#model = model;
@@ -82,14 +77,12 @@ class ModelList<T extends Model> extends Array<T> {
    * Returns a promise that resolves when the list is reloaded.
    */
   async reload() {
-    const _this = this;
-
     this.#reloadPromise ??= new Promise<void>(async (resolve, reject) => {
       try {
-        const { model, query } = _this;
+        const { model, query } = this;
         const list = (await model.getList(query)) as ModelList<T>;
-        _this.splice(0, _this.length, ...list);
-        _this.#count = list.count;
+        this.splice(0, this.length, ...list);
+        this.#count = list.count;
         resolve();
       } catch (e) {
         reject(e);
@@ -129,7 +122,7 @@ class ModelList<T extends Model> extends Array<T> {
    */
   toJSON() {
     return {
-      rows: this.toArray().map((r) => r.toJSON()),
+      rows: this.toArray().map(r => r.toJSON()),
       count: this.#count,
     };
   }

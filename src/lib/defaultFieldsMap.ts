@@ -3,11 +3,7 @@ import Field from "@/lib/Field";
 import SerializerFormat from "@/enums/serializer-format";
 import Model from "@/lib/Model";
 import Adapter from "@/lib/Adapter";
-import {
-  getFieldFromDefinition,
-  getNestedFieldsMap,
-  isObjectId,
-} from "@/lib/utils";
+import { getFieldFromDefinition, getNestedFieldsMap, isObjectId } from "@/lib/utils";
 import CoreError from "@/lib/CoreError";
 import { FieldOptions } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
@@ -57,9 +53,7 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
       return false;
     };
 
-    const values = list
-      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
-      .flat(Infinity);
+    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
 
     return !values.some(_isInvalid);
   }
@@ -92,19 +86,12 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
       return !isObjectId(value);
     };
 
-    const values = list
-      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
-      .flat(Infinity);
+    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
 
     return !values.some(_isInvalid);
   }
 
-  _serializeJSON = (
-    value: any,
-    format: string,
-    from: Model,
-    ctx: SerializerCtx = {}
-  ) => {
+  _serializeJSON = (value: any, format: string, from: Model, ctx: SerializerCtx = {}) => {
     if (!value) {
       return null;
     }
@@ -113,57 +100,36 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 
     if (value instanceof Model) {
       id = value._id;
-    } else if (
-      value instanceof PromiseModel &&
-      typeof value.query === "string"
-    ) {
+    } else if (value instanceof PromiseModel && typeof value.query === "string") {
       id = value.query;
     } else {
       id = value;
     }
 
     const adapter = from.model.getAdapter();
-    const fieldId = getFieldFromDefinition<FieldTypes.ID>(
-      { type: FieldTypes.ID },
-      adapter,
-      "_id"
-    );
+    const fieldId = getFieldFromDefinition<FieldTypes.ID>({ type: FieldTypes.ID }, adapter, "_id");
 
     return fieldId.serialize(id, format, from, ctx);
   };
 
-  _serializeObject = (
-    value: any,
-    format: string,
-    from: Model,
-    ctx: SerializerCtx = {}
-  ) => {
+  _serializeObject = (value: any, format: string, from: Model, ctx: SerializerCtx = {}) => {
     const adapter = from.model.getAdapter();
 
     // get the referenced model with the same adapter as from parameter
-    let model = Model.getFromSlug(this.options.ref, adapter.base);
+    const model = Model.getFromSlug(this.options.ref, adapter.base);
 
     if (!isObjectId(value)) {
       return null;
     }
 
-    const fieldId = getFieldFromDefinition<FieldTypes.ID>(
-      { type: FieldTypes.ID },
-      adapter,
-      "_id"
-    );
+    const fieldId = getFieldFromDefinition<FieldTypes.ID>({ type: FieldTypes.ID }, adapter, "_id");
 
     const _id = fieldId.serialize(value, format, from, ctx);
 
     return model.get(_id, ctx?.transactionCtx);
   };
 
-  serialize(
-    value: any,
-    format: string,
-    from: Model,
-    ctx: SerializerCtx = {}
-  ): any {
+  serialize(value: any, format: string, from: Model, ctx: SerializerCtx = {}): any {
     if (
       [
         SerializerFormat.JSON,
@@ -189,20 +155,12 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       return typeof value !== "object";
     };
 
-    const values = list
-      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
-      .flat(Infinity);
+    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
     return !values.some(_isInvalid);
   }
 
-  serialize(
-    value: any,
-    format: string,
-    from: Model,
-    ctx: SerializerCtx = {}
-  ): any {
+  serialize(value: any, format: string, from: Model, ctx: SerializerCtx = {}): any {
     value = Array.isArray(value) ? value[0] : value;
-    const _field = this;
     const oFormat = ctx.outputFormat || format;
 
     if (!value || typeof value !== "object") {
@@ -221,18 +179,18 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       let value = target[prop];
 
       if (!targetField) {
-        if (_field.options?.strict) {
+        if (this.options?.strict) {
           return undefined;
         }
 
-        if (!_field.options?.defaultField) {
+        if (!this.options?.defaultField) {
           return value;
         }
 
         targetField = getFieldFromDefinition(
-          _field.options.defaultField,
+          this.options.defaultField,
           adapter,
-          [_field.path, prop].join(".")
+          [this.path, prop].join("."),
         );
       }
 
@@ -264,17 +222,17 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       }
 
       if (this.options.defaultField) {
-        const noField = Object.keys(obj).filter((k) => !fieldsMap.has(k));
+        const noField = Object.keys(obj).filter(k => !fieldsMap.has(k));
 
         if (noField.length) {
-          noField.forEach((k) => {
+          noField.forEach(k => {
             if (obj[k] === undefined || obj[k] === null) {
               json[k] = obj[k];
             } else {
               const tmpField = getFieldFromDefinition(
                 this.options.defaultField,
                 adapter,
-                [this.path, k].join(".")
+                [this.path, k].join("."),
               );
 
               json[k] = tmpField.serialize(obj[k], format, from, ctx);
@@ -298,11 +256,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
       });
     };
 
-    if (
-      [SerializerFormat.JSON, SerializerFormat.DOCUMENT].includes(
-        format as SerializerFormat
-      )
-    ) {
+    if ([SerializerFormat.JSON, SerializerFormat.DOCUMENT].includes(format as SerializerFormat)) {
       return _serializeJSON(value);
     }
 
@@ -322,9 +276,7 @@ class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
       return !Object.values(IdentityTypes).includes(type) || !isObjectId(id);
     };
 
-    const values = list
-      .map((i) => i.get(this.path, SerializerFormat.VALIDATION))
-      .flat(Infinity);
+    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
 
     return !values.some(_isInvalid);
   }
@@ -338,18 +290,16 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     value: any,
     format: string,
     from: Model,
-    ctx: SerializerCtx = {}
+    ctx: SerializerCtx = {},
   ) {
     const adapter = from.model.getAdapter();
 
     if (format === SerializerFormat.OBJECT) {
-      let model = Model.getFromSlug(options.ref, adapter.base);
+      const model = Model.getFromSlug(options.ref, adapter.base);
 
-      let ids = value;
-
-      if (!ids.every(isObjectId)) {
+      if (!value?.every(isObjectId)) {
         throw new CoreError({
-          message: `Error serializing array of relations with ids ${ids}`,
+          message: `Error serializing array of relations with ids ${value}`,
         });
       }
 
@@ -362,20 +312,17 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
           const itemsField = getFieldFromDefinition(
             this.options.items,
             adapter,
-            this.path + `.[${i}]`
+            this.path + `.[${i}]`,
           );
 
           return itemsField.serialize(v, format, from, ctx);
         });
       } else {
-        res = model.getList({ ids }, ctx?.transactionCtx);
+        res = model.getList({ ids: value }, ctx?.transactionCtx);
       }
 
       return res;
-    } else if (
-      value instanceof PromiseModelList ||
-      value instanceof ModelList
-    ) {
+    } else if (value instanceof PromiseModelList || value instanceof ModelList) {
       value = value.getIds();
     }
 
@@ -383,40 +330,21 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
       return [];
     }
 
-    const fieldId = getFieldFromDefinition<FieldTypes.ID>(
-      { type: FieldTypes.ID },
-      adapter,
-      "_id"
-    );
+    const fieldId = getFieldFromDefinition<FieldTypes.ID>({ type: FieldTypes.ID }, adapter, "_id");
 
-    return value.map((id) => fieldId.serialize(id, format, from, ctx));
+    return value.map(id => fieldId.serialize(id, format, from, ctx));
   }
 
-  serialize(
-    value: any,
-    format: string,
-    from: Model,
-    ctx: SerializerCtx = {}
-  ): any {
+  serialize(value: any, format: string, from: Model, ctx: SerializerCtx = {}): any {
     if (this.options.items?.type === FieldTypes.RELATION) {
-      return this._serializeRelationArray(
-        this.options.items?.options,
-        value,
-        format,
-        from,
-        ctx
-      );
+      return this._serializeRelationArray(this.options.items?.options, value, format, from, ctx);
     }
 
     const adapter = from.model.getAdapter();
     value = Array.isArray(value) ? value : [value];
 
     return value.map((v, i) => {
-      const itemsField = getFieldFromDefinition(
-        this.options.items,
-        adapter,
-        this.path + `.[${i}]`
-      );
+      const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
 
       return itemsField.serialize(v, format, from, ctx);
     });

@@ -11,9 +11,7 @@ class Terms extends Model {
   static __name = "Terms";
   static slug = "terms";
   static definition: ModelDefinition = {
-    validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "content" } },
-    ],
+    validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "content" } }],
   };
 
   static scope = ModelEnvScopes.GLOBAL;

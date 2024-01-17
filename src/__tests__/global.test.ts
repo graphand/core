@@ -16,7 +16,7 @@ describe("Global tests", () => {
     const model = DataModel.withAdapter(adapter);
 
     await expect(
-      model.validate([new model({ slug, definition: { fields: "toto" } })])
+      model.validate([new model({ slug, definition: { fields: "toto" } })]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
@@ -29,7 +29,7 @@ describe("Global tests", () => {
             },
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
@@ -44,7 +44,7 @@ describe("Global tests", () => {
             },
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
@@ -59,7 +59,7 @@ describe("Global tests", () => {
             },
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -70,17 +70,15 @@ describe("Global tests", () => {
     const model = DataModel.withAdapter(adapter);
 
     await expect(
-      model.validate([new model({ slug, definition: { validators: "toto" } })])
+      model.validate([new model({ slug, definition: { validators: "toto" } })]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      model.validate([new model({ slug, definition: { validators: {} } })])
+      model.validate([new model({ slug, definition: { validators: {} } })]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      model.validate([
-        new model({ slug, definition: { validators: ["required"] } }),
-      ])
+      model.validate([new model({ slug, definition: { validators: ["required"] } })]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
@@ -95,7 +93,7 @@ describe("Global tests", () => {
             ],
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -188,7 +186,7 @@ describe("Global tests", () => {
             },
           },
         }),
-      ])
+      ]),
     ).resolves.toBeTruthy();
   });
 
@@ -235,7 +233,7 @@ describe("Global tests", () => {
             b: { title: "test" },
           },
         }),
-      ])
+      ]),
     ).resolves.toBeTruthy();
 
     await expect(
@@ -250,7 +248,7 @@ describe("Global tests", () => {
             b: { noTitle: true },
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -304,7 +302,7 @@ describe("Global tests", () => {
             arr: [{ title: "3" }, { title: "4" }],
           },
         }),
-      ])
+      ]),
     ).resolves.toBeTruthy();
 
     await expect(
@@ -319,7 +317,7 @@ describe("Global tests", () => {
             arr: [{ title: "3" }, { title: "4" }],
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -445,7 +443,7 @@ describe("Global tests", () => {
             ],
           },
         }),
-      ])
+      ]),
     ).resolves.toBeTruthy();
 
     await expect(
@@ -458,10 +456,7 @@ describe("Global tests", () => {
                   nestedArr: [{ a0: { title: "1" } }, { a1: { title: "2" } }],
                 },
                 b: {
-                  nestedArr: [
-                    { b0: { title: "3" } },
-                    { b1: { noTitle: true } },
-                  ],
+                  nestedArr: [{ b0: { title: "3" } }, { b1: { noTitle: true } }],
                 },
               },
               {
@@ -513,7 +508,7 @@ describe("Global tests", () => {
             ],
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -602,7 +597,7 @@ describe("Global tests", () => {
             ],
           },
         }),
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -755,7 +750,7 @@ describe("Global tests", () => {
         {
           slug: generateRandomString(),
         },
-      ])
+      ]),
     ).resolves.toBeTruthy();
 
     await expect(
@@ -784,7 +779,7 @@ describe("Global tests", () => {
             fields: {},
           },
         },
-      ])
+      ]),
     ).resolves.toBeTruthy();
 
     await expect(
@@ -814,7 +809,7 @@ describe("Global tests", () => {
             validators: [],
           },
         },
-      ])
+      ]),
     ).resolves.toBeTruthy();
   });
 
@@ -822,23 +817,21 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
 
     const extensibleModels = Object.values(models)
-      .filter((model) => model.extensible)
-      .map((model) => model.slug);
+      .filter(model => model.extensible)
+      .map(model => model.slug);
 
     const nonExtendableModels = Object.values(models)
-      .filter((model) => !model.extensible)
-      .map((model) => model.slug);
+      .filter(model => !model.extensible)
+      .map(model => model.slug);
 
     for (const slug of extensibleModels) {
-      await expect(
-        DataModel.withAdapter(adapter).validate([{ slug }])
-      ).resolves.toBeTruthy();
+      await expect(DataModel.withAdapter(adapter).validate([{ slug }])).resolves.toBeTruthy();
     }
 
     for (const slug of nonExtendableModels) {
-      await expect(
-        DataModel.withAdapter(adapter).validate([{ slug }])
-      ).rejects.toThrow(ValidationError);
+      await expect(DataModel.withAdapter(adapter).validate([{ slug }])).rejects.toThrow(
+        ValidationError,
+      );
     }
   });
 
@@ -857,7 +850,7 @@ describe("Global tests", () => {
             },
           },
         },
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
@@ -872,7 +865,7 @@ describe("Global tests", () => {
             },
           },
         },
-      ])
+      ]),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -924,13 +917,9 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     const _Environment = Environment.withAdapter(adapter);
 
-    await expect(_Environment.create({ name: "master" })).rejects.toThrow(
-      ValidationError
-    );
+    await expect(_Environment.create({ name: "master" })).rejects.toThrow(ValidationError);
 
-    await expect(_Environment.create({ name: "main" })).rejects.toThrow(
-      ValidationError
-    );
+    await expect(_Environment.create({ name: "main" })).rejects.toThrow(ValidationError);
 
     await expect(_Environment.create({ name: "test" })).resolves.toBeTruthy();
   });

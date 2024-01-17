@@ -31,7 +31,7 @@ describe("Test Model", () => {
       const TestModel = BaseModel.withAdapter(adapter);
       const created = await TestModel.createMultiple([{}, {}, {}]);
       expect(created).toBeInstanceOf(Array);
-      created.forEach((i) => {
+      created.forEach(i => {
         expect(i).toBeInstanceOf(TestModel);
       });
     });
@@ -530,10 +530,7 @@ describe("Test Model", () => {
 
       expect(created.get("test.[].nested")).toEqual(["123", "456"]);
 
-      expect(created.get("test.nested.undefined")).toEqual([
-        undefined,
-        undefined,
-      ]);
+      expect(created.get("test.nested.undefined")).toEqual([undefined, undefined]);
     });
 
     it("should serialize with complex schema fields", async () => {
@@ -742,11 +739,11 @@ describe("Test Model", () => {
 
       const rels = created.get("arr.rel");
       expect(rels).toBeInstanceOf(Array);
-      expect(rels.every((r) => r instanceof PromiseModel)).toBeTruthy();
+      expect(rels.every(r => r instanceof PromiseModel)).toBeTruthy();
 
       const arrRels = created.get("arr.arrRel");
       expect(arrRels).toBeInstanceOf(Array);
-      expect(arrRels.every((r) => r instanceof PromiseModelList)).toBeTruthy();
+      expect(arrRels.every(r => r instanceof PromiseModelList)).toBeTruthy();
     });
 
     it("should serialize to undefined nested fields of null", async () => {
@@ -1060,7 +1057,7 @@ describe("Test Model", () => {
           {
             nested: "test3a",
           },
-        ])
+        ]),
       ).toEqual([
         {
           nested: "test3a",
@@ -1072,7 +1069,7 @@ describe("Test Model", () => {
       expect(
         created.set("arr.[]", {
           nested: "test3b",
-        })
+        }),
       ).toEqual([
         {
           nested: "test3b",
@@ -1217,10 +1214,7 @@ describe("Test Model", () => {
     });
 
     it("with array of relation field", async () => {
-      await _testWith("relArray", [
-        "507f191e810c19729de860ea",
-        "507f191e810c19729de860eb",
-      ]);
+      await _testWith("relArray", ["507f191e810c19729de860ea", "507f191e810c19729de860eb"]);
     });
 
     it("with complex nested fields", async () => {
@@ -1247,10 +1241,7 @@ describe("Test Model", () => {
         },
       });
 
-      expect(created.get("complex.nestedArr.nested")).toEqual([
-        "test1",
-        "test2",
-      ]);
+      expect(created.get("complex.nestedArr.nested")).toEqual(["test1", "test2"]);
 
       const r = created.set("complex.nestedArr.nested", "test3");
 
@@ -1272,7 +1263,7 @@ describe("Test Model", () => {
       const TestModel = BaseModelWithKeyField.withAdapter(adapter);
 
       const keyFieldValidator = TestModel.validatorsArray.find(
-        (v) => v.type === ValidatorTypes.KEY_FIELD
+        v => v.type === ValidatorTypes.KEY_FIELD,
       );
       expect(keyFieldValidator).toBeDefined();
     });
@@ -1294,15 +1285,9 @@ describe("Test Model", () => {
 
       const validators = TestModel.validatorsArray;
 
-      const keyFieldValidator = validators.find(
-        (v) => v.type === ValidatorTypes.KEY_FIELD
-      );
-      const uniqueValidator = validators.find(
-        (v) => v.type === ValidatorTypes.UNIQUE
-      );
-      const requiredValidator = validators.find(
-        (v) => v.type === ValidatorTypes.REQUIRED
-      );
+      const keyFieldValidator = validators.find(v => v.type === ValidatorTypes.KEY_FIELD);
+      const uniqueValidator = validators.find(v => v.type === ValidatorTypes.UNIQUE);
+      const requiredValidator = validators.find(v => v.type === ValidatorTypes.REQUIRED);
 
       expect(keyFieldValidator).toBeDefined();
       expect(uniqueValidator).toBeUndefined();
@@ -1574,9 +1559,7 @@ describe("Test Model", () => {
 
     it("getRecursiveValidatorsFromModel should returns keyField validator if model has a keyField", () => {
       const validators = getRecursiveValidatorsFromModel(DataModel);
-      const keyFieldValidator = validators.find(
-        (v) => v.type === ValidatorTypes.KEY_FIELD
-      );
+      const keyFieldValidator = validators.find(v => v.type === ValidatorTypes.KEY_FIELD);
       expect(keyFieldValidator).toBeDefined();
     });
   });
@@ -1603,9 +1586,7 @@ describe("Test Model", () => {
       class CustomAccount extends Account {}
 
       expect(CustomAccount.getBaseClass()).toBe(CustomAccount);
-      expect(CustomAccount.withAdapter(adapter).getBaseClass()).toBe(
-        CustomAccount
-      );
+      expect(CustomAccount.withAdapter(adapter).getBaseClass()).toBe(CustomAccount);
     });
   });
 
@@ -1650,10 +1631,7 @@ describe("Test Model", () => {
 
       const extendedAccount = class extends Account {};
 
-      const extendedAccountFromModel = getAdaptedModel(
-        extendedAccount,
-        adapter
-      );
+      const extendedAccountFromModel = getAdaptedModel(extendedAccount, adapter);
 
       expect(extendedAccountFromModel.getBaseClass()).not.toBe(extendedAccount);
       expect(extendedAccountFromModel.getBaseClass()).toBe(Account);
@@ -1667,11 +1645,7 @@ describe("Test Model", () => {
 
       const extendedAccount = class extends Account {};
 
-      const extendedAccountFromModel = getAdaptedModel(
-        extendedAccount,
-        adapter,
-        true
-      );
+      const extendedAccountFromModel = getAdaptedModel(extendedAccount, adapter, true);
 
       expect(extendedAccountFromModel.getBaseClass()).toBe(extendedAccount);
     });
@@ -1684,11 +1658,7 @@ describe("Test Model", () => {
 
       const extendedAccount = class ExtendedAccount extends Account {};
 
-      const extendedAccountFromModel = getAdaptedModel(
-        extendedAccount,
-        adapter,
-        true
-      );
+      const extendedAccountFromModel = getAdaptedModel(extendedAccount, adapter, true);
 
       expect(extendedAccountFromModel.getBaseClass()).toBe(extendedAccount);
 
@@ -1710,11 +1680,7 @@ describe("Test Model", () => {
       expect(baseModelFromSlug).toBe(baseModelFromModel);
       expect(baseModelFromModel.getBaseClass()).not.toBe(ExampleModel);
 
-      const extendedModelFromModel = getAdaptedModel(
-        ExampleModel,
-        adapter,
-        true
-      );
+      const extendedModelFromModel = getAdaptedModel(ExampleModel, adapter, true);
 
       expect(extendedModelFromModel.getBaseClass()).toBe(ExampleModel);
 
@@ -1762,10 +1728,7 @@ describe("Test Model", () => {
       const creatingPromise = DocModel.create({});
 
       await expect(creatingPromise).rejects.toThrow(CoreError);
-      await expect(creatingPromise).rejects.toHaveProperty(
-        "code",
-        ErrorCodes.INVALID_OPERATION
-      );
+      await expect(creatingPromise).rejects.toHaveProperty("code", ErrorCodes.INVALID_OPERATION);
     });
   });
 
@@ -1898,9 +1861,7 @@ describe("Test Model", () => {
         allowMultipleOperations: false,
       }).withAdapter(mockAdapter());
 
-      await expect(TestModel.update({}, {})).rejects.toThrow(
-        "Cannot run updateMultiple operation"
-      );
+      await expect(TestModel.update({}, {})).rejects.toThrow("Cannot run updateMultiple operation");
     });
 
     it("should be able to updateMultiple on models with allowMultipleOperations = false and query as string (=updateOne)", async () => {
@@ -1916,9 +1877,7 @@ describe("Test Model", () => {
         allowMultipleOperations: false,
       }).withAdapter(mockAdapter());
 
-      await expect(TestModel.delete({})).rejects.toThrow(
-        "Cannot run deleteMultiple operation"
-      );
+      await expect(TestModel.delete({})).rejects.toThrow("Cannot run deleteMultiple operation");
     });
 
     it("should be able to deleteMultiple on models with allowMultipleOperations = false and query as string (=deleteOne)", async () => {

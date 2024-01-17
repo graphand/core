@@ -33,18 +33,10 @@ class Field<T extends FieldTypes = FieldTypes> {
   get options(): FieldOptions<T> {
     const defaults = getDefaultFieldOptions(this.type);
 
-    return Object.assign(
-      {},
-      defaults,
-      this.#definition.options ?? {}
-    ) as FieldOptions<T>;
+    return Object.assign({}, defaults, this.#definition.options ?? {}) as FieldOptions<T>;
   }
 
-  async validate(
-    list: Array<Model>,
-    model: typeof Model,
-    ctx?: TransactionCtx
-  ) {
+  async validate(list: Array<Model>, model: typeof Model, ctx?: TransactionCtx) {
     return true;
   }
 
