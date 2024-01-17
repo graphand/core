@@ -17,7 +17,7 @@ import Data from "@/lib/Data";
 import PromiseModel from "@/lib/PromiseModel";
 
 describe("Test Model", () => {
-  let adapter = mockAdapter();
+  const adapter = mockAdapter();
   let BaseModel = mockModel();
 
   describe("Model crud", () => {
