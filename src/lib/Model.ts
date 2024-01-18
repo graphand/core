@@ -854,6 +854,31 @@ class Model {
   ) {
     const baseClass = this.getBaseClass();
 
+    if (
+      baseClass.isSingle() &&
+      [
+        "getList",
+        "createOne",
+        "createMultiple",
+        "updateMultiple",
+        "deleteOne",
+        "deleteMultiple",
+      ].includes(action)
+    ) {
+      throw new CoreError({
+        message: `Cannot use hook on a single model for action ${action}`,
+      });
+    }
+
+    if (
+      !baseClass.allowMultipleOperations &&
+      ["updateMultiple", "deleteMultiple"].includes(action)
+    ) {
+      throw new CoreError({
+        message: `Cannot use hook on model ${baseClass.slug} with allowMultipleOperations=false for action ${action}`,
+      });
+    }
+
     if (!baseClass.hasOwnProperty("__hooks") || !baseClass.__hooks) {
       baseClass.__hooks = new Set();
     }
