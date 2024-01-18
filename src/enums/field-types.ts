@@ -1,13 +1,13 @@
 enum FieldTypes {
-  ID = "Id",
-  ARRAY = "Array",
-  TEXT = "Text",
-  NUMBER = "Number",
-  BOOLEAN = "Boolean",
-  RELATION = "Relation",
-  DATE = "Date",
-  NESTED = "Nested",
-  IDENTITY = "Identity",
+  ID = "id",
+  ARRAY = "array",
+  TEXT = "text",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  RELATION = "relation",
+  DATE = "date",
+  NESTED = "nested",
+  IDENTITY = "identity",
 }
 
 export default FieldTypes;
