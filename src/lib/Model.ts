@@ -617,13 +617,6 @@ class Model {
           try {
             await this.initialize();
 
-            if (this.isSingle()) {
-              throw new CoreError({
-                code: ErrorCodes.INVALID_OPERATION,
-                message: `Cannot use getList on a single model, use get instead`,
-              });
-            }
-
             const list = await this.execute("getList", [query], ctx);
             resolve(list);
           } catch (e) {
@@ -658,13 +651,6 @@ class Model {
 
     await this.initialize();
 
-    if (this.isSingle()) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use create on a single model, instance is already created`,
-      });
-    }
-
     return await this.execute("createOne", [payload], ctx);
   }
 
@@ -688,20 +674,6 @@ class Model {
     ctx?: TransactionCtx,
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
-
-    if (this.isSingle()) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use createMultiple on a single model, instance is already created`,
-      });
-    }
-
-    if (!this.allowMultipleOperations) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot run createMultiple operation on model ${this.slug}`,
-      });
-    }
 
     return await this.execute("createMultiple", [payload], ctx);
   }
@@ -754,23 +726,9 @@ class Model {
   ): Promise<Array<InstanceType<T>>> {
     await this.initialize();
 
-    if (this.isSingle()) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use update on a single model, use instance of the model instead`,
-      });
-    }
-
     if (typeof query === "string") {
       const updated = await this.execute("updateOne", [query, update], ctx);
       return [updated];
-    }
-
-    if (!this.allowMultipleOperations) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot run updateMultiple operation on model ${this.slug}`,
-      });
     }
 
     return await this.execute("updateMultiple", [query, update], ctx);
@@ -784,13 +742,6 @@ class Model {
    */
   async delete(ctx?: TransactionCtx): Promise<this> {
     await this.model.initialize();
-
-    if (this.model.isSingle()) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use delete on a single model, delete the model itself instead`,
-      });
-    }
 
     await this.model.execute("deleteOne", [String(this._id)], ctx);
 
@@ -819,13 +770,6 @@ class Model {
   ): Promise<string[]> {
     await this.initialize();
 
-    if (this.isSingle()) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot use delete on a single model, delete the model itself instead`,
-      });
-    }
-
     if (typeof query === "string") {
       const deleted = await this.execute("deleteOne", [query], ctx);
       if (deleted) {
@@ -833,13 +777,6 @@ class Model {
       }
 
       return [];
-    }
-
-    if (!this.allowMultipleOperations) {
-      throw new CoreError({
-        code: ErrorCodes.INVALID_OPERATION,
-        message: `Cannot run deleteMultiple operation on model ${this.slug}`,
-      });
     }
 
     return await this.execute("deleteMultiple", [query], ctx);
@@ -981,6 +918,35 @@ class Model {
     args: Args,
     bindCtx: Partial<TransactionCtx> = {},
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
+    if (!bindCtx?.forceOperation) {
+      if (
+        this.isSingle() &&
+        [
+          "getList",
+          "createOne",
+          "createMultiple",
+          "updateMultiple",
+          "deleteOne",
+          "deleteMultiple",
+        ].includes(action)
+      ) {
+        throw new CoreError({
+          code: ErrorCodes.INVALID_OPERATION,
+          message: `Cannot run ${action} operation on a single model (${this.slug})`,
+        });
+      }
+
+      if (
+        !this.allowMultipleOperations &&
+        ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)
+      ) {
+        throw new CoreError({
+          code: ErrorCodes.INVALID_OPERATION,
+          message: `Cannot run ${action} operation a model with allowMultipleOperations disabled (${this.slug})`,
+        });
+      }
+    }
+
     const retryToken = Symbol();
     const abortToken = Symbol();
     const transaction = {

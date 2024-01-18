@@ -31,6 +31,7 @@ export type BaseTransactionCtx = {
   retryTimes: number;
   transaction: Transaction;
   disableValidation?: boolean;
+  forceOperation?: boolean;
 };
 
 export type BaseSerializerCtx = {

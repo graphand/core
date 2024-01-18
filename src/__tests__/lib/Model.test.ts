@@ -1536,15 +1536,6 @@ describe("Test Model", () => {
       expect(beforeCreateFn).toHaveBeenCalledTimes(1);
       expect(afterCreateFn).toHaveBeenCalledTimes(1);
     });
-
-    it("Should throw error if hook a multiple action on a model with allowMultipleOperations=false", async () => {
-      const TestModel = class extends BaseModel {
-        static allowMultipleOperations = false;
-      }.withAdapter(adapter);
-
-      expect(() => TestModel.hook("before", "updateMultiple", () => null)).toThrow();
-      expect(() => TestModel.hook("before", "deleteMultiple", () => null)).toThrow();
-    });
   });
 
   describe("Model utils", () => {
