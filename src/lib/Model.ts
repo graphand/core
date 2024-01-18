@@ -516,7 +516,11 @@ class Model {
    * const modelStr = instance.toString();
    * const instance = Model.fromString(modelStr);
    */
-  static fromString<T extends typeof Model>(this: T, str: string, cleanPayload = true) {
+  static fromString<T extends typeof Model>(
+    this: T,
+    str: string,
+    cleanPayload = true,
+  ): InstanceType<T> {
     const parsed = JSON.parse(str);
     let payload = parsed;
 
@@ -530,7 +534,7 @@ class Model {
       payload = cleaned;
     }
 
-    return new this(payload);
+    return new this(payload) as InstanceType<T>;
   }
 
   /**
@@ -689,6 +693,13 @@ class Model {
       throw new CoreError({
         code: ErrorCodes.INVALID_OPERATION,
         message: `Cannot use createMultiple on a single model, instance is already created`,
+      });
+    }
+
+    if (!this.allowMultipleOperations) {
+      throw new CoreError({
+        code: ErrorCodes.INVALID_OPERATION,
+        message: `Cannot run createMultiple operation on model ${this.slug}`,
       });
     }
 
@@ -853,31 +864,6 @@ class Model {
     order: number = 0,
   ) {
     const baseClass = this.getBaseClass();
-
-    if (
-      baseClass.isSingle() &&
-      [
-        "getList",
-        "createOne",
-        "createMultiple",
-        "updateMultiple",
-        "deleteOne",
-        "deleteMultiple",
-      ].includes(action)
-    ) {
-      throw new CoreError({
-        message: `Cannot use hook on a single model for action ${action}`,
-      });
-    }
-
-    if (
-      !baseClass.allowMultipleOperations &&
-      ["updateMultiple", "deleteMultiple"].includes(action)
-    ) {
-      throw new CoreError({
-        message: `Cannot use hook on model ${baseClass.slug} with allowMultipleOperations=false for action ${action}`,
-      });
-    }
 
     if (!baseClass.hasOwnProperty("__hooks") || !baseClass.__hooks) {
       baseClass.__hooks = new Set();
