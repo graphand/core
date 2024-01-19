@@ -20,6 +20,7 @@ class SearchConfig extends Model {
   };
 
   static scope = ModelEnvScopes.ENV;
+  static allowMultipleOperations = false;
 
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;

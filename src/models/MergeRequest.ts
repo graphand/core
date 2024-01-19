@@ -21,6 +21,7 @@ class MergeRequest<T extends MergeRequestTypes = MergeRequestTypes> extends Mode
   };
 
   static scope = ModelEnvScopes.PROJECT;
+  static allowMultipleOperations = false;
 
   @fieldDecorator(FieldTypes.TEXT)
   slug: FieldDefinitionText;
@@ -37,6 +38,9 @@ class MergeRequest<T extends MergeRequestTypes = MergeRequestTypes> extends Mode
 
   @fieldDecorator(FieldTypes.TEXT)
   target: FieldDefinitionText; // The target environment name
+
+  @fieldDecorator(FieldTypes.BOOLEAN)
+  _closed: FieldDefinitionBoolean;
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
   _job: FieldDefinitionRelation<Job>;

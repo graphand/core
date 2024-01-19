@@ -802,6 +802,15 @@ class Model {
   ) {
     const baseClass = this.getBaseClass();
 
+    if (
+      !this.allowMultipleOperations &&
+      ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)
+    ) {
+      console.warn(
+        `Useless hook ${action} on a model with allowMultipleOperations disabled (${this.slug})`,
+      );
+    }
+
     if (!baseClass.hasOwnProperty("__hooks") || !baseClass.__hooks) {
       baseClass.__hooks = new Set();
     }

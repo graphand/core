@@ -23,6 +23,7 @@ class Environment extends Model {
   };
 
   static scope = ModelEnvScopes.PROJECT;
+  static allowMultipleOperations = false;
 
   @fieldDecorator(FieldTypes.TEXT)
   name: FieldDefinitionText;

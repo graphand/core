@@ -19,6 +19,7 @@ class MergeRequestEvent<T extends MergeRequestEventTypes = MergeRequestEventType
   };
 
   static scope = ModelEnvScopes.PROJECT;
+  static allowMultipleOperations = false;
 
   @fieldDecorator(FieldTypes.TEXT, {
     options: Object.values(MergeRequestEventTypes),
