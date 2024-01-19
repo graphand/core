@@ -30,7 +30,7 @@ class DefaultFieldBoolean extends Field<FieldTypes.BOOLEAN> {
 }
 
 class DefaultFieldDate extends Field<FieldTypes.DATE> {
-  serialize(value: any, format): any {
+  serialize(value: any): any {
     return value instanceof Date ? value : new Date(value);
   }
 }

@@ -219,7 +219,7 @@ describe("Test Model", () => {
         };
       }.withAdapter(adapter);
 
-      const dm = await DataModel.withAdapter(adapter).create({
+      await DataModel.withAdapter(adapter).create({
         slug: "test",
         definition: {
           keyField: "test2",
@@ -241,7 +241,7 @@ describe("Test Model", () => {
     });
 
     it("Medias keyField is not overriden by datamodel", async () => {
-      const dm = await DataModel.withAdapter(adapter).create({
+      await DataModel.withAdapter(adapter).create({
         slug: Media.slug,
         definition: {
           keyField: "test2",

@@ -41,6 +41,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return this.getFullPath() + this.type;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validate(docs: Array<DocumentDefinition>, model: typeof Model, ctx: any) {
     return false;
   }

@@ -17,7 +17,7 @@ export const mockAdapter = ({
   validatorsMap = {
     ...defaultValidatorsMap,
     [ValidatorTypes.SAMPLE]: class ValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
-      async validate(data) {
+      async validate() {
         return true;
       }
     },
@@ -68,7 +68,7 @@ export const mockAdapter = ({
 
         return Promise.resolve(found);
       }),
-      getList: jest.fn(([query]) => {
+      getList: jest.fn(() => {
         return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
       }),
       createOne: jest.fn(async ([payload]) => {

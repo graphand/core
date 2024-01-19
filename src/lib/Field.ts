@@ -36,10 +36,12 @@ class Field<T extends FieldTypes = FieldTypes> {
     return Object.assign({}, defaults, this.#definition.options ?? {}) as FieldOptions<T>;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validate(list: Array<Model>, model: typeof Model, ctx?: TransactionCtx) {
     return true;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   serialize(value: any, format: string, from: Model, ctx: SerializerCtx = {}) {
     return value;
   }

@@ -104,7 +104,7 @@ type FieldDefinitionType<
   ? FieldDefinitionArray<D>
   : never;
 
-export type DefaultFieldIdDefinition<D extends FieldDefinitionOptions<FieldTypes.ID>> = string;
+export type DefaultFieldIdDefinition = string;
 
 export type DefaultFieldArrayDefinition<D extends FieldDefinitionOptions<FieldTypes.ARRAY>> =
   D["type"] extends FieldTypes.RELATION
@@ -115,17 +115,11 @@ export type DefaultFieldTextDefinition<D extends FieldDefinitionOptions<FieldTyp
   | FieldTextDefinitionSingleType<D["options"], D["strict"]>
   | undefined;
 
-export type DefaultFieldBooleanDefinition<D extends FieldDefinitionOptions<FieldTypes.BOOLEAN>> =
-  | boolean
-  | undefined;
+export type DefaultFieldBooleanDefinition = boolean | undefined;
 
-export type DefaultFieldNumberDefinition<D extends FieldDefinitionOptions<FieldTypes.NUMBER>> =
-  | number
-  | undefined;
+export type DefaultFieldNumberDefinition = number | undefined;
 
-export type DefaultFieldDateDefinition<D extends FieldDefinitionOptions<FieldTypes.DATE>> =
-  | Date
-  | undefined;
+export type DefaultFieldDateDefinition = Date | undefined;
 
 export type DefaultFieldNestedDefinition<
   D extends FieldDefinitionOptions<FieldTypes.NESTED> = Record<string, any>,
@@ -441,6 +435,7 @@ export type SockethookEvent<
 };
 
 export type SockethookResponse<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   P extends HookPhase,
   A extends keyof AdapterFetcher<T>,
   T extends typeof Model,

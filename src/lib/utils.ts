@@ -548,6 +548,7 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
  * to specify the type of field for which the default options are being retrieved.
  * @returns An empty object of type `FieldOptions<T>`.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const getDefaultFieldOptions = <T extends FieldTypes>(type: T): FieldOptions<T> => {
   return {} as FieldOptions<T>;
 };

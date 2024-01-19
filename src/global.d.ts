@@ -13,7 +13,6 @@ import type {
   BaseSerializerCtx,
 } from "@/types";
 import type FieldTypes from "@/enums/field-types";
-import Model from "@/lib/Model";
 
 declare global {
   export type TransactionCtx = BaseTransactionCtx;

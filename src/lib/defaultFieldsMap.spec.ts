@@ -1686,8 +1686,6 @@ describe("test fieldsMap", () => {
         ],
       });
 
-      const value = i.get("arrJson.[2].title");
-
       expect(i.get("arrJson.[0].title")).toEqual("1");
       expect(i.get("arrJson.[0].test")).toBe(undefined);
 
