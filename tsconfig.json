@@ -27,6 +27,6 @@
       }
     ]
   },
-  "include": ["src"],
+  "include": ["src", "__jest__"],
   "exclude": ["node_modules", "**/node_modules/*"]
 }

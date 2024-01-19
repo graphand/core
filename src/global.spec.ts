@@ -6,7 +6,7 @@ import DataModel from "@/models/DataModel";
 import Data from "@/lib/Data";
 import Environment from "@/models/Environment";
 import Media from "@/models/Media";
-import { models } from "..";
+import { models } from ".";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
