@@ -36,7 +36,9 @@ class Job extends Model {
       type: FieldTypes.TEXT,
     },
   })
-  _refs: Array<string>;
+  _refs: FieldDefinitionArray<{
+    type: FieldTypes.TEXT;
+  }>;
 
   @fieldDecorator(FieldTypes.DATE)
   _startedAt: FieldDefinitionDate;
@@ -51,7 +53,7 @@ class Job extends Model {
   })
   _alerts: FieldDefinitionArray<{
     type: FieldTypes.NESTED;
-    definition: any;
+    options: any;
   }>;
 
   @fieldDecorator(FieldTypes.NESTED)

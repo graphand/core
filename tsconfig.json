@@ -28,6 +28,6 @@
       }
     ]
   },
-  "include": ["src", "__jest__", "src/definitions.ts"],
+  "include": ["src", "__jest__", "definitions.d.ts"],
   "exclude": ["node_modules", "**/node_modules/*"]
 }

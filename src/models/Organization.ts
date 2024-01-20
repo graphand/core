@@ -39,9 +39,7 @@ class Organization extends Model {
   })
   _users: FieldDefinitionArray<{
     type: FieldTypes.RELATION;
-    options: {
-      model: User;
-    };
+    options: User;
   }>;
 
   @fieldDecorator(FieldTypes.NESTED, {

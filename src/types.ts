@@ -7,8 +7,6 @@ import type Field from "@/lib/Field";
 import type ErrorCodes from "@/enums/error-codes";
 import type Validator from "@/lib/Validator";
 import type ValidationError from "@/lib/ValidationError";
-import type PromiseModel from "@/lib/PromiseModel";
-import type PromiseModelList from "@/lib/PromiseModelList";
 import AuthProviders from "@/enums/auth-providers";
 import AuthMethods from "@/enums/auth-methods";
 import Sockethook from "@/models/Sockethook";
@@ -63,16 +61,14 @@ export type FieldDefinitionOptions<
   ? { [key: string]: any }
   : any;
 
-type PromiseModelOn<T extends Model> = PromiseModel<T> & object;
-
 type string_ = string & Partial<any>;
 
-type FieldTextDefinitionSingleType<
+export type FieldTextDefinitionSingleType<
   Options extends string[],
   Strict extends boolean = false,
 > = Strict extends true ? Options[number] : FieldTextDefinitionSingleType<Options, true> | string_;
 
-type FieldDefinitionType<
+export type FieldDefinitionType<
   T extends FieldTypes,
   D extends FieldDefinitionOptions<T>,
 > = T extends FieldTypes.ID
@@ -92,31 +88,6 @@ type FieldDefinitionType<
   : T extends FieldTypes.ARRAY
   ? FieldDefinitionArray<D>
   : never;
-
-export type DefaultFieldIdDefinition = string;
-
-export type DefaultFieldArrayDefinition<D extends FieldDefinitionOptions<FieldTypes.ARRAY>> =
-  D["type"] extends FieldTypes.RELATION
-    ? PromiseModelList<D["definition"]>
-    : Array<FieldDefinitionType<D["type"], D["definition"]>>;
-
-export type DefaultFieldTextDefinition<D extends FieldDefinitionOptions<FieldTypes.TEXT>> =
-  | FieldTextDefinitionSingleType<D["options"], D["strict"]>
-  | undefined;
-
-export type DefaultFieldBooleanDefinition = boolean | undefined;
-
-export type DefaultFieldNumberDefinition = number | undefined;
-
-export type DefaultFieldDateDefinition = Date | undefined;
-
-export type DefaultFieldNestedDefinition<
-  D extends FieldDefinitionOptions<FieldTypes.NESTED> = Record<string, any>,
-> = D | undefined;
-
-export type DefaultFieldRelationDefinition<D extends FieldDefinitionOptions<FieldTypes.RELATION>> =
-  | PromiseModelOn<D>
-  | undefined;
 
 export type SortDirection =
   | 1

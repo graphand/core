@@ -40,7 +40,7 @@ class Role extends Model {
   })
   inherits: FieldDefinitionArray<{
     type: FieldTypes.RELATION;
-    definition: Role;
+    options: Role;
   }>;
 
   @fieldDecorator(FieldTypes.BOOLEAN)
@@ -78,7 +78,7 @@ class Role extends Model {
   })
   rules: FieldDefinitionArray<{
     type: FieldTypes.NESTED;
-    definition: Rule;
+    options: Rule;
   }>;
 
   @fieldDecorator(FieldTypes.ARRAY, {
@@ -118,7 +118,7 @@ class Role extends Model {
   })
   fieldsRestrictions: FieldDefinitionArray<{
     type: FieldTypes.NESTED;
-    definition: FieldsRestriction;
+    options: FieldsRestriction;
   }>;
 
   async getRulesInherited(): Promise<Array<Rule>> {
