@@ -992,7 +992,7 @@ class Model {
     }
 
     if (payloadBefore.err?.includes(retryToken)) {
-      return await this.execute(action, args, ctx);
+      return await this.execute(action, args, bindCtx);
     }
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
@@ -1004,7 +1004,7 @@ class Model {
 
     if (payloadAfter.err?.length) {
       if (payloadAfter.err.includes(retryToken)) {
-        return await this.execute(action, args, ctx);
+        return await this.execute(action, args, bindCtx);
       }
 
       throw payloadAfter.err[0];
