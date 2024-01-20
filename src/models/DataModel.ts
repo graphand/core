@@ -102,7 +102,7 @@ class DataModel extends Model {
   definition: FieldDefinitionNested<ModelDefinition>;
 
   @fieldDecorator(FieldTypes.NESTED)
-  _doc: FieldDefinitionNested; // The related document if single is true
+  _doc: FieldDefinitionNested<Record<string, any>>; // The related document if single is true
 }
 
 export default DataModel;

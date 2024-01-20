@@ -8,3 +8,4 @@ webpack.config.js
 README.md
 wallaby.js
 dist/types/lib/test-utils.d.ts
+dist/types/global.spec.d.ts

@@ -6,6 +6,7 @@ import { fieldDecorator } from "@/lib/fieldDecorator";
 import FieldTypes from "@/enums/field-types";
 import {
   AdapterFetcher,
+  CoreTransactionCtx,
   DocumentDefinition,
   FieldsPathItem,
   Hook,
@@ -925,7 +926,7 @@ class Model {
     this: M,
     action: A,
     args: Args,
-    bindCtx: Partial<TransactionCtx> = {},
+    bindCtx: TransactionCtx = {},
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     if (!bindCtx?.forceOperation) {
       if (
@@ -963,14 +964,13 @@ class Model {
       action,
       args,
     };
-    bindCtx.retryTimes ??= 0;
 
-    const ctx = {
+    const ctx: TransactionCtx & CoreTransactionCtx = {
       ...bindCtx,
       retryToken,
       abortToken,
       transaction,
-    } as TransactionCtx;
+    };
 
     const payloadBefore: HookCallbackArgs<"before", A, M> = {
       args,
@@ -992,8 +992,7 @@ class Model {
     }
 
     if (payloadBefore.err?.includes(retryToken)) {
-      bindCtx.retryTimes++;
-      return await this.execute(action, args, bindCtx);
+      return await this.execute(action, args, ctx);
     }
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
@@ -1005,8 +1004,7 @@ class Model {
 
     if (payloadAfter.err?.length) {
       if (payloadAfter.err.includes(retryToken)) {
-        bindCtx.retryTimes++;
-        return await this.execute(action, args, bindCtx);
+        return await this.execute(action, args, ctx);
       }
 
       throw payloadAfter.err[0];

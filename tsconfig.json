@@ -10,15 +10,16 @@
     "resolveJsonModule": true,
     "lib": ["es2019"],
     "target": "esnext",
+    "rootDir": "src",
     "outDir": "dist",
-    "baseUrl": "src",
+    "baseUrl": ".",
     "allowJs": true,
     "skipLibCheck": true,
     "preserveConstEnums": true,
     "declarationDir": "dist/types",
     "downlevelIteration": true,
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     },
     "plugins": [
       {
@@ -27,6 +28,6 @@
       }
     ]
   },
-  "include": ["src", "__jest__"],
+  "include": ["src", "__jest__", "src/definitions.ts"],
   "exclude": ["node_modules", "**/node_modules/*"]
 }

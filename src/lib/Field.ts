@@ -1,6 +1,6 @@
 import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
-import { FieldDefinition, FieldOptions } from "@/types";
+import { CoreSerializerCtx, FieldDefinition, FieldOptions } from "@/types";
 import { getDefaultFieldOptions } from "@/lib/utils";
 
 class Field<T extends FieldTypes = FieldTypes> {
@@ -42,7 +42,7 @@ class Field<T extends FieldTypes = FieldTypes> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  serialize(value: any, format: string, from: Model, ctx: SerializerCtx = {}) {
+  serialize(value: any, format: string, from: Model, ctx: SerializerCtx & CoreSerializerCtx = {}) {
     return value;
   }
 

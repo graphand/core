@@ -1733,57 +1733,6 @@ describe("Test Model", () => {
   });
 
   describe("Model execution", () => {
-    it("should retry execution when throwing retryToken in before hook", async () => {
-      const TestModel = mockModel().withAdapter(mockAdapter());
-
-      const beforeCreateFn1 = jest.fn();
-      const beforeCreateFn2 = jest.fn(({ ctx }) => {
-        if (ctx.retryTimes < 2) {
-          throw ctx.retryToken;
-        }
-      });
-      const afterCreateFn = jest.fn();
-
-      TestModel.hook("before", "createOne", beforeCreateFn1);
-      TestModel.hook("before", "createOne", beforeCreateFn2);
-      TestModel.hook("after", "createOne", afterCreateFn);
-
-      expect(beforeCreateFn1).toHaveBeenCalledTimes(0);
-      expect(afterCreateFn).toHaveBeenCalledTimes(0);
-
-      await TestModel.create({});
-
-      expect(beforeCreateFn1).toHaveBeenCalledTimes(3);
-      expect(beforeCreateFn2).toHaveBeenCalledTimes(3);
-      expect(afterCreateFn).toHaveBeenCalledTimes(1);
-    });
-
-    it("should retry execution when throwing retryToken in after hook", async () => {
-      const TestModel = mockModel().withAdapter(mockAdapter());
-
-      const beforeCreateFn = jest.fn();
-      const afterCreateFn1 = jest.fn(({ ctx }) => {
-        if (ctx.retryTimes < 2) {
-          throw ctx.retryToken;
-        }
-      });
-      const afterCreateFn2 = jest.fn();
-
-      TestModel.hook("before", "createOne", beforeCreateFn);
-      TestModel.hook("after", "createOne", afterCreateFn1);
-      TestModel.hook("after", "createOne", afterCreateFn2);
-
-      expect(beforeCreateFn).toHaveBeenCalledTimes(0);
-      expect(afterCreateFn1).toHaveBeenCalledTimes(0);
-      expect(afterCreateFn2).toHaveBeenCalledTimes(0);
-
-      await TestModel.create({});
-
-      expect(beforeCreateFn).toHaveBeenCalledTimes(3);
-      expect(afterCreateFn1).toHaveBeenCalledTimes(3);
-      expect(afterCreateFn2).toHaveBeenCalledTimes(3);
-    });
-
     it("should immediately stop execution when throwing abortToken in before hook", async () => {
       const TestModel = mockModel().withAdapter(adapter);
 

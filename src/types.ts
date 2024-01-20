@@ -11,7 +11,7 @@ import type PromiseModel from "@/lib/PromiseModel";
 import type PromiseModelList from "@/lib/PromiseModelList";
 import AuthProviders from "@/enums/auth-providers";
 import AuthMethods from "@/enums/auth-methods";
-import Sockethook from "models/Sockethook";
+import Sockethook from "@/models/Sockethook";
 import MergeRequestTypes from "@/enums/merge-request-types";
 import MergeRequestEventTypes from "./enums/merge-request-event-types";
 
@@ -25,35 +25,24 @@ type Transaction<
   args: Args;
 };
 
-export type BaseTransactionCtx = {
+export type CoreTransactionCtx = {
   retryToken: symbol;
   abortToken: symbol;
-  retryTimes: number;
   transaction: Transaction;
+};
+
+export type CoreSerializerCtx = object;
+
+export type DefaultTransactionCtx = {
   disableValidation?: boolean;
   forceOperation?: boolean;
 };
 
-export type BaseSerializerCtx = {
+export type DefaultSerializerCtx = {
   defaults?: boolean;
   outputFormat?: string;
   transactionCtx?: TransactionCtx;
 };
-
-export type DefaultFieldDefinitionOptions<T extends FieldTypes> = T extends FieldTypes.TEXT
-  ? {
-      options: [];
-      strict: false;
-    }
-  : T extends FieldTypes.ARRAY
-  ? {
-      type: FieldTypes.TEXT;
-    }
-  : T extends FieldTypes.RELATION
-  ? {
-      model: null;
-    }
-  : object;
 
 export type FieldDefinitionOptions<
   T extends FieldTypes,
@@ -87,15 +76,15 @@ type FieldDefinitionType<
   T extends FieldTypes,
   D extends FieldDefinitionOptions<T>,
 > = T extends FieldTypes.ID
-  ? FieldDefinitionId<D>
+  ? FieldDefinitionId
   : T extends FieldTypes.TEXT
   ? FieldDefinitionText<D>
   : T extends FieldTypes.BOOLEAN
-  ? FieldDefinitionBoolean<D>
+  ? FieldDefinitionBoolean
   : T extends FieldTypes.NUMBER
-  ? FieldDefinitionNumber<D>
+  ? FieldDefinitionNumber
   : T extends FieldTypes.DATE
-  ? FieldDefinitionDate<D>
+  ? FieldDefinitionDate
   : T extends FieldTypes.NESTED
   ? FieldDefinitionNested<D>
   : T extends FieldTypes.RELATION
@@ -199,28 +188,43 @@ export type UpdateFilter = {
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
-  count: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<number | null>;
-  get: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<InstanceType<T> | null>;
-  getList: (args: [query: JSONQuery], ctx: TransactionCtx) => Promise<ModelList<InstanceType<T>>>;
+  count: (
+    args: [query: string | JSONQuery],
+    ctx: TransactionCtx & CoreTransactionCtx,
+  ) => Promise<number | null>;
+  get: (
+    args: [query: string | JSONQuery],
+    ctx: TransactionCtx & CoreTransactionCtx,
+  ) => Promise<InstanceType<T> | null>;
+  getList: (
+    args: [query: JSONQuery],
+    ctx: TransactionCtx & CoreTransactionCtx,
+  ) => Promise<ModelList<InstanceType<T>>>;
   createOne: (
     args: [payload: InputModelPayload<T>],
-    ctx: TransactionCtx,
+    ctx: TransactionCtx & CoreTransactionCtx,
   ) => Promise<InstanceType<T>>;
   createMultiple: (
     args: [payload: Array<InputModelPayload<T>>],
-    ctx: TransactionCtx,
+    ctx: TransactionCtx & CoreTransactionCtx,
   ) => Promise<Array<InstanceType<T>>>;
   updateOne: (
     args: [query: string | JSONQuery, update: UpdateFilter],
-    ctx: TransactionCtx,
+    ctx: TransactionCtx & CoreTransactionCtx,
   ) => Promise<InstanceType<T>>;
   updateMultiple: (
     args: [query: JSONQuery, update: UpdateFilter],
-    ctx: TransactionCtx,
+    ctx: TransactionCtx & CoreTransactionCtx,
   ) => Promise<Array<InstanceType<T>>>;
-  deleteOne: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<boolean>;
-  deleteMultiple: (args: [query: JSONQuery], ctx: TransactionCtx) => Promise<string[]>;
-  initialize?: (args: never, ctx: TransactionCtx) => Promise<void>;
+  deleteOne: (
+    args: [query: string | JSONQuery],
+    ctx: TransactionCtx & CoreTransactionCtx,
+  ) => Promise<boolean>;
+  deleteMultiple: (
+    args: [query: JSONQuery],
+    ctx: TransactionCtx & CoreTransactionCtx,
+  ) => Promise<string[]>;
+  initialize?: (args: never, ctx: TransactionCtx & CoreTransactionCtx) => Promise<void>;
 };
 
 export type Module<T extends typeof Model = any> = (model: T) => void;
@@ -347,7 +351,7 @@ export type HookCallbackArgs<
 > = P extends "before"
   ? {
       args: Parameters<AdapterFetcher<T>[A]>[0];
-      ctx: TransactionCtx;
+      ctx: TransactionCtx & CoreTransactionCtx;
       err?: Array<Error | symbol>;
     }
   : HookCallbackArgs<"before", A, T> & {
