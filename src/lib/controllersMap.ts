@@ -300,6 +300,12 @@ const controllersMap = {
     scope: "project",
     secured: true,
   },
+  createProjectFromBackup: {
+    path: "/projects/from-backup",
+    methods: ["post"],
+    scope: "global",
+    secured: true,
+  },
 };
 
 export default controllersMap as Record<keyof typeof controllersMap, ControllerDefinition>;
