@@ -316,12 +316,14 @@ class Model<Props extends object = never> {
 
     let model: M;
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const models = require("@/index").models as Record<string, typeof Model>;
     const coreModel: M = Object.values(models).find(m => m.slug === slug) as M;
 
     if (coreModel) {
       model = coreModel;
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const _Data = require("@/lib/Data").default;
       // @ts-expect-error decorator
       model = class extends _Data {
