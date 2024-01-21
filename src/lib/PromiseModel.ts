@@ -22,14 +22,14 @@ class PromiseModel<T extends Model> extends Thenable<T> {
   }
 
   get _id() {
-    const query = this.query as any;
-
-    if (isObjectId(query as any)) {
-      return query;
+    if (typeof this.query === "string" && isObjectId(this.query)) {
+      return this.query;
     }
 
-    if ("_id" in query && isObjectId(query._id)) {
-      return query._id;
+    // @ts-expect-error find _id on any object type
+    const foundId: string | undefined = this.query?._id;
+    if (isObjectId(foundId)) {
+      return foundId;
     }
 
     return null;
