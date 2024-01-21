@@ -55,7 +55,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.create({});
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -73,7 +73,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.create({ title: null });
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -88,7 +88,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.createMultiple([{}, { title }]);
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -108,7 +108,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.createMultiple([{ title }, { title: null }]);
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -134,7 +134,7 @@ describe("test validatorsMap", () => {
 
         try {
           await i.update({ $set: { title: null } });
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -148,7 +148,7 @@ describe("test validatorsMap", () => {
 
         try {
           await i.update({ $unset: { title: true } });
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -174,7 +174,7 @@ describe("test validatorsMap", () => {
         try {
           const _model = model as typeof Model;
           await _model.update({ filter: { _id: i._id } }, { $set: { title: null } });
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -189,7 +189,7 @@ describe("test validatorsMap", () => {
         try {
           const _model = model as typeof Model;
           await _model.update({ filter: { _id: i._id } }, { $unset: { title: true } });
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -218,7 +218,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.validate([{}]);
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -230,7 +230,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.validate([{ title: "" }]);
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -242,7 +242,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.validate([{ title: undefined }]);
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();
@@ -254,7 +254,7 @@ describe("test validatorsMap", () => {
 
         try {
           await model.validate([{ title: null }]);
-        } catch (_e: any) {
+        } catch (_e) {
           const e = _e as ValidationError;
           expect(e).toBeInstanceOf(ValidationError);
           expect(_containsValidator(e)).toBeTruthy();

@@ -5,6 +5,7 @@ import Model from "@/lib/Model";
 import DataModel from "@/models/DataModel";
 import Patterns from "@/enums/patterns";
 import { isValidDefinition } from "@/lib/utils";
+import { ModelInstance } from "..";
 
 const systemModels = [
   "accounts_authProviders",
@@ -24,10 +25,11 @@ const systemModels = [
   "users",
   "mergeRequests",
   "mergeRequestEvents",
+  "settings",
 ];
 
 class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const path = this.getFullPath();
     const values = list.map(i => i.get(path)).flat(Infinity);
 
@@ -38,7 +40,7 @@ class DefaultValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
 }
 
 class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const path = this.getFullPath();
     const values = list
       .map(i => i.get(path))
@@ -68,7 +70,7 @@ class DefaultValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
 }
 
 class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const path = this.getFullPath();
     const values = list
       .map(i => i.get(path))
@@ -84,7 +86,7 @@ class DefaultValidatorRegex extends Validator<ValidatorTypes.REGEX> {
 }
 
 class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
-  async validate(list: Array<Model>, model: typeof Model, ctx?: TransactionCtx) {
+  async validate(list: Array<ModelInstance>, model: typeof Model, ctx?: TransactionCtx) {
     const adapter = model?.getAdapter();
     const validatorsMap = adapter?.validatorsMap ?? {};
 
@@ -135,7 +137,7 @@ class DefaultValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
 }
 
 class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const path = this.getFullPath();
     const values = list
       .map(i => i.get(path))
@@ -159,7 +161,7 @@ class DefaultValidatorLength extends Validator<ValidatorTypes.LENGTH> {
 }
 
 class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const path = this.getFullPath();
     const values = list
       .map(i => i.get(path))
@@ -179,7 +181,7 @@ class DefaultValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
 }
 
 class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const values = list.map(i => i.get("slug")).filter(v => ![null, undefined].includes(v));
 
     if (!values?.length) return true;
@@ -193,27 +195,7 @@ class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_S
 }
 
 class DefaultValidatorDatamodelDefinition extends Validator<ValidatorTypes.DATAMODEL_DEFINITION> {
-  async validate(list: Array<Model>) {
-    // const _isInvalid = (m: DataModel) => {
-    //   if (!isValidDefinition(m.definition)) {
-    //     return true;
-    //   }
-
-    //   const doc = m.getDoc() ?? {};
-    //   const keys = Object.keys(doc);
-    //   if (
-    //     ["fields", "validators", "keyField", "single"].some((k) =>
-    //       keys.includes(k)
-    //     )
-    //   ) {
-    //     console.warn(
-    //       `DataModel ${m.slug} has deprecated fields out of definition: ` +
-    //         JSON.stringify(doc)
-    //     );
-    //     return false;
-    //   }
-    // };
-
+  async validate(list: Array<ModelInstance>) {
     return !list.some((m: DataModel) => !isValidDefinition(m.definition));
   }
 }

@@ -9,7 +9,7 @@ import CoreError from "@/lib/CoreError";
 import DataModel from "@/models/DataModel";
 import ErrorCodes from "@/enums/error-codes";
 import Media from "@/models/Media";
-import { ModelDefinition } from "@/types";
+import { ModelDefinition, ModelInstance } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
 import SerializerFormat from "@/enums/serializer-format";
 import { getRecursiveValidatorsFromModel } from "@/lib/utils";
@@ -856,7 +856,7 @@ describe("Test Model", () => {
     });
 
     it("should not call useless serializer", async () => {
-      const serializeText = jest.fn((value: any): any => value);
+      const serializeText = jest.fn(value => value);
 
       const _adapter = mockAdapter({
         fieldsMap: {
@@ -2134,9 +2134,63 @@ describe("Test Model", () => {
 
       i1._id = new ObjectId().toString();
 
-      const i2 = await Model.getClass(slug2, adapter).create<any>({ rel: i1._id });
+      const i2 = await Model.getClass<
+        typeof Model<{
+          rel: FieldDefinitionRelation<ModelInstance<typeof Model1>>;
+        }>
+      >(slug2, adapter).create({ rel: i1._id });
 
       expect(i2.rel.model).toBe(Model1);
+    });
+
+    it("should cache class on adapter by slug and use these models in relation fields", async () => {
+      const adapter = mockAdapter();
+
+      const slug1 = generateRandomString();
+      const slug2 = generateRandomString();
+
+      await DataModel.extend({ adapterClass: adapter }).createMultiple([
+        {
+          slug: slug1,
+        },
+        {
+          slug: slug2,
+          definition: {
+            fields: {
+              rel: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: slug1,
+                },
+              },
+            },
+          },
+        },
+      ]);
+
+      const i1 = await Model.getClass(slug1, adapter).create({});
+
+      i1._id = new ObjectId().toString();
+
+      const i2 = await Model.getClass<
+        typeof Model<{
+          rel: FieldDefinitionRelation;
+        }>
+      >(slug2, adapter).create({ rel: i1._id });
+
+      expect(i2.rel.model).toHaveProperty("slug", slug1);
+
+      const Model1 = class extends Data {
+        static slug = slug1;
+      }.extend({ adapterClass: adapter, force: true });
+
+      const i3 = await Model.getClass<
+        typeof Model<{
+          rel: FieldDefinitionRelation;
+        }>
+      >(slug2, adapter).create({ rel: i1._id });
+
+      expect(i3.rel.model).toBe(Model1);
     });
 
     it("should cache class on adapter by slug and use these models in array relation fields", async () => {
@@ -2177,7 +2231,11 @@ describe("Test Model", () => {
 
       i1._id = new ObjectId().toString();
 
-      const i2 = await Model.getClass(slug2, adapter).create<any>({ rel: [i1._id] });
+      const i2 = await Model.getClass<
+        typeof Model<{
+          rel: FieldDefinitionRelation;
+        }>
+      >(slug2, adapter).create({ rel: [i1._id] });
 
       expect(i2.rel.model).toBe(Model1);
     });

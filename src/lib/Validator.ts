@@ -1,5 +1,5 @@
 import ValidatorTypes from "@/enums/validator-types";
-import { DocumentDefinition, ValidatorDefinition, ValidatorHook, ValidatorOptions } from "@/types";
+import { ModelInstance, ValidatorDefinition, ValidatorHook, ValidatorOptions } from "@/types";
 import Model from "@/lib/Model";
 import { getDefaultValidatorOptions } from "@/lib/utils";
 
@@ -42,7 +42,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validate(docs: Array<DocumentDefinition>, model: typeof Model, ctx: TransactionCtx) {
+  async validate(docs: Array<ModelInstance>, model: typeof Model, ctx: TransactionCtx) {
     return false;
   }
 

@@ -20,6 +20,7 @@ import Sockethook from "@/models/Sockethook";
 import Token from "@/models/Token";
 import Terms from "@/models/Terms";
 import Environment from "@/models/Environment";
+import Settings from "@/models/Settings";
 import ModelList from "@/lib/ModelList";
 import ModelEnvScopes from "@/enums/model-env-scopes";
 import FieldTypes from "@/enums/field-types";
@@ -80,6 +81,7 @@ const models = {
   Project,
   Role,
   SearchConfig,
+  Settings,
   Sockethook,
   Terms,
   Token,
@@ -105,6 +107,7 @@ export {
   Project,
   Role,
   SearchConfig,
+  Settings,
   Sockethook,
   Terms,
   Token,

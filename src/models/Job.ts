@@ -5,6 +5,7 @@ import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import JobTypes from "@/enums/job-types";
 import JobStatus from "@/enums/job-status";
+import { JSONType } from "@/types";
 
 @modelDecorator()
 class Job extends Model {
@@ -53,11 +54,11 @@ class Job extends Model {
   })
   _alerts: FieldDefinitionArray<{
     type: FieldTypes.NESTED;
-    options: any;
+    options: JSONType;
   }>;
 
   @fieldDecorator(FieldTypes.NESTED)
-  _result: Record<string, any>;
+  _result: FieldDefinitionNested<JSONType>;
 }
 
 export default Job;

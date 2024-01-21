@@ -7,6 +7,7 @@ import type {
   FieldTextDefinitionSingleType,
   PromiseModelList,
   PromiseModel,
+  Model,
 } from "@graphand/core";
 
 declare global {
@@ -38,7 +39,7 @@ declare global {
     | D
     | undefined;
 
-  export type FieldDefinitionRelation<D extends FieldDefinitionOptions<FieldTypes.RELATION>> =
-    | PromiseModel<D>
-    | undefined;
+  export type FieldDefinitionRelation<
+    D extends FieldDefinitionOptions<FieldTypes.RELATION> = typeof Model,
+  > = PromiseModel<D> | undefined;
 }

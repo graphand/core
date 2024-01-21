@@ -38,7 +38,7 @@ class Media extends Model {
   @fieldDecorator(FieldTypes.NUMBER)
   _size: FieldDefinitionNumber;
 
-  file: any;
+  file;
 }
 
 export default Media;

@@ -2,7 +2,7 @@ import Model from "@/lib/Model";
 import ModelEnvScopes from "@/enums/model-env-scopes";
 import { fieldDecorator } from "@/lib/fieldDecorator";
 import { modelDecorator } from "@/lib/modelDecorator";
-import { ModelDefinition } from "@/types";
+import { ModelDefinition, JSONType } from "@/types";
 import FieldTypes from "@/enums/field-types";
 import ValidatorTypes from "@/enums/validator-types";
 
@@ -102,7 +102,7 @@ class DataModel extends Model {
   definition: FieldDefinitionNested<ModelDefinition>;
 
   @fieldDecorator(FieldTypes.NESTED)
-  _doc: FieldDefinitionNested<Record<string, any>>; // The related document if single is true
+  _doc: FieldDefinitionNested<JSONType>; // The related document if single is true
 }
 
 export default DataModel;

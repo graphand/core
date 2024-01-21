@@ -7,7 +7,7 @@ import Validator from "@/lib/Validator";
 import ValidatorTypes from "@/enums/validator-types";
 import ValidationError from "@/lib/ValidationError";
 import PromiseModel from "@/lib/PromiseModel";
-import { DataModel, Model, models } from "@/index";
+import { DataModel, JSONType, Model, models } from "@/index";
 import PromiseModelList from "@/lib/PromiseModelList";
 import SerializerFormat from "@/enums/serializer-format";
 
@@ -357,11 +357,11 @@ describe("test fieldsMap", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy", async () => {
-        const serializeText = jest.fn((value: any): any => {
+        const serializeText = jest.fn(value => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn((value: any): any => {
+        const serializeNumber = jest.fn(value => {
           return parseFloat(value);
         });
 
@@ -413,11 +413,11 @@ describe("test fieldsMap", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy even in nested objects", async () => {
-        const serializeText = jest.fn((value: any): any => {
+        const serializeText = jest.fn(value => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn((value: any): any => {
+        const serializeNumber = jest.fn(value => {
           return parseFloat(value);
         });
 
@@ -485,11 +485,11 @@ describe("test fieldsMap", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy even in nested array", async () => {
-        const serializeText = jest.fn((value: any): any => {
+        const serializeText = jest.fn(value => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn((value: any): any => {
+        const serializeNumber = jest.fn(value => {
           return parseFloat(value);
         });
 
@@ -1006,7 +1006,13 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).extend({ adapterClass: _adapter });
+        }).extend<
+          typeof Model<{
+            obj: FieldDefinitionNested<{
+              title: FieldDefinitionText;
+            }>;
+          }>
+        >({ adapterClass: _adapter });
         await model.initialize();
 
         const i = new model({ obj: { title: "test" } });
@@ -1105,7 +1111,7 @@ describe("test fieldsMap", () => {
     });
 
     describe("consistency", () => {
-      const _testConsistency = (model: typeof Model, obj: any, f = "obj") => {
+      const _testConsistency = (model: typeof Model, obj: JSONType, f = "obj") => {
         const i = new model({ [f]: obj });
 
         const obj1 = i.get(f, SerializerFormat.JSON);
@@ -1220,7 +1226,7 @@ describe("test fieldsMap", () => {
         await model.initialize();
 
         _testConsistency(model, {
-          value: new ObjectId(),
+          value: new ObjectId().toString(),
         });
       });
 

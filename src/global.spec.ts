@@ -887,8 +887,14 @@ describe("Global tests", () => {
       },
     });
 
-    const model = Model.getClass(dm);
-    const i: any = await model.create({});
+    const model = Model.getClass<
+      typeof Model<{
+        title: FieldDefinitionText;
+      }>
+    >(dm);
+    const i = await model.create({
+      title: undefined,
+    });
 
     expect(i.title).toBe("defaultTitle");
 

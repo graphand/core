@@ -11,8 +11,6 @@ class Data extends Model {
   static searchable = true;
   static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
   static scope = ModelEnvScopes.ENV;
-
-  [prop: string]: any;
 }
 
 export default Data;

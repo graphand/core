@@ -13,6 +13,18 @@ import Sockethook from "@/models/Sockethook";
 import MergeRequestTypes from "@/enums/merge-request-types";
 import MergeRequestEventTypes from "./enums/merge-request-event-types";
 
+export type JSONSubtype =
+  | null
+  | string
+  | number
+  | Date
+  | JSONSubtypeArray
+  | boolean
+  | { [key: string]: JSONSubtype };
+export type JSONSubtypeArray = Array<JSONSubtype>;
+
+export type JSONType = Record<string, JSONSubtype> | JSONSubtypeArray;
+
 type Transaction<
   M extends typeof Model = typeof Model,
   A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
@@ -58,9 +70,11 @@ export type FieldDefinitionOptions<
   : T extends FieldTypes.RELATION
   ? Model
   : T extends FieldTypes.NESTED
-  ? { [key: string]: any }
-  : any;
+  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any
+  : never;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type string_ = string & Partial<any>;
 
 export type FieldTextDefinitionSingleType<
@@ -116,7 +130,7 @@ export type Sort =
   | [string, SortDirection][]
   | [string, SortDirection];
 
-export type Filter = Record<string, any>;
+export type Filter = JSONSubtype;
 
 export type PopulateOption = {
   path: string;
@@ -126,7 +140,7 @@ export type PopulateOption = {
 
 export type PopulatePath = string | PopulateOption;
 
-export type Populate = PopulatePath | PopulatePath[] | Record<string, any>;
+export type Populate = PopulatePath | PopulatePath[] | JSON;
 
 export type JSONQuery = {
   filter?: Filter;
@@ -140,22 +154,22 @@ export type JSONQuery = {
   populate?: Populate;
 };
 
-export type UpdateFilter = {
-  $currentDate?: any;
-  $inc?: any;
-  $min?: any;
-  $max?: any;
-  $mul?: any;
-  $rename?: any;
-  $set?: any;
-  $setOnInsert?: any;
-  $unset?: any;
-  $addToSet?: any;
-  $pop?: any;
-  $pull?: any;
-  $push?: any;
-  $pullAll?: any;
-  $bit?: any;
+export type UpdateObject = {
+  $currentDate?: JSONType;
+  $inc?: JSONType;
+  $min?: JSONType;
+  $max?: JSONType;
+  $mul?: JSONType;
+  $rename?: JSONType;
+  $set?: JSONType;
+  $setOnInsert?: JSONType;
+  $unset?: JSONType;
+  $addToSet?: JSONType;
+  $pop?: JSONType;
+  $pull?: JSONType;
+  $push?: JSONType;
+  $pullAll?: JSONType;
+  $bit?: JSONType;
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
@@ -166,27 +180,27 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   get: (
     args: [query: string | JSONQuery],
     ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<InstanceType<T> | null>;
+  ) => Promise<ModelInstance<T> | null>;
   getList: (
     args: [query: JSONQuery],
     ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<ModelList<InstanceType<T>>>;
+  ) => Promise<ModelList<ModelInstance<T>>>;
   createOne: (
-    args: [payload: InputModelPayload<T>],
+    args: [payload: ModelDocument<T>],
     ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<InstanceType<T>>;
+  ) => Promise<ModelInstance<T>>;
   createMultiple: (
-    args: [payload: Array<InputModelPayload<T>>],
+    args: [payload: Array<ModelDocument<T>>],
     ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<Array<InstanceType<T>>>;
+  ) => Promise<Array<ModelInstance<T>>>;
   updateOne: (
-    args: [query: string | JSONQuery, update: UpdateFilter],
+    args: [query: string | JSONQuery, update: UpdateObject],
     ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<InstanceType<T>>;
+  ) => Promise<ModelInstance<T>>;
   updateMultiple: (
-    args: [query: JSONQuery, update: UpdateFilter],
+    args: [query: JSONQuery, update: UpdateObject],
     ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<Array<InstanceType<T>>>;
+  ) => Promise<Array<ModelInstance<T>>>;
   deleteOne: (
     args: [query: string | JSONQuery],
     ctx: TransactionCtx & CoreTransactionCtx,
@@ -198,7 +212,7 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   initialize?: (args: never, ctx: TransactionCtx & CoreTransactionCtx) => Promise<void>;
 };
 
-export type Module<T extends typeof Model = any> = (model: T) => void;
+export type Module<T extends typeof Model = typeof Model> = (model: T) => void;
 
 export type ValidatorOptionsMap = {
   [ValidatorTypes.REQUIRED]: { field: string };
@@ -271,7 +285,7 @@ export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
     default?: number;
   };
   [FieldTypes.NESTED]: {
-    default?: { [key: string]: any };
+    default?: JSONType;
     defaultField?: FieldDefinition;
     fields?: FieldsDefinition;
     strict?: boolean;
@@ -298,20 +312,18 @@ export type FieldDefinition<T extends FieldTypes = keyof FieldOptionsMap | Field
 
 export type FieldsDefinition = Record<string, FieldDefinition>;
 
-export type DocumentDefinition = Record<string, any>;
+export type ModelProps<M extends Model> = M extends Model<infer K> ? K : never;
 
-export type InputModelPayload<M extends typeof Model> = Partial<
-  Omit<ModelDocument<InstanceType<M>>, ModelDocumentBaseFields>
+type Fixed = JSONSubtype | (() => JSONSubtype);
+
+export type ModelDocument<M extends typeof Model = typeof Model> = Partial<
+  Record<keyof InstanceType<M> | keyof ModelProps<InstanceType<M>>, Fixed>
 >;
 
-export type ModelDocumentBaseFields =
-  | "_id"
-  | "_createdAt"
-  | "_createdBy"
-  | "_updatedAt"
-  | "_updatedBy";
+export type GenericModelDocument = Partial<Record<string, Fixed>>;
 
-export type ModelDocument<M extends Model> = Record<keyof M, any>;
+export type ModelInstance<M extends typeof Model = typeof Model> = InstanceType<M> &
+  ModelProps<InstanceType<M>>;
 
 export type HookPhase = "before" | "after";
 
@@ -329,7 +341,11 @@ export type HookCallbackArgs<
       res?: ReturnType<AdapterFetcher<T>[A]>;
     };
 
-export type Hook<P extends HookPhase, A extends keyof AdapterFetcher<T>, T extends typeof Model> = {
+export type Hook<
+  P extends HookPhase = HookPhase,
+  A extends keyof AdapterFetcher<T> = keyof AdapterFetcher,
+  T extends typeof Model = typeof Model,
+> = {
   phase: P;
   action: A;
   fn: (args: HookCallbackArgs<P, A, T>) => void;
@@ -383,7 +399,7 @@ export type ModelCrudEvent = {
   operation?: "create" | "update" | "delete";
   model: string;
   ids: Array<string>;
-  data?: Array<any>;
+  data?: Array<JSONType>;
 };
 
 export type FormProcessEvent = {
@@ -401,7 +417,7 @@ export type SockethookEvent<
   T extends typeof Model,
 > = {
   operation: string;
-  hook: ModelDocument<Sockethook> & {
+  hook: ModelDocument<typeof Sockethook> & {
     phase: P;
     action: A;
     on: T["slug"];
@@ -444,7 +460,7 @@ export type FieldsPathItem = { key: string; field: Field };
 
 export type MergeRequestOptionsMap = {
   [MergeRequestTypes.STATIC]: {
-    gdx: Record<string, any>;
+    gdx: JSONType;
   };
   [MergeRequestTypes.QUERY]: {
     source: string;
@@ -461,7 +477,7 @@ export type MergeRequestEventDataMap = {
     comment: string;
   };
   [MergeRequestEventTypes.PATCH]: {
-    apply: Record<string, any>;
+    apply: JSONType;
     comment?: string;
   };
   [MergeRequestEventTypes.APPROVE]: {

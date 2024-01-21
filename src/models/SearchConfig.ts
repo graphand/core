@@ -3,7 +3,7 @@ import ModelEnvScopes from "@/enums/model-env-scopes";
 import { fieldDecorator } from "@/lib/fieldDecorator";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
-import { ModelDefinition } from "@/types";
+import { Filter, JSONType, ModelDefinition } from "@/types";
 import ValidatorTypes from "@/enums/validator-types";
 import Job from "@/models/Job";
 
@@ -32,13 +32,13 @@ class SearchConfig extends Model {
   source: FieldDefinitionText;
 
   @fieldDecorator(FieldTypes.NESTED)
-  filter: FieldDefinitionNested<any>;
+  filter: FieldDefinitionNested<Filter>;
 
   @fieldDecorator(FieldTypes.NESTED)
-  properties: FieldDefinitionNested<any>; // mappings.properties
+  properties: FieldDefinitionNested<JSONType>; // mappings.properties
 
   @fieldDecorator(FieldTypes.NESTED)
-  analysis: FieldDefinitionNested<any>; // settings.analysis
+  analysis: FieldDefinitionNested<JSONType>; // settings.analysis
 
   @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
   _job: FieldDefinitionRelation<Job>;

@@ -8,8 +8,10 @@ import {
   FieldsPathItem,
   Hook,
   HookPhase,
-  InputModelPayload,
+  JSONSubtype,
   ModelDefinition,
+  ModelDocument,
+  ModelInstance,
   ValidatorDefinition,
   ValidatorHook,
   ValidatorOptions,
@@ -192,11 +194,15 @@ export const getFieldsPathsFromPath = (
  * `HookPhase`.
  * @returns an array of hooks.
  */
-export const getRecursiveHooksFromModel = <A extends keyof AdapterFetcher, T extends typeof Model>(
+export const getRecursiveHooksFromModel = <
+  A extends keyof AdapterFetcher,
+  T extends typeof Model,
+  P extends HookPhase,
+>(
   model: T,
   action: A,
-  phase: HookPhase,
-): Array<Hook<any, A, T>> => {
+  phase: P,
+): Array<Hook<P, A, T>> => {
   const _hooks = [];
 
   crossModelTree(model, m => {
@@ -350,10 +356,7 @@ export const getArrayValidatorsArray = (
  * @returns The function `parseValidatorHook` returns an object with properties `phase`, `action`, and
  * `fn`.
  */
-export const parseValidatorHook = (
-  hook: ValidatorHook,
-  validator: Validator,
-): Hook<any, any, any> => {
+export const parseValidatorHook = (hook: ValidatorHook, validator: Validator): Hook => {
   const [phase, action, executor] = hook;
 
   const fn = async function (...args) {
@@ -424,8 +427,11 @@ export const createValidatorsArray = (model: typeof Model): Array<Validator> => 
  * object should have a `fieldsMap` property which is an object mapping field types to field classes.
  * @returns The function `getFieldClass` returns the value of the variable `FieldClass`.
  */
-export const getFieldClass = (type: FieldTypes, adapter?: Adapter) => {
-  let FieldClass: typeof Field<any> = adapter?.fieldsMap?.[type];
+export const getFieldClass = <T extends FieldTypes>(
+  type: T,
+  adapter?: Adapter,
+): typeof Field<T> => {
+  let FieldClass: typeof Field<T> = adapter?.fieldsMap?.[type];
 
   if (!FieldClass) {
     FieldClass = defaultFieldsMap[type];
@@ -450,8 +456,11 @@ export const getFieldClass = (type: FieldTypes, adapter?: Adapter) => {
  * @returns The function `getValidatorClass` returns the `ValidatorClass` which is a class that extends
  * `Validator<any>`.
  */
-export const getValidatorClass = (type: ValidatorTypes, adapter?: Adapter) => {
-  let ValidatorClass: typeof Validator<any> = adapter?.validatorsMap?.[type];
+export const getValidatorClass = <T extends ValidatorTypes>(
+  type: T,
+  adapter?: Adapter,
+): typeof Validator<T> => {
+  let ValidatorClass: typeof Validator<T> = adapter?.validatorsMap?.[type];
 
   if (!ValidatorClass) {
     ValidatorClass = defaultValidatorsMap[type];
@@ -577,7 +586,7 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
   }
 };
 
-export const isObjectId = (input: string) => /^[a-f\d]{24}$/i.test(input);
+export const isObjectId = (input: JSONSubtype) => /^[a-f\d]{24}$/i.test(String(input));
 
 /**
  * The function `defineFieldsProperties` defines properties on an instance object based on the fields
@@ -614,6 +623,7 @@ export const defineFieldsProperties = (instance: Model) => {
     model.__fieldsProperties = properties;
   }
 
+  // @ts-expect-error __fieldsProperties
   Object.defineProperties(instance, model.__fieldsProperties);
 };
 
@@ -625,11 +635,11 @@ const _pathReplace = (field: Field, p, fp) => {
  * The `_getter` function is a helper function that retrieves values from an object based on a given
  * set of fields and paths.
  * @param opts - The `opts` parameter is an object that contains the following properties:
- * - `_value` - The `_value` property is the value to be retrieved from the object. It is of type
+ * - `value` - The `value` property is the value to be retrieved from the object. It is of type
  * `any`.
- * - `_fieldsPaths` - The `_fieldsPaths` property is an array of `FieldsPathItem` objects. It is used
+ * - `fieldsPaths` - The `fieldsPaths` property is an array of `FieldsPathItem` objects. It is used
  * to determine which fields to retrieve from the object.
- * - `_lastField` - The `_lastField` property is the last field in the `_fieldsPaths` array. It is of
+ * - `lastField` - The `lastField` property is the last field in the `fieldsPaths` array. It is of
  * type `Field`.
  * - `noFieldSymbol` - The `noFieldSymbol` property is a symbol that is used to indicate that a field
  * does not exist.
@@ -646,47 +656,46 @@ const _pathReplace = (field: Field, p, fp) => {
  * in the `_value` object.
  */
 export const _getter = (opts: {
-  _value?: any;
-  _fieldsPaths: Array<{ key: string; field: Field }>;
-  _lastField?: Field;
+  value?: JSONSubtype;
+  fieldsPaths: Array<{ key: string; field: Field }>;
+  lastField?: Field;
   noFieldSymbol: symbol;
   format: string;
   ctx: SerializerCtx;
   from: Model;
 }) => {
-  let { _value, _lastField } = opts;
-  const { _fieldsPaths, noFieldSymbol, format, from, ctx } = opts;
-  const lastField = _fieldsPaths[_fieldsPaths.length - 1]?.field;
-  _lastField ??= lastField;
+  let { value } = opts;
+  const { fieldsPaths, noFieldSymbol, format, from, ctx } = opts;
+  const lastField = fieldsPaths[fieldsPaths.length - 1]?.field ?? opts.lastField;
 
-  for (let i = 0; i < _fieldsPaths.length; i++) {
-    const _fieldsPath = _fieldsPaths[i];
-    if (!_fieldsPath) {
+  for (let i = 0; i < fieldsPaths.length; i++) {
+    const fieldsPath = fieldsPaths[i];
+    if (!fieldsPath) {
       return noFieldSymbol;
     }
 
-    const { key, field } = _fieldsPath;
+    const { key, field } = fieldsPath;
 
     const defaults = ctx?.defaults ?? format !== SerializerFormat.DOCUMENT;
-    if (defaults && _value === undefined && "default" in field.options) {
-      _value = field.options.default as typeof _value;
+    if (defaults && value === undefined && "default" in field.options) {
+      value = field.options.default as typeof value;
     }
 
-    if (_value === undefined || _value === null) {
-      return _value;
+    if (value === undefined || value === null) {
+      return value;
     }
 
-    const restPaths = _fieldsPaths.slice(i + 1);
+    const restPaths = fieldsPaths.slice(i + 1);
     const matchIndex = key.match(/\[(\d+)?\]/);
     if (matchIndex) {
-      if (!Array.isArray(_value)) {
+      if (!Array.isArray(value)) {
         return noFieldSymbol;
       }
 
       if (matchIndex[1] === undefined) {
         const adapter = from.model.getAdapter();
 
-        return _value.map((v, fi) => {
+        return value.map((v, fi) => {
           const thisPath = field.path.replace(/\[\]$/, `[${fi}]`);
           const _restPaths = restPaths.map(p => {
             if (!p) {
@@ -705,9 +714,9 @@ export const _getter = (opts: {
 
           const res = _getter({
             ...opts,
-            _value: v,
-            _fieldsPaths: _restPaths,
-            _lastField: lastField,
+            value: v,
+            fieldsPaths: _restPaths,
+            lastField: lastField,
           });
 
           return res === noFieldSymbol ? undefined : res;
@@ -716,42 +725,42 @@ export const _getter = (opts: {
 
       const index = parseInt(matchIndex[1]);
 
-      if (_value.length <= index) {
+      if (value.length <= index) {
         return noFieldSymbol;
       }
 
       const res = _getter({
         ...opts,
-        _value: _value[index],
-        _fieldsPaths: restPaths,
-        _lastField: lastField,
+        value: value[index],
+        fieldsPaths: restPaths,
+        lastField: lastField,
       });
 
       return res === noFieldSymbol ? undefined : res;
     }
 
-    if (!_value || typeof _value !== "object") {
+    if (!value || typeof value !== "object") {
       break;
     }
 
-    const n = _value[key];
+    const n = value[key];
 
     if (n === undefined || n === null) {
       return n;
     }
 
-    if (field === _lastField) {
-      _value = n;
+    if (field === lastField) {
+      value = n;
     } else {
-      _value = field.serialize(n, SerializerFormat.NEXT_FIELD, from, ctx);
+      value = field.serialize(n, SerializerFormat.NEXT_FIELD, from, ctx);
     }
   }
 
-  if (!_lastField || (_lastField?.nextFieldEqObject && format === SerializerFormat.OBJECT)) {
-    return _value;
+  if (!lastField || (lastField?.nextFieldEqObject && format === SerializerFormat.OBJECT)) {
+    return value;
   }
 
-  return _lastField.serialize(_value, format, from, ctx);
+  return lastField.serialize(value, format, from, ctx);
 };
 
 /**
@@ -772,13 +781,13 @@ export const _getter = (opts: {
  * @returns the value assigned to `assignTo[assignPath.key]` after serializing `_value` using
  * `assignPath.field.serialize()`.
  */
-export const _setter = (opts: {
-  _assignTo: any;
-  _value: any;
+export const _setter = <T extends typeof Model>(opts: {
+  _assignTo: ModelDocument<T> | Array<ModelDocument<T>>;
+  _value: JSONSubtype;
   _fieldsPaths: Array<{ key: string | number; field: Field }>;
   _throw: () => void;
-  ctx: any;
-  from: Model;
+  ctx: TransactionCtx;
+  from: ModelInstance<T>;
 }) => {
   const { _assignTo, _fieldsPaths, _throw, _value, ctx, from } = opts;
 
@@ -843,205 +852,269 @@ export const getNestedFieldsArrayForModel = (model: typeof Model): Array<Field> 
 };
 
 /**
- * The `validateModel` function is a TypeScript function that validates a list of instances or input
- * payloads against a given model, checking for field and validator errors.
- * @param {T} model - The `model` parameter is the model class that represents the data structure you
- * want to validate. It should be a subclass of the `Model` class.
- * @param list - The `list` parameter is an array that contains instances of the model or input
- * payloads for creating new instances. It can be an array of `InstanceType<T>` or
- * `InputModelPayload<T>`.
- * @param {TransactionCtx} ctx - The `ctx` parameter is an optional object that represents the execution
- * context. It can contain any additional information or variables that may be needed during the
- * validation process.
- * @returns The function `validateModel` returns a Promise that resolves to a boolean value (`true`).
+ * The function `validateValidators` asynchronously validates a set of validators on a given model and
+ * adds any validation errors to a set.
+ * @param  - - `validators`: An array of tuples, where each tuple contains a `Validator` object and an
+ * array of `ModelInstance` objects.
+ */
+async function validateFields<T extends typeof Model>(opts: {
+  fields: Array<Field>;
+  on: Array<ModelInstance<T>>;
+  model: T;
+  ctx?: TransactionCtx;
+  errorsFieldsSet: Set<ValidationFieldError>;
+  fieldsValidators: Array<[Validator, Array<ModelInstance<T>>]>;
+  fieldsValidatorsKeys: Set<string>;
+}) {
+  const { fields, on, model, ctx, errorsFieldsSet, fieldsValidators, fieldsValidatorsKeys } = opts;
+
+  for (const field of fields) {
+    const { type, path } = field;
+
+    try {
+      const validated = await field.validate(on, model, ctx);
+      if (!validated) {
+        throw null;
+      }
+
+      if (type === FieldTypes.NESTED) {
+        const values = on
+          .map(i => i.get(path, SerializerFormat.VALIDATION))
+          .flat(Infinity)
+          .filter(Boolean);
+
+        if (values?.length) {
+          const _field = field as Field<FieldTypes.NESTED>;
+          const o = _field.options || {};
+          if (o.defaultField) {
+            const noField = values.map(v => Object.keys(v).filter(k => !o.fields?.[k])).flat();
+
+            if (noField?.length) {
+              const adapter = model.getAdapter();
+              const _process = async (_path, _list: Array<ModelInstance<T>>) => {
+                const tmpField = getFieldFromDefinition(o.defaultField, adapter, _path);
+
+                const promises = [
+                  validateFields({
+                    ...opts,
+                    fields: [tmpField],
+                    on: _list,
+                  }),
+                ];
+
+                if (tmpField?.type === FieldTypes.NESTED) {
+                  const fields = getNestedFieldsMap(model, tmpField as Field<FieldTypes.NESTED>);
+
+                  promises.push(
+                    validateFields({
+                      ...opts,
+                      fields: Array.from(fields.values()),
+                      on: _list,
+                    }),
+                  );
+                }
+
+                await Promise.all(promises);
+              };
+
+              await Promise.all(
+                noField.map(async k => {
+                  const path = _field.path + `.${k}`;
+
+                  const valuesMap = new Map<
+                    string,
+                    { list: Array<ModelInstance<T>>; arrayLength?: number }
+                  >();
+
+                  on.forEach(i => {
+                    const value = i.get(path, SerializerFormat.VALIDATION);
+                    if (value && !(Array.isArray(value) && value.length === 0)) {
+                      const str = JSON.stringify({ value });
+                      let entry = valuesMap.get(str);
+                      if (!entry) {
+                        entry = {
+                          list: [],
+                          arrayLength: Array.isArray(value) ? value.length : undefined,
+                        };
+                        valuesMap.set(str, entry);
+                      }
+                      entry.list.push(i);
+                    }
+                  });
+
+                  if (valuesMap.size) {
+                    await Promise.all(
+                      Array.from(valuesMap.values()).map(async i => {
+                        if (i.arrayLength !== undefined) {
+                          await Promise.all(
+                            [...Array(i.arrayLength)].map((_, j) =>
+                              _process(path.replace(/\[\]/, `[${j}]`), i.list),
+                            ),
+                          );
+                        } else {
+                          await _process(path, i.list);
+                        }
+                      }),
+                    );
+                  }
+                }),
+              );
+            }
+          }
+
+          getNestedValidatorsArray(model, _field).forEach(v => {
+            const key = v.getKey();
+            if (!fieldsValidatorsKeys.has(key)) {
+              fieldsValidators.push([v, on]);
+              fieldsValidatorsKeys.add(key);
+            }
+          });
+        }
+      }
+
+      if (type === FieldTypes.ARRAY) {
+        const _field = field as Field<FieldTypes.ARRAY>;
+        const entries = on
+          .map(i => [i, i.get(path, SerializerFormat.VALIDATION)])
+          .filter(e => Boolean(e[1]));
+        const values = entries
+          .map(e => e[1])
+          .flat(Infinity)
+          .filter(Boolean);
+
+        if (values?.length) {
+          const validators = getArrayValidatorsArray(model, _field);
+          const _on = entries.map(e => e[0]);
+
+          validators.forEach(v => {
+            const key = v.getKey();
+            if (!fieldsValidatorsKeys.has(key)) {
+              fieldsValidators.push([v, _on]);
+              fieldsValidatorsKeys.add(key);
+            }
+          });
+
+          const fields = getArrayItemsFieldsMap(model, _field);
+          // await validateFields(Array.from(fields.values()), _on);
+          await validateFields({
+            ...opts,
+            fields: Array.from(fields.values()),
+            on: _on,
+          });
+        }
+      }
+    } catch (err) {
+      const e = new ValidationFieldError({
+        slug: field.path.split(".").pop(),
+        field,
+        validationError: err instanceof ValidationError ? err : null,
+      });
+
+      errorsFieldsSet.add(e);
+    }
+  }
+}
+
+/**
+ * The function `validateValidators` asynchronously validates a set of validators on a given model and
+ * adds any validation errors to a set.
+ * @param  - - `validators`: An array of tuples, where each tuple contains a `Validator` object and an
+ * array of `ModelInstance` objects.
+ */
+async function validateValidators<T extends typeof Model>({
+  validators,
+  model,
+  ctx,
+  errorsValidatorsSet,
+}: {
+  validators: Array<[Validator, Array<ModelInstance<T>>]>;
+  model: T;
+  ctx?: TransactionCtx;
+  errorsValidatorsSet: Set<ValidationValidatorError>;
+}) {
+  await Promise.all(
+    validators.map(async ([validator, on]) => {
+      try {
+        const validated = await validator.validate(on, model, ctx);
+        if (!validated) {
+          throw null;
+        }
+      } catch (err) {
+        const e = new ValidationValidatorError({
+          validator,
+        });
+
+        errorsValidatorsSet.add(e);
+      }
+    }),
+  );
+}
+
+/**
+ * The `validateModel` function is a TypeScript function that validates a list of model instances
+ * against their defined fields and validators, throwing a `ValidationError` if any errors are found.
+ * @param {T} model - The `model` parameter is the type of the model that you want to validate. It
+ * should be a subclass of the `Model` class.
+ * @param list - The `list` parameter is an array of either `ModelInstance<T>` or `ModelDocument<T>`.
+ * @param {TransactionCtx} [ctx] - The `ctx` parameter is an optional parameter of type
+ * `TransactionCtx`. It is used to pass a transaction context to the validation process. This allows
+ * the validation to be performed within a transaction, ensuring that any changes made during the
+ * validation can be rolled back if necessary. If no transaction context is provided
+ * @returns a boolean value of `true`.
  */
 export const validateModel = async <T extends typeof Model>(
   model: T,
-  list: Array<InstanceType<T> | InputModelPayload<T>>,
+  list: Array<ModelInstance<T> | ModelDocument<T>>,
   ctx?: TransactionCtx,
 ) => {
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
+  const fieldsValidatorsKeys = new Set<string>();
+  const fieldsValidators: Array<[Validator, Array<ModelInstance<T>>]> = [];
 
-  const instances = list.map(i => (i instanceof Model ? i : new model({ ...i }))) as Array<
-    InstanceType<T>
+  const instances = list.map(i => (i instanceof Model ? i : new model(i))) as Array<
+    ModelInstance<T>
   >;
 
-  const fieldsValidatorsKeys = new Set<string>();
-  const fieldsValidators: Array<[Validator, Array<InstanceType<T>>]> = [];
-
-  const _processFields = async (fields: Array<Field>, on = instances) => {
-    for (const field of fields) {
-      const { type, path } = field;
-
-      try {
-        const validated = await field.validate(on, model, ctx);
-        if (!validated) {
-          throw null;
-        }
-
-        if (type === FieldTypes.NESTED) {
-          const values = on
-            .map(i => i.get(path, SerializerFormat.VALIDATION))
-            .flat(Infinity)
-            .filter(Boolean);
-
-          if (values?.length) {
-            const _field = field as Field<FieldTypes.NESTED>;
-            const o = _field.options || {};
-            if (o.defaultField) {
-              const noField = values.map(v => Object.keys(v).filter(k => !o.fields?.[k])).flat();
-
-              if (noField?.length) {
-                const adapter = model.getAdapter();
-                const _process = async (_path, list: Array<InstanceType<T>>) => {
-                  const tmpField = getFieldFromDefinition(o.defaultField, adapter, _path);
-
-                  const promises = [_processFields([tmpField], list)];
-
-                  if (tmpField?.type === FieldTypes.NESTED) {
-                    const fields = getNestedFieldsMap(model, tmpField as Field<FieldTypes.NESTED>);
-
-                    promises.push(_processFields(Array.from(fields.values()), list));
-                  }
-
-                  await Promise.all(promises);
-                };
-
-                await Promise.all(
-                  noField.map(async k => {
-                    const path = _field.path + `.${k}`;
-
-                    const valuesMap = new Map<
-                      string,
-                      { list: Array<InstanceType<T>>; arrayLength?: number }
-                    >();
-
-                    on.forEach(i => {
-                      const value = i.get(path, SerializerFormat.VALIDATION);
-                      if (value && !(Array.isArray(value) && !value.length)) {
-                        const str = JSON.stringify({ value });
-                        if (!valuesMap.has(str)) {
-                          valuesMap.set(str, {
-                            list: [],
-                            arrayLength: Array.isArray(value) ? value.length : undefined,
-                          });
-                        }
-
-                        valuesMap.get(str).list.push(i);
-                      }
-                    });
-
-                    if (valuesMap.size) {
-                      await Promise.all(
-                        Array.from(valuesMap.values()).map(async ({ list, arrayLength }) => {
-                          if (arrayLength !== undefined) {
-                            await Promise.all(
-                              Array.from({ length: arrayLength }).map((v, j) =>
-                                _process(path.replace(/\[\]/, `[${j}]`), list),
-                              ),
-                            );
-                          } else {
-                            await _process(path, list);
-                          }
-                        }),
-                      );
-                    }
-                  }),
-                );
-              }
-            }
-
-            getNestedValidatorsArray(model, _field).forEach(v => {
-              const key = v.getKey();
-              if (!fieldsValidatorsKeys.has(key)) {
-                fieldsValidators.push([v, on]);
-                fieldsValidatorsKeys.add(key);
-              }
-            });
-          }
-        }
-
-        if (type === FieldTypes.ARRAY) {
-          const _field = field as Field<FieldTypes.ARRAY>;
-          const entries = on
-            .map(i => [i, i.get(path, SerializerFormat.VALIDATION)])
-            .filter(e => Boolean(e[1]));
-          const values = entries
-            .map(e => e[1])
-            .flat(Infinity)
-            .filter(Boolean);
-
-          if (values?.length) {
-            const validators = getArrayValidatorsArray(model, _field);
-            const _on = entries.map(e => e[0]);
-
-            validators.forEach(v => {
-              const key = v.getKey();
-              if (!fieldsValidatorsKeys.has(key)) {
-                fieldsValidators.push([v, _on]);
-                fieldsValidatorsKeys.add(key);
-              }
-            });
-
-            const fields = getArrayItemsFieldsMap(model, _field);
-            await _processFields(Array.from(fields.values()), _on);
-          }
-        }
-      } catch (err) {
-        const e = new ValidationFieldError({
-          slug: field.path.split(".").pop(),
-          field,
-          validationError: err instanceof ValidationError ? err : null,
-        });
-
-        errorsFieldsSet.add(e);
-      }
-    }
-  };
-
-  const _processValidators = async (validators: Array<[Validator, Array<InstanceType<T>>]>) => {
-    await Promise.all(
-      validators.map(async ([validator, on]) => {
-        try {
-          const validated = await validator.validate(on, model, ctx);
-          if (!validated) {
-            throw null;
-          }
-        } catch (err) {
-          const e = new ValidationValidatorError({
-            validator,
-          });
-
-          errorsValidatorsSet.add(e);
-        }
-      }),
-    );
-  };
-
-  const _verify = () => {
-    if (errorsFieldsSet.size || errorsValidatorsSet.size) {
-      throw new ValidationError({
-        fields: [...errorsFieldsSet],
-        validators: [...errorsValidatorsSet],
-      });
-    }
-  };
-
-  await _processFields(getNestedFieldsArrayForModel(model));
-
-  _verify();
+  const promises: Array<Promise<void>> = [
+    validateFields({
+      fields: getNestedFieldsArrayForModel(model),
+      on: instances,
+      model,
+      ctx,
+      errorsFieldsSet,
+      fieldsValidators,
+      fieldsValidatorsKeys,
+    }),
+  ];
 
   if (model.validatorsArray?.length) {
-    await _processValidators(model.validatorsArray.map(v => [v, instances]));
-
-    _verify();
+    promises.push(
+      validateValidators({
+        validators: model.validatorsArray.map(v => [v, instances]),
+        model,
+        ctx,
+        errorsValidatorsSet,
+      }),
+    );
   }
 
-  if (fieldsValidatorsKeys.size) {
-    await _processValidators(fieldsValidators);
+  await Promise.all(promises);
 
-    _verify();
+  if (fieldsValidatorsKeys.size && !errorsFieldsSet.size && !errorsValidatorsSet.size) {
+    await validateValidators({
+      validators: fieldsValidators,
+      model,
+      ctx,
+      errorsValidatorsSet,
+    });
+  }
+
+  if (errorsFieldsSet.size || errorsValidatorsSet.size) {
+    throw new ValidationError({
+      fields: [...errorsFieldsSet],
+      validators: [...errorsValidatorsSet],
+    });
   }
 
   return true;
@@ -1098,7 +1171,7 @@ export const assignDatamodel = async <T extends typeof Model>(model: T, datamode
     return;
   }
 
-  model.definition = datamodel.getDoc()?.definition ?? {};
+  model.definition = (datamodel.getDoc()?.definition ?? {}) as ModelDefinition;
 
   model.__fieldsMap = createFieldsMap(model);
   model.__validatorsArray = createValidatorsArray(model);

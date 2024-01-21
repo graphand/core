@@ -7,15 +7,20 @@ import FieldTypes from "@/enums/field-types";
 import {
   AdapterFetcher,
   CoreTransactionCtx,
-  DocumentDefinition,
   FieldsPathItem,
   Hook,
   HookCallbackArgs,
   HookPhase,
-  InputModelPayload,
   JSONQuery,
   ModelDefinition,
   Module,
+  JSONType,
+  ModelDocument,
+  GenericModelDocument,
+  ModelInstance,
+  ModelProps,
+  UpdateObject,
+  JSONSubtype,
 } from "@/types";
 import SerializerFormat from "@/enums/serializer-format";
 import Adapter from "@/lib/Adapter";
@@ -35,8 +40,11 @@ import {
 import CoreError from "@/lib/CoreError";
 import ErrorCodes from "@/enums/error-codes";
 import type DataModel from "@/models/DataModel";
+import ModelList from "./ModelList";
 
-class Model {
+// Used to infer the type of a model instance from a model class
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class Model<Props extends object = never> {
   static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
   static searchable: boolean = false; // Whether the model is usable as a search config source
   static exposed: boolean = true; // Whether the model is exposed in the API or not
@@ -51,18 +59,18 @@ class Model {
   static cacheAdapter = true;
 
   static __name: string = "Model";
-  static __hooks: Set<Hook<any, any, any>>;
+  static __hooks: Set<Hook<HookPhase, keyof AdapterFetcher, typeof Model>>;
   static __initOptions: Parameters<typeof getModelInitPromise>[1];
   static __initPromise: Promise<void>;
   static __adapter: Adapter;
   static __fieldsMap: Map<string, Field>;
   static __validatorsArray: Array<Validator>;
   static __fieldsKeys: string[];
-  static __fieldsProperties: any;
+  static __fieldsProperties: JSONType;
   static __extendedClass: typeof Model;
   static __dm: string | null; // The id of the datamodel that initialized the model if extensible. null if datamodel not found
 
-  #doc: DocumentDefinition; // The document
+  #doc: GenericModelDocument; // The document
 
   @fieldDecorator(FieldTypes.ID)
   _id: FieldDefinitionId;
@@ -79,7 +87,7 @@ class Model {
   @fieldDecorator(FieldTypes.IDENTITY)
   _updatedBy;
 
-  constructor(doc: any = {}) {
+  constructor(doc: GenericModelDocument = {}) {
     if (!doc || typeof doc !== "object") {
       throw new CoreError({
         message: `Invalid document: ${doc}`,
@@ -88,6 +96,7 @@ class Model {
 
     this.#doc = doc;
     this.#doc._id ??= Date.now();
+    return this;
   }
 
   /**
@@ -133,7 +142,7 @@ class Model {
    * Set the current instance doc (raw data)
    * @param doc
    */
-  setDoc(doc: any) {
+  setDoc(doc: GenericModelDocument) {
     this.#doc = doc;
   }
 
@@ -346,7 +355,7 @@ class Model {
     path: string,
     format: string = SerializerFormat.OBJECT,
     bindCtx: Partial<SerializerCtx> = {},
-    value?: any,
+    value?: JSONSubtype,
   ) {
     let fieldsPaths: Array<FieldsPathItem>;
 
@@ -376,7 +385,7 @@ class Model {
     }
 
     const firstField = fieldsPaths[0].field;
-    value ??= this.#doc[firstField.path];
+    value ??= this.#doc[firstField.path] as JSONSubtype;
 
     const defaults = ctx?.defaults ?? format !== SerializerFormat.DOCUMENT;
     if (defaults && value === undefined && "default" in firstField.options) {
@@ -395,8 +404,8 @@ class Model {
       const _value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, this, ctx);
 
       const res = _getter({
-        _value,
-        _fieldsPaths: fieldsPaths.splice(1),
+        value: _value,
+        fieldsPaths: fieldsPaths.splice(1),
         format,
         ctx,
         noFieldSymbol,
@@ -418,7 +427,7 @@ class Model {
   set<T extends Model, S extends keyof T | string>(
     this: T,
     path: S,
-    value: S extends keyof T ? T[S] | any : any,
+    value: JSONSubtype,
     ctx?: TransactionCtx,
   ) {
     const _path = path as string;
@@ -473,7 +482,7 @@ class Model {
     defineFieldsProperties(this);
 
     const keys = fieldsKeys ?? this.model.fieldsKeys;
-    const res: any = {};
+    const res = {};
 
     keys.forEach(slug => {
       const v = this.get(slug, format, bindCtx);
@@ -484,7 +493,8 @@ class Model {
       res[slug] = v;
     });
 
-    return res;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return res as Partial<Record<keyof this | keyof ModelProps<this>, any>>;
   }
 
   /**
@@ -518,7 +528,7 @@ class Model {
    * Serialize the current instance to a string
    */
   toString() {
-    return JSON.stringify(this.#doc);
+    return JSON.stringify(this.#doc) as string;
   }
 
   /**
@@ -534,12 +544,12 @@ class Model {
     this: T,
     str: string,
     cleanPayload = true,
-  ): InstanceType<T> {
+  ): ModelInstance<T> {
     const parsed = JSON.parse(str);
     let payload = parsed;
 
     if (cleanPayload) {
-      const cleaned: any = {};
+      const cleaned: object = {};
 
       this.fieldsKeys.forEach(slug => {
         cleaned[slug] = parsed[slug];
@@ -548,7 +558,7 @@ class Model {
       payload = cleaned;
     }
 
-    return new this(payload) as InstanceType<T>;
+    return new this(payload) as ModelInstance<T>;
   }
 
   /**
@@ -590,15 +600,15 @@ class Model {
     this: T,
     query: string | JSONQuery = {},
     ctx?: TransactionCtx,
-  ): PromiseModel<InstanceType<T>> {
-    return new PromiseModel<InstanceType<T>>(
+  ): PromiseModel<ModelInstance<T>> {
+    return new PromiseModel<ModelInstance<T>>(
       [
         async (resolve, reject) => {
           try {
             await this.initialize();
 
             const i = await this.execute("get", [query], ctx);
-            resolve(i);
+            resolve(i as ModelInstance<T>);
           } catch (e) {
             reject(e);
           }
@@ -624,15 +634,15 @@ class Model {
     this: T,
     query: JSONQuery = {},
     ctx?: TransactionCtx,
-  ): PromiseModelList<InstanceType<T>> {
-    return new PromiseModelList<InstanceType<T>>(
+  ): PromiseModelList<ModelInstance<T>> {
+    return new PromiseModelList<ModelInstance<T>>(
       [
         async (resolve, reject) => {
           try {
             await this.initialize();
 
             const list = await this.execute("getList", [query], ctx);
-            resolve(list);
+            resolve(list as ModelList<ModelInstance<T>>);
           } catch (e) {
             reject(e);
           }
@@ -653,9 +663,9 @@ class Model {
    */
   static async create<T extends typeof Model>(
     this: T,
-    payload: InputModelPayload<T>,
+    payload: ModelDocument<T>,
     ctx?: TransactionCtx,
-  ): Promise<InstanceType<T>> {
+  ): Promise<ModelInstance<T>> {
     if (Array.isArray(payload)) {
       throw new CoreError({
         code: ErrorCodes.INVALID_PARAMS,
@@ -665,7 +675,7 @@ class Model {
 
     await this.initialize();
 
-    return await this.execute("createOne", [payload], ctx);
+    return (await this.execute("createOne", [payload], ctx)) as ModelInstance<T>;
   }
 
   /**
@@ -684,12 +694,12 @@ class Model {
    */
   static async createMultiple<T extends typeof Model>(
     this: T,
-    payload: Array<InputModelPayload<T>>,
+    payload: Array<ModelDocument<T>>,
     ctx?: TransactionCtx,
-  ): Promise<Array<InstanceType<T>>> {
+  ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
-    return await this.execute("createMultiple", [payload], ctx);
+    return (await this.execute("createMultiple", [payload], ctx)) as Array<ModelInstance<T>>;
   }
 
   /**
@@ -702,7 +712,7 @@ class Model {
    * await instance.update({ $unset: { title: true } });
    * console.log(instance.title); // undefined
    */
-  async update(update: any, ctx?: TransactionCtx): Promise<this> {
+  async update(update: UpdateObject, ctx?: TransactionCtx): Promise<this> {
     const res = await this.model.execute("updateOne", [String(this._id), update], ctx);
 
     if (!res?.getDoc?.()) {
@@ -735,17 +745,17 @@ class Model {
   static async update<T extends typeof Model>(
     this: T,
     query: string | JSONQuery = {},
-    update: any,
+    update: UpdateObject,
     ctx?: TransactionCtx,
-  ): Promise<Array<InstanceType<T>>> {
+  ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
     if (typeof query === "string") {
       const updated = await this.execute("updateOne", [query, update], ctx);
-      return [updated];
+      return [updated] as Array<ModelInstance<T>>;
     }
 
-    return await this.execute("updateMultiple", [query, update], ctx);
+    return (await this.execute("updateMultiple", [query, update], ctx)) as Array<ModelInstance<T>>;
   }
 
   /**
@@ -847,7 +857,7 @@ class Model {
    */
   static async validate<T extends typeof Model>(
     this: T,
-    list: Array<InstanceType<T> | InputModelPayload<T>>,
+    list: Array<ModelInstance<T> | ModelDocument<T>>,
     ctx?: TransactionCtx,
   ) {
     return await validateModel(this, list, ctx);

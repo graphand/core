@@ -10,7 +10,7 @@ import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
 import { defineFieldsProperties } from "@/lib/utils";
 import Validator from "@/lib/Validator";
 
-const cache: Map<typeof Model, Set<any>> = new Map();
+const cache: Map<typeof Model, Set<Model>> = new Map();
 
 export const mockAdapter = ({
   fieldsMap = defaultFieldsMap,
@@ -29,7 +29,7 @@ export const mockAdapter = ({
   class MockAdapter extends Adapter {
     runValidators = true;
 
-    get thisCache(): Set<any> {
+    get thisCache(): Set<Model> {
       const cacheKey = this.model.getBaseClass();
 
       let cacheModel = cache.get(cacheKey);
@@ -56,7 +56,7 @@ export const mockAdapter = ({
         const cache = Array.from(this.thisCache);
 
         if (typeof query === "string") {
-          return cache.find(r => r._id === query);
+          return Promise.resolve(cache.find(r => r._id === query));
         }
 
         let found = cache[0];
@@ -218,6 +218,7 @@ export const mockModel = ({
       defineFieldsProperties(this);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [slug: string]: any;
   }
 
