@@ -15,7 +15,7 @@ describe("test fieldsMap", () => {
   const adapter = mockAdapter({});
 
   describe("TEXT field", () => {
-    it("Should returns default value if undefined", async () => {
+    it("should return default value if undefined", async () => {
       const defaultText = faker.lorem.word();
 
       const model = mockModel({
@@ -27,21 +27,21 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({});
       expect(i.title).toEqual(defaultText);
     });
 
-    it("Should returns string value by default", async () => {
+    it("should return string value by default", async () => {
       const model = mockModel({
         fields: {
           title: {
             type: FieldTypes.TEXT,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const title = faker.lorem.word();
@@ -50,14 +50,14 @@ describe("test fieldsMap", () => {
       expect(i.title).toEqual(title);
     });
 
-    it("Should returns string from array by default", async () => {
+    it("should return string from array by default", async () => {
       const model = mockModel({
         fields: {
           title: {
             type: FieldTypes.TEXT,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const titleArray = [faker.lorem.word(), faker.lorem.word()];
@@ -66,14 +66,14 @@ describe("test fieldsMap", () => {
       expect(typeof i.title).toBe("string");
     });
 
-    it("Should not be able to save an _id in a TEXT field", async () => {
+    it("should not be able to save an _id in a TEXT field", async () => {
       const model = mockModel({
         fields: {
           title: {
             type: FieldTypes.TEXT,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({ title: String(new ObjectId()) });
@@ -82,7 +82,7 @@ describe("test fieldsMap", () => {
     });
 
     describe("options.options", () => {
-      it("Should returns value within options", async () => {
+      it("should return value within options", async () => {
         const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
@@ -94,7 +94,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const title = options[0];
@@ -103,7 +103,7 @@ describe("test fieldsMap", () => {
         expect(i.title).toEqual(title);
       });
 
-      it("Should returns value not in options if strict mode is not enabled", async () => {
+      it("should return value not in options if strict mode is not enabled", async () => {
         const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
@@ -115,7 +115,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const title = "notInOptions";
@@ -124,7 +124,7 @@ describe("test fieldsMap", () => {
         expect(i.title).toEqual(title);
       });
 
-      it("Should returns value within options if value is valid & strict mode is enabled", async () => {
+      it("should return value within options if value is valid & strict mode is enabled", async () => {
         const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
@@ -137,7 +137,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const title = options[0];
@@ -146,7 +146,7 @@ describe("test fieldsMap", () => {
         expect(i.title).toEqual(title);
       });
 
-      it("Should returns null if value not in options and strict mode is enabled", async () => {
+      it("should return null if value not in options and strict mode is enabled", async () => {
         const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
@@ -159,7 +159,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const title = "notInOptions";
@@ -168,7 +168,7 @@ describe("test fieldsMap", () => {
         expect(i.title).toEqual(undefined);
       });
 
-      it("Should not throw error if value is in options and strict mode is enabled", async () => {
+      it("should not throw error if value is in options and strict mode is enabled", async () => {
         const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
@@ -181,7 +181,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const title = options[0];
@@ -190,7 +190,7 @@ describe("test fieldsMap", () => {
         await expect(model.validate([i])).resolves.toBeTruthy();
       });
 
-      it("Should throw error if value not in options and strict mode is enabled", async () => {
+      it("should throw error if value not in options and strict mode is enabled", async () => {
         const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
@@ -203,7 +203,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const title = "notInOptions";
@@ -215,7 +215,7 @@ describe("test fieldsMap", () => {
   });
 
   describe("Nested field", () => {
-    it("Should returns default value if undefined", async () => {
+    it("should return default value if undefined", async () => {
       const defaultJSON = { default: true };
 
       const model = mockModel({
@@ -227,21 +227,21 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({});
       expect(i.obj).toEqual(defaultJSON);
     });
 
-    it("Should returns object value by default", async () => {
+    it("should return object value by default", async () => {
       const model = mockModel({
         fields: {
           obj: {
             type: FieldTypes.NESTED,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const obj = { title: faker.lorem.word() };
@@ -250,14 +250,14 @@ describe("test fieldsMap", () => {
       expect(i.obj).toBeInstanceOf(Object);
     });
 
-    it("Should returns object from array by default", async () => {
+    it("should return object from array by default", async () => {
       const model = mockModel({
         fields: {
           obj: {
             type: FieldTypes.NESTED,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const obj = [{ title: faker.lorem.word() }, { title: faker.lorem.word() }];
@@ -267,8 +267,8 @@ describe("test fieldsMap", () => {
       expect(Array.isArray(i.obj)).toBeFalsy();
     });
 
-    it("Should returns undefined if no value", async () => {
-      const model = DataModel.withAdapter(adapter);
+    it("should return undefined if no value", async () => {
+      const model = DataModel.extend({ adapterClass: adapter });
 
       const i = await model.create({
         slug: generateRandomString(),
@@ -283,7 +283,7 @@ describe("test fieldsMap", () => {
       expect(i.get("definition.fields.test.options", SerializerFormat.JSON)).toBe(undefined);
     });
 
-    it("Should not bind default values in document format", async () => {
+    it("should not bind default values in document format", async () => {
       const model = mockModel({
         fields: {
           obj: {
@@ -293,7 +293,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({});
@@ -302,7 +302,7 @@ describe("test fieldsMap", () => {
       expect(i.get("obj", SerializerFormat.DOCUMENT)).toEqual(undefined);
     });
 
-    it("Should not bind default values in document format in nested fields", async () => {
+    it("should not bind default values in document format in nested fields", async () => {
       const model = mockModel({
         fields: {
           obj: {
@@ -319,7 +319,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({
@@ -331,7 +331,7 @@ describe("test fieldsMap", () => {
     });
 
     describe("Proxy", () => {
-      it("Should returns an object proxy", async () => {
+      it("should return an object proxy", async () => {
         const model = mockModel({
           fields: {
             obj: {
@@ -345,7 +345,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const i = new model({
@@ -356,7 +356,7 @@ describe("test fieldsMap", () => {
         expect(i.obj.__isProxy).toBe(true);
       });
 
-      it("Should not call other fields serializers thanks to the proxy", async () => {
+      it("should not call other fields serializers thanks to the proxy", async () => {
         const serializeText = jest.fn((value: any): any => {
           return typeof value === "string" ? value : String(value);
         });
@@ -392,7 +392,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         expect(serializeText).not.toHaveBeenCalled();
@@ -412,7 +412,7 @@ describe("test fieldsMap", () => {
         expect(serializeNumber).not.toHaveBeenCalled();
       });
 
-      it("Should not call other fields serializers thanks to the proxy even in nested objects", async () => {
+      it("should not call other fields serializers thanks to the proxy even in nested objects", async () => {
         const serializeText = jest.fn((value: any): any => {
           return typeof value === "string" ? value : String(value);
         });
@@ -458,7 +458,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         expect(serializeText).not.toHaveBeenCalled();
@@ -484,7 +484,7 @@ describe("test fieldsMap", () => {
         expect(serializeNumber).not.toHaveBeenCalled();
       });
 
-      it("Should not call other fields serializers thanks to the proxy even in nested array", async () => {
+      it("should not call other fields serializers thanks to the proxy even in nested array", async () => {
         const serializeText = jest.fn((value: any): any => {
           return typeof value === "string" ? value : String(value);
         });
@@ -525,7 +525,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         expect(serializeText).not.toHaveBeenCalled();
@@ -550,7 +550,7 @@ describe("test fieldsMap", () => {
     });
 
     describe("options.strict", () => {
-      it("Should returns only defined fields in options when strict", async () => {
+      it("should return only defined fields in options when strict", async () => {
         const model = mockModel({
           fields: {
             obj: {
@@ -565,7 +565,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         const obj = {
@@ -581,7 +581,7 @@ describe("test fieldsMap", () => {
     });
 
     describe("options.fields", () => {
-      it("Should serialize from fields defined in options", async () => {
+      it("should serialize from fields defined in options", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = jest.fn(() => serializedText);
 
@@ -608,7 +608,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = {
@@ -620,7 +620,7 @@ describe("test fieldsMap", () => {
         expect(i.obj.title).toEqual(serializedText);
       });
 
-      it("Should validate fields defined in options", async () => {
+      it("should validate fields defined in options", async () => {
         const testValidator = jest.fn(() => Promise.resolve(true));
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
@@ -646,7 +646,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = { title: faker.lorem.word() };
@@ -660,7 +660,7 @@ describe("test fieldsMap", () => {
         expect(testValidator).toBeCalledTimes(1);
       });
 
-      it("Should support nested JSON fields", async () => {
+      it("should support nested JSON fields", async () => {
         const serializedText = faker.lorem.word();
         const testSerializer = jest.fn(() => serializedText);
         const testValidator = jest.fn(() => Promise.resolve(true));
@@ -696,7 +696,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = {
@@ -717,7 +717,7 @@ describe("test fieldsMap", () => {
         expect(testValidator).toBeCalledTimes(1);
       });
 
-      it("Should throw error if error happens in field validation", async () => {
+      it("should throw error if error happens in field validation", async () => {
         const testValidator = jest.fn(() => Promise.resolve(false));
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
@@ -750,7 +750,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = {
@@ -771,7 +771,7 @@ describe("test fieldsMap", () => {
     });
 
     describe("options.validators", () => {
-      it("Should validate validators defined in options", async () => {
+      it("should validate validators defined in options", async () => {
         const testValidate = jest.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
@@ -797,7 +797,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = {};
@@ -811,7 +811,7 @@ describe("test fieldsMap", () => {
         expect(testValidate).toBeCalledTimes(1);
       });
 
-      it("Should throw error if error happens in validator", async () => {
+      it("should throw error if error happens in validator", async () => {
         const testValidate = jest.fn(() => Promise.resolve(false));
 
         const _adapter = mockAdapter({
@@ -836,7 +836,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = {};
@@ -851,7 +851,7 @@ describe("test fieldsMap", () => {
         }
       });
 
-      it("Should support nested JSON fields and should not validate if nested value undefined", async () => {
+      it("should support nested JSON fields and should not validate if nested value undefined", async () => {
         const testValidate = jest.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
@@ -884,7 +884,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = {};
@@ -898,7 +898,7 @@ describe("test fieldsMap", () => {
         expect(testValidate).toBeCalledTimes(0);
       });
 
-      it("Should support nested JSON fields and should validate if nested value is not undefined", async () => {
+      it("should support nested JSON fields and should validate if nested value is not undefined", async () => {
         const testValidate = jest.fn(() => Promise.resolve(true));
 
         const _adapter = mockAdapter({
@@ -931,7 +931,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const obj = { nested: {} };
@@ -972,7 +972,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const i = new model({ obj: { title: "test" } });
@@ -1006,7 +1006,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const i = new model({ obj: { title: "test" } });
@@ -1047,7 +1047,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const fakerNumber = parseFloat(faker.random.numeric());
@@ -1087,7 +1087,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(_adapter);
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
         const fakeNumber = faker.random.numeric();
@@ -1128,7 +1128,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, {
@@ -1150,7 +1150,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, {
@@ -1172,7 +1172,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, {
@@ -1194,7 +1194,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, {
@@ -1216,7 +1216,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, {
@@ -1241,7 +1241,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, {
@@ -1268,7 +1268,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, [
@@ -1304,7 +1304,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, {
@@ -1340,7 +1340,7 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
         await model.initialize();
 
         _testConsistency(model, [
@@ -1353,14 +1353,14 @@ describe("test fieldsMap", () => {
   });
 
   describe("Identity field", () => {
-    it("Should throw error if is invalid", async () => {
+    it("should throw error if is invalid", async () => {
       const model = mockModel({
         fields: {
           identity: {
             type: FieldTypes.IDENTITY,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       await expect(model.create({ identity: "invalid" })).rejects.toThrow(ValidationError);
@@ -1368,14 +1368,14 @@ describe("test fieldsMap", () => {
       await expect(model.create({ identity: "account:test" })).rejects.toThrow(ValidationError);
     });
 
-    it("Should not throw error if is valid", async () => {
+    it("should not throw error if is valid", async () => {
       const model = mockModel({
         fields: {
           identity: {
             type: FieldTypes.IDENTITY,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       await expect(
@@ -1385,7 +1385,7 @@ describe("test fieldsMap", () => {
   });
 
   describe("Relation field", () => {
-    it("should returns valid PromiseModel instance", async () => {
+    it("should return valid PromiseModel instance", async () => {
       const model = mockModel({
         fields: {
           rel: {
@@ -1395,7 +1395,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const _id = String(new ObjectId());
@@ -1406,7 +1406,7 @@ describe("test fieldsMap", () => {
       expect(i.rel.query).toEqual(_id);
     });
 
-    it("should returns null if value is null", async () => {
+    it("should return null if value is null", async () => {
       const model = mockModel({
         fields: {
           rel: {
@@ -1416,7 +1416,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({ rel: null });
@@ -1424,7 +1424,7 @@ describe("test fieldsMap", () => {
       expect(i.rel).toBe(null);
     });
 
-    it("should returns null if value is invalid", async () => {
+    it("should return null if value is invalid", async () => {
       const model = mockModel({
         fields: {
           rel: {
@@ -1434,7 +1434,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({ rel: "invalid" });
@@ -1442,7 +1442,7 @@ describe("test fieldsMap", () => {
       expect(i.rel).toBe(null);
     });
 
-    it("should returns string in JSON format", async () => {
+    it("should return string in JSON format", async () => {
       const model = mockModel({
         fields: {
           rel: {
@@ -1452,7 +1452,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const _id = String(new ObjectId());
@@ -1463,7 +1463,7 @@ describe("test fieldsMap", () => {
   });
 
   describe("Array field", () => {
-    it("Should throw error if is relation with invalid value", async () => {
+    it("should throw error if is relation with invalid value", async () => {
       const model = mockModel({
         fields: {
           arr: {
@@ -1478,7 +1478,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       await expect(
@@ -1488,7 +1488,7 @@ describe("test fieldsMap", () => {
       ).rejects.toThrow(ValidationError);
     });
 
-    it("Should not throw error if is relation with valid value", async () => {
+    it("should not throw error if is relation with valid value", async () => {
       const model = mockModel({
         fields: {
           arr: {
@@ -1503,7 +1503,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       await expect(
@@ -1513,7 +1513,7 @@ describe("test fieldsMap", () => {
       ).resolves.toBeInstanceOf(model);
     });
 
-    it("should returns valid serialized array from items option", async () => {
+    it("should return valid serialized array from items option", async () => {
       const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
       const model = mockModel({
@@ -1539,7 +1539,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({
@@ -1551,7 +1551,7 @@ describe("test fieldsMap", () => {
       expect(i.arrNumbers).toEqual([1, 2, 3]);
     });
 
-    it("should returns PromiseModelList for relation array with format object", async () => {
+    it("should return PromiseModelList for relation array with format object", async () => {
       const model = mockModel({
         fields: {
           arrRel: {
@@ -1566,7 +1566,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({
@@ -1580,7 +1580,7 @@ describe("test fieldsMap", () => {
       });
     });
 
-    it("should returns array of ids for relation array with format json", async () => {
+    it("should return array of ids for relation array with format json", async () => {
       const model = mockModel({
         fields: {
           arrRel: {
@@ -1595,7 +1595,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({
@@ -1608,7 +1608,7 @@ describe("test fieldsMap", () => {
       expect(jsonArrRel).toEqual(["507f191e810c19729de860ea", "507f191e810c19729de860eb"]);
     });
 
-    it("should returns array of objects for json field", async () => {
+    it("should return array of objects for json field", async () => {
       const model = mockModel({
         fields: {
           arrJson: {
@@ -1620,7 +1620,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({
@@ -1631,7 +1631,7 @@ describe("test fieldsMap", () => {
       expect(i.arrJson).toEqual([{ test: "test" }, { test2: "test2" }]);
     });
 
-    it("should returns array from non-array with json field", async () => {
+    it("should return array from non-array with json field", async () => {
       const model = mockModel({
         fields: {
           arrJson: {
@@ -1643,7 +1643,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({
@@ -1654,7 +1654,7 @@ describe("test fieldsMap", () => {
       expect(i.arrJson).toEqual([{ test: "test" }]);
     });
 
-    it("should returns serialized item from index", async () => {
+    it("should return serialized item from index", async () => {
       const model = mockModel({
         fields: {
           arrJson: {
@@ -1674,7 +1674,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
       await model.initialize();
 
       const i = new model({
@@ -1699,7 +1699,7 @@ describe("test fieldsMap", () => {
       expect(i.get("arrJson.[3].test")).toBe(undefined);
     });
 
-    it("should returns serialized item from index within array", async () => {
+    it("should return serialized item from index within array", async () => {
       const model = mockModel({
         fields: {
           arrRel: {
@@ -1714,7 +1714,7 @@ describe("test fieldsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       await model.initialize();
 

@@ -8,7 +8,7 @@ describe("test ModelList", () => {
     model = mockModel();
   });
 
-  it("Should be able to get ids list", async () => {
+  it("should be able to get ids list", async () => {
     const list = new ModelList(model, [
       new model({
         _id: "a",

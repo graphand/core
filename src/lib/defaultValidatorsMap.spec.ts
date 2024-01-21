@@ -36,7 +36,7 @@ describe("test validatorsMap", () => {
           },
         },
       ],
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
     beforeAll(async () => {
       await model.initialize();
@@ -284,7 +284,7 @@ describe("test validatorsMap", () => {
               },
             },
           },
-        }).withAdapter(adapter);
+        }).extend({ adapterClass: adapter });
 
         await expect(
           _model.validate([
@@ -324,7 +324,7 @@ describe("test validatorsMap", () => {
             } as ValidatorOptions<ValidatorTypes.REGEX>,
           },
         ],
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       await model.initialize();
 
@@ -419,7 +419,7 @@ describe("test validatorsMap", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       await expect(
         _model.validate([
@@ -454,7 +454,7 @@ describe("test validatorsMap", () => {
           },
         },
       ],
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
     beforeAll(async () => {
       await model.initialize();
@@ -481,7 +481,7 @@ describe("test validatorsMap", () => {
   });
 
   describe("datamodelKeyField validator", () => {
-    const DataModel = models.DataModel.withAdapter(adapter);
+    const DataModel = models.DataModel.extend({ adapterClass: adapter });
 
     it("datamodel without keyField should not throw error", async () => {
       const datamodel = DataModel.create({
@@ -592,7 +592,7 @@ describe("test validatorsMap", () => {
             },
           },
         ],
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       await model.initialize();
 
@@ -707,7 +707,7 @@ describe("test validatorsMap", () => {
             },
           },
         ],
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       await model.initialize();
 
@@ -838,7 +838,7 @@ describe("test validatorsMap", () => {
           },
         },
       ],
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
     beforeAll(async () => {
       await model.initialize();

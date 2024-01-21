@@ -116,7 +116,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     const adapter = from.model.getAdapter();
 
     // get the referenced model with the same adapter as from parameter
-    const model = Model.getFromSlug(this.options.ref, adapter.base);
+    const model = Model.getClass(this.options.ref, adapter.base);
 
     if (!isObjectId(value)) {
       return null;
@@ -295,7 +295,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     const adapter = from.model.getAdapter();
 
     if (format === SerializerFormat.OBJECT) {
-      const model = Model.getFromSlug(options.ref, adapter.base);
+      const model = Model.getClass(options.ref, adapter.base);
 
       if (!value?.every(isObjectId)) {
         throw new CoreError({

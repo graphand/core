@@ -3,7 +3,7 @@ import Model from "@/lib/Model";
 import ModelEnvScopes from "@/enums/model-env-scopes";
 
 const _getModelScope: ControllerDefinition["scope"] = ({ model }) => {
-  const _model = Model.getFromSlug(model);
+  const _model = Model.getClass(model);
 
   if (_model.controllersScope) return _model.controllersScope;
   if (!_model || _model.scope === ModelEnvScopes.GLOBAL) return "global";

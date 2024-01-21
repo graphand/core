@@ -12,23 +12,26 @@ import Media from "@/models/Media";
 import { ModelDefinition } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
 import SerializerFormat from "@/enums/serializer-format";
-import { getRecursiveValidatorsFromModel, getAdaptedModel } from "@/lib/utils";
+import { getRecursiveValidatorsFromModel } from "@/lib/utils";
 import Data from "@/lib/Data";
 import PromiseModel from "@/lib/PromiseModel";
+import { faker } from "@faker-js/faker";
+import { ObjectId } from "bson";
 
 describe("Test Model", () => {
-  const adapter = mockAdapter();
-  let BaseModel = mockModel();
+  const BaseModel = mockModel();
 
   describe("Model crud", () => {
-    it("Should be able to Model.create", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be able to Model.create", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const created = await TestModel.create({});
       expect(created).toBeInstanceOf(TestModel);
     });
 
-    it("Should be able to Model.createMultiple", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be able to Model.createMultiple", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const created = await TestModel.createMultiple([{}, {}, {}]);
       expect(created).toBeInstanceOf(Array);
       created.forEach(i => {
@@ -36,47 +39,67 @@ describe("Test Model", () => {
       });
     });
 
-    it("Should be able to Model.count", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be able to Model.count", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const count = await TestModel.count();
       expect(typeof count).toBe("number");
     });
 
-    it("Should be able to Model.count", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be able to Model.count", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const count = await TestModel.count();
       expect(typeof count).toBe("number");
     });
   });
 
   describe("Model initialization", () => {
+    it("should be able to manually define fields", () => {
+      const adapter = mockAdapter();
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {},
+          },
+        },
+      }).extend({ adapterClass: adapter });
+
+      expect(model.fieldsKeys).toContain("title");
+    });
+
     it("Model should load fields from adapter", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const created = await TestModel.create({});
       expect(created.model.fieldsMap.get("title")).toBeInstanceOf(Field);
     });
 
     it("Model should load validators from adapter", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const created = await TestModel.create({});
       expect(created.model.validatorsArray).toBeInstanceOf(Array);
       expect(created.model.validatorsArray.length).toEqual(1);
     });
 
-    it("Should be able to getFromSlug with adapter", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
-      const AccountModel = TestModel.getFromSlug("accounts");
+    it("should be able to getClass with adapter", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
+      const AccountModel = TestModel.getClass("accounts");
       expect(AccountModel.getAdapter(false)).toBeInstanceOf(adapter);
     });
 
-    it("Should be able to getFromSlug without adapter", async () => {
-      const AccountModel = Model.getFromSlug("accounts");
+    it("should be able to getClass without adapter", async () => {
+      const AccountModel = Model.getClass("accounts");
       expect(AccountModel.getAdapter(false)).toBeUndefined();
     });
 
     it("Model initialization should execute hooks", async () => {
+      const adapter = mockAdapter();
       const _model = mockModel();
-      const model = _model.withAdapter(adapter);
+      const model = _model.extend({ adapterClass: adapter });
 
       const hookBefore = jest.fn();
       const hookAfter = jest.fn();
@@ -90,8 +113,9 @@ describe("Test Model", () => {
     });
 
     it("Model initialization should execute hooks only at first initialization", async () => {
+      const adapter = mockAdapter();
       const _model = mockModel();
-      const model = _model.withAdapter(adapter);
+      const model = _model.extend({ adapterClass: adapter });
 
       const hookBefore = jest.fn();
       const hookAfter = jest.fn();
@@ -110,8 +134,9 @@ describe("Test Model", () => {
     });
 
     it("Model initialization with hook error should throw error", async () => {
+      const adapter = mockAdapter();
       const _model = mockModel();
-      const model = _model.withAdapter(adapter);
+      const model = _model.extend({ adapterClass: adapter });
 
       const hookBefore = jest.fn(() => {
         throw new Error("test");
@@ -122,11 +147,13 @@ describe("Test Model", () => {
     });
 
     it("Model initialization should use initOptions", async () => {
+      const adapter = mockAdapter();
       const base = class extends Model {
+        static slug = generateRandomString();
         static extensible: boolean = true;
       };
 
-      const model = base.withAdapter(adapter);
+      const model = base.extend({ adapterClass: adapter });
 
       const initFn = jest.spyOn(model, "reloadModel");
 
@@ -145,12 +172,15 @@ describe("Test Model", () => {
       expect(lastCallArgs.datamodel).toBeUndefined();
       expect(lastCallArgs.ctx).toBeUndefined();
 
-      const model2 = model.clone({
-        datamodel: new DataModel({
-          definition: {
-            keyField: "test",
-          },
-        }),
+      const model2 = model.extend({
+        initOptions: {
+          datamodel: new DataModel({
+            definition: {
+              keyField: "test",
+            },
+          }),
+        },
+        adapterClass: mockAdapter(),
       });
 
       const initFn2 = jest.spyOn(model2, "reloadModel");
@@ -170,6 +200,7 @@ describe("Test Model", () => {
     });
 
     it("Model clone should override fields", async () => {
+      const adapter = mockAdapter();
       const model = class extends Data {
         static slug = "test";
         static definition: ModelDefinition = {
@@ -179,13 +210,13 @@ describe("Test Model", () => {
             },
           },
         };
-      }.withAdapter(adapter);
+      }.extend({ adapterClass: adapter });
 
       const fieldTest = model.fieldsMap.get("test");
       expect(fieldTest).toBeInstanceOf(Field);
       expect(fieldTest.type).toEqual(FieldTypes.TEXT);
 
-      const dm = await DataModel.withAdapter(adapter).create({
+      const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: "test",
         definition: {
           fields: {
@@ -199,8 +230,11 @@ describe("Test Model", () => {
         },
       });
 
-      const model2 = model.clone({
-        datamodel: dm,
+      const model2 = model.extend({
+        initOptions: {
+          datamodel: dm,
+        },
+        adapterClass: mockAdapter(),
       });
 
       await model2.initialize();
@@ -212,15 +246,18 @@ describe("Test Model", () => {
     });
 
     it("Model.keyField is not overriden by datamodel if declared in inherited class", async () => {
+      const adapter = mockAdapter();
+      const slug1 = generateRandomString();
+      const slug2 = generateRandomString();
       const model = class extends Data {
-        static slug = "test";
+        static slug = slug1;
         static definition: ModelDefinition = {
           keyField: "test",
         };
-      }.withAdapter(adapter);
+      }.extend({ adapterClass: adapter });
 
-      await DataModel.withAdapter(adapter).create({
-        slug: "test",
+      await DataModel.extend({ adapterClass: adapter }).create({
+        slug: slug1,
         definition: {
           keyField: "test2",
           fields: {
@@ -232,8 +269,8 @@ describe("Test Model", () => {
       });
 
       const model2 = class extends model {
-        static slug = "test";
-      }.withAdapter(adapter);
+        static slug = slug2;
+      }.extend({ adapterClass: adapter });
 
       await model2.initialize();
 
@@ -241,7 +278,8 @@ describe("Test Model", () => {
     });
 
     it("Medias keyField is not overriden by datamodel", async () => {
-      await DataModel.withAdapter(adapter).create({
+      const adapter = mockAdapter();
+      await DataModel.extend({ adapterClass: adapter }).create({
         slug: Media.slug,
         definition: {
           keyField: "test2",
@@ -253,7 +291,7 @@ describe("Test Model", () => {
         },
       });
 
-      const model = Media.withAdapter(adapter);
+      const model = Media.extend({ adapterClass: adapter });
       await model.initialize();
 
       expect(model.fieldsMap.get("test2")).toBeInstanceOf(Field);
@@ -262,7 +300,8 @@ describe("Test Model", () => {
   });
 
   describe("Model getter", () => {
-    it("Model should returns field default value if undefined", async () => {
+    it("Model should return field default value if undefined", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -272,20 +311,21 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
       expect(created.get("test")).toBe("default");
     });
 
     it("should serialize with field from adapter", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
             type: FieldTypes.TEXT,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         test: 123,
@@ -295,6 +335,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize with nested fields in json", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -308,7 +349,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         test: {
@@ -321,6 +362,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize with nested fields in array", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -332,7 +374,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         test: [123],
@@ -347,6 +389,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize with nested fields in array of array", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -363,7 +406,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         test: [[123], [456]],
@@ -374,6 +417,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize with nested json field in array of array", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -397,7 +441,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         test: [
@@ -477,6 +521,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize with nested fields in array of json", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -495,7 +540,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         test: [
@@ -534,6 +579,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize with complex schema fields", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           field1: {
@@ -567,7 +613,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         field1: [
@@ -664,6 +710,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize array of relation to PromiseModelList", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -678,7 +725,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         test: ["63fdefb5debe7dae686d3575", "63fdefb5debe7dae686d3575"],
@@ -688,6 +735,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize array of relation to PromiseModelList even if json nested", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           arr: {
@@ -720,7 +768,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         arr: [
@@ -747,6 +795,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize to undefined nested fields of null", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -760,7 +809,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
 
@@ -768,6 +817,7 @@ describe("Test Model", () => {
     });
 
     it("should serialize to undefined nested fields of null array", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
@@ -786,7 +836,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({ test: [] });
 
@@ -795,9 +845,10 @@ describe("Test Model", () => {
     });
 
     it("should serialize to undefined nested fields of nested unexisting field", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {},
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
 
@@ -834,7 +885,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(_adapter);
+      }).extend({ adapterClass: _adapter });
 
       const created = await model.create({
         obj: {
@@ -854,13 +905,14 @@ describe("Test Model", () => {
 
   describe("Model setter", () => {
     it("should set simple field value", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
             type: FieldTypes.TEXT,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
 
@@ -870,13 +922,14 @@ describe("Test Model", () => {
     });
 
     it("should serialize value", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           test: {
             type: FieldTypes.TEXT,
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
 
@@ -898,7 +951,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: mockAdapter() });
 
       const created = await model.create({ obj: { nested: "toto" } });
 
@@ -921,7 +974,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: mockAdapter() });
 
       const created = await model.create({});
 
@@ -931,6 +984,7 @@ describe("Test Model", () => {
     });
 
     it("should set value as array", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           arr: {
@@ -942,7 +996,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
 
@@ -952,6 +1006,7 @@ describe("Test Model", () => {
     });
 
     it("should set value in array", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           arr: {
@@ -963,7 +1018,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({ arr: ["test1"] });
 
@@ -973,6 +1028,7 @@ describe("Test Model", () => {
     });
 
     it("should set value in array of json", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           arr: {
@@ -991,7 +1047,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         arr: [
@@ -1018,6 +1074,7 @@ describe("Test Model", () => {
     });
 
     it("should return the setted value", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           arr: {
@@ -1036,7 +1093,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({
         arr: [
@@ -1082,6 +1139,7 @@ describe("Test Model", () => {
     });
 
     it("should throw error if field doesn't exist", async () => {
+      const adapter = mockAdapter();
       const model = mockModel({
         fields: {
           arr: {
@@ -1100,7 +1158,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
 
       const created = await model.create({});
 
@@ -1114,6 +1172,7 @@ describe("Test Model", () => {
     let model;
 
     beforeAll(() => {
+      const adapter = mockAdapter();
       model = mockModel({
         fields: {
           text: {
@@ -1177,7 +1236,7 @@ describe("Test Model", () => {
             },
           },
         },
-      }).withAdapter(adapter);
+      }).extend({ adapterClass: adapter });
     });
 
     const _testWith = async (field, value, create?) => {
@@ -1252,6 +1311,7 @@ describe("Test Model", () => {
 
   describe("Model validation", () => {
     it("Model should have keyField validator if keyField is defined", async () => {
+      const adapter = mockAdapter();
       const BaseModelWithKeyField = mockModel({
         fields: {
           title: {
@@ -1260,7 +1320,7 @@ describe("Test Model", () => {
         },
       });
       BaseModelWithKeyField.definition.keyField = "title";
-      const TestModel = BaseModelWithKeyField.withAdapter(adapter);
+      const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
 
       const keyFieldValidator = TestModel.validatorsArray.find(
         v => v.type === ValidatorTypes.KEY_FIELD,
@@ -1269,6 +1329,7 @@ describe("Test Model", () => {
     });
 
     it("Model should have keyField validator if keyField is defined and should filter unique and required validators", async () => {
+      const adapter = mockAdapter();
       const BaseModelWithKeyField = mockModel({
         fields: {
           title: {
@@ -1281,7 +1342,7 @@ describe("Test Model", () => {
         ],
       });
       BaseModelWithKeyField.definition.keyField = "title";
-      const TestModel = BaseModelWithKeyField.withAdapter(adapter);
+      const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
 
       const validators = TestModel.validatorsArray;
 
@@ -1307,7 +1368,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = BaseModel.withAdapter(_adapter);
+      const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
       const i = new TestModel({});
       expect(testValidate).toHaveBeenCalledTimes(0);
@@ -1330,7 +1391,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = BaseModel.withAdapter(_adapter);
+      const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
       const i = new TestModel({});
 
@@ -1356,7 +1417,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = BaseModel.withAdapter(_adapter);
+      const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
       const i = new TestModel({});
       expect(testValidate).toHaveBeenCalledTimes(0);
@@ -1379,7 +1440,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = BaseModel.withAdapter(_adapter);
+      const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
       const i = new TestModel({});
 
@@ -1413,7 +1474,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = BaseModel.withAdapter(_adapter);
+      const TestModel = BaseModel.extend({ adapterClass: _adapter });
 
       expect(testValidateField).toHaveBeenCalledTimes(0);
       expect(testValidateValidator).toHaveBeenCalledTimes(0);
@@ -1445,7 +1506,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = BaseModel.withAdapter(_adapter);
+      const TestModel = BaseModel.extend({ adapterClass: _adapter });
 
       expect(testValidateField).toHaveBeenCalledTimes(0);
       expect(testValidateValidator).toHaveBeenCalledTimes(0);
@@ -1477,7 +1538,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = BaseModel.withAdapter(_adapter);
+      const TestModel = BaseModel.extend({ adapterClass: _adapter });
 
       expect(testValidateField).toHaveBeenCalledTimes(0);
       expect(testValidateValidator).toHaveBeenCalledTimes(0);
@@ -1500,8 +1561,9 @@ describe("Test Model", () => {
   });
 
   describe("Model hooks", () => {
-    it("Should be able to hook", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be able to hook", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
 
       const beforeCreateFn = jest.fn();
       const afterCreateFn = jest.fn();
@@ -1518,8 +1580,9 @@ describe("Test Model", () => {
       expect(afterCreateFn).toHaveBeenCalledTimes(1);
     });
 
-    it("Should be able to declare after hook inside the before hook", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be able to declare after hook inside the before hook", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
 
       const afterCreateFn = jest.fn();
       const beforeCreateFn = jest.fn(() => {
@@ -1539,8 +1602,9 @@ describe("Test Model", () => {
   });
 
   describe("Model utils", () => {
-    it("Should be able to stringify and then hydrate from string", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be able to stringify and then hydrate from string", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const i = await TestModel.get({});
       const str = i.toString();
       const hydrated = TestModel.fromString(str);
@@ -1549,15 +1613,16 @@ describe("Test Model", () => {
       expect(hydrated._id).toEqual(i._id);
     });
 
-    it("Should be cloneable", async () => {
-      const TestModel = BaseModel.withAdapter(adapter);
+    it("should be cloneable", async () => {
+      const adapter = mockAdapter();
+      const TestModel = BaseModel.extend({ adapterClass: adapter });
       const i = await TestModel.create({});
       const clone = i.clone();
       expect(clone).toBeInstanceOf(TestModel);
       expect(clone._id).toEqual(i._id);
     });
 
-    it("getRecursiveValidatorsFromModel should returns keyField validator if model has a keyField", () => {
+    it("getRecursiveValidatorsFromModel should return keyField validator if model has a keyField", () => {
       const validators = getRecursiveValidatorsFromModel(DataModel);
       const keyFieldValidator = validators.find(v => v.type === ValidatorTypes.KEY_FIELD);
       expect(keyFieldValidator).toBeDefined();
@@ -1565,7 +1630,7 @@ describe("Test Model", () => {
   });
 
   describe("Model baseClass", () => {
-    it("should keep baseClass with withAdapter", () => {
+    it("should keep baseClass with extend", () => {
       let model = BaseModel;
 
       expect(model.getBaseClass()).toBe(BaseModel);
@@ -1574,124 +1639,44 @@ describe("Test Model", () => {
         .fill(null)
         .forEach(() => {
           const prevModel = model;
-          model = model.withAdapter(adapter);
+          model = model.extend({ adapterClass: mockAdapter() });
           expect(model).not.toBe(prevModel);
           expect(model.getBaseClass()).toBe(BaseModel);
         });
     });
 
     it("should always return the base class", () => {
-      expect(BaseModel.withAdapter(adapter).getBaseClass()).toBe(BaseModel);
+      expect(BaseModel.extend({ adapterClass: mockAdapter() }).getBaseClass()).toBe(BaseModel);
 
       class CustomAccount extends Account {}
 
       expect(CustomAccount.getBaseClass()).toBe(CustomAccount);
-      expect(CustomAccount.withAdapter(adapter).getBaseClass()).toBe(CustomAccount);
+      expect(CustomAccount.extend({ adapterClass: mockAdapter() }).getBaseClass()).toBe(
+        CustomAccount,
+      );
     });
   });
 
   describe("Model unicity", () => {
     it("should get same model from slug with same adapter", () => {
-      const model = Model.getFromSlug("accounts", adapter);
-      const modelBis = Model.getFromSlug("accounts", adapter);
+      const adapter = mockAdapter();
+      const model = Model.getClass("accounts", adapter);
+      const modelBis = Model.getClass("accounts", adapter);
 
       expect(model).toBe(modelBis);
     });
 
     it("should get different models from slug with different adapter", () => {
-      const model = Model.getFromSlug("accounts");
-      const modelBis = Model.getFromSlug("accounts", adapter);
+      const adapter = mockAdapter();
+      const model = Model.getClass("accounts");
+      const modelBis = Model.getClass("accounts", adapter);
 
       expect(model).not.toBe(modelBis);
-    });
-
-    it("should returns same model from slug and then adapter", () => {
-      BaseModel = mockModel();
-
-      const model = Model.getFromSlug(BaseModel.slug, adapter);
-      const modelBis = getAdaptedModel(BaseModel, adapter);
-
-      expect(model).toBe(modelBis);
-    });
-
-    it("should returns same model from adapter and then slug", () => {
-      BaseModel = mockModel();
-
-      const model = getAdaptedModel(BaseModel, adapter);
-      const modelBis = Model.getFromSlug(BaseModel.slug, adapter);
-
-      expect(model).toBe(modelBis);
-    });
-
-    it("should returns first cached model", () => {
-      const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = getAdaptedModel(Account, adapter);
-
-      expect(baseAccountFromSlug).toBe(baseAccountFromModel);
-
-      const extendedAccount = class extends Account {};
-
-      const extendedAccountFromModel = getAdaptedModel(extendedAccount, adapter);
-
-      expect(extendedAccountFromModel.getBaseClass()).not.toBe(extendedAccount);
-      expect(extendedAccountFromModel.getBaseClass()).toBe(Account);
-    });
-
-    it("should be able to override model", () => {
-      const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = getAdaptedModel(Account, adapter);
-
-      expect(baseAccountFromSlug).toBe(baseAccountFromModel);
-
-      const extendedAccount = class extends Account {};
-
-      const extendedAccountFromModel = getAdaptedModel(extendedAccount, adapter, true);
-
-      expect(extendedAccountFromModel.getBaseClass()).toBe(extendedAccount);
-    });
-
-    it("Should be able to get adapted model from slug once it has been adapted from model", () => {
-      const baseAccountFromSlug = Model.getFromSlug("accounts", adapter);
-      const baseAccountFromModel = getAdaptedModel(Account, adapter);
-
-      expect(baseAccountFromSlug).toBe(baseAccountFromModel);
-
-      const extendedAccount = class ExtendedAccount extends Account {};
-
-      const extendedAccountFromModel = getAdaptedModel(extendedAccount, adapter, true);
-
-      expect(extendedAccountFromModel.getBaseClass()).toBe(extendedAccount);
-
-      const extendedAccountFromSlug = Model.getFromSlug("accounts", adapter);
-
-      expect(extendedAccountFromSlug.getBaseClass()).toBe(extendedAccount);
-    });
-
-    it("Should be able to get adapted model from slug once it has been adapted from model on data", () => {
-      const slug = "example";
-
-      const ExampleModel = class ExampleModel extends Data {
-        static slug = slug;
-      };
-
-      const baseModelFromSlug = Model.getFromSlug(slug, adapter);
-      const baseModelFromModel = getAdaptedModel(ExampleModel, adapter);
-
-      expect(baseModelFromSlug).toBe(baseModelFromModel);
-      expect(baseModelFromModel.getBaseClass()).not.toBe(ExampleModel);
-
-      const extendedModelFromModel = getAdaptedModel(ExampleModel, adapter, true);
-
-      expect(extendedModelFromModel.getBaseClass()).toBe(ExampleModel);
-
-      const extendedModelFromSlug = Model.getFromSlug(slug, adapter);
-
-      expect(extendedModelFromSlug.getBaseClass()).toBe(ExampleModel);
-      expect(extendedModelFromSlug).toBe(extendedModelFromModel);
     });
   });
 
   describe("Model page", () => {
+    const adapter = mockAdapter();
     const DocModel = mockModel({
       single: true,
       fields: {
@@ -1712,9 +1697,9 @@ describe("Test Model", () => {
           },
         },
       },
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
-    it("Should be able to get data from model", async () => {
+    it("should be able to get data from model", async () => {
       const getPromise = DocModel.get();
       expect(getPromise).toBeInstanceOf(PromiseModel);
 
@@ -1724,7 +1709,7 @@ describe("Test Model", () => {
       expect(i.test).toEqual("defaultValue");
     });
 
-    it("Should not be able to create an instance", async () => {
+    it("should not be able to create an instance", async () => {
       const creatingPromise = DocModel.create({});
 
       await expect(creatingPromise).rejects.toThrow(CoreError);
@@ -1734,7 +1719,8 @@ describe("Test Model", () => {
 
   describe("Model execution", () => {
     it("should immediately stop execution when throwing abortToken in before hook", async () => {
-      const TestModel = mockModel().withAdapter(adapter);
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
 
       const beforeCreateFn1 = jest.fn();
       const beforeCreateFn2 = jest.fn(({ ctx }) => {
@@ -1757,7 +1743,8 @@ describe("Test Model", () => {
     });
 
     it("should immediately stop execution when throwing abortToken in first before hook", async () => {
-      const TestModel = mockModel().withAdapter(adapter);
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
 
       const beforeCreateFn1 = jest.fn(({ ctx }) => {
         throw ctx.abortToken;
@@ -1780,7 +1767,7 @@ describe("Test Model", () => {
     });
 
     it("should immediately stop execution when throwing abortToken in first after hook", async () => {
-      const TestModel = mockModel().withAdapter(mockAdapter());
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
       const beforeCreateFn = jest.fn();
       const afterCreateFn1 = jest.fn(({ ctx }) => {
@@ -1808,7 +1795,7 @@ describe("Test Model", () => {
     it("should throw error when trying to updateMultiple on models with allowMultipleOperations = false", async () => {
       const TestModel = mockModel({
         allowMultipleOperations: false,
-      }).withAdapter(mockAdapter());
+      }).extend({ adapterClass: mockAdapter() });
 
       await expect(TestModel.update({}, {})).rejects.toThrow("Cannot run updateMultiple operation");
     });
@@ -1816,7 +1803,7 @@ describe("Test Model", () => {
     it("should be able to updateMultiple on models with allowMultipleOperations = false and query as string (=updateOne)", async () => {
       const TestModel = mockModel({
         allowMultipleOperations: false,
-      }).withAdapter(mockAdapter());
+      }).extend({ adapterClass: mockAdapter() });
 
       await expect(TestModel.update("", {})).resolves.toBeDefined();
     });
@@ -1824,7 +1811,7 @@ describe("Test Model", () => {
     it("should throw error when trying to deleteMultiple on models with allowMultipleOperations = false", async () => {
       const TestModel = mockModel({
         allowMultipleOperations: false,
-      }).withAdapter(mockAdapter());
+      }).extend({ adapterClass: mockAdapter() });
 
       await expect(TestModel.delete({})).rejects.toThrow("Cannot run deleteMultiple operation");
     });
@@ -1832,19 +1819,19 @@ describe("Test Model", () => {
     it("should be able to deleteMultiple on models with allowMultipleOperations = false and query as string (=deleteOne)", async () => {
       const TestModel = mockModel({
         allowMultipleOperations: false,
-      }).withAdapter(mockAdapter());
+      }).extend({ adapterClass: mockAdapter() });
 
       await expect(TestModel.delete("")).resolves.toBeDefined();
     });
 
     it("should be able to updateMultiple on models with allowMultipleOperations = true (default)", async () => {
-      const TestModel = mockModel().withAdapter(mockAdapter());
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
       await expect(TestModel.update({}, {})).resolves.toBeDefined();
     });
 
     it("should be able to deleteMultiple on models with allowMultipleOperations = true (default)", async () => {
-      const TestModel = mockModel().withAdapter(mockAdapter());
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
       await expect(TestModel.update({}, {})).resolves.toBeDefined();
     });
@@ -1852,7 +1839,8 @@ describe("Test Model", () => {
 
   describe("Model reload", () => {
     it("should load fields from datamodel", async () => {
-      const dm = await DataModel.withAdapter(adapter).create({
+      const adapter = mockAdapter();
+      const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
         definition: {
           fields: {
@@ -1863,7 +1851,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = Data.getFromDatamodel(dm);
+      const TestModel = Model.getClass(dm);
 
       expect(TestModel.slug).toEqual(dm.slug);
 
@@ -1884,7 +1872,8 @@ describe("Test Model", () => {
     });
 
     it("should load fields from single datamodel", async () => {
-      const dm = await DataModel.withAdapter(adapter).create({
+      const adapter = mockAdapter();
+      const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
         definition: {
           single: true,
@@ -1896,7 +1885,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = Data.getFromDatamodel(dm);
+      const TestModel = Model.getClass(dm);
 
       expect(TestModel.isSingle()).toBeTruthy();
 
@@ -1919,7 +1908,8 @@ describe("Test Model", () => {
     });
 
     it("should support for keyField change", async () => {
-      const dm = await DataModel.withAdapter(adapter).create({
+      const adapter = mockAdapter();
+      const dm = await DataModel.extend({ adapterClass: adapter }).create({
         slug: generateRandomString(),
         definition: {
           keyField: "field1",
@@ -1937,7 +1927,7 @@ describe("Test Model", () => {
         },
       });
 
-      const TestModel = Data.getFromDatamodel(dm);
+      const TestModel = Model.getClass(dm);
 
       await TestModel.reloadModel();
 
@@ -1962,27 +1952,10 @@ describe("Test Model", () => {
     });
   });
 
-  describe("Model clone", () => {
-    it("should return right model constructor", async () => {
-      const TestModel = mockModel().withAdapter(mockAdapter());
-
-      const i = await TestModel.create({});
-
-      expect(i.model).toBe(TestModel);
-    });
-
-    it("should return right model constructor when model is cloned", async () => {
-      const TestModelCloned = mockModel().withAdapter(mockAdapter()).clone();
-
-      const i = await TestModelCloned.create({});
-
-      expect(i.model).toBe(TestModelCloned);
-    });
-  });
-
   describe("Model adapter", () => {
     it("should return model adapter", async () => {
-      const TestModel = mockModel().withAdapter(adapter);
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
 
       expect(TestModel.getAdapter()?.base).toBe(adapter);
     });
@@ -2004,10 +1977,14 @@ describe("Test Model", () => {
 
       const model = mockModel();
       model.adapterClass = adapterGlobal;
-      const model1 = model.withAdapter(adapter1);
-      const model2 = model.withAdapter(adapter2);
+      const model1 = model.extend({ adapterClass: adapter1 });
+      model1.slug = generateRandomString();
+      const model2 = model.extend({ adapterClass: adapter2 });
+      model2.slug = generateRandomString();
       const model3 = class extends model2 {};
-      const model4 = model3.withAdapter(adapter1);
+      model3.slug = generateRandomString();
+      const model4 = model3.extend({ adapterClass: adapter1 });
+      model4.slug = generateRandomString();
 
       expect(model.getAdapter()?.base).toBe(adapterGlobal);
       expect(model1.getAdapter()?.base).toBe(adapter1);
@@ -2029,6 +2006,241 @@ describe("Test Model", () => {
       GlobalModel.adapterClass = adapter2;
       expect(model1.getAdapter()?.base).not.toBe(adapter2);
       expect(model1.hasAdapterClassChanged()).toBeTruthy();
+    });
+  });
+
+  describe("Model getClass", () => {
+    it("should return the same model & initialize once with multiple model get", async () => {
+      const adapter = mockAdapter();
+      const slug = generateRandomString();
+      await DataModel.extend({ adapterClass: adapter }).create({ slug });
+
+      const model = Model.getClass(slug, adapter);
+      const modelBis = Model.getClass(slug, adapter);
+
+      expect(model).toBe(modelBis);
+
+      const spy = jest.spyOn(model, "reloadModel");
+
+      expect(spy).toHaveBeenCalledTimes(0);
+
+      await expect(model.initialize()).resolves.toBeUndefined();
+      await expect(modelBis.initialize()).resolves.toBeUndefined();
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw error at initializing if no adapter", async () => {
+      const slug = generateRandomString();
+
+      const model = Model.getClass(slug);
+
+      await expect(model.initialize()).rejects.toThrow(CoreError);
+    });
+
+    it("should not throw error at initializing if datamodel exists", async () => {
+      const adapter = mockAdapter();
+      const slug = generateRandomString();
+      await DataModel.extend({ adapterClass: adapter }).create({ slug });
+
+      const model = Model.getClass(slug).extend({ adapterClass: adapter });
+
+      await expect(model.initialize()).resolves.toBeUndefined();
+    });
+
+    it("should not throw error at initializing if datamodel doesn't exists", async () => {
+      const adapter = mockAdapter();
+      const slug = generateRandomString();
+
+      const model = Model.getClass(slug).extend({ adapterClass: adapter });
+
+      await expect(model.initialize()).resolves.toBeUndefined();
+    });
+
+    it("getClass should return model with the instance adapter", async () => {
+      const adapter = mockAdapter();
+      const DM = DataModel.extend({ adapterClass: adapter });
+      const datamodel = new DM({ slug: faker.animal.type() });
+
+      const modelFromDM = Model.getClass(datamodel);
+
+      expect(modelFromDM.getAdapter(false)?.base).toBe(adapter);
+    });
+
+    it("should return same model from slug and from datamodel instance with same adapter", async () => {
+      const adapter = mockAdapter();
+      const slug = generateRandomString();
+
+      const datamodel = new DataModel({ slug });
+
+      const modelFromDM = Model.getClass(datamodel, adapter);
+      const modelFromSlug = Model.getClass(slug, adapter);
+
+      expect(modelFromDM).toBe(modelFromSlug);
+    });
+
+    it("should return different models from slug and from datamodel instance with different adapters", async () => {
+      const adapter = mockAdapter();
+      const slug = generateRandomString();
+
+      const datamodel = new DataModel({ slug });
+
+      const modelFromDM = Model.getClass(datamodel);
+      const modelFromSlug = Model.getClass(slug, adapter);
+
+      expect(modelFromDM).not.toBe(modelFromSlug);
+    });
+
+    it("should return different models from slugs with different adapters", async () => {
+      const adapter = mockAdapter();
+      const slug = generateRandomString();
+
+      const modelFromDM = Model.getClass(slug);
+      const modelFromSlug = Model.getClass(slug, adapter);
+
+      expect(modelFromDM).not.toBe(modelFromSlug);
+    });
+
+    it("should cache class on adapter by slug and use these models in relation fields", async () => {
+      const adapter = mockAdapter();
+
+      const slug1 = generateRandomString();
+      const slug2 = generateRandomString();
+
+      await DataModel.extend({ adapterClass: adapter }).createMultiple([
+        {
+          slug: slug1,
+        },
+        {
+          slug: slug2,
+          definition: {
+            fields: {
+              rel: {
+                type: FieldTypes.RELATION,
+                options: {
+                  ref: slug1,
+                },
+              },
+            },
+          },
+        },
+      ]);
+
+      const Model1 = class extends Data {
+        static slug = slug1;
+      }.extend({ adapterClass: adapter });
+
+      const i1 = await Model.getClass(slug1, adapter).create({});
+
+      i1._id = new ObjectId().toString();
+
+      const i2 = await Model.getClass(slug2, adapter).create<any>({ rel: i1._id });
+
+      expect(i2.rel.model).toBe(Model1);
+    });
+
+    it("should cache class on adapter by slug and use these models in array relation fields", async () => {
+      const adapter = mockAdapter();
+
+      const slug1 = generateRandomString();
+      const slug2 = generateRandomString();
+
+      await DataModel.extend({ adapterClass: adapter }).createMultiple([
+        {
+          slug: slug1,
+        },
+        {
+          slug: slug2,
+          definition: {
+            fields: {
+              rel: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  items: {
+                    type: FieldTypes.RELATION,
+                    options: {
+                      ref: slug1,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ]);
+
+      const Model1 = class extends Data {
+        static slug = slug1;
+      }.extend({ adapterClass: adapter });
+
+      const i1 = await Model.getClass(slug1, adapter).create({});
+
+      i1._id = new ObjectId().toString();
+
+      const i2 = await Model.getClass(slug2, adapter).create<any>({ rel: [i1._id] });
+
+      expect(i2.rel.model).toBe(Model1);
+    });
+  });
+
+  describe("Model extend", () => {
+    it("should return right model constructor", async () => {
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
+
+      const i = await TestModel.create({});
+
+      expect(i.model).toBe(TestModel);
+    });
+
+    it("should return right model constructor when model is cloned", async () => {
+      const TestModelCloned = mockModel().extend({ adapterClass: mockAdapter() });
+
+      const i = await TestModelCloned.create({});
+
+      expect(i.model).toBe(TestModelCloned);
+    });
+
+    it("should not throw error if model is extended with different adapter", async () => {
+      const adapter1 = mockAdapter();
+      const adapter2 = mockAdapter();
+
+      const TestModel = mockModel().extend({ adapterClass: adapter1 });
+
+      expect(TestModel.extend({ adapterClass: adapter2 })).toBeDefined();
+    });
+
+    it("should throw error if model is extended with same adapter as the model slug is already registered", async () => {
+      const adapter = mockAdapter();
+
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      expect(() => TestModel.extend({ adapterClass: adapter })).toThrow("already registered");
+    });
+
+    it("should not throw error if model is extended with same adapter and register: false and not override adapter model", async () => {
+      const adapter = mockAdapter();
+
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      expect(TestModel.extend({ adapterClass: adapter, register: false })).toBeDefined();
+
+      const TestModel2 = TestModel.extend({ adapterClass: adapter, register: false });
+
+      expect(adapter.getModel(TestModel.slug)).toBe(TestModel);
+      expect(adapter.getModel(TestModel.slug)).not.toBe(TestModel2);
+    });
+
+    it("should not throw error if model is extended with same adapter and force: true and override adapter model", async () => {
+      const adapter = mockAdapter();
+
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      expect(TestModel.extend({ adapterClass: adapter, force: true })).toBeDefined();
+
+      const TestModel2 = TestModel.extend({ adapterClass: adapter, force: true });
+
+      expect(adapter.getModel(TestModel.slug)).not.toBe(TestModel);
+      expect(adapter.getModel(TestModel.slug)).toBe(TestModel2);
     });
   });
 });

@@ -3,17 +3,16 @@ import FieldTypes from "@/enums/field-types";
 import ValidationError from "@/lib/ValidationError";
 import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils";
 import DataModel from "@/models/DataModel";
-import Data from "@/lib/Data";
 import Environment from "@/models/Environment";
 import Media from "@/models/Media";
-import { models } from ".";
+import { Model, models } from ".";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
     const slug = generateRandomString();
     const adapter = mockAdapter();
 
-    const model = DataModel.withAdapter(adapter);
+    const model = DataModel.extend({ adapterClass: adapter });
 
     await expect(
       model.validate([new model({ slug, definition: { fields: "toto" } })]),
@@ -67,7 +66,7 @@ describe("Global tests", () => {
     const slug = generateRandomString();
     const adapter = mockAdapter();
 
-    const model = DataModel.withAdapter(adapter);
+    const model = DataModel.extend({ adapterClass: adapter });
 
     await expect(
       model.validate([new model({ slug, definition: { validators: "toto" } })]),
@@ -101,7 +100,7 @@ describe("Global tests", () => {
     const slug = generateRandomString();
     const adapter = mockAdapter();
 
-    const model = DataModel.withAdapter(adapter);
+    const model = DataModel.extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
@@ -219,7 +218,7 @@ describe("Global tests", () => {
           },
         },
       },
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
@@ -288,7 +287,7 @@ describe("Global tests", () => {
           },
         },
       },
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
@@ -379,7 +378,7 @@ describe("Global tests", () => {
           },
         },
       },
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
@@ -565,7 +564,7 @@ describe("Global tests", () => {
           },
         },
       },
-    }).withAdapter(adapter);
+    }).extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
@@ -603,7 +602,7 @@ describe("Global tests", () => {
 
   it("should be able to extend Media model definition", async () => {
     const adapter = mockAdapter();
-    await DataModel.withAdapter(adapter).create({
+    await DataModel.extend({ adapterClass: adapter }).create({
       slug: Media.slug,
       definition: {
         fields: {
@@ -615,7 +614,7 @@ describe("Global tests", () => {
       },
     });
 
-    const mediaModel = Media.withAdapter(adapter);
+    const mediaModel = Media.extend({ adapterClass: adapter });
     await mediaModel.initialize();
 
     expect(mediaModel.fieldsMap.get("title")).toBeTruthy();
@@ -623,14 +622,14 @@ describe("Global tests", () => {
 
   it("should not be able to override Media model validators", async () => {
     const adapter = mockAdapter();
-    await DataModel.withAdapter(adapter).create({
+    await DataModel.extend({ adapterClass: adapter }).create({
       slug: Media.slug,
       definition: {
         validators: [],
       },
     });
 
-    const mediaModel = Media.withAdapter(adapter);
+    const mediaModel = Media.extend({ adapterClass: adapter });
     await mediaModel.initialize();
 
     expect(mediaModel.validatorsArray.length).toBeGreaterThan(0);
@@ -690,7 +689,7 @@ describe("Global tests", () => {
   //         },
   //       },
   //     },
-  //   }).withAdapter(adapter);
+  //   }).extend({ adapterClass: adapter});
 
   //   await expect(
   //     model.validate([
@@ -728,9 +727,10 @@ describe("Global tests", () => {
 
   it("should be able to create multiple datamodels at once", async () => {
     const adapter = mockAdapter();
+    const DM = DataModel.extend({ adapterClass: adapter });
 
     await expect(
-      DataModel.withAdapter(adapter).validate([
+      DM.validate([
         {
           slug: generateRandomString(),
           definition: {
@@ -754,7 +754,7 @@ describe("Global tests", () => {
     ).resolves.toBeTruthy();
 
     await expect(
-      DataModel.withAdapter(adapter).validate([
+      DM.validate([
         {
           slug: generateRandomString(),
           definition: {
@@ -783,7 +783,7 @@ describe("Global tests", () => {
     ).resolves.toBeTruthy();
 
     await expect(
-      DataModel.withAdapter(adapter).validate([
+      DM.validate([
         {
           slug: generateRandomString(),
           definition: {
@@ -815,6 +815,7 @@ describe("Global tests", () => {
 
   it("should not be able to create datamodel with non-extensible core model name", async () => {
     const adapter = mockAdapter();
+    const DM = DataModel.extend({ adapterClass: adapter });
 
     const extensibleModels = Object.values(models)
       .filter(model => model.extensible)
@@ -825,21 +826,20 @@ describe("Global tests", () => {
       .map(model => model.slug);
 
     for (const slug of extensibleModels) {
-      await expect(DataModel.withAdapter(adapter).validate([{ slug }])).resolves.toBeTruthy();
+      await expect(DM.validate([{ slug }])).resolves.toBeTruthy();
     }
 
     for (const slug of nonExtendableModels) {
-      await expect(DataModel.withAdapter(adapter).validate([{ slug }])).rejects.toThrow(
-        ValidationError,
-      );
+      await expect(DM.validate([{ slug }])).rejects.toThrow(ValidationError);
     }
   });
 
   it("should not be able to create datamodel with invalid field name", async () => {
     const adapter = mockAdapter();
+    const DM = DataModel.extend({ adapterClass: adapter });
 
     await expect(
-      DataModel.withAdapter(adapter).validate([
+      DM.validate([
         {
           slug: generateRandomString(),
           definition: {
@@ -854,7 +854,7 @@ describe("Global tests", () => {
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      DataModel.withAdapter(adapter).validate([
+      DM.validate([
         {
           slug: generateRandomString(),
           definition: {
@@ -873,7 +873,7 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
 
     const slug = generateRandomString();
-    const dm = await DataModel.withAdapter(adapter).create({
+    const dm = await DataModel.extend({ adapterClass: adapter }).create({
       slug,
       definition: {
         fields: {
@@ -887,7 +887,7 @@ describe("Global tests", () => {
       },
     });
 
-    const model = Data.getFromDatamodel(dm);
+    const model = Model.getClass(dm);
     const i: any = await model.create({});
 
     expect(i.title).toBe("defaultTitle");
@@ -915,7 +915,7 @@ describe("Global tests", () => {
 
   it("should not be able to create an environment with master or main as name", async () => {
     const adapter = mockAdapter();
-    const _Environment = Environment.withAdapter(adapter);
+    const _Environment = Environment.extend({ adapterClass: adapter });
 
     await expect(_Environment.create({ name: "master" })).rejects.toThrow(ValidationError);
 
@@ -926,7 +926,7 @@ describe("Global tests", () => {
 
   it("should be able to create a datamodel with one letter as slug", async () => {
     const adapter = mockAdapter();
-    const _DataModel = DataModel.withAdapter(adapter);
+    const _DataModel = DataModel.extend({ adapterClass: adapter });
 
     await expect(_DataModel.create({ slug: "a" })).resolves.toBeTruthy();
   });

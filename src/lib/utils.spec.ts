@@ -8,7 +8,7 @@ describe("test utils", () => {
   describe("crossModelTree", () => {
     it("should cross model parents until Model class", () => {
       const adapter = mockAdapter();
-      const model1 = Model.withAdapter(adapter);
+      const model1 = Model.extend({ adapterClass: adapter, force: true });
       const model1bis = class extends model1 {};
       const model1bisbis = class extends model1bis {};
       const model2 = class extends model1bisbis {};
@@ -27,7 +27,7 @@ describe("test utils", () => {
   });
 
   describe("getFieldsPathsFromPath", () => {
-    it("should returns single array entry for one field", () => {
+    it("should return single array entry for one field", () => {
       const model = class extends Model {
         static definition: ModelDefinition = {
           fields: {

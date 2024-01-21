@@ -23,7 +23,6 @@ import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
 import Validator from "@/lib/Validator";
 import Adapter from "@/lib/Adapter";
 import ValidationValidatorError from "@/lib/ValidationValidatorError";
-import CoreError from "@/lib/CoreError";
 import SerializerFormat from "@/enums/serializer-format";
 import ValidationFieldError from "@/lib/ValidationFieldError";
 import ValidationError from "@/lib/ValidationError";
@@ -618,43 +617,6 @@ export const defineFieldsProperties = (instance: Model) => {
   Object.defineProperties(instance, model.__fieldsProperties);
 };
 
-/**
- * The `getAdaptedModel` function returns an adapted version of a given model using a specified adapter
- * class, and caches the adapted model for future use.
- * @param {M} model - The `model` parameter is the model class that you want to adapt. It should be a
- * subclass of the `Model` class.
- * @param adapterClass - The `adapterClass` parameter is the class that will be used to adapt the
- * model. It should be a subclass of the `Adapter` class.
- * @param {boolean} [override] - The `override` parameter is a boolean flag that determines whether to
- * override an existing adapted model with a new one. If `override` is set to `true`, a new adapted
- * model will be created even if an existing one already exists. If `override` is set to `false` or not
- * @returns The function `getAdaptedModel` returns an adapted model of type `M`.
- */
-export const getAdaptedModel = <M extends typeof Model = typeof Model>(
-  model: M,
-  adapterClass: typeof Adapter,
-  override?: boolean,
-): M => {
-  if (!adapterClass) {
-    throw new CoreError({
-      message: "Adapter is required in getAdaptedModel method",
-    });
-  }
-  let adaptedModel: M;
-
-  if (!override) {
-    adaptedModel = adapterClass.modelsMap.get(model.slug) as M;
-  }
-
-  if (!adaptedModel) {
-    adaptedModel = model.withAdapter(adapterClass);
-
-    adapterClass.modelsMap.set(model.slug, adaptedModel);
-  }
-
-  return adaptedModel;
-};
-
 const _pathReplace = (field: Field, p, fp) => {
   return p.field.path.replace(field.path, fp);
 };
@@ -1175,7 +1137,7 @@ export const getModelInitPromise = (
         return hook.fn.call(model);
       }, Promise.resolve());
     } catch (e) {
-      reject(e);
+      return reject(e);
     }
 
     resolve();

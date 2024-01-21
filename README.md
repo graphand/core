@@ -97,22 +97,21 @@ paramétrage à core pour savoir comment interagir avec les données dans le con
 chaque modèle, core créé une instance de cette classe. _Chaque instance de l'adaptateur a donc accès
 au modèle en question via l'attribut `Adapter.prototype.model`._
 
-Pour fonctionner avec un adaptateur, les modèles doivent être appelé avec la méthode
-`Model.withAdapter`, qui prend en paramètre la classe de l'adaptateur qui sera instanciée. C'est
-cette fonction qui est appelée under the hood par le client avec la méthode
-`Client.prototype.getModel` et par le serveur avec la méthode `Controller.prototype.getModel` (avec
-leurs adaptateurs respectifs).
+Pour fonctionner avec un adaptateur, les modèles doivent être appelé avec la méthode `Model.extend`,
+qui prend en paramètre la classe de l'adaptateur qui sera instanciée. C'est cette fonction qui est
+appelée under the hood par le client avec la méthode `Client.prototype.getModel` et par le serveur
+avec la méthode `Controller.prototype.getModel` (avec leurs adaptateurs respectifs).
 
 ```ts
 class ClientAdapter extends Adapter {} // ClientAdapter décrit comment les modèles interagissent avec les données sur le client
 
-const AccountModel = Account.withAdapter(ClientAdapter); // maintenant AccountModel sait comment lire/écrire des données et est utilisable
+const AccountModel = Account.extend({ adapterClass: ClientAdapter }); // maintenant AccountModel sait comment lire/écrire des données et est utilisable
 
 AccountModel.getList("..."); // exécute la méthode getList de l'adaptateur ClientAdapter
 ```
 
-Si un modèle n'est pas adapté avec la méthode `Model.withAdapter`, un adapteur sera automatiquement
-instancié à partir de la classe `Model.adapterClass` du modèle en question. Par exemple, l'exemple
+Si un modèle n'est pas étendu avec la méthode `Model.extend`, un adapteur sera automatiquement
+instancié à partir de la classe `Model.adapterClass` du modèle en question. Par exemple, le code
 ci-dessus peut-être réécrit de la manière suivante :
 
 ```ts
@@ -163,7 +162,7 @@ Model.hook("after", "get", function () {
   // sera appelé après l'appel de la méthode get du fetcher
 });
 
-const AdaptedModel = Model.withAdapter(MyAdapter); // nécessaire pour que les actions de crud fonctionnent dans le contexte (= client.getModel(Model) sur le client et context.getModel(Model) sur le serveur)
+const AdaptedModel = Model.extend({ adapterClass: MyAdapter }); // nécessaire pour que les actions de crud fonctionnent dans le contexte (= client.getModel(Model) sur le client et context.getModel(Model) sur le serveur)
 
 AdaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ainsi que les hooks du modèle
 ```

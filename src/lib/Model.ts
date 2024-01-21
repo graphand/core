@@ -26,7 +26,6 @@ import {
   getFieldsPathsFromPath,
   getRecursiveHooksFromModel,
   defineFieldsProperties,
-  getAdaptedModel,
   _getter,
   _setter,
   validateModel,
@@ -49,6 +48,7 @@ class Model {
   static freeMode: boolean = false; // Whether the model is free
   static definition: ModelDefinition; // The definition of the model
   static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
+  static cacheAdapter = true;
 
   static __name: string = "Model";
   static __hooks: Set<Hook<any, any, any>>;
@@ -59,7 +59,7 @@ class Model {
   static __validatorsArray: Array<Validator>;
   static __fieldsKeys: string[];
   static __fieldsProperties: any;
-  static __baseClass: typeof Model;
+  static __extendedClass: typeof Model;
   static __dm: string | null; // The id of the datamodel that initialized the model if extensible. null if datamodel not found
 
   #doc: DocumentDefinition; // The document
@@ -149,68 +149,68 @@ class Model {
     return new this.model(clonedDoc);
   }
 
-  static clone<T extends typeof Model>(
-    this: T,
-    initOptions?: Parameters<typeof getModelInitPromise>[1],
-  ): T {
-    const baseClass = this.getBaseClass();
-
-    // @ts-expect-error decorator
-    const modelCloned = class extends baseClass {
-      static __initOptions = initOptions;
-    };
-
-    Object.defineProperty(modelCloned, "name", { value: this.__name });
-
-    if (this.__adapter) {
-      const adapterClass = this.__adapter.base;
-      const adapter = new adapterClass(modelCloned);
-      modelCloned.__adapter = adapter;
-    }
-
-    return modelCloned;
-  }
-
   /**
-   * The function returns the base class of a given model class. If the the current model class is adapted (withAdapter),
-   * the base class will be the class that was initially adapted.
+   * The function returns the base class of a given model class. If the the current model class is extended (Model.extend),
+   * the base class will be the class that was initially extended.
    */
   static getBaseClass<T extends typeof Model>(this: T): T {
-    if (this.hasOwnProperty("__baseClass") && this.__baseClass) {
-      return this.__baseClass as T;
+    if (this.hasOwnProperty("__extendedClass") && this.__extendedClass) {
+      return this.__extendedClass as T;
     }
 
-    return this;
+    return this as T;
   }
 
   /**
-   * Returns a new model class with the given adapter.
-   * @param adapterClass
-   * @param modules
-   * @example
-   * const Account = models.Account.withAdapter(MyAdapter); // Account is now usable with MyAdapter
-   * const account = await Account.getList({}); // returns a PromiseModelList
+   * The `extend` function is a static method that allows a model class to be extended with additional
+   * functionality, such as a different adapter class or additional modules.
+   * The adapter class is the class that will be used to process the model data, like crud operations.
+   * @param {T}  - - `T`: A generic type that extends `typeof Model`, which represents the class that
+   * is being extended.
+   * @param opts - {
+   * @returns the extended model class.
    */
-  static withAdapter<T extends typeof Model>(
+  static extend<T extends typeof Model>(
     this: T,
-    adapterClass: typeof Adapter,
-    modules?: Array<Module>,
+    opts: {
+      adapterClass?: typeof Adapter;
+      initOptions?: Parameters<typeof getModelInitPromise>[1];
+      modules?: Array<Module>;
+      register?: boolean;
+      force?: boolean;
+    },
   ): T {
-    const baseClass = this.getBaseClass();
+    const extendedClass = this.getBaseClass();
+
+    if (!extendedClass?.slug && !opts.force) {
+      throw new CoreError({
+        message: "Cannot extend a model without slug",
+      });
+    }
 
     // @ts-expect-error decorator
-    const modelWithAdapter = class extends this {
-      static __baseClass = baseClass;
+    const model = class extends extendedClass {
+      static __extendedClass = extendedClass;
     };
 
-    Object.defineProperty(modelWithAdapter, "name", { value: this.__name });
+    if (opts?.initOptions) {
+      model.__initOptions = opts.initOptions;
+    }
 
-    const adapter = new adapterClass(modelWithAdapter);
-    modelWithAdapter.__adapter = adapter;
+    if (opts?.adapterClass) {
+      const AdapterClass = opts.adapterClass;
+      model.__adapter = new AdapterClass(model);
+    }
 
-    modules?.forEach(module => module(modelWithAdapter));
+    if (opts?.register ?? (opts?.adapterClass && model.slug)) {
+      opts?.adapterClass?.registerModel(model, opts?.force);
+    }
 
-    return modelWithAdapter;
+    if (opts?.modules?.length) {
+      opts.modules.forEach(module => module(model));
+    }
+
+    return model;
   }
 
   /**
@@ -241,8 +241,7 @@ class Model {
     const adapter = this.getAdapter();
 
     if (!datamodel) {
-      const DataModelClass = require("@/models/DataModel").default;
-      datamodel = await getAdaptedModel(DataModelClass, adapter.base).get(
+      datamodel = await Model.getClass<typeof DataModel>("datamodels", adapter.base).get(
         {
           filter: {
             slug: this.slug,
@@ -284,37 +283,51 @@ class Model {
     return this.__validatorsArray;
   }
 
-  /**
-   * Returns the model from its slug.
-   * If the model is not existing in core models, a model extending Data will be returned and will be
-   * initialized from the datamodel with this slug.
-   * @param slug
-   * @param adapter
-   * @param fallbackData - Whether to return a Data model if the model is not found in core models.
-   * @returns
-   */
-  static getFromSlug<M extends typeof Model = typeof Model>(
-    slug: string,
-    adapter?: typeof Adapter,
-    fallbackData: boolean = true,
+  static getClass<M extends typeof Model = typeof Model>(
+    slugOrModel: string | DataModel,
+    adapterClass?: typeof Adapter,
   ): M {
-    if (!adapter) {
-      adapter = this.getAdapter(false)?.base;
+    if (!slugOrModel) {
+      throw new CoreError({
+        message: `Invalid slugOrModel: ${slugOrModel}`,
+      });
     }
 
-    const models = require("@/index").models as Record<string, typeof Model>;
-    let model: M = Object.values(models).find(m => m.slug === slug) as M;
-    if (model) {
-      let adaptedModel = adapter?.modelsMap.get(model.slug) as M;
-      if (!adaptedModel && adapter) {
-        adaptedModel = model.withAdapter(adapter);
-        adapter.modelsMap.set(model.slug, adaptedModel);
-      }
+    const slug = typeof slugOrModel === "string" ? slugOrModel : slugOrModel.slug;
+    const datamodel: DataModel = typeof slugOrModel === "string" ? null : slugOrModel;
+    adapterClass ??= this.getAdapter(false)?.base;
 
-      model = adaptedModel || model;
-    } else if (fallbackData) {
-      const Data = require("@/lib/Data").default;
-      model = Data.__getFromSlug(slug, adapter);
+    if (!adapterClass && datamodel) {
+      adapterClass = datamodel.model.getAdapter(false)?.base;
+    }
+
+    if (adapterClass?.hasModel(slug)) {
+      return adapterClass.getModel(slug) as M;
+    }
+
+    let model: M;
+
+    const models = require("@/index").models as Record<string, typeof Model>;
+    const coreModel: M = Object.values(models).find(m => m.slug === slug) as M;
+
+    if (coreModel) {
+      model = coreModel;
+    } else {
+      const _Data = require("@/lib/Data").default;
+      // @ts-expect-error decorator
+      model = class extends _Data {
+        static __name = `Data<${slug}>`;
+
+        static slug = slug;
+      };
+    }
+
+    if (adapterClass) {
+      model = model.extend({ adapterClass, initOptions: { datamodel } });
+    }
+
+    if (datamodel) {
+      assignDatamodel(model, datamodel);
     }
 
     return model;
