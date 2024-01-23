@@ -2,9 +2,7 @@ import Model from "@/lib/Model";
 import {
   AdapterFetcher,
   FieldDefinition,
-  FieldOptions,
   FieldOptionsMap,
-  FieldsDefinition,
   FieldsPathItem,
   Hook,
   HookPhase,
@@ -15,7 +13,7 @@ import {
   ValidatorDefinition,
   ValidatorHook,
   ValidatorOptions,
-  ValidatorsDefinition,
+  FieldOptions,
 } from "@/types";
 import FieldTypes from "@/enums/field-types";
 import defaultFieldsMap from "@/lib/defaultFieldsMap";
@@ -30,6 +28,7 @@ import ValidationFieldError from "@/lib/ValidationFieldError";
 import ValidationError from "@/lib/ValidationError";
 import type DataModel from "@/models/DataModel";
 import Patterns from "@/enums/patterns";
+import systemFields from "./systemFields";
 
 export const crossModelTree = (_model: typeof Model, cb: (model: typeof Model) => void) => {
   let model = _model;
@@ -42,68 +41,6 @@ export const crossModelTree = (_model: typeof Model, cb: (model: typeof Model) =
   } while (model && model !== Model);
 
   cb(Model);
-};
-
-/**
- * The function `getRecursiveFieldsFromModel` retrieves all fields from a model and its base classes
- * recursively.
- * @param model - The `model` parameter is of type `typeof Model`. It represents a class that extends
- * the `Model` class.
- * @returns the fields definition object.
- */
-export const getRecursiveFieldsFromModel = (model: typeof Model): FieldsDefinition => {
-  let fields = {};
-
-  crossModelTree(model, m => {
-    if (m.hasOwnProperty("definition")) {
-      const _modelFields = m.definition.fields || {};
-
-      fields = { ..._modelFields, ...fields };
-    }
-  });
-
-  return fields;
-};
-
-/**
- * The function `getRecursiveValidatorsFromModel` retrieves all the validators defined in the base
- * classes of a given model, excluding validators related to the key field if it exists.
- * @param model - The `model` parameter is of type `typeof Model`. It represents a model class that
- * extends a base model class called `Model`.
- * @returns an array of validators.
- */
-export const getRecursiveValidatorsFromModel = (model: typeof Model): ValidatorsDefinition => {
-  const validators: ValidatorsDefinition = [];
-  const keyField = model.getKeyField();
-
-  crossModelTree(model, m => {
-    if (m.hasOwnProperty("definition")) {
-      const _modelValidators = m.definition.validators || [];
-
-      Array.prototype.push.apply(validators, _modelValidators);
-    }
-  });
-
-  if (keyField && keyField !== "_id") {
-    validators.push({
-      type: ValidatorTypes.KEY_FIELD,
-      options: { field: keyField },
-    });
-
-    return validators.filter(v => {
-      if (v.type === ValidatorTypes.UNIQUE && v.options?.field === keyField) {
-        return false;
-      }
-
-      if (v.type === ValidatorTypes.REQUIRED && v.options?.field === keyField) {
-        return false;
-      }
-
-      return true;
-    });
-  }
-
-  return validators;
 };
 
 /**
@@ -379,20 +316,20 @@ export const parseValidatorHook = (hook: ValidatorHook, validator: Validator): H
  * map. It is of type `typeof Model`.
  * @returns The function `createFieldsMap` returns a `Map` object.
  */
-export const createFieldsMap = (model: typeof Model) => {
-  const modelFields = getRecursiveFieldsFromModel(model);
+export const createFieldsMap = (model: typeof Model): Map<string, Field> => {
+  const definition = model.definition as ModelDefinition;
+  const fields: Record<string, FieldDefinition> = Object.assign({}, definition?.fields);
 
-  if (!model.systemFields) {
-    delete modelFields._createdAt;
-    delete modelFields._createdBy;
-    delete modelFields._updatedAt;
-    delete modelFields._updatedBy;
+  if (model.systemFields) {
+    Object.assign(fields, systemFields);
   }
 
-  const map = new Map();
+  fields._id = { type: FieldTypes.ID };
+
+  const map = new Map<string, Field>();
   const adapter = model.getAdapter(false);
 
-  Object.entries(modelFields).forEach(([slug, def]) => {
+  Object.entries(fields).forEach(([slug, def]) => {
     const field = getFieldFromDefinition(def, adapter, slug);
 
     if (field) {
@@ -411,11 +348,32 @@ export const createFieldsMap = (model: typeof Model) => {
  * @returns The function `createValidatorsArray` returns an array of `Validator` objects.
  */
 export const createValidatorsArray = (model: typeof Model): Array<Validator> => {
-  const modelValidators = getRecursiveValidatorsFromModel(model);
+  const definition = model.definition as ModelDefinition;
+  let validators: Array<Readonly<ValidatorDefinition>> = Array.from(definition?.validators || []);
+
+  const keyField = definition?.keyField;
+  if (keyField && keyField !== "_id") {
+    validators.push({
+      type: ValidatorTypes.KEY_FIELD,
+      options: { field: keyField },
+    });
+
+    validators = validators.filter(v => {
+      if (v.type === ValidatorTypes.UNIQUE && v.options?.field === keyField) {
+        return false;
+      }
+
+      if (v.type === ValidatorTypes.REQUIRED && v.options?.field === keyField) {
+        return false;
+      }
+
+      return true;
+    });
+  }
 
   const adapter = model.getAdapter(false);
 
-  return modelValidators.map(def => getValidatorFromDefinition(def, adapter, null));
+  return validators.map(def => getValidatorFromDefinition(def, adapter, null));
 };
 
 /**
@@ -598,33 +556,7 @@ export const isObjectId = (input: JSONSubtype) => /^[a-f\d]{24}$/i.test(String(i
 export const defineFieldsProperties = (instance: Model) => {
   const { model } = instance;
 
-  if (!model.__fieldsProperties) {
-    const properties = {};
-    for (const slug of model.fieldsKeys) {
-      properties[slug] = {
-        enumerable: true,
-        configurable: true,
-        get() {
-          return this.get(slug);
-        },
-        set(v) {
-          if (v === undefined) {
-            console.warn(
-              "cannot set undefined value with = operator. Please use .set method instead",
-            );
-            return;
-          }
-
-          return this.set(slug, v);
-        },
-      };
-    }
-
-    model.__fieldsProperties = properties;
-  }
-
-  // @ts-expect-error __fieldsProperties
-  Object.defineProperties(instance, model.__fieldsProperties);
+  Object.defineProperties(instance, model.fieldsProperties);
 };
 
 const _pathReplace = (field: Field, p, fp) => {
@@ -662,7 +594,7 @@ export const _getter = (opts: {
   noFieldSymbol: symbol;
   format: string;
   ctx: SerializerCtx;
-  from: Model;
+  from: ModelInstance;
 }) => {
   let { value } = opts;
   const { fieldsPaths, noFieldSymbol, format, from, ctx } = opts;
@@ -782,7 +714,7 @@ export const _getter = (opts: {
  * `assignPath.field.serialize()`.
  */
 export const _setter = <T extends typeof Model>(opts: {
-  _assignTo: ModelDocument<T> | Array<ModelDocument<T>>;
+  _assignTo: object | Array<object>;
   _value: JSONSubtype;
   _fieldsPaths: Array<{ key: string | number; field: Field }>;
   _throw: () => void;
@@ -824,7 +756,7 @@ export const _setter = <T extends typeof Model>(opts: {
     assignTo[assignPath.key] = assignPath.field.serialize(
       _value,
       SerializerFormat.DOCUMENT,
-      from,
+      from as ModelInstance,
       ctx,
     );
 
@@ -872,7 +804,7 @@ async function validateFields<T extends typeof Model>(opts: {
     const { type, path } = field;
 
     try {
-      const validated = await field.validate(on, model, ctx);
+      const validated = await field.validate(on as Array<ModelInstance>, model, ctx);
       if (!validated) {
         throw null;
       }
@@ -1027,7 +959,7 @@ async function validateValidators<T extends typeof Model>({
   ctx,
   errorsValidatorsSet,
 }: {
-  validators: Array<[Validator, Array<ModelInstance<T>>]>;
+  validators: Array<[Validator, Array<ModelInstance>]>;
   model: T;
   ctx?: TransactionCtx;
   errorsValidatorsSet: Set<ValidationValidatorError>;
@@ -1064,17 +996,17 @@ async function validateValidators<T extends typeof Model>({
  */
 export const validateModel = async <T extends typeof Model>(
   model: T,
-  list: Array<ModelInstance<T> | ModelDocument<T>>,
+  list: Array<ModelInstance<T> | Partial<ModelDocument<T>>>,
   ctx?: TransactionCtx,
 ) => {
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
   const fieldsValidatorsKeys = new Set<string>();
-  const fieldsValidators: Array<[Validator, Array<ModelInstance<T>>]> = [];
+  const fieldsValidators: Array<[Validator, Array<ModelInstance>]> = [];
 
-  const instances = list.map(i => (i instanceof Model ? i : new model(i))) as Array<
-    ModelInstance<T>
-  >;
+  const instances = list.map(i =>
+    i instanceof Model ? i : model.fromDoc(i),
+  ) as Array<ModelInstance>;
 
   const promises: Array<Promise<void>> = [
     validateFields({
@@ -1164,27 +1096,51 @@ export const crossFields = (
   return crossFields;
 };
 
-export const assignDatamodel = async <T extends typeof Model>(model: T, datamodel: DataModel) => {
-  if (!datamodel) {
-    model.definition = {};
-    model.__dm = null;
-    return;
+export const assignDatamodel = async <T extends typeof Model>(
+  model: T,
+  datamodel: ModelInstance<typeof DataModel>,
+) => {
+  model.__dm = datamodel ? String(datamodel._id) : null;
+
+  const baseClass = model.getBaseClass();
+
+  const def = (datamodel?.getDoc()?.definition ?? {}) as ModelDefinition;
+  const baseDefinition = (baseClass.definition ?? {}) as ModelDefinition;
+
+  const fields = {};
+
+  if (baseDefinition.fields) {
+    Object.assign(fields, baseDefinition.fields);
   }
 
-  model.definition = (datamodel.getDoc()?.definition ?? {}) as ModelDefinition;
+  if (def.fields) {
+    Object.assign(fields, def.fields);
+  }
 
-  model.__fieldsMap = createFieldsMap(model);
-  model.__validatorsArray = createValidatorsArray(model);
+  const validators = [];
 
-  delete model.__fieldsProperties;
-  delete model.__fieldsKeys;
-  model.__dm = String(datamodel._id);
+  if (baseDefinition?.validators?.length) {
+    validators.push(...baseDefinition.validators);
+  }
+
+  if (def.validators?.length) {
+    validators.push(...def.validators);
+  }
+
+  model.definition = {
+    keyField: baseDefinition.keyField || def.keyField,
+    single: def.single,
+    fields,
+    validators,
+  };
+
+  model.__memo = {};
 };
 
 export const getModelInitPromise = (
   model: typeof Model,
   opts: {
-    datamodel?: DataModel;
+    datamodel?: ModelInstance<typeof DataModel>;
     ctx?: TransactionCtx;
   } = {},
 ) => {
@@ -1217,7 +1173,9 @@ export const getModelInitPromise = (
   });
 };
 
-export const isValidDefinition = (definition: ModelDefinition) => {
+export const isValidDefinition = (
+  definition: ModelDefinition | ModelInstance<typeof DataModel>["definition"],
+) => {
   const fields = definition?.fields;
 
   if (fields) {
@@ -1244,7 +1202,11 @@ export const isValidDefinition = (definition: ModelDefinition) => {
       return false;
     }
 
-    if (keyFieldField.options?.default) {
+    if (
+      keyFieldField?.options &&
+      "default" in keyFieldField.options &&
+      keyFieldField.options.default !== undefined
+    ) {
       return false;
     }
   }

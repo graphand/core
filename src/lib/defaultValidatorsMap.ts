@@ -5,7 +5,7 @@ import Model from "@/lib/Model";
 import DataModel from "@/models/DataModel";
 import Patterns from "@/enums/patterns";
 import { isValidDefinition } from "@/lib/utils";
-import { ModelInstance } from "..";
+import { ModelInstance } from "@/types";
 
 const systemModels = [
   "accounts_authProviders",
@@ -196,7 +196,7 @@ class DefaultValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_S
 
 class DefaultValidatorDatamodelDefinition extends Validator<ValidatorTypes.DATAMODEL_DEFINITION> {
   async validate(list: Array<ModelInstance>) {
-    return !list.some((m: DataModel) => !isValidDefinition(m.definition));
+    return !list.some((m: ModelInstance<typeof DataModel>) => !isValidDefinition(m.definition));
   }
 }
 

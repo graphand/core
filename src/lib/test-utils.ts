@@ -1,8 +1,6 @@
 import Adapter from "@/lib/Adapter";
-import { AdapterFetcher, FieldsDefinition, ValidatorsDefinition } from "@/types";
+import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types";
 import ModelList from "@/lib/ModelList";
-import FieldTypes from "@/enums/field-types";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import Model from "@/lib/Model";
 import ValidatorTypes from "@/enums/validator-types";
 import defaultFieldsMap from "@/lib/defaultFieldsMap";
@@ -10,7 +8,7 @@ import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
 import { defineFieldsProperties } from "@/lib/utils";
 import Validator from "@/lib/Validator";
 
-const cache: Map<typeof Model, Set<Model>> = new Map();
+const cache: Map<typeof Model, Set<ModelInstance>> = new Map();
 
 export const mockAdapter = ({
   fieldsMap = defaultFieldsMap,
@@ -22,14 +20,20 @@ export const mockAdapter = ({
       }
     },
   },
+  privateCache,
 }: {
   fieldsMap?: Adapter["fieldsMap"];
   validatorsMap?: Adapter["validatorsMap"];
+  privateCache?: Set<ModelInstance>;
 } = {}) => {
   class MockAdapter extends Adapter {
     runValidators = true;
 
-    get thisCache(): Set<Model> {
+    get thisCache(): Set<ModelInstance> {
+      if (privateCache) {
+        return privateCache;
+      }
+
       const cacheKey = this.model.getBaseClass();
 
       let cacheModel = cache.get(cacheKey);
@@ -37,7 +41,7 @@ export const mockAdapter = ({
         cacheModel = new Set(
           Array(5)
             .fill(null)
-            .map(() => new this.model()),
+            .map(() => this.model.fromDoc()),
         );
 
         cache.set(cacheKey, cacheModel);
@@ -72,12 +76,12 @@ export const mockAdapter = ({
         return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
       }),
       createOne: jest.fn(async ([payload]) => {
-        const i = new this.model(payload);
+        const i = this.model.fromDoc(payload);
         this.thisCache.add(i);
         return Promise.resolve(i);
       }),
       createMultiple: jest.fn(([payload]) => {
-        const created = payload.map(p => new this.model(p));
+        const created = payload.map(p => this.model.fromDoc(p));
         created.forEach(i => this.thisCache.add(i));
         return Promise.resolve(created);
       }),
@@ -167,63 +171,76 @@ export const mockAdapter = ({
   return MockAdapter;
 };
 
-export const mockModel = ({
-  slug,
-  extendsModel = Model,
-  scope = ModelEnvScopes.ENV,
-  allowMultipleOperations = true,
-  extensible = false,
-  single = false,
-  fields = {
-    title: {
-      type: FieldTypes.TEXT,
-      options: { default: "test" },
-    },
-  },
-  validators = [
-    {
-      type: ValidatorTypes.SAMPLE,
-      options: {
-        field: "title",
-      },
-    },
-  ],
-}: {
-  slug?: string;
-  extendsModel?: typeof Model;
-  scope?: ModelEnvScopes;
-  allowMultipleOperations?: boolean;
-  extensible?: boolean;
-  fields?: FieldsDefinition;
-  validators?: ValidatorsDefinition;
-  single?: boolean;
-} = {}) => {
-  slug ??= "a" + Math.random().toString(36).substring(7);
-
-  class Test extends extendsModel {
-    static extensible = extensible;
-    static slug = slug;
-    static scope = scope;
-    static allowMultipleOperations = allowMultipleOperations;
-    static definition = {
-      single,
-      keyField: undefined,
-      fields,
-      validators,
-    };
+export const mockModel = <D extends ModelDefinition>(def?: D): typeof Model & { definition: D } => {
+  return class extends Model {
+    static slug = "a" + generateRandomString();
+    static definition = def;
 
     constructor(doc) {
       super(doc);
 
       defineFieldsProperties(this);
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [slug: string]: any;
-  }
-
-  return Test;
+  };
 };
+
+// export const mockModel = <D extends ModelDefinition>(
+//   opts: {
+//     slug?: string;
+//     extendsModel?: typeof Model;
+//     scope?: ModelEnvScopes;
+//     allowMultipleOperations?: boolean;
+//     extensible?: boolean;
+//     fields?: D["fields"];
+//     validators?: D["validators"];
+//     single?: D["single"];
+//   } = {},
+// ): typeof Model & { definition: D } => {
+//   const {
+//     extendsModel = Model,
+//     scope = ModelEnvScopes.ENV,
+//     allowMultipleOperations = true,
+//     extensible = false,
+//     single = false,
+//     fields = {
+//       title: {
+//         type: FieldTypes.TEXT,
+//         options: { default: "test" },
+//       },
+//     },
+//     validators = [
+//       {
+//         type: ValidatorTypes.SAMPLE,
+//         options: {
+//           field: "title",
+//         },
+//       },
+//     ],
+//   } = opts;
+//   let { slug } = opts;
+//   slug ??= "a" + Math.random().toString(36).substring(7);
+
+//   class Test extends extendsModel {
+//     static extensible = extensible;
+//     static slug = slug;
+//     static scope = scope;
+//     static allowMultipleOperations = allowMultipleOperations;
+//     static definition = {
+//       single,
+//       keyField: undefined,
+//       fields,
+//       validators,
+//     };
+
+//     constructor(doc) {
+//       super(doc);
+
+//       defineFieldsProperties(this);
+//     }
+//   }
+
+//   return Test as typeof Model & { definition: D };
+// };
 
 export const generateRandomString = () => {
   return "a" + Math.random().toString(36).substring(7);

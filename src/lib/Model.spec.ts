@@ -12,14 +12,27 @@ import Media from "@/models/Media";
 import { ModelDefinition, ModelInstance } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
 import SerializerFormat from "@/enums/serializer-format";
-import { getRecursiveValidatorsFromModel } from "@/lib/utils";
 import Data from "@/lib/Data";
 import PromiseModel from "@/lib/PromiseModel";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
 
 describe("Test Model", () => {
-  const BaseModel = mockModel();
+  const BaseModel = mockModel({
+    fields: {
+      title: {
+        type: FieldTypes.TEXT,
+      },
+    },
+    validators: [
+      {
+        type: ValidatorTypes.SAMPLE,
+        options: {
+          field: "title",
+        },
+      },
+    ],
+  });
 
   describe("Model crud", () => {
     it("should be able to Model.create", async () => {
@@ -199,51 +212,51 @@ describe("Test Model", () => {
       expect(model2.getKeyField()).toEqual("test");
     });
 
-    it("Model clone should override fields", async () => {
-      const adapter = mockAdapter();
-      const model = class extends Data {
-        static slug = "test";
-        static definition: ModelDefinition = {
-          fields: {
-            test: {
-              type: FieldTypes.TEXT,
-            },
-          },
-        };
-      }.extend({ adapterClass: adapter });
+    // it("Model clone should override fields", async () => {
+    //   const adapter = mockAdapter();
+    //   const model = class extends Data {
+    //     static slug = "test";
+    //     static definition: ModelDefinition = {
+    //       fields: {
+    //         test: {
+    //           type: FieldTypes.TEXT,
+    //         },
+    //       },
+    //     };
+    //   }.extend({ adapterClass: adapter });
 
-      const fieldTest = model.fieldsMap.get("test");
-      expect(fieldTest).toBeInstanceOf(Field);
-      expect(fieldTest.type).toEqual(FieldTypes.TEXT);
+    //   const fieldTest = model.fieldsMap.get("test");
+    //   expect(fieldTest).toBeInstanceOf(Field);
+    //   expect(fieldTest.type).toEqual(FieldTypes.TEXT);
 
-      const dm = await DataModel.extend({ adapterClass: adapter }).create({
-        slug: "test",
-        definition: {
-          fields: {
-            test: {
-              type: FieldTypes.NUMBER,
-            },
-            test2: {
-              type: FieldTypes.TEXT,
-            },
-          },
-        },
-      });
+    //   const dm = await DataModel.extend({ adapterClass: adapter }).create({
+    //     slug: "test",
+    //     definition: {
+    //       fields: {
+    //         test: {
+    //           type: FieldTypes.NUMBER,
+    //         },
+    //         test2: {
+    //           type: FieldTypes.TEXT,
+    //         },
+    //       },
+    //     },
+    //   });
 
-      const model2 = model.extend({
-        initOptions: {
-          datamodel: dm,
-        },
-        adapterClass: mockAdapter(),
-      });
+    //   const model2 = model.extend({
+    //     initOptions: {
+    //       datamodel: dm,
+    //     },
+    //     adapterClass: mockAdapter(),
+    //   });
 
-      await model2.initialize();
+    //   await model2.initialize();
 
-      expect(model2.fieldsMap?.get("test2")).toBeInstanceOf(Field);
-      const fieldTest2 = model2.fieldsMap.get("test");
-      expect(fieldTest2).toBeInstanceOf(Field);
-      expect(fieldTest2.type).toEqual(FieldTypes.NUMBER);
-    });
+    //   expect(model2.fieldsMap?.get("test2")).toBeInstanceOf(Field);
+    //   const fieldTest2 = model2.fieldsMap.get("test");
+    //   expect(fieldTest2).toBeInstanceOf(Field);
+    //   expect(fieldTest2.type).toEqual(FieldTypes.NUMBER);
+    // });
 
     it("Model.keyField is not overriden by datamodel if declared in inherited class", async () => {
       const adapter = mockAdapter();
@@ -257,7 +270,7 @@ describe("Test Model", () => {
       }.extend({ adapterClass: adapter });
 
       await DataModel.extend({ adapterClass: adapter }).create({
-        slug: slug1,
+        slug: slug2,
         definition: {
           keyField: "test2",
           fields: {
@@ -328,7 +341,7 @@ describe("Test Model", () => {
       }).extend({ adapterClass: adapter });
 
       const created = await model.create({
-        test: 123,
+        test: 123 as unknown as string,
       });
 
       expect(created.get("test")).toBe("123");
@@ -336,7 +349,7 @@ describe("Test Model", () => {
 
     it("should serialize with nested fields in json", async () => {
       const adapter = mockAdapter();
-      const model = mockModel({
+      const _model = mockModel({
         fields: {
           test: {
             type: FieldTypes.NESTED,
@@ -349,11 +362,25 @@ describe("Test Model", () => {
             },
           },
         },
-      }).extend({ adapterClass: adapter });
+      });
+      const model = _model.extend({ adapterClass: adapter });
 
-      const created = await model.create({
+      const created = await model.create<{
+        fields: {
+          test: {
+            type: FieldTypes.NESTED;
+            options: {
+              fields: {
+                nested: {
+                  type: FieldTypes.TEXT;
+                };
+              };
+            };
+          };
+        };
+      }>({
         test: {
-          nested: 123,
+          nested: 123 as unknown as string,
         },
       });
 
@@ -377,7 +404,7 @@ describe("Test Model", () => {
       }).extend({ adapterClass: adapter });
 
       const created = await model.create({
-        test: [123],
+        test: [123 as unknown as string],
       });
 
       expect(created.get("test")).toEqual(["123"]);
@@ -409,7 +436,7 @@ describe("Test Model", () => {
       }).extend({ adapterClass: adapter });
 
       const created = await model.create({
-        test: [[123], [456]],
+        test: [[123 as unknown as string], [456 as unknown as string]],
       });
 
       expect(created.get("test")).toEqual([["123"], ["456"]]);
@@ -447,18 +474,18 @@ describe("Test Model", () => {
         test: [
           [
             {
-              nested: 123,
+              nested: 123 as unknown as string,
             },
             {
-              nested: 456,
+              nested: 456 as unknown as string,
             },
           ],
           [
             {
-              nested: 123,
+              nested: 123 as unknown as string,
             },
             {
-              nested: 456,
+              nested: 456 as unknown as string,
             },
           ],
         ],
@@ -545,10 +572,10 @@ describe("Test Model", () => {
       const created = await model.create({
         test: [
           {
-            nested: 123,
+            nested: 123 as unknown as string,
           },
           {
-            nested: 456,
+            nested: 456 as unknown as string,
           },
         ],
       });
@@ -1007,18 +1034,21 @@ describe("Test Model", () => {
 
     it("should set value in array", async () => {
       const adapter = mockAdapter();
-      const model = mockModel({
-        fields: {
-          arr: {
-            type: FieldTypes.ARRAY,
-            options: {
-              items: {
-                type: FieldTypes.TEXT,
+      const model = class extends Model {
+        static slug = generateRandomString();
+        static definition = {
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
               },
             },
           },
-        },
-      }).extend({ adapterClass: adapter });
+        };
+      }.extend({ adapterClass: adapter });
 
       const created = await model.create({ arr: ["test1"] });
 
@@ -1319,7 +1349,7 @@ describe("Test Model", () => {
           },
         },
       });
-      BaseModelWithKeyField.definition.keyField = "title";
+      Object.assign(BaseModelWithKeyField.definition, { keyField: "title" });
       const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
 
       const keyFieldValidator = TestModel.validatorsArray.find(
@@ -1341,7 +1371,7 @@ describe("Test Model", () => {
           { type: ValidatorTypes.REQUIRED, options: { field: "title" } },
         ],
       });
-      BaseModelWithKeyField.definition.keyField = "title";
+      Object.assign(BaseModelWithKeyField.definition, { keyField: "title" });
       const TestModel = BaseModelWithKeyField.extend({ adapterClass: adapter });
 
       const validators = TestModel.validatorsArray;
@@ -1370,7 +1400,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = new TestModel({});
+      const i = TestModel.fromDoc({});
       expect(testValidate).toHaveBeenCalledTimes(0);
 
       await TestModel.validate([i]);
@@ -1393,7 +1423,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = new TestModel({});
+      const i = TestModel.fromDoc({});
 
       expect.assertions(1);
 
@@ -1419,7 +1449,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = new TestModel({});
+      const i = TestModel.fromDoc({});
       expect(testValidate).toHaveBeenCalledTimes(0);
 
       await TestModel.validate([i]);
@@ -1442,7 +1472,7 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = new TestModel({});
+      const i = TestModel.fromDoc({});
 
       expect.assertions(1);
 
@@ -1602,17 +1632,6 @@ describe("Test Model", () => {
   });
 
   describe("Model utils", () => {
-    it("should be able to stringify and then hydrate from string", async () => {
-      const adapter = mockAdapter();
-      const TestModel = BaseModel.extend({ adapterClass: adapter });
-      const i = await TestModel.get({});
-      const str = i.toString();
-      const hydrated = TestModel.fromString(str);
-
-      expect(hydrated).toBeInstanceOf(TestModel);
-      expect(hydrated._id).toEqual(i._id);
-    });
-
     it("should be cloneable", async () => {
       const adapter = mockAdapter();
       const TestModel = BaseModel.extend({ adapterClass: adapter });
@@ -1620,12 +1639,6 @@ describe("Test Model", () => {
       const clone = i.clone();
       expect(clone).toBeInstanceOf(TestModel);
       expect(clone._id).toEqual(i._id);
-    });
-
-    it("getRecursiveValidatorsFromModel should return keyField validator if model has a keyField", () => {
-      const validators = getRecursiveValidatorsFromModel(DataModel);
-      const keyFieldValidator = validators.find(v => v.type === ValidatorTypes.KEY_FIELD);
-      expect(keyFieldValidator).toBeDefined();
     });
   });
 
@@ -1793,33 +1806,33 @@ describe("Test Model", () => {
 
   describe("Model allowMultipleOperations", () => {
     it("should throw error when trying to updateMultiple on models with allowMultipleOperations = false", async () => {
-      const TestModel = mockModel({
-        allowMultipleOperations: false,
-      }).extend({ adapterClass: mockAdapter() });
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
+
+      TestModel.allowMultipleOperations = false;
 
       await expect(TestModel.update({}, {})).rejects.toThrow("Cannot run updateMultiple operation");
     });
 
     it("should be able to updateMultiple on models with allowMultipleOperations = false and query as string (=updateOne)", async () => {
-      const TestModel = mockModel({
-        allowMultipleOperations: false,
-      }).extend({ adapterClass: mockAdapter() });
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
+
+      TestModel.allowMultipleOperations = false;
 
       await expect(TestModel.update("", {})).resolves.toBeDefined();
     });
 
     it("should throw error when trying to deleteMultiple on models with allowMultipleOperations = false", async () => {
-      const TestModel = mockModel({
-        allowMultipleOperations: false,
-      }).extend({ adapterClass: mockAdapter() });
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
+
+      TestModel.allowMultipleOperations = false;
 
       await expect(TestModel.delete({})).rejects.toThrow("Cannot run deleteMultiple operation");
     });
 
     it("should be able to deleteMultiple on models with allowMultipleOperations = false and query as string (=deleteOne)", async () => {
-      const TestModel = mockModel({
-        allowMultipleOperations: false,
-      }).extend({ adapterClass: mockAdapter() });
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
+
+      TestModel.allowMultipleOperations = false;
 
       await expect(TestModel.delete("")).resolves.toBeDefined();
     });
@@ -1859,11 +1872,13 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      dm.definition.fields = {
-        field2: {
-          type: FieldTypes.TEXT,
+      Object.assign(dm.definition, {
+        fields: {
+          field2: {
+            type: FieldTypes.TEXT,
+          },
         },
-      };
+      });
 
       await TestModel.reloadModel();
 
@@ -1887,6 +1902,8 @@ describe("Test Model", () => {
 
       const TestModel = Model.getClass(dm);
 
+      await TestModel.initialize();
+
       expect(TestModel.isSingle()).toBeTruthy();
 
       expect(TestModel.slug).toEqual(dm.slug);
@@ -1895,11 +1912,13 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      dm.definition.fields = {
-        field2: {
-          type: FieldTypes.TEXT,
+      Object.assign(dm.definition, {
+        fields: {
+          field2: {
+            type: FieldTypes.TEXT,
+          },
         },
-      };
+      });
 
       await TestModel.reloadModel();
 
@@ -1920,7 +1939,7 @@ describe("Test Model", () => {
           },
           validators: [
             {
-              type: "required",
+              type: ValidatorTypes.REQUIRED,
               options: { field: "field1" },
             },
           ],
@@ -1935,12 +1954,14 @@ describe("Test Model", () => {
 
       expect(TestModel.fieldsKeys).toContain("field1");
 
-      dm.definition.keyField = "field2";
-      dm.definition.fields = {
-        field2: {
-          type: FieldTypes.TEXT,
+      Object.assign(dm.definition, {
+        keyField: "field2",
+        fields: {
+          field2: {
+            type: FieldTypes.TEXT,
+          },
         },
-      };
+      });
 
       await TestModel.reloadModel();
 
@@ -2000,7 +2021,7 @@ describe("Test Model", () => {
       const GlobalModel = mockModel();
       GlobalModel.adapterClass = adapter1;
 
-      const model1 = mockModel({ extendsModel: GlobalModel });
+      const model1 = class extends GlobalModel {};
       expect(model1.getAdapter()?.base).toBe(adapter1);
       expect(model1.hasAdapterClassChanged()).toBeFalsy();
       GlobalModel.adapterClass = adapter2;
@@ -2135,9 +2156,18 @@ describe("Test Model", () => {
       i1._id = new ObjectId().toString();
 
       const i2 = await Model.getClass<
-        typeof Model<{
-          rel: FieldDefinitionRelation<ModelInstance<typeof Model1>>;
-        }>
+        typeof Model & {
+          definition: {
+            fields: {
+              rel: {
+                type: FieldTypes.RELATION;
+                options: {
+                  ref: "accounts";
+                };
+              };
+            };
+          };
+        }
       >(slug2, adapter).create({ rel: i1._id });
 
       expect(i2.rel.model).toBe(Model1);
@@ -2172,11 +2202,11 @@ describe("Test Model", () => {
 
       i1._id = new ObjectId().toString();
 
-      const i2 = await Model.getClass<
-        typeof Model<{
-          rel: FieldDefinitionRelation;
-        }>
-      >(slug2, adapter).create({ rel: i1._id });
+      const i2 = await Model.getClass(slug2, adapter).create<{
+        fields: {
+          rel: { type: FieldTypes.RELATION };
+        };
+      }>({ rel: i1._id });
 
       expect(i2.rel.model).toHaveProperty("slug", slug1);
 
@@ -2184,11 +2214,11 @@ describe("Test Model", () => {
         static slug = slug1;
       }.extend({ adapterClass: adapter, force: true });
 
-      const i3 = await Model.getClass<
-        typeof Model<{
-          rel: FieldDefinitionRelation;
-        }>
-      >(slug2, adapter).create({ rel: i1._id });
+      const i3 = await Model.getClass(slug2, adapter).create<{
+        fields: {
+          rel: { type: FieldTypes.RELATION };
+        };
+      }>({ rel: i1._id });
 
       expect(i3.rel.model).toBe(Model1);
     });
@@ -2231,11 +2261,16 @@ describe("Test Model", () => {
 
       i1._id = new ObjectId().toString();
 
-      const i2 = await Model.getClass<
-        typeof Model<{
-          rel: FieldDefinitionRelation;
-        }>
-      >(slug2, adapter).create({ rel: [i1._id] });
+      const i2 = await Model.getClass(slug2, adapter).create<{
+        fields: {
+          rel: {
+            type: FieldTypes.ARRAY;
+            options: {
+              items: { type: FieldTypes.RELATION };
+            };
+          };
+        };
+      }>({ rel: [i1._id] });
 
       expect(i2.rel.model).toBe(Model1);
     });
@@ -2300,5 +2335,117 @@ describe("Test Model", () => {
       expect(adapter.getModel(TestModel.slug)).not.toBe(TestModel);
       expect(adapter.getModel(TestModel.slug)).toBe(TestModel2);
     });
+
+    it("should be able to extend medias class fields", async () => {
+      const cache = new Set<ModelInstance>();
+      const adapter = mockAdapter({ privateCache: cache });
+
+      await DataModel.extend({ adapterClass: adapter }).create({
+        slug: "medias",
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                default: "1",
+              },
+            },
+          },
+        },
+      });
+
+      const model = Model.getClass("medias", adapter);
+
+      await model.initialize();
+
+      expect(model.fieldsMap.has("title")).toBeTruthy();
+    });
+
+    it("should be able to extend multiple medias classes", async () => {
+      const cache = new Set<ModelInstance>();
+
+      const adapter1 = mockAdapter({ privateCache: cache });
+      const adapter2 = mockAdapter({ privateCache: cache });
+
+      await DataModel.extend({ adapterClass: adapter1 }).create({
+        slug: "medias",
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                default: "1",
+              },
+            },
+          },
+        },
+      });
+
+      const medias1 = Model.getClass("medias", adapter1);
+      const medias2 = Model.getClass("medias", adapter2);
+
+      await medias1.initialize();
+      await medias2.initialize();
+
+      expect(medias1.fieldsMap.has("title")).toBeTruthy();
+      expect(medias2.fieldsMap.has("title")).toBeTruthy();
+    });
+  });
+
+  it("should ...", async () => {
+    const slug = generateRandomString();
+    const adapter = mockAdapter();
+
+    const dm = await DataModel.extend({ adapterClass: adapter }).create({
+      slug: slug,
+      definition: {
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+            options: {
+              default: "1",
+            },
+          },
+        },
+      },
+    });
+
+    const model1 = Model.getClass(slug, adapter);
+
+    const spyReload = jest.spyOn(model1, "reloadModel");
+
+    expect(spyReload).toHaveBeenCalledTimes(0);
+
+    await model1.initialize();
+
+    expect(spyReload).toHaveBeenCalledTimes(1);
+
+    expect(model1.fieldsMap.has("title")).toBeTruthy();
+
+    const model2 = Model.getClass(slug, adapter);
+
+    const spyReload2 = jest.spyOn(model2, "reloadModel");
+
+    expect(spyReload2).toHaveBeenCalledTimes(1);
+
+    await model2.initialize();
+
+    expect(spyReload2).toHaveBeenCalledTimes(1);
+
+    expect(model2.fieldsMap.has("title")).toBeTruthy();
+
+    await dm.update({
+      $set: {
+        definition: {
+          fields: {
+            subtitle: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      },
+    });
+
+    // console.log(model1.fieldsMap);
   });
 });

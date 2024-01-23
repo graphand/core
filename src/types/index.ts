@@ -1,34 +1,42 @@
 import type Model from "@/lib/Model";
 import type ModelList from "@/lib/ModelList";
-import type FieldTypes from "@/enums/field-types";
-import type RuleActions from "@/enums/rule-actions";
-import type ValidatorTypes from "@/enums/validator-types";
 import type Field from "@/lib/Field";
 import type ErrorCodes from "@/enums/error-codes";
 import type Validator from "@/lib/Validator";
 import type ValidationError from "@/lib/ValidationError";
-import AuthProviders from "@/enums/auth-providers";
-import AuthMethods from "@/enums/auth-methods";
-import Sockethook from "@/models/Sockethook";
-import MergeRequestTypes from "@/enums/merge-request-types";
-import MergeRequestEventTypes from "./enums/merge-request-event-types";
+import type AuthProviders from "@/enums/auth-providers";
+import type AuthMethods from "@/enums/auth-methods";
+import type Sockethook from "@/models/Sockethook";
+import type MergeRequestTypes from "@/enums/merge-request-types";
+import type MergeRequestEventTypes from "@/enums/merge-request-event-types";
+import type { models } from "@/.";
+import { FieldDefinition, ModelDocument, ModelObject } from "@/types/fields";
+import { ValidatorDefinition } from "@/types/validators";
+export * from "./fields";
+export * from "./validators";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OverrideModelDefinition = any;
 
 export type JSONSubtype =
   | null
   | string
   | number
   | Date
-  | JSONSubtypeArray
   | boolean
+  | JSONSubtypeArray
   | { [key: string]: JSONSubtype };
+
 export type JSONSubtypeArray = Array<JSONSubtype>;
 
-export type JSONType = Record<string, JSONSubtype> | JSONSubtypeArray;
+export type JSONTypeObject = Record<string, JSONSubtype>;
+
+export type JSONType = JSONTypeObject | JSONSubtypeArray;
 
 type Transaction<
   M extends typeof Model = typeof Model,
   A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
-  Args extends Parameters<AdapterFetcher[A]>[0] = Parameters<AdapterFetcher[A]>[0],
+  Args extends Parameters<AdapterFetcher<M>[A]>[0] = Parameters<AdapterFetcher<M>[A]>[0],
 > = {
   model: M;
   action: A;
@@ -53,55 +61,6 @@ export type DefaultSerializerCtx = {
   outputFormat?: string;
   transactionCtx?: TransactionCtx;
 };
-
-export type FieldDefinitionOptions<
-  T extends FieldTypes,
-  S extends FieldTypes = FieldTypes,
-> = T extends FieldTypes.TEXT
-  ? {
-      options?: Array<string>;
-      strict?: boolean;
-    }
-  : T extends FieldTypes.ARRAY
-  ? {
-      type: S;
-      definition?: FieldDefinitionOptions<S>;
-    }
-  : T extends FieldTypes.RELATION
-  ? Model
-  : T extends FieldTypes.NESTED
-  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any
-  : never;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type string_ = string & Partial<any>;
-
-export type FieldTextDefinitionSingleType<
-  Options extends string[],
-  Strict extends boolean = false,
-> = Strict extends true ? Options[number] : FieldTextDefinitionSingleType<Options, true> | string_;
-
-export type FieldDefinitionType<
-  T extends FieldTypes,
-  D extends FieldDefinitionOptions<T>,
-> = T extends FieldTypes.ID
-  ? FieldDefinitionId
-  : T extends FieldTypes.TEXT
-  ? FieldDefinitionText<D>
-  : T extends FieldTypes.BOOLEAN
-  ? FieldDefinitionBoolean
-  : T extends FieldTypes.NUMBER
-  ? FieldDefinitionNumber
-  : T extends FieldTypes.DATE
-  ? FieldDefinitionDate
-  : T extends FieldTypes.NESTED
-  ? FieldDefinitionNested<D>
-  : T extends FieldTypes.RELATION
-  ? FieldDefinitionRelation<D>
-  : T extends FieldTypes.ARRAY
-  ? FieldDefinitionArray<D>
-  : never;
 
 export type SortDirection =
   | 1
@@ -184,13 +143,13 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   getList: (
     args: [query: JSONQuery],
     ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<ModelList<ModelInstance<T>>>;
+  ) => Promise<ModelList<T>>;
   createOne: (
-    args: [payload: ModelDocument<T>],
+    args: [payload: Partial<ModelDocument<T>>],
     ctx: TransactionCtx & CoreTransactionCtx,
   ) => Promise<ModelInstance<T>>;
   createMultiple: (
-    args: [payload: Array<ModelDocument<T>>],
+    args: [payload: Array<Partial<ModelDocument<T>>>],
     ctx: TransactionCtx & CoreTransactionCtx,
   ) => Promise<Array<ModelInstance<T>>>;
   updateOne: (
@@ -214,116 +173,38 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
 
 export type Module<T extends typeof Model = typeof Model> = (model: T) => void;
 
-export type ValidatorOptionsMap = {
-  [ValidatorTypes.REQUIRED]: { field: string };
-  [ValidatorTypes.UNIQUE]: { field: string };
-  [ValidatorTypes.KEY_FIELD]: { field: string };
-  [ValidatorTypes.SAMPLE]: { field: string };
-  [ValidatorTypes.LENGTH]: { field: string; min?: number; max?: number };
-  [ValidatorTypes.BOUNDARIES]: { field: string; min?: number; max?: number };
-  [ValidatorTypes.REGEX]: {
-    field: string;
-    pattern: string;
-    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
-  };
+export type RefModelsMap = {
+  accounts: typeof models.Account;
+  authProviders: typeof models.AuthProvider;
+  backups: typeof models.Backup;
+  datamodels: typeof models.DataModel;
+  environments: typeof models.Environment;
+  jobs: typeof models.Job;
+  keys: typeof models.Key;
+  medias: typeof models.Media;
+  mergeRequests: typeof models.MergeRequest;
+  mergeRequestEvents: typeof models.MergeRequestEvent;
+  organizations: typeof models.Organization;
+  projects: typeof models.Project;
+  roles: typeof models.Role;
+  searchConfigs: typeof models.SearchConfig;
+  settings: typeof models.Settings;
+  sockethooks: typeof models.Sockethook;
+  terms: typeof models.Terms;
+  tokens: typeof models.Token;
+  users: typeof models.User;
 };
 
-export type ValidatorOptionsMapOmitField = {
-  [ValidatorTypes.LENGTH]: { min?: number; max?: number };
-  [ValidatorTypes.BOUNDARIES]: { min?: number; max?: number };
-  [ValidatorTypes.REGEX]: {
-    pattern: string;
-    options?: Partial<Array<"i" | "m" | "s" | "u" | "y">>;
-  };
-};
+export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap
+  ? RefModelsMap[T]
+  : typeof Model;
 
-export type ValidatorOptions<
-  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes,
-> = T extends keyof ValidatorOptionsMap ? ValidatorOptionsMap[T] : Record<string, never>;
-
-export type ValidatorDefinition<
-  T extends ValidatorTypes = keyof ValidatorOptionsMap | ValidatorTypes,
-> = T extends keyof ValidatorOptionsMap
-  ? {
-      type: T;
-      options: ValidatorOptionsMap[T];
-    }
-  : {
-      type: T;
-      options?: Record<string, never>;
-    };
-
-export type ValidatorDefinitionOmitField<
-  T extends ValidatorTypes = keyof ValidatorOptionsMapOmitField | ValidatorTypes,
-> = T extends keyof ValidatorOptionsMapOmitField
-  ? {
-      type: T;
-      options: ValidatorOptionsMapOmitField[T];
-    }
-  : {
-      type: T;
-      options?: Record<string, never>;
-    };
-
-export type ValidatorsDefinition = Array<ValidatorDefinition>;
-export type ValidatorsDefinitionOmitField = Array<ValidatorDefinitionOmitField>;
-
-export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
-  [FieldTypes.ARRAY]: {
-    items: FieldDefinition<T>;
-    validators?: ValidatorsDefinitionOmitField;
-  };
-  [FieldTypes.TEXT]: {
-    default?: string;
-    options?: string[];
-    strict?: boolean;
-  };
-  [FieldTypes.RELATION]: {
-    ref: string;
-  };
-  [FieldTypes.NUMBER]: {
-    default?: number;
-  };
-  [FieldTypes.NESTED]: {
-    default?: JSONType;
-    defaultField?: FieldDefinition;
-    fields?: FieldsDefinition;
-    strict?: boolean;
-    validators?: ValidatorsDefinition;
-  };
-  [FieldTypes.BOOLEAN]: {
-    default?: boolean;
-  };
-};
-
-export type FieldOptions<T extends FieldTypes = keyof FieldOptionsMap | FieldTypes> =
-  T extends keyof FieldOptionsMap ? FieldOptionsMap[T] : Record<string, never>;
-
-export type FieldDefinition<T extends FieldTypes = keyof FieldOptionsMap | FieldTypes> =
-  T extends keyof FieldOptionsMap
-    ? {
-        type: T;
-        options?: FieldOptionsMap[T];
-      }
-    : {
-        type: T;
-        options?: Record<string, never>;
-      };
-
-export type FieldsDefinition = Record<string, FieldDefinition>;
-
-export type ModelProps<M extends Model> = M extends Model<infer K> ? K : never;
-
-type Fixed = JSONSubtype | (() => JSONSubtype);
-
-export type ModelDocument<M extends typeof Model = typeof Model> = Partial<
-  Record<keyof InstanceType<M> | keyof ModelProps<InstanceType<M>>, Fixed>
->;
-
-export type GenericModelDocument = Partial<Record<string, Fixed>>;
-
-export type ModelInstance<M extends typeof Model = typeof Model> = InstanceType<M> &
-  ModelProps<InstanceType<M>>;
+export type ModelInstance<
+  M extends typeof Model = typeof Model,
+  D = undefined,
+> = (M["definition"] extends ModelDefinition ? InstanceType<typeof Model> : unknown) &
+  InstanceType<M> &
+  ModelObject<M, D>;
 
 export type HookPhase = "before" | "after";
 
@@ -343,7 +224,7 @@ export type HookCallbackArgs<
 
 export type Hook<
   P extends HookPhase = HookPhase,
-  A extends keyof AdapterFetcher<T> = keyof AdapterFetcher,
+  A extends keyof AdapterFetcher<T> = keyof AdapterFetcher<typeof Model>,
   T extends typeof Model = typeof Model,
 > = {
   phase: P;
@@ -357,20 +238,6 @@ export type ValidatorHook<
   A extends keyof AdapterFetcher<T> = keyof AdapterFetcher<typeof Model>,
   T extends typeof Model = typeof Model,
 > = [P, A, (args: HookCallbackArgs<P, A, T>) => boolean];
-
-export type Rule = {
-  ref?: string;
-  actions?: RuleActions[];
-  filter?: object;
-  prohibition?: boolean;
-};
-
-export type FieldsRestriction = {
-  ref?: string;
-  actions?: RuleActions[];
-  filter?: object;
-  fields: string[];
-};
 
 export type CoreErrorDefinition = {
   message?: string;
@@ -593,9 +460,9 @@ export type SockethookStatus = {
   };
 };
 
-export type ModelDefinition = {
-  keyField?: string;
-  single?: boolean;
-  fields?: FieldsDefinition;
-  validators?: ValidatorsDefinition;
-};
+export type ModelDefinition = Readonly<{
+  keyField?: Readonly<string>;
+  single?: Readonly<boolean>;
+  fields?: Readonly<Record<string, FieldDefinition>>;
+  validators?: Readonly<Array<ValidatorDefinition>>;
+}>;

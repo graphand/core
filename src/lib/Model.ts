@@ -2,8 +2,6 @@ import ModelEnvScopes from "@/enums/model-env-scopes";
 import Field from "@/lib/Field";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
-import { fieldDecorator } from "@/lib/fieldDecorator";
-import FieldTypes from "@/enums/field-types";
 import {
   AdapterFetcher,
   CoreTransactionCtx,
@@ -14,13 +12,15 @@ import {
   JSONQuery,
   ModelDefinition,
   Module,
-  JSONType,
   ModelDocument,
   GenericModelDocument,
   ModelInstance,
-  ModelProps,
   UpdateObject,
   JSONSubtype,
+  RefModelsMap,
+  ModelJSON,
+  ModelObject,
+  JSONType,
 } from "@/types";
 import SerializerFormat from "@/enums/serializer-format";
 import Adapter from "@/lib/Adapter";
@@ -30,7 +30,6 @@ import {
   createValidatorsArray,
   getFieldsPathsFromPath,
   getRecursiveHooksFromModel,
-  defineFieldsProperties,
   _getter,
   _setter,
   validateModel,
@@ -42,9 +41,7 @@ import ErrorCodes from "@/enums/error-codes";
 import type DataModel from "@/models/DataModel";
 import ModelList from "./ModelList";
 
-// Used to infer the type of a model instance from a model class
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-class Model<Props extends object = never> {
+class Model {
   static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
   static searchable: boolean = false; // Whether the model is usable as a search config source
   static exposed: boolean = true; // Whether the model is exposed in the API or not
@@ -54,7 +51,7 @@ class Model<Props extends object = never> {
   static scope: ModelEnvScopes; // The scope of the model (global/project). Project scope could be global on project (project) or specific to an environment (env)
   static controllersScope: "global" | "project"; // The scope for CRUD controllers. Default calculated from model.scope
   static freeMode: boolean = false; // Whether the model is free
-  static definition: ModelDefinition; // The definition of the model
+  static definition: object; // The definition of the model (use satisfies ModelDefinition)
   static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
   static cacheAdapter = true;
 
@@ -63,29 +60,16 @@ class Model<Props extends object = never> {
   static __initOptions: Parameters<typeof getModelInitPromise>[1];
   static __initPromise: Promise<void>;
   static __adapter: Adapter;
-  static __fieldsMap: Map<string, Field>;
-  static __validatorsArray: Array<Validator>;
-  static __fieldsKeys: string[];
-  static __fieldsProperties: JSONType;
   static __extendedClass: typeof Model;
-  static __dm: string | null; // The id of the datamodel that initialized the model if extensible. null if datamodel not found
+  static __dm?: string | null; // The id of the datamodel that initialized the model if extensible. null if datamodel not found
+  static __memo: {
+    fieldsMap?: Map<string, Field>;
+    validatorsArray?: Array<Validator>;
+    fieldsKeys?: string[];
+    fieldsProperties?: PropertyDescriptorMap;
+  };
 
-  #doc: GenericModelDocument; // The document
-
-  @fieldDecorator(FieldTypes.ID)
-  _id: FieldDefinitionId;
-
-  @fieldDecorator(FieldTypes.DATE)
-  _createdAt: FieldDefinitionDate;
-
-  @fieldDecorator(FieldTypes.IDENTITY)
-  _createdBy;
-
-  @fieldDecorator(FieldTypes.DATE)
-  _updatedAt: FieldDefinitionDate;
-
-  @fieldDecorator(FieldTypes.IDENTITY)
-  _updatedBy;
+  __doc: GenericModelDocument; // The document
 
   constructor(doc: GenericModelDocument = {}) {
     if (!doc || typeof doc !== "object") {
@@ -94,9 +78,8 @@ class Model<Props extends object = never> {
       });
     }
 
-    this.#doc = doc;
-    this.#doc._id ??= Date.now();
-    return this;
+    this.__doc = doc;
+    this.__doc._id ??= String(Date.now());
   }
 
   /**
@@ -108,18 +91,27 @@ class Model<Props extends object = never> {
   }
 
   static isSingle() {
-    return Boolean(this.definition?.single);
+    const definition = this.definition as ModelDefinition;
+    return Boolean(definition?.single);
   }
 
   static getKeyField() {
-    return this.getBaseClass().definition?.keyField ?? this.definition?.keyField ?? "_id";
+    const definition = this.definition as ModelDefinition;
+    return definition?.keyField ?? definition?.keyField ?? "_id";
+  }
+
+  static fromDoc<D = undefined, T extends typeof Model = typeof Model>(
+    this: T,
+    doc: Partial<ModelDocument<T, D>> = {},
+  ): ModelInstance<T, D> {
+    return new this(doc as GenericModelDocument) as ModelInstance<T, D>;
   }
 
   /**
    * Returns the current instance doc (raw data)
    */
   getDoc() {
-    return this.#doc;
+    return this.__doc;
   }
 
   getKey(format?: string) {
@@ -143,7 +135,7 @@ class Model<Props extends object = never> {
    * @param doc
    */
   setDoc(doc: GenericModelDocument) {
-    this.#doc = doc;
+    this.__doc = doc;
   }
 
   /**
@@ -153,16 +145,16 @@ class Model<Props extends object = never> {
    * const clonedAccount = account.clone();
    * console.log(account === clonedAccount); // false
    */
-  clone() {
-    const clonedDoc = JSON.parse(JSON.stringify(this.#doc));
-    return new this.model(clonedDoc);
+  clone(): this {
+    const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
+    return this.model.fromDoc(clonedDoc) as unknown as this;
   }
 
   /**
    * The function returns the base class of a given model class. If the the current model class is extended (Model.extend),
    * the base class will be the class that was initially extended.
    */
-  static getBaseClass<T extends typeof Model>(this: T): T {
+  static getBaseClass<T extends typeof Model = typeof Model>(this: T): T {
     if (this.hasOwnProperty("__extendedClass") && this.__extendedClass) {
       return this.__extendedClass as T;
     }
@@ -170,16 +162,7 @@ class Model<Props extends object = never> {
     return this as T;
   }
 
-  /**
-   * The `extend` function is a static method that allows a model class to be extended with additional
-   * functionality, such as a different adapter class or additional modules.
-   * The adapter class is the class that will be used to process the model data, like crud operations.
-   * @param {T}  - - `T`: A generic type that extends `typeof Model`, which represents the class that
-   * is being extended.
-   * @param opts - {
-   * @returns the extended model class.
-   */
-  static extend<T extends typeof Model>(
+  static extend<T extends typeof Model = typeof Model>(
     this: T,
     opts: {
       adapterClass?: typeof Adapter;
@@ -245,7 +228,10 @@ class Model<Props extends object = never> {
    * If the model is not extensible (Role, Token, etc.), this method does nothing.
    * @returns
    */
-  static async reloadModel(opts?: { datamodel?: DataModel; ctx?: TransactionCtx }) {
+  static async reloadModel(opts?: {
+    datamodel?: ModelInstance<typeof DataModel>;
+    ctx?: TransactionCtx;
+  }) {
     let datamodel = opts?.datamodel;
     const adapter = this.getAdapter();
 
@@ -270,8 +256,9 @@ class Model<Props extends object = never> {
    * The fields map could be incomplete if the model is extensible and is not initialized.
    */
   static get fieldsMap() {
-    this.__fieldsMap ??= createFieldsMap(this);
-    return this.__fieldsMap;
+    this.__memo ??= {};
+    this.__memo.fieldsMap ??= createFieldsMap(this);
+    return this.__memo.fieldsMap;
   }
 
   /**
@@ -279,8 +266,9 @@ class Model<Props extends object = never> {
    * Equivalent to Array.from(model.fieldsMap.keys()).
    */
   static get fieldsKeys() {
-    this.__fieldsKeys ??= Array.from(this.fieldsMap.keys());
-    return this.__fieldsKeys;
+    this.__memo ??= {};
+    this.__memo.fieldsKeys ??= Array.from(this.fieldsMap.keys());
+    return this.__memo.fieldsKeys;
   }
 
   /**
@@ -288,22 +276,63 @@ class Model<Props extends object = never> {
    * The validators array could be incomplete if the model is extensible and is not initialized.
    */
   static get validatorsArray() {
-    this.__validatorsArray ??= createValidatorsArray(this);
-    return this.__validatorsArray;
+    this.__memo ??= {};
+    this.__memo.validatorsArray ??= createValidatorsArray(this);
+    return this.__memo.validatorsArray;
   }
 
-  static getClass<M extends typeof Model = typeof Model>(
-    slugOrModel: string | DataModel,
+  static get fieldsProperties() {
+    if (!this.__memo?.fieldsProperties) {
+      const properties: PropertyDescriptorMap = {};
+      for (const slug of this.fieldsKeys) {
+        properties[slug] = {
+          enumerable: true,
+          configurable: true,
+          get() {
+            return this.get(slug);
+          },
+          set(v) {
+            if (v === undefined) {
+              console.warn(
+                "cannot set undefined value with = operator. Please use .set method instead",
+              );
+              return;
+            }
+
+            return this.set(slug, v);
+          },
+        };
+      }
+
+      this.__memo ??= {};
+      this.__memo.fieldsProperties = properties;
+    }
+
+    return this.__memo.fieldsProperties;
+  }
+
+  static getClass<
+    M extends typeof Model = undefined,
+    T extends string | keyof RefModelsMap | ModelInstance<typeof DataModel> =
+      | string
+      | keyof RefModelsMap
+      | ModelInstance<typeof DataModel>,
+  >(
+    slugOrModel: T,
     adapterClass?: typeof Adapter,
-  ): M {
+  ): M extends undefined ? (T extends keyof RefModelsMap ? RefModelsMap[T] : typeof Model) : M {
     if (!slugOrModel) {
       throw new CoreError({
         message: `Invalid slugOrModel: ${slugOrModel}`,
       });
     }
 
-    const slug = typeof slugOrModel === "string" ? slugOrModel : slugOrModel.slug;
-    const datamodel: DataModel = typeof slugOrModel === "string" ? null : slugOrModel;
+    const slug =
+      typeof slugOrModel === "string"
+        ? slugOrModel
+        : (slugOrModel as ModelInstance<typeof DataModel>).slug;
+    const datamodel: ModelInstance<typeof DataModel> =
+      typeof slugOrModel === "string" ? null : slugOrModel;
     adapterClass ??= this.getAdapter(false)?.base;
 
     if (!adapterClass && datamodel) {
@@ -311,7 +340,8 @@ class Model<Props extends object = never> {
     }
 
     if (adapterClass?.hasModel(slug)) {
-      return adapterClass.getModel(slug) as M;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return adapterClass.getModel(slug) as any;
     }
 
     let model: M;
@@ -341,7 +371,8 @@ class Model<Props extends object = never> {
       assignDatamodel(model, datamodel);
     }
 
-    return model;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return model as any;
   }
 
   /**
@@ -380,14 +411,14 @@ class Model<Props extends object = never> {
 
     if (!fieldsPaths?.length) {
       if (this.model.freeMode) {
-        return this.#doc[path];
+        return this.__doc[path];
       }
 
       return undefined;
     }
 
     const firstField = fieldsPaths[0].field;
-    value ??= this.#doc[firstField.path] as JSONSubtype;
+    value ??= this.__doc[firstField.path] as JSONSubtype;
 
     const defaults = ctx?.defaults ?? format !== SerializerFormat.DOCUMENT;
     if (defaults && value === undefined && "default" in firstField.options) {
@@ -398,12 +429,14 @@ class Model<Props extends object = never> {
       return value;
     }
 
+    const from = this as unknown as ModelInstance;
+
     if (fieldsPaths.length === 1) {
-      return firstField.serialize(value, format, this, ctx);
+      return firstField.serialize(value, format, from, ctx);
     } else {
       const noFieldSymbol = Symbol("noField");
 
-      const _value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, this, ctx);
+      const _value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, from, ctx);
 
       const res = _getter({
         value: _value,
@@ -411,7 +444,7 @@ class Model<Props extends object = never> {
         format,
         ctx,
         noFieldSymbol,
-        from: this,
+        from,
       });
 
       return res === noFieldSymbol ? undefined : res;
@@ -426,12 +459,7 @@ class Model<Props extends object = never> {
    * model.set("field", "value");
    * console.log(model.get("field")); // value
    */
-  set<T extends Model, S extends keyof T | string>(
-    this: T,
-    path: S,
-    value: JSONSubtype,
-    ctx?: TransactionCtx,
-  ) {
+  set(path: string, value: JSONSubtype, ctx?: TransactionCtx) {
     const _path = path as string;
     let fieldsPaths;
     const _throw = () => {
@@ -457,12 +485,12 @@ class Model<Props extends object = never> {
     }
 
     return _setter({
-      _assignTo: this.#doc,
+      _assignTo: this.__doc,
       _value: value,
       _fieldsPaths: fieldsPaths,
       _throw,
       ctx,
-      from: this,
+      from: this as unknown as ModelInstance,
     });
   }
 
@@ -481,8 +509,6 @@ class Model<Props extends object = never> {
     clean = false,
     fieldsKeys?: Array<string>,
   ) {
-    defineFieldsProperties(this);
-
     const keys = fieldsKeys ?? this.model.fieldsKeys;
     const res = {};
 
@@ -495,8 +521,7 @@ class Model<Props extends object = never> {
       res[slug] = v;
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return res as Partial<Record<keyof this | keyof ModelProps<this>, any>>;
+    return res;
   }
 
   /**
@@ -504,8 +529,10 @@ class Model<Props extends object = never> {
    * @example
    * console.log(instance.toJSON()); // equivalent to instance.to(SerializerFormat.JSON)
    */
-  toJSON() {
-    return this.serialize(SerializerFormat.JSON);
+  toJSON<T extends ModelInstance>(this: T) {
+    return this.serialize(SerializerFormat.JSON) as T extends ModelInstance<infer M, infer D>
+      ? ModelJSON<M, D>
+      : JSONType;
   }
 
   /**
@@ -513,54 +540,19 @@ class Model<Props extends object = never> {
    * @example
    * console.log(instance.toObject()); // equivalent to instance.to(SerializerFormat.OBJECT)
    */
-  toObject() {
-    return this.serialize(SerializerFormat.OBJECT);
+  toObject<T extends typeof Model = typeof Model>() {
+    return this.serialize(SerializerFormat.OBJECT) as ModelObject<T>;
   }
 
   /**
    * Get the document representation of the current instance as a document
+   * The document format is about the same as the JSON format but with some differences:
+   * - default values of the fields are not included
    * @example
    * console.log(instance.toDocument()); // equivalent to instance.to(SerializerFormat.DOCUMENT)
    */
-  toDocument() {
-    return this.serialize(SerializerFormat.DOCUMENT);
-  }
-
-  /**
-   * Serialize the current instance to a string
-   */
-  toString() {
-    return JSON.stringify(this.#doc) as string;
-  }
-
-  /**
-   * Hydrate a new instance of the current model from a string.
-   * You can use Model.prototype.toString() to get the string representation of an instance and then use this method to hydrate a new instance.
-   * @param str
-   * @param cleanPayload
-   * @example
-   * const modelStr = instance.toString();
-   * const instance = Model.fromString(modelStr);
-   */
-  static fromString<T extends typeof Model>(
-    this: T,
-    str: string,
-    cleanPayload = true,
-  ): ModelInstance<T> {
-    const parsed = JSON.parse(str);
-    let payload = parsed;
-
-    if (cleanPayload) {
-      const cleaned: object = {};
-
-      this.fieldsKeys.forEach(slug => {
-        cleaned[slug] = parsed[slug];
-      });
-
-      payload = cleaned;
-    }
-
-    return new this(payload) as ModelInstance<T>;
+  toDocument<T extends typeof Model = typeof Model>() {
+    return this.serialize(SerializerFormat.DOCUMENT) as ModelDocument<T>;
   }
 
   /**
@@ -570,7 +562,7 @@ class Model<Props extends object = never> {
    * @example
    * const count = await Model.count({ filter: { title: { "$regex": "a" } } });
    */
-  static async count<T extends typeof Model>(
+  static async count<T extends typeof Model = typeof Model>(
     this: T,
     query: string | JSONQuery = {},
     ctx?: TransactionCtx,
@@ -598,19 +590,19 @@ class Model<Props extends object = never> {
    * const instance = await Model.get({ filter: { title: { "$regex": "a" } } });
    * console.log(instance.title); // "apple"
    */
-  static get<T extends typeof Model>(
+  static get<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
     query: string | JSONQuery = {},
     ctx?: TransactionCtx,
-  ): PromiseModel<ModelInstance<T>> {
-    return new PromiseModel<ModelInstance<T>>(
+  ): PromiseModel<T, D> {
+    return new PromiseModel<T, D>(
       [
         async (resolve, reject) => {
           try {
             await this.initialize();
 
             const i = await this.execute("get", [query], ctx);
-            resolve(i as ModelInstance<T>);
+            resolve(i as ModelInstance<T, D>);
           } catch (e) {
             reject(e);
           }
@@ -632,19 +624,19 @@ class Model<Props extends object = never> {
    * console.log(list[0].title); // "apple"
    * console.log(list[1].title); // "banana"
    */
-  static getList<T extends typeof Model>(
+  static getList<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
     query: JSONQuery = {},
     ctx?: TransactionCtx,
-  ): PromiseModelList<ModelInstance<T>> {
-    return new PromiseModelList<ModelInstance<T>>(
+  ): PromiseModelList<T, D> {
+    return new PromiseModelList<T, D>(
       [
         async (resolve, reject) => {
           try {
             await this.initialize();
 
             const list = await this.execute("getList", [query], ctx);
-            resolve(list as ModelList<ModelInstance<T>>);
+            resolve(list as ModelList<T, D>);
           } catch (e) {
             reject(e);
           }
@@ -663,11 +655,11 @@ class Model<Props extends object = never> {
    * console.log(instance._id); // ...
    * console.log(instance.title); // "apple"
    */
-  static async create<T extends typeof Model>(
+  static async create<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
-    payload: ModelDocument<T>,
+    payload: Partial<ModelDocument<T, D>>,
     ctx?: TransactionCtx,
-  ): Promise<ModelInstance<T>> {
+  ): Promise<ModelInstance<T, D>> {
     if (Array.isArray(payload)) {
       throw new CoreError({
         code: ErrorCodes.INVALID_PARAMS,
@@ -677,7 +669,8 @@ class Model<Props extends object = never> {
 
     await this.initialize();
 
-    return (await this.execute("createOne", [payload], ctx)) as ModelInstance<T>;
+    const i = await this.execute("createOne", [payload], ctx);
+    return i as ModelInstance<T, D>;
   }
 
   /**
@@ -694,14 +687,15 @@ class Model<Props extends object = never> {
    * console.log(instances[0].title); // "apple"
    * console.log(instances[1].title); // "banana"
    */
-  static async createMultiple<T extends typeof Model>(
+  static async createMultiple<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
-    payload: Array<ModelDocument<T>>,
+    payload: Array<Partial<ModelDocument<T, D>>>,
     ctx?: TransactionCtx,
-  ): Promise<Array<ModelInstance<T>>> {
+  ): Promise<Array<ModelInstance<T, D>>> {
     await this.initialize();
 
-    return (await this.execute("createMultiple", [payload], ctx)) as Array<ModelInstance<T>>;
+    const list = await this.execute("createMultiple", [payload], ctx);
+    return list as Array<ModelInstance<T, D>>;
   }
 
   /**
@@ -715,7 +709,9 @@ class Model<Props extends object = never> {
    * console.log(instance.title); // undefined
    */
   async update(update: UpdateObject, ctx?: TransactionCtx): Promise<this> {
-    const res = await this.model.execute("updateOne", [String(this._id), update], ctx);
+    await this.model.initialize();
+
+    const res = await this.model.execute("updateOne", [String(this.get("_id")), update], ctx);
 
     if (!res?.getDoc?.()) {
       throw new CoreError({
@@ -723,7 +719,7 @@ class Model<Props extends object = never> {
       });
     }
 
-    this.#doc = res.#doc;
+    this.__doc = res.__doc;
 
     return this;
   }
@@ -744,20 +740,22 @@ class Model<Props extends object = never> {
    * console.log(list[0].title); // "pear"
    * console.log(list[1].title); // "pear"
    */
-  static async update<T extends typeof Model>(
+  static async update<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
     query: string | JSONQuery = {},
     update: UpdateObject,
     ctx?: TransactionCtx,
-  ): Promise<Array<ModelInstance<T>>> {
+  ): Promise<Array<ModelInstance<T, D>>> {
     await this.initialize();
 
     if (typeof query === "string") {
       const updated = await this.execute("updateOne", [query, update], ctx);
-      return [updated] as Array<ModelInstance<T>>;
+      return [updated] as Array<ModelInstance<T, D>>;
     }
 
-    return (await this.execute("updateMultiple", [query, update], ctx)) as Array<ModelInstance<T>>;
+    return (await this.execute("updateMultiple", [query, update], ctx)) as Array<
+      ModelInstance<T, D>
+    >;
   }
 
   /**
@@ -769,7 +767,7 @@ class Model<Props extends object = never> {
   async delete(ctx?: TransactionCtx): Promise<this> {
     await this.model.initialize();
 
-    await this.model.execute("deleteOne", [String(this._id)], ctx);
+    await this.model.execute("deleteOne", [this.get("_id", SerializerFormat.JSON)], ctx);
 
     return this;
   }
@@ -789,7 +787,7 @@ class Model<Props extends object = never> {
    * console.log(list[0]); // ...
    * console.log(list[1]); // ...
    */
-  static async delete<T extends typeof Model>(
+  static async delete<T extends typeof Model = typeof Model>(
     this: T,
     query: string | JSONQuery = {},
     ctx?: TransactionCtx,
@@ -826,8 +824,6 @@ class Model<Props extends object = never> {
     fn: Hook<P, A, T>["fn"],
     order: number = 0,
   ) {
-    const baseClass = this.getBaseClass();
-
     if (
       !this.allowMultipleOperations &&
       ["createMultiple", "updateMultiple", "deleteMultiple"].includes(action)
@@ -836,6 +832,8 @@ class Model<Props extends object = never> {
         `Useless hook ${action} on a model with allowMultipleOperations disabled (${this.slug})`,
       );
     }
+
+    const baseClass = this.getBaseClass();
 
     if (!baseClass.hasOwnProperty("__hooks") || !baseClass.__hooks) {
       baseClass.__hooks = new Set();
@@ -857,11 +855,11 @@ class Model<Props extends object = never> {
    * ]);
    * await Model.validate(instances); // will validate the two instances with the model validators and either throw an error or return true
    */
-  static async validate<T extends typeof Model>(
+  static async validate<T extends typeof Model = typeof Model>(
     this: T,
-    list: Array<ModelInstance<T> | ModelDocument<T>>,
+    list: Array<ModelInstance<T> | Partial<ModelDocument<T>>>,
     ctx?: TransactionCtx,
-  ) {
+  ): Promise<boolean> {
     return await validateModel(this, list, ctx);
   }
 
@@ -875,7 +873,7 @@ class Model<Props extends object = never> {
    * error will be thrown. If `required` is set to `false` and no adapter is found, `null
    * @returns the adapter object.
    */
-  static getAdapter<T extends typeof Model>(this: T, required = true) {
+  static getAdapter<T extends typeof Model = typeof Model>(this: T, required = true) {
     let adapter;
     const baseClass = this.getBaseClass();
     const adapterClass = baseClass?.adapterClass;
@@ -904,7 +902,7 @@ class Model<Props extends object = never> {
    * @returns a boolean value. It returns true if the adapter's base is not equal to the adapter class,
    * and false otherwise.
    */
-  static hasAdapterClassChanged<T extends typeof Model>(this: T) {
+  static hasAdapterClassChanged<T extends typeof Model = typeof Model>(this: T) {
     const adapter = this.getAdapter(false);
     if (!adapter) {
       return false;

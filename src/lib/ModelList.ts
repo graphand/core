@@ -1,4 +1,4 @@
-import { JSONQuery } from "@/types";
+import { JSONQuery, ModelInstance } from "@/types";
 import Model from "@/lib/Model";
 
 /**
@@ -6,13 +6,13 @@ import Model from "@/lib/Model";
  * It is used to return a list of instances.
  * It could be used as an array (list.map(), list.filter(), etc.). and also exposes some useful properties and methods.
  */
-class ModelList<T extends Model> extends Array<T> {
-  #model: typeof Model; // Model class
+class ModelList<T extends typeof Model, D = undefined> extends Array<ModelInstance<T, D>> {
+  #model: T; // Model class
   #query: JSONQuery; // Query used to fetch the list (returned by the adapter)
   #count: number; // Total count of the list (returned by the adapter)
   #reloadPromise: Promise<void>; // Promise to wait for the reload to finish
 
-  constructor(model: typeof Model, list: Array<T> = [], query?: JSONQuery, count?: number) {
+  constructor(model: T, list: Array<ModelInstance<T, D>> = [], query?: JSONQuery, count?: number) {
     super(...list);
 
     this.#model = model;
@@ -53,8 +53,8 @@ class ModelList<T extends Model> extends Array<T> {
   /**
    * Returns the last updated item of the list.
    */
-  get lastUpdated(): Model | undefined {
-    let _maxUpdated: Model | undefined;
+  get lastUpdated(): ModelInstance<T, D> | undefined {
+    let _maxUpdated: ModelInstance<T, D> | undefined;
     let _maxUpdatedTime: number | undefined;
 
     for (const i of this) {
@@ -80,7 +80,7 @@ class ModelList<T extends Model> extends Array<T> {
     this.#reloadPromise ??= new Promise<void>(async (resolve, reject) => {
       try {
         const { model, query } = this;
-        const list = (await model.getList(query)) as ModelList<T>;
+        const list = (await model.getList(query)) as ModelList<T, D>;
         this.splice(0, this.length, ...list);
         this.#count = list.count;
         resolve();

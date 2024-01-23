@@ -1,11 +1,12 @@
 import ValidatorTypes from "@/enums/validator-types";
 import FieldTypes from "@/enums/field-types";
 import ValidationError from "@/lib/ValidationError";
-import { generateRandomString, mockAdapter, mockModel } from "@/lib/test-utils";
+import { generateRandomString, mockAdapter } from "@/lib/test-utils";
 import DataModel from "@/models/DataModel";
 import Environment from "@/models/Environment";
 import Media from "@/models/Media";
-import { Model, models } from ".";
+import Model from "@/lib/Model";
+import { ModelDefinition, models } from ".";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -15,12 +16,17 @@ describe("Global tests", () => {
     const model = DataModel.extend({ adapterClass: adapter });
 
     await expect(
-      model.validate([new model({ slug, definition: { fields: "toto" } })]),
+      model.validate([
+        model.fromDoc({
+          slug,
+          definition: { fields: "toto" as unknown as ModelDefinition["fields"] },
+        }),
+      ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           slug,
           definition: {
             fields: {
@@ -33,7 +39,7 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           slug,
           definition: {
             fields: {
@@ -48,7 +54,7 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           slug,
           definition: {
             fields: {
@@ -69,20 +75,25 @@ describe("Global tests", () => {
     const model = DataModel.extend({ adapterClass: adapter });
 
     await expect(
-      model.validate([new model({ slug, definition: { validators: "toto" } })]),
+      model.validate([model.fromDoc({ slug, definition: { validators: "toto" } } as object)]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      model.validate([new model({ slug, definition: { validators: {} } })]),
-    ).rejects.toThrow(ValidationError);
-
-    await expect(
-      model.validate([new model({ slug, definition: { validators: ["required"] } })]),
+      model.validate([model.fromDoc({ slug, definition: { validators: {} } } as object)]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
+          slug,
+          definition: { validators: ["required"] } as object,
+        }),
+      ]),
+    ).rejects.toThrow(ValidationError);
+
+    await expect(
+      model.validate([
+        model.fromDoc({
           slug,
           definition: {
             validators: [
@@ -91,7 +102,7 @@ describe("Global tests", () => {
               },
             ],
           },
-        }),
+        } as object),
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -104,7 +115,7 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           slug,
           definition: {
             fields: {
@@ -191,43 +202,46 @@ describe("Global tests", () => {
 
   it("should be able to validate with nested field with defaultField with multiple documents with different fields", async () => {
     const adapter = mockAdapter();
-    const model = mockModel({
-      fields: {
-        obj: {
-          type: FieldTypes.NESTED,
-          options: {
-            defaultField: {
-              type: FieldTypes.NESTED,
-              options: {
-                fields: {
-                  title: {
-                    type: FieldTypes.TEXT,
-                    options: {},
-                  },
-                },
-                validators: [
-                  {
-                    type: ValidatorTypes.REQUIRED,
-                    options: {
-                      field: "title",
+    const model = class extends Model {
+      static slug = generateRandomString();
+      static definition = {
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              defaultField: {
+                type: FieldTypes.NESTED,
+                options: {
+                  fields: {
+                    title: {
+                      type: FieldTypes.TEXT,
+                      options: {},
                     },
                   },
-                ],
+                  validators: [
+                    {
+                      type: ValidatorTypes.REQUIRED,
+                      options: {
+                        field: "title",
+                      },
+                    },
+                  ],
+                },
               },
             },
           },
         },
-      },
-    }).extend({ adapterClass: adapter });
+      };
+    }.extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           obj: {
             a: { title: "test" },
           },
         }),
-        new model({
+        model.fromDoc({
           obj: {
             b: { title: "test" },
           },
@@ -237,12 +251,12 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           obj: {
             a: { title: "test" },
           },
         }),
-        new model({
+        model.fromDoc({
           obj: {
             b: { noTitle: true },
           },
@@ -253,32 +267,35 @@ describe("Global tests", () => {
 
   it("should be able to validate with nested field in array with multiple documents with different fields", async () => {
     const adapter = mockAdapter();
-    const model = mockModel({
-      fields: {
-        obj: {
-          type: FieldTypes.NESTED,
-          options: {
-            fields: {
-              arr: {
-                type: FieldTypes.ARRAY,
-                options: {
-                  items: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      fields: {
-                        title: {
-                          type: FieldTypes.TEXT,
-                          options: {},
-                        },
-                      },
-                      validators: [
-                        {
-                          type: ValidatorTypes.REQUIRED,
-                          options: {
-                            field: "title",
+    const model = class extends Model {
+      static slug = generateRandomString();
+      static definition = {
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                arr: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.NESTED,
+                      options: {
+                        fields: {
+                          title: {
+                            type: FieldTypes.TEXT,
+                            options: {},
                           },
                         },
-                      ],
+                        validators: [
+                          {
+                            type: ValidatorTypes.REQUIRED,
+                            options: {
+                              field: "title",
+                            },
+                          },
+                        ],
+                      },
                     },
                   },
                 },
@@ -286,17 +303,17 @@ describe("Global tests", () => {
             },
           },
         },
-      },
-    }).extend({ adapterClass: adapter });
+      };
+    }.extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           obj: {
             arr: [{ title: "1" }, { title: "2" }],
           },
         }),
-        new model({
+        model.fromDoc({
           obj: {
             arr: [{ title: "3" }, { title: "4" }],
           },
@@ -306,12 +323,12 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           obj: {
             arr: [{ title: "1" }, { noTitle: true }],
           },
         }),
-        new model({
+        model.fromDoc({
           obj: {
             arr: [{ title: "3" }, { title: "4" }],
           },
@@ -322,45 +339,48 @@ describe("Global tests", () => {
 
   it("should be able to validate with nested field in array with defaultField with multiple documents with different fields", async () => {
     const adapter = mockAdapter();
-    const model = mockModel({
-      fields: {
-        obj: {
-          type: FieldTypes.NESTED,
-          options: {
-            fields: {
-              arr: {
-                type: FieldTypes.ARRAY,
-                options: {
-                  items: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      defaultField: {
-                        type: FieldTypes.NESTED,
-                        options: {
-                          fields: {
-                            nestedArr: {
-                              type: FieldTypes.ARRAY,
-                              options: {
-                                items: {
-                                  type: FieldTypes.NESTED,
-                                  options: {
-                                    defaultField: {
-                                      type: FieldTypes.NESTED,
-                                      options: {
-                                        fields: {
-                                          title: {
-                                            type: FieldTypes.TEXT,
-                                            options: {},
-                                          },
-                                        },
-                                        validators: [
-                                          {
-                                            type: ValidatorTypes.REQUIRED,
-                                            options: {
-                                              field: "title",
+    const model = class extends Model {
+      static slug = generateRandomString();
+      static definition = {
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                arr: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.NESTED,
+                      options: {
+                        defaultField: {
+                          type: FieldTypes.NESTED,
+                          options: {
+                            fields: {
+                              nestedArr: {
+                                type: FieldTypes.ARRAY,
+                                options: {
+                                  items: {
+                                    type: FieldTypes.NESTED,
+                                    options: {
+                                      defaultField: {
+                                        type: FieldTypes.NESTED,
+                                        options: {
+                                          fields: {
+                                            title: {
+                                              type: FieldTypes.TEXT,
+                                              options: {},
                                             },
                                           },
-                                        ],
+                                          validators: [
+                                            {
+                                              type: ValidatorTypes.REQUIRED,
+                                              options: {
+                                                field: "title",
+                                              },
+                                            },
+                                          ],
+                                        },
                                       },
                                     },
                                   },
@@ -377,12 +397,12 @@ describe("Global tests", () => {
             },
           },
         },
-      },
-    }).extend({ adapterClass: adapter });
+      };
+    }.extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           obj: {
             arr: [
               {
@@ -412,7 +432,7 @@ describe("Global tests", () => {
             ],
           },
         }),
-        new model({
+        model.fromDoc({
           obj: {
             arr: [
               {
@@ -447,7 +467,7 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           obj: {
             arr: [
               {
@@ -477,7 +497,7 @@ describe("Global tests", () => {
             ],
           },
         }),
-        new model({
+        model.fromDoc({
           obj: {
             arr: [
               {
@@ -513,42 +533,45 @@ describe("Global tests", () => {
 
   it("should detect unique fields on nested field in array with multiple documents", async () => {
     const adapter = mockAdapter();
-    const model = mockModel({
-      fields: {
-        obj: {
-          type: FieldTypes.NESTED,
-          options: {
-            fields: {
-              arr: {
-                type: FieldTypes.ARRAY,
-                options: {
-                  items: {
-                    type: FieldTypes.NESTED,
-                    options: {
-                      defaultField: {
-                        type: FieldTypes.NESTED,
-                        options: {
-                          fields: {
-                            nestedArr: {
-                              type: FieldTypes.ARRAY,
-                              options: {
-                                items: {
-                                  type: FieldTypes.NESTED,
-                                  options: {
-                                    fields: {
-                                      label: {
-                                        type: FieldTypes.TEXT,
-                                        options: {},
-                                      },
-                                    },
-                                    validators: [
-                                      {
-                                        type: ValidatorTypes.UNIQUE,
-                                        options: {
-                                          field: "label",
+    const model = class extends Model {
+      static slug = generateRandomString();
+      static definition = {
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                arr: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.NESTED,
+                      options: {
+                        defaultField: {
+                          type: FieldTypes.NESTED,
+                          options: {
+                            fields: {
+                              nestedArr: {
+                                type: FieldTypes.ARRAY,
+                                options: {
+                                  items: {
+                                    type: FieldTypes.NESTED,
+                                    options: {
+                                      fields: {
+                                        label: {
+                                          type: FieldTypes.TEXT,
+                                          options: {},
                                         },
                                       },
-                                    ],
+                                      validators: [
+                                        {
+                                          type: ValidatorTypes.UNIQUE,
+                                          options: {
+                                            field: "label",
+                                          },
+                                        },
+                                      ],
+                                    },
                                   },
                                 },
                               },
@@ -563,12 +586,12 @@ describe("Global tests", () => {
             },
           },
         },
-      },
-    }).extend({ adapterClass: adapter });
+      };
+    }.extend({ adapterClass: adapter });
 
     await expect(
       model.validate([
-        new model({
+        model.fromDoc({
           obj: {
             arr: [
               {
@@ -582,7 +605,7 @@ describe("Global tests", () => {
             ],
           },
         }),
-        new model({
+        model.fromDoc({
           obj: {
             arr: [
               {
@@ -693,7 +716,7 @@ describe("Global tests", () => {
 
   //   await expect(
   //     model.validate([
-  //       new model({
+  //       model.fromDoc({
   //         obj: {
   //           arr: [
   //             {
@@ -707,7 +730,7 @@ describe("Global tests", () => {
   //           ],
   //         },
   //       }),
-  //       new model({
+  //       model.fromDoc({
   //         obj: {
   //           arr: [
   //             {
@@ -767,7 +790,7 @@ describe("Global tests", () => {
             },
             validators: [
               {
-                type: "required",
+                type: ValidatorTypes.REQUIRED,
                 options: { field: "title" },
               },
             ],
@@ -796,7 +819,7 @@ describe("Global tests", () => {
             },
             validators: [
               {
-                type: "required",
+                type: ValidatorTypes.REQUIRED,
                 options: { field: "title" },
               },
             ],
@@ -887,12 +910,17 @@ describe("Global tests", () => {
       },
     });
 
-    const model = Model.getClass<
-      typeof Model<{
-        title: FieldDefinitionText;
-      }>
-    >(dm);
-    const i = await model.create({
+    const model = Model.getClass(dm);
+    const i = await model.create<{
+      fields: {
+        title: {
+          type: FieldTypes.TEXT;
+          options: {
+            default: string;
+          };
+        };
+      };
+    }>({
       title: undefined,
     });
 

@@ -42,7 +42,7 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validate(docs: Array<ModelInstance>, model: typeof Model, ctx: TransactionCtx) {
+  async validate(list: ModelInstance[], model: typeof Model, ctx: TransactionCtx) {
     return false;
   }
 

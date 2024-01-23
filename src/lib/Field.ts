@@ -1,6 +1,12 @@
 import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
-import { CoreSerializerCtx, FieldDefinition, FieldOptions, JSONSubtype } from "@/types";
+import {
+  CoreSerializerCtx,
+  FieldDefinition,
+  JSONSubtype,
+  FieldOptions,
+  ModelInstance,
+} from "@/types";
 import { getDefaultFieldOptions } from "@/lib/utils";
 
 class Field<T extends FieldTypes = FieldTypes> {
@@ -37,14 +43,14 @@ class Field<T extends FieldTypes = FieldTypes> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validate(list: Array<Model>, model: typeof Model, ctx?: TransactionCtx) {
+  async validate(list: Array<ModelInstance>, model: typeof Model, ctx?: TransactionCtx) {
     return true;
   }
 
   serialize(
     value: JSONSubtype,
     format: string,
-    from: Model,
+    from: ModelInstance,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ctx: SerializerCtx & CoreSerializerCtx = {},
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

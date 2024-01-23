@@ -1,16 +1,22 @@
 import Model from "@/lib/Model";
 import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
-import { fieldDecorator } from "@/lib/fieldDecorator";
 import FieldTypes from "@/enums/field-types";
 import ValidatorTypes from "@/enums/validator-types";
-import { ModelDefinition } from "@/types";
 import Patterns from "@/enums/patterns";
+import { ModelDefinition } from "@/types";
 
 @modelDecorator()
 class User extends Model {
   static __name = "User";
-  static definition: ModelDefinition = {
+  static definition = {
+    fields: {
+      firstname: { type: FieldTypes.TEXT },
+      lastname: { type: FieldTypes.TEXT },
+      email: { type: FieldTypes.TEXT },
+      password: { type: FieldTypes.TEXT },
+      pendingEmail: { type: FieldTypes.TEXT },
+    },
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "firstname" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "lastname" } },
@@ -19,25 +25,10 @@ class User extends Model {
       { type: ValidatorTypes.UNIQUE, options: { field: "email" } },
       { type: ValidatorTypes.REGEX, options: { field: "email", pattern: Patterns.EMAIL } },
     ],
-  };
+  } satisfies ModelDefinition;
 
-  static slug = "users";
+  static slug = "users" as const;
   static scope = ModelEnvScopes.GLOBAL;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  firstname: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  lastname: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  email: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  password: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  pendingEmail: FieldDefinitionText;
 }
 
 export default User;

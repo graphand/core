@@ -5,7 +5,7 @@ import Model from "@/lib/Model";
 import Adapter from "@/lib/Adapter";
 import { getFieldFromDefinition, getNestedFieldsMap, isObjectId } from "@/lib/utils";
 import CoreError from "@/lib/CoreError";
-import { FieldOptions, JSONSubtype } from "@/types";
+import { FieldDefinition, FieldOptions, JSONSubtype, ModelInstance } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
 import PromiseModel from "@/lib/PromiseModel";
 import ModelList from "@/lib/ModelList";
@@ -36,7 +36,7 @@ class DefaultFieldDate extends Field<FieldTypes.DATE> {
 }
 
 class DefaultFieldText extends Field<FieldTypes.TEXT> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const _isInvalid = (value: JSONSubtype) => {
       if (value === null || value === undefined) {
         return false;
@@ -77,7 +77,7 @@ class DefaultFieldText extends Field<FieldTypes.TEXT> {
 class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
   nextFieldEqObject = false;
 
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const _isInvalid = (value: JSONSubtype) => {
       if (value === null || value === undefined) {
         return false;
@@ -91,15 +91,20 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     return !values.some(_isInvalid);
   }
 
-  _serializeJSON = (value: JSONSubtype, format: string, from: Model, ctx: SerializerCtx = {}) => {
+  _serializeJSON = (
+    value: JSONSubtype,
+    format: string,
+    from: ModelInstance,
+    ctx: SerializerCtx = {},
+  ) => {
     if (!value) {
       return null;
     }
 
     let id: string;
 
-    if (value instanceof Model) {
-      id = value._id;
+    if (typeof value === "object" && "_id" in value) {
+      id = String(value._id);
     } else if (value instanceof PromiseModel && typeof value.query === "string") {
       id = value.query;
     } else {
@@ -112,7 +117,12 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     return fieldId.serialize(id, format, from, ctx);
   };
 
-  _serializeObject = (value: JSONSubtype, format: string, from: Model, ctx: SerializerCtx = {}) => {
+  _serializeObject = (
+    value: JSONSubtype,
+    format: string,
+    from: ModelInstance,
+    ctx: SerializerCtx = {},
+  ) => {
     const adapter = from.model.getAdapter();
 
     // get the referenced model with the same adapter as from parameter
@@ -129,7 +139,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
     return model.get(_id, ctx?.transactionCtx);
   };
 
-  serialize(value: JSONSubtype, format: string, from: Model, ctx: SerializerCtx = {}) {
+  serialize(value: JSONSubtype, format: string, from: ModelInstance, ctx: SerializerCtx = {}) {
     if (
       [
         SerializerFormat.JSON,
@@ -146,7 +156,7 @@ class DefaultFieldRelation extends Field<FieldTypes.RELATION> {
 }
 
 class DefaultFieldNested extends Field<FieldTypes.NESTED> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const _isInvalid = (value: JSONSubtype) => {
       if (value === null || value === undefined) {
         return false;
@@ -159,7 +169,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
     return !values.some(_isInvalid);
   }
 
-  serialize(value: JSONSubtype, format: string, from: Model, ctx: SerializerCtx = {}) {
+  serialize(value: JSONSubtype, format: string, from: ModelInstance, ctx: SerializerCtx = {}) {
     value = Array.isArray(value) ? value[0] : value;
     const oFormat = ctx.outputFormat || format;
 
@@ -265,7 +275,7 @@ class DefaultFieldNested extends Field<FieldTypes.NESTED> {
 }
 
 class DefaultFieldIdentity extends Field<FieldTypes.IDENTITY> {
-  async validate(list: Array<Model>) {
+  async validate(list: Array<ModelInstance>) {
     const _isInvalid = (value: JSONSubtype) => {
       if (value === null || value === undefined) {
         return false;
@@ -289,7 +299,7 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     options: FieldOptions<FieldTypes.RELATION>,
     value: JSONSubtype,
     format: string,
-    from: Model,
+    from: ModelInstance,
     ctx: SerializerCtx = {},
   ) {
     const adapter = from.model.getAdapter();
@@ -335,9 +345,10 @@ class DefaultFieldArray extends Field<FieldTypes.ARRAY> {
     return arrVal.map(id => fieldId.serialize(id, format, from, ctx));
   }
 
-  serialize(value: JSONSubtype, format: string, from: Model, ctx: SerializerCtx = {}) {
+  serialize(value: JSONSubtype, format: string, from: ModelInstance, ctx: SerializerCtx = {}) {
     if (this.options.items?.type === FieldTypes.RELATION) {
-      return this._serializeRelationArray(this.options.items?.options, value, format, from, ctx);
+      const itemsField = this.options.items as FieldDefinition<FieldTypes.RELATION>;
+      return this._serializeRelationArray(itemsField?.options, value, format, from, ctx);
     }
 
     const adapter = from.model.getAdapter();

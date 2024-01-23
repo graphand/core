@@ -13,8 +13,7 @@
     "build": "webpack",
     "build:watch": "webpack --watch",
     "test": "jest",
-    "lint": "eslint src/**/*.ts",
-    "format": "eslint src/**/*.ts --fix"
+    "lint": "eslint src/*.ts src/**/*.ts"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
@@ -29,7 +28,7 @@
     "ts-loader": "^9.4.2",
     "ts-patch": "^3.1.2",
     "tsconfig-paths-webpack-plugin": "^4.1.0",
-    "typescript": "^5.0.2",
+    "typescript": "^5.3.3",
     "typescript-transform-paths": "^3.4.6",
     "webpack": "^5.76.2",
     "webpack-cli": "^5.0.1"

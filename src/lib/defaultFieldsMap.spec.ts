@@ -30,7 +30,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({});
+      const i = model.fromDoc({});
       expect(i.title).toEqual(defaultText);
     });
 
@@ -46,7 +46,7 @@ describe("test fieldsMap", () => {
 
       const title = faker.lorem.word();
 
-      const i = new model({ title });
+      const i = model.fromDoc({ title });
       expect(i.title).toEqual(title);
     });
 
@@ -62,7 +62,7 @@ describe("test fieldsMap", () => {
 
       const titleArray = [faker.lorem.word(), faker.lorem.word()];
 
-      const i = new model({ title: titleArray });
+      const i = model.fromDoc({ title: titleArray } as object);
       expect(typeof i.title).toBe("string");
     });
 
@@ -76,7 +76,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({ title: String(new ObjectId()) });
+      const i = model.fromDoc({ title: String(new ObjectId()) });
 
       await expect(model.validate([i])).rejects.toThrow(ValidationError);
     });
@@ -99,7 +99,7 @@ describe("test fieldsMap", () => {
 
         const title = options[0];
 
-        const i = new model({ title });
+        const i = model.fromDoc({ title });
         expect(i.title).toEqual(title);
       });
 
@@ -120,7 +120,7 @@ describe("test fieldsMap", () => {
 
         const title = "notInOptions";
 
-        const i = new model({ title });
+        const i = model.fromDoc({ title });
         expect(i.title).toEqual(title);
       });
 
@@ -142,7 +142,7 @@ describe("test fieldsMap", () => {
 
         const title = options[0];
 
-        const i = new model({ title });
+        const i = model.fromDoc({ title });
         expect(i.title).toEqual(title);
       });
 
@@ -164,7 +164,7 @@ describe("test fieldsMap", () => {
 
         const title = "notInOptions";
 
-        const i = new model({ title });
+        const i = model.fromDoc({ title });
         expect(i.title).toEqual(undefined);
       });
 
@@ -186,7 +186,7 @@ describe("test fieldsMap", () => {
 
         const title = options[0];
 
-        const i = new model({ title });
+        const i = model.fromDoc({ title });
         await expect(model.validate([i])).resolves.toBeTruthy();
       });
 
@@ -208,7 +208,7 @@ describe("test fieldsMap", () => {
 
         const title = "notInOptions";
 
-        const i = new model({ title });
+        const i = model.fromDoc({ title });
         await expect(model.validate([i])).rejects.toThrow(ValidationError);
       });
     });
@@ -230,7 +230,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({});
+      const i = model.fromDoc({});
       expect(i.obj).toEqual(defaultJSON);
     });
 
@@ -246,7 +246,7 @@ describe("test fieldsMap", () => {
 
       const obj = { title: faker.lorem.word() };
 
-      const i = new model({ obj });
+      const i = model.fromDoc({ obj });
       expect(i.obj).toBeInstanceOf(Object);
     });
 
@@ -262,7 +262,7 @@ describe("test fieldsMap", () => {
 
       const obj = [{ title: faker.lorem.word() }, { title: faker.lorem.word() }];
 
-      const i = new model({ obj });
+      const i = model.fromDoc({ obj });
       expect(i.obj).toBeInstanceOf(Object);
       expect(Array.isArray(i.obj)).toBeFalsy();
     });
@@ -296,7 +296,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({});
+      const i = model.fromDoc({});
 
       expect(i.get("obj")).toEqual({ test: 1 });
       expect(i.get("obj", SerializerFormat.DOCUMENT)).toEqual(undefined);
@@ -322,7 +322,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({
+      const i = model.fromDoc({
         obj: {},
       });
 
@@ -348,7 +348,7 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const i = new model({
+        const i = model.fromDoc({
           obj: {},
         });
 
@@ -398,7 +398,7 @@ describe("test fieldsMap", () => {
         expect(serializeText).not.toHaveBeenCalled();
         expect(serializeNumber).not.toHaveBeenCalled();
 
-        const i = new model({
+        const i = model.fromDoc({
           obj: {
             title: "test",
             value: 123,
@@ -464,7 +464,7 @@ describe("test fieldsMap", () => {
         expect(serializeText).not.toHaveBeenCalled();
         expect(serializeNumber).not.toHaveBeenCalled();
 
-        const i = new model({
+        const i = model.fromDoc({
           obj: {
             subObj: {
               title: "test",
@@ -531,7 +531,7 @@ describe("test fieldsMap", () => {
         expect(serializeText).not.toHaveBeenCalled();
         expect(serializeNumber).not.toHaveBeenCalled();
 
-        const i = new model({
+        const i = model.fromDoc({
           arr: [
             {
               title: "test",
@@ -573,10 +573,14 @@ describe("test fieldsMap", () => {
           fieldNotDefined: faker.lorem.word(),
         };
 
-        const i = new model({ obj });
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.title).toEqual(obj.title);
-        expect(i.obj.fieldNotDefined).toBe(undefined);
+        const i = model.fromDoc({ obj });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const _obj = i.obj as any;
+
+        expect(_obj).toBeInstanceOf(Object);
+        expect(_obj.title).toEqual(obj.title);
+        expect(_obj.fieldNotDefined).toBe(undefined);
       });
     });
 
@@ -615,7 +619,7 @@ describe("test fieldsMap", () => {
           title: faker.lorem.word(),
         };
 
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
         expect(i.obj).toBeInstanceOf(Object);
         expect(i.obj.title).toEqual(serializedText);
       });
@@ -651,7 +655,7 @@ describe("test fieldsMap", () => {
 
         const obj = { title: faker.lorem.word() };
 
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
 
         expect(testValidator).toBeCalledTimes(0);
 
@@ -705,7 +709,7 @@ describe("test fieldsMap", () => {
           },
         };
 
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
         expect(i.obj).toBeInstanceOf(Object);
         expect(i.obj.nested).toBeInstanceOf(Object);
         expect(i.obj.nested.title).toEqual(serializedText);
@@ -759,7 +763,7 @@ describe("test fieldsMap", () => {
           },
         };
 
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
 
         try {
           await model.validate([i]);
@@ -802,7 +806,7 @@ describe("test fieldsMap", () => {
 
         const obj = {};
 
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
 
         expect(testValidate).toBeCalledTimes(0);
 
@@ -840,7 +844,7 @@ describe("test fieldsMap", () => {
         await model.initialize();
 
         const obj = {};
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
 
         expect.assertions(1);
 
@@ -889,7 +893,7 @@ describe("test fieldsMap", () => {
 
         const obj = {};
 
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
 
         expect(testValidate).toBeCalledTimes(0);
 
@@ -936,7 +940,7 @@ describe("test fieldsMap", () => {
 
         const obj = { nested: {} };
 
-        const i = new model({ obj });
+        const i = model.fromDoc({ obj });
 
         expect(testValidate).toBeCalledTimes(0);
 
@@ -975,10 +979,13 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const i = new model({ obj: { title: "test" } });
+        const i = model.fromDoc({ obj: { title: "test" } });
 
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.title).toEqual(serializedText);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const obj = i.obj as any;
+
+        expect(obj).toBeInstanceOf(Object);
+        expect(obj.title).toEqual(serializedText);
       });
 
       it("should use defaultField by default to serialize in json", async () => {
@@ -1006,20 +1013,15 @@ describe("test fieldsMap", () => {
               },
             },
           },
-        }).extend<
-          typeof Model<{
-            obj: FieldDefinitionNested<{
-              title: FieldDefinitionText;
-            }>;
-          }>
-        >({ adapterClass: _adapter });
+        }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const i = new model({ obj: { title: "test" } });
+        const i = model.fromDoc({ obj: { title: "test" } });
 
         const json = i.toJSON();
 
         expect(json.obj).toBeInstanceOf(Object);
+        // @ts-expect-error - We know that obj is an object
         expect(json.obj.title).toEqual(serializedText);
       });
 
@@ -1057,11 +1059,14 @@ describe("test fieldsMap", () => {
         await model.initialize();
 
         const fakerNumber = parseFloat(faker.random.numeric());
-        const i = new model({ obj: { title: "test", test: fakerNumber } });
+        const i = model.fromDoc({ obj: { title: "test", test: fakerNumber } } as object);
 
-        expect(i.obj).toBeInstanceOf(Object);
-        expect(i.obj.title).toEqual(serializedText);
-        expect(i.obj.test).toEqual(fakerNumber);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const obj = i.obj as any;
+
+        expect(obj).toBeInstanceOf(Object);
+        expect(obj.title).toEqual(serializedText);
+        expect(obj.test).toEqual(fakerNumber);
       });
 
       it("should use defaultField by default to validate", async () => {
@@ -1097,9 +1102,9 @@ describe("test fieldsMap", () => {
         await model.initialize();
 
         const fakeNumber = faker.random.numeric();
-        const i = new model({
+        const i = model.fromDoc({
           obj: { title: "test", title2: "test2", test: fakeNumber },
-        });
+        } as object);
 
         expect(i.obj).toBeInstanceOf(Object);
         expect(testValidator).toBeCalledTimes(0);
@@ -1112,10 +1117,10 @@ describe("test fieldsMap", () => {
 
     describe("consistency", () => {
       const _testConsistency = (model: typeof Model, obj: JSONType, f = "obj") => {
-        const i = new model({ [f]: obj });
+        const i = model.fromDoc({ [f]: obj });
 
         const obj1 = i.get(f, SerializerFormat.JSON);
-        const obj2 = new model({ [f]: obj1 }).get(f, SerializerFormat.JSON);
+        const obj2 = model.fromDoc({ [f]: obj1 }).get(f, SerializerFormat.JSON);
 
         expect(obj1).toEqual(obj2);
       };
@@ -1405,7 +1410,7 @@ describe("test fieldsMap", () => {
       await model.initialize();
 
       const _id = String(new ObjectId());
-      const i = new model({ rel: _id });
+      const i = model.fromDoc({ rel: _id });
 
       expect(i.rel).toBeInstanceOf(PromiseModel);
       expect(i.rel.model?.getBaseClass()).toBe(models.Account);
@@ -1425,7 +1430,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({ rel: null });
+      const i = model.fromDoc({ rel: null });
 
       expect(i.rel).toBe(null);
     });
@@ -1443,7 +1448,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({ rel: "invalid" });
+      const i = model.fromDoc({ rel: "invalid" });
 
       expect(i.rel).toBe(null);
     });
@@ -1462,7 +1467,7 @@ describe("test fieldsMap", () => {
       await model.initialize();
 
       const _id = String(new ObjectId());
-      const i = new model({ rel: _id });
+      const i = model.fromDoc({ rel: _id });
 
       expect(i.get("rel", SerializerFormat.JSON)).toEqual(_id);
     });
@@ -1548,10 +1553,10 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({
+      const i = model.fromDoc({
         arrTextWithOpts: ["invalid1", options[1], "invalid2"],
         arrNumbers: ["1", "2", "3"],
-      });
+      } as object);
 
       expect(i.arrTextWithOpts).toEqual([undefined, options[1], undefined]);
       expect(i.arrNumbers).toEqual([1, 2, 3]);
@@ -1575,7 +1580,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({
+      const i = model.fromDoc({
         arrRel: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
       });
 
@@ -1604,7 +1609,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({
+      const i = model.fromDoc({
         arrRel: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
       });
 
@@ -1629,7 +1634,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({
+      const i = model.fromDoc({
         arrJson: [{ test: "test" }, { test2: "test2" }],
       });
 
@@ -1652,9 +1657,9 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({
+      const i = model.fromDoc({
         arrJson: { test: "test" },
-      });
+      } as object);
 
       expect(i.arrJson).toBeInstanceOf(Array);
       expect(i.arrJson).toEqual([{ test: "test" }]);
@@ -1683,14 +1688,14 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = new model({
+      const i = model.fromDoc({
         arrJson: [
           { title: 1, test: "1" },
           { title: 2, test: "2" },
           "invalid",
           { title: 3, test: "3" },
         ],
-      });
+      } as object);
 
       expect(i.get("arrJson.[0].title")).toEqual("1");
       expect(i.get("arrJson.[0].test")).toBe(undefined);
@@ -1726,7 +1731,7 @@ describe("test fieldsMap", () => {
 
       const ids = Array.from({ length: 3 }, () => new ObjectId().toString());
 
-      const i = new model({
+      const i = model.fromDoc({
         arrRel: ids,
       });
 

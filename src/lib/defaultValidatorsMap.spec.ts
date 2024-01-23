@@ -718,10 +718,10 @@ describe("test validatorsMap", () => {
       const model = await _mockModelWithRegexValidator();
 
       await expect(model.create({})).resolves.toBeInstanceOf(model);
-      await expect(model.create({ title: -10 })).resolves.toBeInstanceOf(model);
-      await expect(model.create({ title: 100 })).resolves.toBeInstanceOf(model);
-      await expect(model.create({ title: 0 })).resolves.toBeInstanceOf(model);
-      await expect(model.create({ title: 0.1 })).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: "-10" })).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: "100" })).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: "0" })).resolves.toBeInstanceOf(model);
+      await expect(model.create({ title: "0.1" })).resolves.toBeInstanceOf(model);
     });
 
     describe("min", () => {

@@ -1,17 +1,47 @@
 import Model from "@/lib/Model";
 import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
-import { fieldDecorator } from "@/lib/fieldDecorator";
 import FieldTypes from "@/enums/field-types";
-import { AdapterFetcher, HookPhase, ModelDefinition } from "@/types";
 import ValidatorTypes from "@/enums/validator-types";
+import { ModelDefinition } from "@/types";
 
 @modelDecorator()
 class Sockethook extends Model {
   static __name = "Sockethook";
-  static slug = "sockethooks";
-  static definition: ModelDefinition = {
+  static slug = "sockethooks" as const;
+  static definition = {
     keyField: "name",
+    fields: {
+      name: { type: FieldTypes.TEXT },
+      on: { type: FieldTypes.TEXT },
+      phase: {
+        type: FieldTypes.TEXT,
+        options: {
+          options: ["before", "after"],
+          strict: true,
+        },
+      },
+      action: {
+        type: FieldTypes.TEXT,
+        options: {
+          options: [
+            "count",
+            "get",
+            "getList",
+            "createOne",
+            "createMultiple",
+            "updateOne",
+            "updateMultiple",
+            "deleteOne",
+            "deleteMultiple",
+            "initialize",
+          ],
+          strict: true,
+        },
+      },
+      blocking: { type: FieldTypes.BOOLEAN },
+      order: { type: FieldTypes.NUMBER, options: { default: 0 } },
+    },
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "on" } },
       { type: ValidatorTypes.REQUIRED, options: { field: "phase" } },
@@ -21,44 +51,9 @@ class Sockethook extends Model {
         options: { field: "order", min: 0 },
       },
     ],
-  };
+  } satisfies ModelDefinition;
 
   static scope = ModelEnvScopes.ENV;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  name: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.TEXT)
-  on: FieldDefinitionText;
-
-  @fieldDecorator(FieldTypes.TEXT, {
-    options: ["before", "after"],
-    strict: true,
-  })
-  phase: HookPhase;
-
-  @fieldDecorator(FieldTypes.TEXT, {
-    options: [
-      "count",
-      "get",
-      "getList",
-      "createOne",
-      "createMultiple",
-      "updateOne",
-      "updateMultiple",
-      "deleteOne",
-      "deleteMultiple",
-      "initialize",
-    ],
-    strict: true,
-  })
-  action: keyof AdapterFetcher;
-
-  @fieldDecorator(FieldTypes.BOOLEAN)
-  blocking: FieldDefinitionBoolean;
-
-  @fieldDecorator(FieldTypes.NUMBER, { default: 0 })
-  order: FieldDefinitionNumber;
 }
 
 export default Sockethook;
