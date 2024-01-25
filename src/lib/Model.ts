@@ -393,23 +393,16 @@ class Model {
     bindCtx: Partial<SerializerCtx> = {},
     value?: JSONSubtype,
   ) {
-    let fieldsPaths: Array<FieldsPathItem>;
-
     const ctx: SerializerCtx = { ...bindCtx, outputFormat: format };
     const model = this.model();
+    let fieldsPaths: Array<FieldsPathItem>;
 
     if (path.includes(".")) {
       const pathArr = path.split(".");
-      fieldsPaths = getFieldsPathsFromPath(this.model(), [...pathArr]);
+      fieldsPaths = getFieldsPathsFromPath(this.model(), pathArr);
     } else {
-      const field = model.fieldsMap.get(path);
-      if (field) {
-        fieldsPaths = [
-          {
-            field,
-            key: path,
-          },
-        ];
+      if (model.fieldsMap.has(path)) {
+        fieldsPaths = [{ field: model.fieldsMap.get(path), key: path }];
       }
     }
 
@@ -437,22 +430,22 @@ class Model {
 
     if (fieldsPaths.length === 1) {
       return firstField.serialize(value, format, from, ctx);
-    } else {
-      const noFieldSymbol = Symbol("noField");
-
-      const _value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, from, ctx);
-
-      const res = _getter({
-        value: _value,
-        fieldsPaths: fieldsPaths.splice(1),
-        format,
-        ctx,
-        noFieldSymbol,
-        from,
-      });
-
-      return res === noFieldSymbol ? undefined : res;
     }
+
+    const noFieldSymbol = Symbol("noField");
+
+    const _value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, from, ctx);
+
+    const res = _getter({
+      value: _value,
+      fieldsPaths: fieldsPaths.splice(1),
+      format,
+      ctx,
+      noFieldSymbol,
+      from,
+    });
+
+    return res === noFieldSymbol ? undefined : res;
   }
 
   /**

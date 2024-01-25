@@ -454,8 +454,11 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
 
   // const cacheKey = path;
 
-  // if (adapter?.cacheFieldsMap?.has(cacheKey)) {
-  //   return adapter.cacheFieldsMap.get(cacheKey);
+  // if (adapter) {
+  //   adapter.cacheFieldsMap ??= new Map();
+  //   if (adapter?.cacheFieldsMap?.has(cacheKey)) {
+  //     return adapter.cacheFieldsMap.get(cacheKey) as unknown as Field<T>;
+  //   }
   // }
 
   const FieldClass = getFieldClass(def.type, adapter) as typeof Field<T>;
@@ -464,7 +467,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
 
   // if (adapter) {
   //   adapter.cacheFieldsMap ??= new Map();
-  //   adapter.cacheFieldsMap.set(cacheKey, field);
+  //   adapter.cacheFieldsMap.set(cacheKey, field as unknown as Field);
   // }
 
   return field;

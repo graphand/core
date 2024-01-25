@@ -6,6 +6,7 @@ import {
   FieldOptions,
   ModelInstance,
   FieldTypeMap,
+  InferFieldType,
 } from "@/types";
 import SerializerFormat from "@/enums/serializer-format";
 
@@ -45,19 +46,19 @@ class Field<T extends FieldTypes = FieldTypes> {
     value: unknown;
     from: ModelInstance;
     ctx: SerializerCtx & CoreSerializerCtx;
-  }) => FieldTypeMap<FieldDefinition<T>>[T][SerializerFormat.JSON];
+  }) => InferFieldType<FieldDefinition<T>, SerializerFormat.JSON>;
 
   sObject?: (input: {
     value: unknown;
     from: ModelInstance;
     ctx: SerializerCtx & CoreSerializerCtx;
-  }) => FieldTypeMap<FieldDefinition<T>>[T][SerializerFormat.OBJECT];
+  }) => InferFieldType<FieldDefinition<T>, SerializerFormat.OBJECT>;
 
   sDocument?: (input: {
     value: unknown;
     from: ModelInstance;
     ctx: SerializerCtx & CoreSerializerCtx;
-  }) => FieldTypeMap<FieldDefinition<T>>[T][SerializerFormat.DOCUMENT];
+  }) => InferFieldType<FieldDefinition<T>, SerializerFormat.DOCUMENT>;
 
   sTo: (input: {
     value: unknown;
