@@ -1021,7 +1021,6 @@ describe("test fieldsMap", () => {
         const json = i.toJSON();
 
         expect(json.obj).toBeInstanceOf(Object);
-        // @ts-expect-error - We know that obj is an object
         expect(json.obj.title).toEqual(serializedText);
       });
 
@@ -1074,6 +1073,7 @@ describe("test fieldsMap", () => {
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
           validate = testValidator;
+          sTo = ({ value }) => value;
         }
 
         const _adapter = mockAdapter({

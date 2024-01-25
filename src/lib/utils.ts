@@ -183,7 +183,7 @@ export const getRecursiveHooksFromModel = <
  */
 export const getNestedFieldsMap = (model: typeof Model, nestedField: Field<FieldTypes.NESTED>) => {
   const adapter = model.getAdapter();
-  const map = new Map();
+  const map = new Map<string, Field>();
 
   Object.entries(nestedField.options.fields ?? {}).forEach(([slug, def]) => {
     const field = getFieldFromDefinition(def, adapter, nestedField.path + "." + slug);
@@ -399,6 +399,7 @@ export const getFieldClass = <T extends FieldTypes>(
     FieldClass = Field;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return FieldClass;
 };
 
@@ -446,7 +447,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
   def: FieldDefinition<T>,
   adapter: Adapter,
   path: string,
-) => {
+): Field<T> => {
   if (!def || typeof def !== "object") {
     return null;
   }
@@ -509,17 +510,6 @@ export const getValidatorFromDefinition = <T extends ValidatorTypes>(
 };
 
 /**
- * The function `getDefaultFieldOptions` returns the default options for a given field type.
- * @param {T} type - The `type` parameter is a generic type `T` that extends `FieldTypes`. It is used
- * to specify the type of field for which the default options are being retrieved.
- * @returns An empty object of type `FieldOptions<T>`.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getDefaultFieldOptions = <T extends FieldTypes>(type: T): FieldOptions<T> => {
-  return {} as FieldOptions<T>;
-};
-
-/**
  * The function `getDefaultValidatorOptions` returns default options based on the provided validator
  * type.
  * @param {T} type - The `type` parameter is a generic type `T` that extends `ValidatorTypes`. It is
@@ -544,7 +534,7 @@ export const getDefaultValidatorOptions = <T extends ValidatorTypes>(
   }
 };
 
-export const isObjectId = (input: JSONSubtype) => /^[a-f\d]{24}$/i.test(String(input));
+export const isObjectId = (input: unknown) => /^[a-f\d]{24}$/i.test(String(input));
 
 /**
  * The function `defineFieldsProperties` defines properties on an instance object based on the fields
@@ -554,9 +544,7 @@ export const isObjectId = (input: JSONSubtype) => /^[a-f\d]{24}$/i.test(String(i
  * `defineFieldsProperties` does not return anything.
  */
 export const defineFieldsProperties = (instance: Model) => {
-  const { model } = instance;
-
-  Object.defineProperties(instance, model.fieldsProperties);
+  Object.defineProperties(instance, instance.model().fieldsProperties);
 };
 
 const _pathReplace = (field: Field, p, fp) => {
@@ -588,11 +576,11 @@ const _pathReplace = (field: Field, p, fp) => {
  * in the `_value` object.
  */
 export const _getter = (opts: {
-  value?: JSONSubtype;
+  value?: unknown;
   fieldsPaths: Array<{ key: string; field: Field }>;
   lastField?: Field;
   noFieldSymbol: symbol;
-  format: string;
+  format: SerializerFormat;
   ctx: SerializerCtx;
   from: ModelInstance;
 }) => {
@@ -625,7 +613,7 @@ export const _getter = (opts: {
       }
 
       if (matchIndex[1] === undefined) {
-        const adapter = from.model.getAdapter();
+        const adapter = from.model().getAdapter();
 
         return value.map((v, fi) => {
           const thisPath = field.path.replace(/\[\]$/, `[${fi}]`);
@@ -804,9 +792,12 @@ async function validateFields<T extends typeof Model>(opts: {
     const { type, path } = field;
 
     try {
-      const validated = await field.validate(on as Array<ModelInstance>, model, ctx);
-      if (!validated) {
-        throw null;
+      // Validate method could be not implemented on Field class
+      if (field.validate) {
+        const validated = await field.validate({ list: on as Array<ModelInstance>, model, ctx });
+        if (!validated) {
+          throw null;
+        }
       }
 
       if (type === FieldTypes.NESTED) {
@@ -967,7 +958,11 @@ async function validateValidators<T extends typeof Model>({
   await Promise.all(
     validators.map(async ([validator, on]) => {
       try {
-        const validated = await validator.validate(on, model, ctx);
+        const validated = await validator.validate({
+          list: on,
+          model,
+          ctx,
+        });
         if (!validated) {
           throw null;
         }

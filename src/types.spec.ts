@@ -235,7 +235,7 @@ describe("test types", () => {
                   type: FieldTypes.DATE,
                 },
               },
-            } as const satisfies ModelDefinition;
+            } satisfies ModelDefinition;
           }
 
           const i = CustomModel.fromDoc();
@@ -245,6 +245,57 @@ describe("test types", () => {
           const json = i.toJSON();
 
           simulateTypeCheck<string>(json.field); // Check the field is a string
+          simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
+        });
+      });
+
+      describe("relation field", () => {
+        it("should validate relation field", () => {
+          class CustomModel extends Model {
+            static definition = {
+              fields: {
+                field: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: "accounts" as const,
+                  },
+                },
+              },
+            } satisfies ModelDefinition;
+          }
+
+          const i = CustomModel.fromDoc();
+
+          simulateTypeCheck<PromiseModel<typeof Account>>(i.field);
+
+          const json = i.toJSON();
+
+          simulateTypeCheck<string>(json.field);
+        });
+      });
+
+      describe("array field", () => {
+        it("should validate array of relation", () => {
+          class CustomModel extends Model {
+            static definition = {
+              fields: {
+                field: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: { type: FieldTypes.TEXT },
+                  },
+                },
+              },
+            } satisfies ModelDefinition;
+          }
+
+          const i = CustomModel.fromDoc();
+
+          simulateTypeCheck<string[]>(i.field); // Check the field is a string[]
+
+          const json = i.toJSON();
+
+          simulateTypeCheck<string[]>(json.field); // Check the field is a string[]
           simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
         });
       });

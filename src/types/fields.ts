@@ -4,6 +4,7 @@ import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
+import { SerializerFormat } from "..";
 
 export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.ARRAY]: {
@@ -48,6 +49,100 @@ type SystemFields = {
   _createdBy: { type: FieldTypes.IDENTITY };
   _updatedAt: { type: FieldTypes.DATE };
   _updatedBy: { type: FieldTypes.IDENTITY };
+};
+
+export type FieldTypeMap<F extends FieldDefinition<FieldTypes>> = {
+  [FieldTypes.ID]: {
+    [SerializerFormat.JSON]: string;
+    [SerializerFormat.OBJECT]: IdType;
+    [SerializerFormat.DOCUMENT]: IdType;
+  };
+  [FieldTypes.IDENTITY]: {
+    [SerializerFormat.JSON]: string;
+    [SerializerFormat.OBJECT]: string;
+    [SerializerFormat.DOCUMENT]: string;
+  };
+  [FieldTypes.BOOLEAN]: {
+    [SerializerFormat.JSON]: boolean;
+    [SerializerFormat.OBJECT]: boolean;
+    [SerializerFormat.DOCUMENT]: boolean;
+  };
+  [FieldTypes.NUMBER]: {
+    [SerializerFormat.JSON]: number;
+    [SerializerFormat.OBJECT]: number;
+    [SerializerFormat.DOCUMENT]: number;
+  };
+  [FieldTypes.DATE]: {
+    [SerializerFormat.JSON]: string;
+    [SerializerFormat.OBJECT]: Date;
+    [SerializerFormat.DOCUMENT]: Date;
+  };
+  [FieldTypes.TEXT]: {
+    [SerializerFormat.JSON]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
+      ? F["options"]["options"] extends Array<string>
+        ? F["options"]["strict"] extends true
+          ? F["options"]["options"][number]
+          : F["options"]["options"][number] | string
+        : string
+      : string;
+    [SerializerFormat.OBJECT]: FieldTypeMap<F>[FieldTypes.TEXT][SerializerFormat.JSON];
+    [SerializerFormat.DOCUMENT]: FieldTypeMap<F>[FieldTypes.TEXT][SerializerFormat.JSON];
+  };
+  [FieldTypes.NESTED]: {
+    [SerializerFormat.JSON]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
+      ? F["options"]["fields"] extends Record<string, FieldDefinition>
+        ? Partial<{
+            [K in keyof F["options"]["fields"]]: F["options"]["fields"][K]["type"] extends keyof ModelTypeMapJSON<
+              F["options"]["fields"][K]
+            >
+              ? ModelTypeMapJSON<F["options"]["fields"][K]>[F["options"]["fields"][K]["type"]]
+              : never;
+          }>
+        : JSONType
+      : JSONType;
+    [SerializerFormat.OBJECT]: FieldTypeMap<F>[FieldTypes.NESTED][SerializerFormat.JSON] & {
+      __isProxy: boolean;
+    };
+    [SerializerFormat.DOCUMENT]: FieldTypeMap<F>[FieldTypes.NESTED][SerializerFormat.JSON];
+  };
+  [FieldTypes.RELATION]: {
+    [SerializerFormat.JSON]: string;
+    [SerializerFormat.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.RELATION]
+      ? F["options"]["ref"] extends string
+        ? PromiseModel<DecodeRefModel<F["options"]["ref"]>>
+        : PromiseModel<typeof Model>
+      : PromiseModel<typeof Model>;
+    [SerializerFormat.DOCUMENT]: IdType;
+  };
+  [FieldTypes.ARRAY]: {
+    [SerializerFormat.JSON]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
+      ? F["options"]["items"] extends FieldDefinition
+        ? F["options"]["items"]["type"] extends keyof ModelTypeMapJSON<F>
+          ? Array<ModelTypeMapJSON<F["options"]["items"]>[F["options"]["items"]["type"]]>
+          : Array<unknown>
+        : Array<unknown>
+      : Array<unknown>;
+    [SerializerFormat.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
+      ? F["options"]["items"]["type"] extends FieldTypes.RELATION
+        ? F["options"]["items"]["options"] extends FieldOptionsMap[FieldTypes.RELATION]
+          ? PromiseModelList<DecodeRefModel<F["options"]["items"]["options"]["ref"]>>
+          : PromiseModelList<typeof Model>
+        : F["options"]["items"] extends FieldDefinition
+        ? F["options"]["items"]["type"] extends keyof ModelTypeMapObject<F>
+          ? Array<ModelTypeMapObject<F["options"]["items"]>[F["options"]["items"]["type"]]>
+          : Array<unknown>
+        : Array<unknown>
+      : Array<unknown>;
+    [SerializerFormat.DOCUMENT]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
+      ? F["options"]["items"]["type"] extends FieldTypes.RELATION
+        ? Array<IdType>
+        : F["options"]["items"] extends FieldDefinition
+        ? F["options"]["items"]["type"] extends keyof ModelTypeMapDocument<F>
+          ? Array<ModelTypeMapDocument<F["options"]["items"]>[F["options"]["items"]["type"]]>
+          : Array<unknown>
+        : Array<unknown>
+      : Array<unknown>;
+  };
 };
 
 export type GenericModelDocument = Partial<Record<string, JSONSubtype>>;

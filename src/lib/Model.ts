@@ -86,8 +86,8 @@ class Model {
    * Returns the current instance model constructor as a typeof Model.
    * instance.model is an alias for instance.constructor.
    */
-  get model() {
-    return this.constructor as typeof Model;
+  model<T extends ModelInstance>(this: T): T extends ModelInstance<infer M> ? M : typeof Model {
+    return this.constructor as T extends ModelInstance<infer M> ? M : typeof Model;
   }
 
   static isSingle() {
@@ -114,19 +114,20 @@ class Model {
     return this.__doc;
   }
 
-  getKey(format?: string) {
-    const keyField = this.model.getKeyField();
+  getKey<T extends ModelInstance<typeof Model>>(this: T, format?: SerializerFormat) {
+    const model = this.model();
+    const keyField = model.getKeyField();
 
     if (!keyField) {
       throw new CoreError({
-        message: `Invalid keyField for model ${this.model.slug} : ${keyField}`,
+        message: `Invalid keyField for model ${model.slug} : ${keyField}`,
       });
     }
 
-    return this.get(this.model.getKeyField(), format);
+    return this.get(model.getKeyField(), format);
   }
 
-  getId(format?: string) {
+  getId(format?: SerializerFormat) {
     return this.get("_id", format);
   }
 
@@ -145,9 +146,10 @@ class Model {
    * const clonedAccount = account.clone();
    * console.log(account === clonedAccount); // false
    */
-  clone(): this {
+  clone<T extends ModelInstance>(this: T): T {
     const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
-    return this.model.fromDoc(clonedDoc) as unknown as this;
+    const model = this.model();
+    return model.fromDoc(clonedDoc) as T;
   }
 
   /**
@@ -336,7 +338,7 @@ class Model {
     adapterClass ??= this.getAdapter(false)?.base;
 
     if (!adapterClass && datamodel) {
-      adapterClass = datamodel.model.getAdapter(false)?.base;
+      adapterClass = datamodel.model().getAdapter(false)?.base;
     }
 
     if (adapterClass?.hasModel(slug)) {
@@ -384,21 +386,23 @@ class Model {
    * console.log(model.get("field.subfield.arr.nested"));
    * console.log(model.get("field.subfield.arr.[1].nested"));
    */
-  get(
+  get<T extends ModelInstance>(
+    this: T,
     path: string,
-    format: string = SerializerFormat.OBJECT,
+    format: SerializerFormat = SerializerFormat.OBJECT,
     bindCtx: Partial<SerializerCtx> = {},
     value?: JSONSubtype,
   ) {
     let fieldsPaths: Array<FieldsPathItem>;
 
     const ctx: SerializerCtx = { ...bindCtx, outputFormat: format };
+    const model = this.model();
 
     if (path.includes(".")) {
       const pathArr = path.split(".");
-      fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+      fieldsPaths = getFieldsPathsFromPath(this.model(), [...pathArr]);
     } else {
-      const field = this.model.fieldsMap.get(path);
+      const field = model.fieldsMap.get(path);
       if (field) {
         fieldsPaths = [
           {
@@ -410,7 +414,7 @@ class Model {
     }
 
     if (!fieldsPaths?.length) {
-      if (this.model.freeMode) {
+      if (model.freeMode) {
         return this.__doc[path];
       }
 
@@ -459,18 +463,18 @@ class Model {
    * model.set("field", "value");
    * console.log(model.get("field")); // value
    */
-  set(path: string, value: JSONSubtype, ctx?: TransactionCtx) {
+  set<T extends ModelInstance>(this: T, path: string, value: JSONSubtype, ctx?: TransactionCtx) {
     const _path = path as string;
     let fieldsPaths;
     const _throw = () => {
       throw new CoreError({
-        message: `Field ${_path} is not found in model ${this.model.slug}`,
+        message: `Field ${_path} is not found in model ${this.model().slug}`,
       });
     };
 
     if (_path.includes(".")) {
       const pathArr = _path.split(".");
-      fieldsPaths = getFieldsPathsFromPath(this.model, [...pathArr]);
+      fieldsPaths = getFieldsPathsFromPath(this.model(), [...pathArr]);
 
       if (fieldsPaths.includes(null)) {
         _throw();
@@ -479,7 +483,7 @@ class Model {
       fieldsPaths = [
         {
           key: _path,
-          field: this.model.fieldsMap.get(_path),
+          field: this.model().fieldsMap.get(_path),
         },
       ];
     }
@@ -490,7 +494,7 @@ class Model {
       _fieldsPaths: fieldsPaths,
       _throw,
       ctx,
-      from: this as unknown as ModelInstance,
+      from: this,
     });
   }
 
@@ -503,13 +507,14 @@ class Model {
    * @example
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
-  serialize(
-    format: string,
+  serialize<T extends ModelInstance>(
+    this: T,
+    format: SerializerFormat,
     bindCtx: Partial<SerializerCtx> = {},
     clean = false,
     fieldsKeys?: Array<string>,
   ) {
-    const keys = fieldsKeys ?? this.model.fieldsKeys;
+    const keys = fieldsKeys ?? this.model().fieldsKeys;
     const res = {};
 
     keys.forEach(slug => {
@@ -540,8 +545,10 @@ class Model {
    * @example
    * console.log(instance.toObject()); // equivalent to instance.to(SerializerFormat.OBJECT)
    */
-  toObject<T extends typeof Model = typeof Model>() {
-    return this.serialize(SerializerFormat.OBJECT) as ModelObject<T>;
+  toObject<T extends ModelInstance>(this: T) {
+    return this.serialize(SerializerFormat.OBJECT) as T extends ModelInstance<infer M, infer D>
+      ? ModelObject<M, D>
+      : JSONType;
   }
 
   /**
@@ -551,8 +558,10 @@ class Model {
    * @example
    * console.log(instance.toDocument()); // equivalent to instance.to(SerializerFormat.DOCUMENT)
    */
-  toDocument<T extends typeof Model = typeof Model>() {
-    return this.serialize(SerializerFormat.DOCUMENT) as ModelDocument<T>;
+  toDocument<T extends ModelInstance>(this: T) {
+    return this.serialize(SerializerFormat.DOCUMENT) as T extends ModelInstance<infer M, infer D>
+      ? ModelDocument<M, D>
+      : JSONType;
   }
 
   /**
@@ -708,10 +717,14 @@ class Model {
    * await instance.update({ $unset: { title: true } });
    * console.log(instance.title); // undefined
    */
-  async update(update: UpdateObject, ctx?: TransactionCtx): Promise<this> {
-    await this.model.initialize();
+  async update<T extends ModelInstance>(
+    this: T,
+    update: UpdateObject,
+    ctx?: TransactionCtx,
+  ): Promise<T> {
+    await this.model().initialize();
 
-    const res = await this.model.execute("updateOne", [String(this.get("_id")), update], ctx);
+    const res = await this.model().execute("updateOne", [String(this.get("_id")), update], ctx);
 
     if (!res?.getDoc?.()) {
       throw new CoreError({
@@ -764,10 +777,10 @@ class Model {
    * const instance = await Model.create({ title: "apple" });
    * await instance.delete();
    */
-  async delete(ctx?: TransactionCtx): Promise<this> {
-    await this.model.initialize();
+  async delete<T extends ModelInstance>(this: T, ctx?: TransactionCtx): Promise<T> {
+    await this.model().initialize();
 
-    await this.model.execute("deleteOne", [this.get("_id", SerializerFormat.JSON)], ctx);
+    await this.model().execute("deleteOne", [this.get("_id", SerializerFormat.JSON)], ctx);
 
     return this;
   }

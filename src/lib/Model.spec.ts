@@ -86,15 +86,15 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = BaseModel.extend({ adapterClass: adapter });
       const created = await TestModel.create({});
-      expect(created.model.fieldsMap.get("title")).toBeInstanceOf(Field);
+      expect(created.model().fieldsMap.get("title")).toBeInstanceOf(Field);
     });
 
     it("Model should load validators from adapter", async () => {
       const adapter = mockAdapter();
       const TestModel = BaseModel.extend({ adapterClass: adapter });
       const created = await TestModel.create({});
-      expect(created.model.validatorsArray).toBeInstanceOf(Array);
-      expect(created.model.validatorsArray.length).toEqual(1);
+      expect(created.model().validatorsArray).toBeInstanceOf(Array);
+      expect(created.model().validatorsArray.length).toEqual(1);
     });
 
     it("should be able to getClass with adapter", async () => {
@@ -2282,7 +2282,7 @@ describe("Test Model", () => {
 
       const i = await TestModel.create({});
 
-      expect(i.model).toBe(TestModel);
+      expect(i.model()).toBe(TestModel);
     });
 
     it("should return right model constructor when model is cloned", async () => {
@@ -2290,7 +2290,7 @@ describe("Test Model", () => {
 
       const i = await TestModelCloned.create({});
 
-      expect(i.model).toBe(TestModelCloned);
+      expect(i.model()).toBe(TestModelCloned);
     });
 
     it("should not throw error if model is extended with different adapter", async () => {
@@ -2340,19 +2340,24 @@ describe("Test Model", () => {
       const cache = new Set<ModelInstance>();
       const adapter = mockAdapter({ privateCache: cache });
 
-      await DataModel.extend({ adapterClass: adapter }).create({
-        slug: "medias",
-        definition: {
-          fields: {
-            title: {
-              type: FieldTypes.TEXT,
-              options: {
-                default: "1",
+      await DataModel.extend({ adapterClass: adapter })
+        .create({
+          slug: "medias",
+          definition: {
+            fields: {
+              title: {
+                type: FieldTypes.TEXT,
+                options: {
+                  default: "1",
+                },
               },
             },
           },
-        },
-      });
+        })
+        .catch(e => {
+          console.log(e.stack);
+          throw e;
+        });
 
       const model = Model.getClass("medias", adapter);
 

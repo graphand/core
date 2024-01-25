@@ -15,9 +15,7 @@ export const mockAdapter = ({
   validatorsMap = {
     ...defaultValidatorsMap,
     [ValidatorTypes.SAMPLE]: class ValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
-      async validate() {
-        return true;
-      }
+      validate = () => Promise.resolve(true);
     },
   },
   privateCache,

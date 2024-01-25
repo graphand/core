@@ -3,11 +3,11 @@ import Model from "@/lib/Model";
 import {
   CoreSerializerCtx,
   FieldDefinition,
-  JSONSubtype,
   FieldOptions,
   ModelInstance,
+  FieldTypeMap,
 } from "@/types";
-import { getDefaultFieldOptions } from "@/lib/utils";
+import SerializerFormat from "@/enums/serializer-format";
 
 class Field<T extends FieldTypes = FieldTypes> {
   #definition: FieldDefinition<T>; // The field definition
@@ -17,11 +17,6 @@ class Field<T extends FieldTypes = FieldTypes> {
   constructor(definition: FieldDefinition<T>, path: string) {
     this.#definition = definition;
     this.#path = path;
-
-    Object.defineProperty(this, "__json", {
-      enumerable: true,
-      value: this.toJSON(),
-    });
   }
 
   get type() {
@@ -37,25 +32,57 @@ class Field<T extends FieldTypes = FieldTypes> {
   }
 
   get options(): FieldOptions<T> {
-    const defaults = getDefaultFieldOptions(this.type);
-
-    return Object.assign({}, defaults, this.#definition.options ?? {}) as FieldOptions<T>;
+    return (this.#definition.options ?? {}) as FieldOptions<T>;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validate(list: Array<ModelInstance>, model: typeof Model, ctx?: TransactionCtx) {
-    return true;
-  }
+  validate?: (input: {
+    list: Array<ModelInstance>;
+    model: typeof Model;
+    ctx?: TransactionCtx;
+  }) => Promise<boolean>;
+
+  sJSON?: (input: {
+    value: unknown;
+    from: ModelInstance;
+    ctx: SerializerCtx & CoreSerializerCtx;
+  }) => FieldTypeMap<FieldDefinition<T>>[T][SerializerFormat.JSON];
+
+  sObject?: (input: {
+    value: unknown;
+    from: ModelInstance;
+    ctx: SerializerCtx & CoreSerializerCtx;
+  }) => FieldTypeMap<FieldDefinition<T>>[T][SerializerFormat.OBJECT];
+
+  sDocument?: (input: {
+    value: unknown;
+    from: ModelInstance;
+    ctx: SerializerCtx & CoreSerializerCtx;
+  }) => FieldTypeMap<FieldDefinition<T>>[T][SerializerFormat.DOCUMENT];
+
+  sTo: (input: {
+    value: unknown;
+    format: SerializerFormat;
+    from: ModelInstance;
+    ctx: SerializerCtx & CoreSerializerCtx;
+  }) => FieldTypeMap<FieldDefinition<T>>[T][keyof FieldTypeMap<FieldDefinition<T>>[T]] | unknown;
 
   serialize(
-    value: JSONSubtype,
-    format: string,
+    value: unknown,
+    format: SerializerFormat,
     from: ModelInstance,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ctx: SerializerCtx & CoreSerializerCtx = {},
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any {
-    return value;
+    ctx: SerializerCtx & CoreSerializerCtx,
+  ) {
+    const s = {
+      [SerializerFormat.JSON]: this.sJSON,
+      [SerializerFormat.OBJECT]: this.sObject,
+      [SerializerFormat.DOCUMENT]: this.sDocument,
+    }[format];
+
+    if (s) {
+      return s({ value, from, ctx });
+    }
+
+    return this.sTo?.({ value, format, from, ctx });
   }
 
   toJSON() {

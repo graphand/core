@@ -12,11 +12,6 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
   constructor(definition: ValidatorDefinition<T>, path?: string) {
     this.#definition = definition;
     this.#path = path;
-
-    Object.defineProperty(this, "__json", {
-      enumerable: true,
-      value: this.toJSON(),
-    });
   }
 
   get type(): T {
@@ -41,10 +36,11 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return this.getFullPath() + this.type;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validate(list: ModelInstance[], model: typeof Model, ctx: TransactionCtx) {
-    return false;
-  }
+  validate?: (input: {
+    list: Array<ModelInstance>;
+    model: typeof Model;
+    ctx?: TransactionCtx;
+  }) => Promise<boolean>;
 
   toJSON() {
     return {
