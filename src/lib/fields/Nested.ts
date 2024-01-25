@@ -1,24 +1,27 @@
 import FieldTypes from "@/enums/field-types";
 import SerializerFormat from "@/enums/serializer-format";
+import { CoreSerializerCtx, ModelInstance } from "@/index";
 import Field from "@/lib/Field";
 import { getFieldFromDefinition, getNestedFieldsMap } from "@/lib/utils";
 
 class FieldNested extends Field<FieldTypes.NESTED> {
   validate: Field<FieldTypes.NESTED>["validate"] = async ({ list }) => {
-    const _isInvalid = value => {
-      if (value === null || value === undefined) {
-        return false;
-      }
-
-      return typeof value !== "object";
-    };
+    const _isInvalid = value => value !== null && value !== undefined && typeof value !== "object";
 
     const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
     return !values.some(_isInvalid);
   };
 
-  sTo: Field<FieldTypes.NESTED>["sTo"] = ({ value, format, from, ctx }) => {
-    value = Array.isArray(value) ? value[0] : value;
+  _sStatic = (
+    input: {
+      value: unknown;
+      from: ModelInstance;
+      ctx: SerializerCtx & CoreSerializerCtx;
+    },
+    format: SerializerFormat,
+  ) => {
+    const { from, ctx } = input;
+    const value = Array.isArray(input.value) ? input.value[0] : input.value;
     const oFormat = ctx?.outputFormat || format;
 
     if (!value || typeof value !== "object") {
@@ -26,14 +29,85 @@ class FieldNested extends Field<FieldTypes.NESTED> {
         return value;
       }
 
-      return value === undefined ? value : null;
+      if (value === undefined) {
+        return value;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return null as any;
     }
 
     const model = from.model();
     const adapter = model.getAdapter();
     const fieldsMap = getNestedFieldsMap(model, this);
 
-    const _get = (target: object, prop: string) => {
+    const json = {};
+
+    for (const [k, field] of fieldsMap) {
+      if (value[k] === undefined || value[k] === null) {
+        json[k] = value[k];
+      } else {
+        json[k] = field.serialize(value[k], format, from, ctx);
+      }
+    }
+
+    if (this.options.strict) {
+      return json;
+    }
+
+    if (this.options.defaultField) {
+      const noField = Object.keys(value).filter(k => !fieldsMap.has(k));
+
+      if (noField.length) {
+        noField.forEach(k => {
+          if (value[k] === undefined || value[k] === null) {
+            json[k] = value[k];
+          } else {
+            const tmpField = getFieldFromDefinition(
+              this.options.defaultField,
+              adapter,
+              [this.path, k].join("."),
+            );
+
+            json[k] = tmpField.serialize(value[k], format, from, ctx);
+          }
+        });
+      }
+    }
+
+    return { ...value, ...json };
+  };
+
+  _sProxy = (
+    input: {
+      value: unknown;
+      from: ModelInstance;
+      ctx: SerializerCtx & CoreSerializerCtx;
+    },
+    format: SerializerFormat,
+  ) => {
+    const { from, ctx } = input;
+    const value = Array.isArray(input.value) ? input.value[0] : input.value;
+    const oFormat = ctx?.outputFormat || format;
+
+    if (!value || typeof value !== "object") {
+      if (oFormat === SerializerFormat.VALIDATION) {
+        return value;
+      }
+
+      if (value === undefined) {
+        return value;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return null as any;
+    }
+
+    const model = from.model();
+    const adapter = model.getAdapter();
+    const fieldsMap = getNestedFieldsMap(model, this);
+
+    const _getter = (target: object, prop: string) => {
       let targetField = fieldsMap.get(prop);
       let value = target[prop];
 
@@ -58,68 +132,38 @@ class FieldNested extends Field<FieldTypes.NESTED> {
         value = targetField.options.default as typeof value;
       }
 
-      if (value !== undefined && value !== null) {
-        value = targetField.serialize(value, format, from, ctx);
+      if (value === undefined || value === null) {
+        return value;
       }
 
-      return value;
+      return targetField.serialize(value, format, from, ctx);
     };
 
-    const _serializeJSON = (obj: object) => {
-      const json = {};
-
-      for (const [k, field] of fieldsMap) {
-        if (obj[k] === undefined || obj[k] === null) {
-          json[k] = obj[k];
-        } else {
-          json[k] = field.serialize(obj[k], format, from, ctx);
+    return new Proxy(value, {
+      get(target, prop: string) {
+        if (prop === "__isProxy") {
+          return true;
         }
-      }
 
-      if (this.options.strict) {
-        return json;
-      }
+        return _getter(target, prop);
+      },
+    });
+  };
 
-      if (this.options.defaultField) {
-        const noField = Object.keys(obj).filter(k => !fieldsMap.has(k));
+  sJSON: Field<FieldTypes.NESTED>["sJSON"] = opts => {
+    return this._sStatic(opts, SerializerFormat.JSON);
+  };
 
-        if (noField.length) {
-          noField.forEach(k => {
-            if (obj[k] === undefined || obj[k] === null) {
-              json[k] = obj[k];
-            } else {
-              const tmpField = getFieldFromDefinition(
-                this.options.defaultField,
-                adapter,
-                [this.path, k].join("."),
-              );
+  sObject: Field<FieldTypes.NESTED>["sObject"] = ({ value, from, ctx }) => {
+    return this._sProxy({ value, from, ctx }, SerializerFormat.OBJECT);
+  };
 
-              json[k] = tmpField.serialize(obj[k], format, from, ctx);
-            }
-          });
-        }
-      }
+  sDocument: Field<FieldTypes.NESTED>["sDocument"] = ({ value, from, ctx }) => {
+    return this._sStatic({ value, from, ctx }, SerializerFormat.DOCUMENT);
+  };
 
-      return { ...obj, ...json };
-    };
-
-    const _serializeObject = (obj: object) => {
-      return new Proxy(obj, {
-        get(target, prop: string) {
-          if (prop === "__isProxy") {
-            return true;
-          }
-
-          return _get(target, prop);
-        },
-      });
-    };
-
-    if ([SerializerFormat.JSON, SerializerFormat.DOCUMENT].includes(format)) {
-      return _serializeJSON(value);
-    }
-
-    return _serializeObject(value);
+  sTo: Field<FieldTypes.NESTED>["sTo"] = input => {
+    return this._sProxy(input, input.format);
   };
 }
 
