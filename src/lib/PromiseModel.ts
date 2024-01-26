@@ -21,7 +21,7 @@ class PromiseModel<T extends typeof Model, D = undefined> extends Thenable<Model
     this.#query = query;
   }
 
-  get _id() {
+  get _id(): string {
     if (typeof this.query === "string" && isObjectId(this.query)) {
       return this.query;
     }

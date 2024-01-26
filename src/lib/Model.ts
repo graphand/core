@@ -111,8 +111,8 @@ class Model {
   /**
    * Returns the current instance doc (raw data)
    */
-  getDoc() {
-    return this.__doc;
+  getDoc<T extends ModelInstance<typeof Model>>(this: T) {
+    return this.__doc as T extends ModelInstance<infer M> ? ModelDocument<M> : GenericModelDocument;
   }
 
   getKey<T extends ModelInstance<typeof Model>>(this: T, format?: SerializerFormat) {

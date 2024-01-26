@@ -179,7 +179,11 @@ export type InferFieldType<
     : unknown
   : unknown;
 
-export type ModelDocument<M extends typeof Model, D = undefined> = InferModelDef<M, "document", D>;
+export type ModelDocument<M extends typeof Model = typeof Model, D = undefined> = InferModelDef<
+  M,
+  "document",
+  D
+>;
 
 export type InferModelDef<
   M extends typeof Model,

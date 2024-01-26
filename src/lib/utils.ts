@@ -1101,7 +1101,7 @@ export const assignDatamodel = async <T extends typeof Model>(
 
   const baseClass = model.getBaseClass();
 
-  const def = (datamodel?.getDoc()?.definition ?? {}) as ModelDefinition;
+  const definition = datamodel?.getDoc()?.definition;
   const baseDefinition = (baseClass.definition ?? {}) as ModelDefinition;
 
   const fields = {};
@@ -1110,8 +1110,8 @@ export const assignDatamodel = async <T extends typeof Model>(
     Object.assign(fields, baseDefinition.fields);
   }
 
-  if (def.fields) {
-    Object.assign(fields, def.fields);
+  if (definition?.fields) {
+    Object.assign(fields, definition.fields);
   }
 
   const validators = [];
@@ -1120,13 +1120,13 @@ export const assignDatamodel = async <T extends typeof Model>(
     validators.push(...baseDefinition.validators);
   }
 
-  if (def.validators?.length) {
-    validators.push(...def.validators);
+  if (definition?.validators?.length) {
+    validators.push(...definition.validators);
   }
 
   model.definition = {
-    keyField: baseDefinition.keyField || def.keyField,
-    single: def.single,
+    keyField: baseDefinition.keyField || definition?.keyField,
+    single: definition?.single || false,
     fields,
     validators,
   };

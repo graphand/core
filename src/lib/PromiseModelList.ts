@@ -30,7 +30,7 @@ class PromiseModelList<T extends typeof Model, D = undefined> extends Thenable<M
     return this.#query;
   }
 
-  getIds() {
+  getIds(): Array<string> {
     if (this.query?.ids) {
       return Array.isArray(this.query.ids) ? this.query.ids : [this.query.ids];
     }
