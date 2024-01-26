@@ -779,9 +779,6 @@ describe("test fieldsMap", () => {
 
         const i = model.fromDoc({ obj });
 
-        console.log(i.obj.__isProxy);
-        console.log(i.obj.__isProxy);
-
         try {
           await model.validate([i]);
         } catch (e) {

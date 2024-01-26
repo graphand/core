@@ -17,6 +17,7 @@ import {
   SerializerFormat,
   SerializerCtx,
   TransactionCtx,
+  FieldsDefinition,
 } from "@/types";
 import FieldTypes from "@/enums/field-types";
 import defaultFieldsMap from "@/lib/defaultFieldsMap";
@@ -320,7 +321,7 @@ export const parseValidatorHook = (hook: ValidatorHook, validator: Validator): H
  */
 export const createFieldsMap = (model: typeof Model): Map<string, Field> => {
   const definition = model.definition as ModelDefinition;
-  const fields: Record<string, FieldDefinition> = Object.assign({}, definition?.fields);
+  const fields: FieldsDefinition = Object.assign({}, definition?.fields);
 
   if (model.systemFields) {
     Object.assign(fields, systemFields);

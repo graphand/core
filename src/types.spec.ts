@@ -5,6 +5,23 @@ import PromiseModel from "./lib/PromiseModel";
 import Account from "./models/Account";
 import Role from "./models/Role";
 
+class CustomModel extends Model {
+  static slug = "customModel";
+  static definition = {
+    fields: {
+      field: {
+        type: FieldTypes.TEXT,
+      },
+    },
+  } satisfies ModelDefinition;
+}
+
+declare module "./types/index" {
+  export interface RefModelsMap {
+    customModel: CustomModel;
+  }
+}
+
 describe("test types", () => {
   const simulateTypeCheck = <ExpectedType>(obj: ExpectedType) => obj;
 
@@ -354,5 +371,11 @@ describe("test types", () => {
     }>();
 
     simulateTypeCheck<string>(i.field); // Check the field is a string
+  });
+
+  it("should ...", () => {
+    const ModelFromSlug = Model.getClass("customModel");
+
+    simulateTypeCheck<CustomModel>(ModelFromSlug);
   });
 });

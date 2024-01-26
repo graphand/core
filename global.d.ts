@@ -1,5 +1,5 @@
 declare global {
-  export type IdType = string;
+  export type IdDocType = string;
 }
 
 export {};

@@ -1,7 +1,7 @@
-import { FieldDefinition } from "@/types";
+import { FieldsDefinition } from "@/types";
 import FieldTypes from "@/enums/field-types";
 
-const systemFields: Record<string, FieldDefinition> = {
+const systemFields: FieldsDefinition = {
   _id: { type: FieldTypes.ID },
   _createdAt: { type: FieldTypes.DATE },
   _createdBy: { type: FieldTypes.IDENTITY },

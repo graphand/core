@@ -21,6 +21,8 @@ export * from "./ctx";
 export type Rule = ModelInstance<typeof Role>["rules"][number];
 export type FieldsRestriction = ModelInstance<typeof Role>["fieldsRestrictions"][number];
 export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition>;
+export type FieldsDefinition = Record<string, FieldDefinition>;
+export type ValidatorsDefinition = Array<ValidatorDefinition>;
 
 export type JSONSubtype =
   | null
@@ -433,6 +435,6 @@ export type SockethookStatus = {
 export type ModelDefinition = Readonly<{
   keyField?: Readonly<string>;
   single?: Readonly<boolean>;
-  fields?: Readonly<Record<string, FieldDefinition>>;
-  validators?: Readonly<Array<ValidatorDefinition>>;
+  fields?: Readonly<FieldsDefinition>;
+  validators?: Readonly<ValidatorsDefinition>;
 }>;

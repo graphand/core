@@ -1,5 +1,11 @@
-import { JSONSubtype, DecodeRefModel, ModelDefinition } from "@/types";
-import { ValidatorDefinition, ValidatorDefinitionOmitField } from "@/types/validators";
+import {
+  JSONSubtype,
+  DecodeRefModel,
+  ModelDefinition,
+  FieldsDefinition,
+  ValidatorsDefinition,
+} from "@/types";
+import { ValidatorDefinitionOmitField } from "@/types/validators";
 import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
 import PromiseModel from "@/lib/PromiseModel";
@@ -25,9 +31,9 @@ export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.NESTED]: {
     default?: JSONTypeObject;
     defaultField?: FieldDefinition;
-    fields?: Record<string, FieldDefinition>;
+    fields?: FieldsDefinition;
     strict?: boolean;
-    validators?: Array<ValidatorDefinition>;
+    validators?: ValidatorsDefinition;
   };
   [FieldTypes.BOOLEAN]: {
     default?: boolean;
@@ -66,7 +72,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
         : string
       : string;
     [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
-      ? (F["options"]["fields"] extends Record<string, FieldDefinition>
+      ? (F["options"]["fields"] extends FieldsDefinition
           ? Partial<{
               [K in keyof F["options"]["fields"]]: InferFieldType<
                 F["options"]["fields"][K],
@@ -87,7 +93,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
       : Array<unknown>;
   };
   object: {
-    [FieldTypes.ID]: IdType;
+    [FieldTypes.ID]: string;
     [FieldTypes.IDENTITY]: string;
     [FieldTypes.BOOLEAN]: boolean;
     [FieldTypes.NUMBER]: number;
@@ -100,7 +106,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
         : string
       : string;
     [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
-      ? (F["options"]["fields"] extends Record<string, FieldDefinition>
+      ? (F["options"]["fields"] extends FieldsDefinition
           ? Partial<{
               [K in keyof F["options"]["fields"]]: InferFieldType<
                 F["options"]["fields"][K],
@@ -129,7 +135,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
       : Array<unknown>;
   };
   document: {
-    [FieldTypes.ID]: IdType;
+    [FieldTypes.ID]: IdDocType;
     [FieldTypes.IDENTITY]: string;
     [FieldTypes.BOOLEAN]: boolean;
     [FieldTypes.NUMBER]: number;
@@ -142,7 +148,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
         : string
       : string;
     [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
-      ? (F["options"]["fields"] extends Record<string, FieldDefinition>
+      ? (F["options"]["fields"] extends FieldsDefinition
           ? Partial<{
               [K in keyof F["options"]["fields"]]: InferFieldType<
                 F["options"]["fields"][K],
@@ -157,10 +163,10 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
             : unknown) &
           JSONTypeObject
       : JSONTypeObject;
-    [FieldTypes.RELATION]: IdType;
+    [FieldTypes.RELATION]: IdDocType;
     [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
       ? F["options"]["items"]["type"] extends FieldTypes.RELATION
-        ? Array<IdType>
+        ? Array<IdDocType>
         : Array<InferFieldType<F["options"]["items"], "document">>
       : Array<unknown>;
   };

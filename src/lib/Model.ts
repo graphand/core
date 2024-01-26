@@ -316,62 +316,76 @@ class Model {
 
   static getClass<
     M extends typeof Model = undefined,
-    T extends string | keyof RefModelsMap | ModelInstance<typeof DataModel> =
-      | string
-      | keyof RefModelsMap
-      | ModelInstance<typeof DataModel>,
+    T extends string | keyof RefModelsMap | ModelInstance<typeof DataModel> | typeof Model = string,
   >(
-    slugOrModel: T,
+    input: T, // a slug (core model slug/datamodel slug), a model class or a datamodel instance
     adapterClass?: typeof Adapter,
-  ): M extends undefined ? (T extends keyof RefModelsMap ? RefModelsMap[T] : typeof Model) : M {
-    if (!slugOrModel) {
+  ): M extends undefined
+    ? T extends typeof Model
+      ? T
+      : T extends keyof RefModelsMap
+      ? RefModelsMap[T]
+      : typeof Model
+    : M {
+    if (!input) {
       throw new CoreError({
-        message: `Invalid slugOrModel: ${slugOrModel}`,
+        message: `Invalid input for getClass: ${input}`,
       });
     }
 
-    const slug =
-      typeof slugOrModel === "string"
-        ? slugOrModel
-        : (slugOrModel as ModelInstance<typeof DataModel>).slug;
-    const datamodel: ModelInstance<typeof DataModel> =
-      typeof slugOrModel === "string" ? null : slugOrModel;
     adapterClass ??= this.getAdapter(false)?.base;
+    let slug: string;
+    let model: ReturnType<typeof Model.getClass<M, T>>;
 
-    if (!adapterClass && datamodel) {
-      adapterClass = datamodel.model().getAdapter(false)?.base;
+    // If input is a model class (typeof Model)
+    if (typeof input === "function" && "prototype" in input && input.prototype instanceof Model) {
+      slug = input.slug;
+      model = input as ReturnType<typeof Model.getClass<M, T>>;
+    }
+
+    slug ??= typeof input === "string" ? input : (input as ModelInstance<typeof DataModel>).slug;
+    const dm: ModelInstance<typeof DataModel> = input instanceof Model && slug ? input : undefined;
+
+    if (!adapterClass && dm) {
+      adapterClass = dm.model().getAdapter(false)?.base;
     }
 
     if (adapterClass?.hasModel(slug)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return adapterClass.getModel(slug) as any;
+      const res = adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
+      if (model && res.getBaseClass() !== model.getBaseClass()) {
+        throw new CoreError({
+          message: `Model ${slug} is already registered with a different class`,
+        });
+      }
+
+      return adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
     }
 
-    let model: M;
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const models = require("@/index").models as Record<string, typeof Model>;
-    const coreModel: M = Object.values(models).find(m => m.slug === slug) as M;
-
-    if (coreModel) {
-      model = coreModel;
-    } else {
+    if (!model) {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const _Data = require("@/lib/Data").default;
-      // @ts-expect-error decorator
-      model = class extends _Data {
-        static __name = `Data<${slug}>`;
+      const models = require("@/index").models as Record<string, typeof Model>;
+      const coreModel: M = Object.values(models).find(m => m.slug === slug) as M;
 
-        static slug = slug;
-      };
+      if (coreModel) {
+        model = coreModel as ReturnType<typeof Model.getClass<M, T>>;
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const _Data = require("@/lib/Data").default;
+        // @ts-expect-error decorator
+        model = class extends _Data {
+          static __name = `Data<${slug}>`;
+
+          static slug = slug;
+        };
+      }
     }
 
     if (adapterClass) {
-      model = model.extend({ adapterClass, initOptions: { datamodel } });
+      model = model.extend({ adapterClass, initOptions: { datamodel: dm } });
     }
 
-    if (datamodel) {
-      assignDatamodel(model, datamodel);
+    if (dm) {
+      assignDatamodel(model, dm);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1040,7 +1054,5 @@ class Model {
     return payloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
   }
 }
-
-globalThis.Model = Model;
 
 export default Model;

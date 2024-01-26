@@ -2273,6 +2273,130 @@ describe("Test Model", () => {
 
       expect(i2.rel.model).toBe(Model1);
     });
+
+    it("should be able to get model from class", async () => {
+      const adapter = mockAdapter();
+
+      class CustomModel extends Model {
+        static slug = "custom";
+        static extensible = false;
+        static definition = {
+          fields: {
+            customField: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        };
+      }
+
+      const model = Model.getClass(CustomModel, adapter);
+
+      expect(model.prototype).toBeInstanceOf(CustomModel);
+
+      expect(adapter.hasModel("custom")).toBeTruthy();
+
+      expect(Model.getClass("custom", adapter)).toBe(model);
+    });
+
+    it("should return the same model from slug and from class", async () => {
+      const adapter = mockAdapter();
+
+      class CustomModel extends Model {
+        static slug = "custom";
+        static extensible = false;
+        static definition = {
+          fields: {
+            customField: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        };
+      }
+
+      const model = Model.getClass(CustomModel, adapter);
+
+      expect(model.prototype).toBeInstanceOf(CustomModel);
+
+      expect(adapter.hasModel("custom")).toBeTruthy();
+
+      expect(Model.getClass("custom", adapter)).toBe(model);
+    });
+
+    it("should return the same model from slug and from class with same adapter", async () => {
+      const adapter = mockAdapter();
+
+      class CustomModel extends Model {
+        static slug = "custom";
+        static extensible = false;
+        static definition = {
+          fields: {
+            customField: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        };
+      }
+
+      const model = Model.getClass(CustomModel, adapter);
+
+      expect(model.prototype).toBeInstanceOf(CustomModel);
+
+      expect(adapter.hasModel("custom")).toBeTruthy();
+
+      expect(Model.getClass("custom", adapter)).toBe(model);
+    });
+
+    it("should return different models from slug and from class with different adapters", async () => {
+      const adapter = mockAdapter();
+      const adapter2 = mockAdapter();
+
+      class CustomModel extends Model {
+        static slug = "custom";
+        static extensible = false;
+        static definition = {
+          fields: {
+            customField: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        };
+      }
+
+      const model = Model.getClass(CustomModel, adapter);
+
+      expect(model.prototype).toBeInstanceOf(CustomModel);
+
+      expect(adapter.hasModel("custom")).toBeTruthy();
+
+      expect(Model.getClass("custom", adapter2)).not.toBe(model);
+    });
+
+    it("should throw error if model is declared from datamodel first and then from different class", async () => {
+      const adapter = mockAdapter();
+
+      const dm = await DataModel.extend({ adapterClass: adapter }).create({
+        slug: "custom",
+        definition: {
+          fields: {
+            customField: {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      });
+
+      const model = Model.getClass(dm, adapter);
+
+      expect(model.prototype).toBeInstanceOf(Data);
+      expect(Model.getClass(model, adapter)).toBe(model);
+
+      class CustomModel extends Model {
+        static slug = "custom";
+        static extensible = false;
+      }
+
+      expect(() => Model.getClass(CustomModel, adapter)).toThrow("already registered");
+    });
   });
 
   describe("Model extend", () => {
