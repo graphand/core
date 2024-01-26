@@ -18,8 +18,8 @@ import {
   UpdateObject,
   JSONSubtype,
   RefModelsMap,
-  JSONType,
   InferModelDef,
+  JSONTypeObject,
 } from "@/types";
 import SerializerFormat from "@/enums/serializer-format";
 import Adapter from "@/lib/Adapter";
@@ -505,7 +505,7 @@ class Model {
     bindCtx: Partial<SerializerCtx> = {},
     clean = false,
     fieldsKeys?: Array<string>,
-  ): T extends ModelInstance<infer M, infer D> ? InferModelDef<M, S, D> : JSONType {
+  ): T extends ModelInstance<infer M, infer D> ? InferModelDef<M, S, D> : JSONTypeObject {
     const keys = fieldsKeys ?? this.model().fieldsKeys;
     const res = {};
 
@@ -518,7 +518,9 @@ class Model {
       res[slug] = v;
     });
 
-    return res as T extends ModelInstance<infer M, infer D> ? InferModelDef<M, S, D> : JSONType;
+    return res as T extends ModelInstance<infer M, infer D>
+      ? InferModelDef<M, S, D>
+      : JSONTypeObject;
   }
 
   /**

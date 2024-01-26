@@ -328,7 +328,7 @@ export type FieldsPathItem = { key: string; field: Field };
 
 export type MergeRequestOptionsMap = {
   [MergeRequestTypes.STATIC]: {
-    gdx: JSONType;
+    gdx: JSONTypeObject;
   };
   [MergeRequestTypes.QUERY]: {
     source: string;
@@ -345,7 +345,7 @@ export type MergeRequestEventDataMap = {
     comment: string;
   };
   [MergeRequestEventTypes.PATCH]: {
-    apply: JSONType;
+    apply: JSONTypeObject;
     comment?: string;
   };
   [MergeRequestEventTypes.APPROVE]: {

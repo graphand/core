@@ -1,4 +1,4 @@
-import { JSONSubtype, JSONType, DecodeRefModel, ModelDefinition } from "@/types";
+import { JSONSubtype, DecodeRefModel, ModelDefinition } from "@/types";
 import { ValidatorDefinition, ValidatorDefinitionOmitField } from "@/types/validators";
 import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
@@ -23,7 +23,7 @@ export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
     default?: number;
   };
   [FieldTypes.NESTED]: {
-    default?: JSONType;
+    default?: JSONTypeObject;
     defaultField?: FieldDefinition;
     fields?: Record<string, FieldDefinition>;
     strict?: boolean;
