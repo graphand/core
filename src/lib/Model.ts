@@ -18,9 +18,8 @@ import {
   UpdateObject,
   JSONSubtype,
   RefModelsMap,
-  ModelJSON,
-  ModelObject,
   JSONType,
+  InferModelDef,
 } from "@/types";
 import SerializerFormat from "@/enums/serializer-format";
 import Adapter from "@/lib/Adapter";
@@ -500,13 +499,13 @@ class Model {
    * @example
    * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
    */
-  serialize<T extends ModelInstance>(
+  serialize<T extends ModelInstance, S extends SerializerFormat>(
     this: T,
-    format: SerializerFormat,
+    format: S,
     bindCtx: Partial<SerializerCtx> = {},
     clean = false,
     fieldsKeys?: Array<string>,
-  ) {
+  ): T extends ModelInstance<infer M, infer D> ? InferModelDef<M, S, D> : JSONType {
     const keys = fieldsKeys ?? this.model().fieldsKeys;
     const res = {};
 
@@ -519,7 +518,7 @@ class Model {
       res[slug] = v;
     });
 
-    return res;
+    return res as T extends ModelInstance<infer M, infer D> ? InferModelDef<M, S, D> : JSONType;
   }
 
   /**
@@ -528,9 +527,7 @@ class Model {
    * console.log(instance.toJSON()); // equivalent to instance.to(SerializerFormat.JSON)
    */
   toJSON<T extends ModelInstance>(this: T) {
-    return this.serialize(SerializerFormat.JSON) as T extends ModelInstance<infer M, infer D>
-      ? ModelJSON<M, D>
-      : JSONType;
+    return this.serialize(SerializerFormat.JSON);
   }
 
   /**
@@ -539,9 +536,7 @@ class Model {
    * console.log(instance.toObject()); // equivalent to instance.to(SerializerFormat.OBJECT)
    */
   toObject<T extends ModelInstance>(this: T) {
-    return this.serialize(SerializerFormat.OBJECT) as T extends ModelInstance<infer M, infer D>
-      ? ModelObject<M, D>
-      : JSONType;
+    return this.serialize(SerializerFormat.OBJECT);
   }
 
   /**
@@ -552,9 +547,7 @@ class Model {
    * console.log(instance.toDocument()); // equivalent to instance.to(SerializerFormat.DOCUMENT)
    */
   toDocument<T extends ModelInstance>(this: T) {
-    return this.serialize(SerializerFormat.DOCUMENT) as T extends ModelInstance<infer M, infer D>
-      ? ModelDocument<M, D>
-      : JSONType;
+    return this.serialize(SerializerFormat.DOCUMENT);
   }
 
   /**

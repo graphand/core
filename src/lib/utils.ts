@@ -1201,7 +1201,7 @@ export const isValidDefinition = (
     }
 
     if (
-      keyFieldField?.options &&
+      typeof keyFieldField?.options === "object" &&
       "default" in keyFieldField.options &&
       keyFieldField.options.default !== undefined
     ) {

@@ -262,7 +262,7 @@ describe("test fieldsMap", () => {
 
       const obj = [{ title: faker.lorem.word() }, { title: faker.lorem.word() }];
 
-      const i = model.fromDoc({ obj });
+      const i = model.fromDoc({ obj } as object);
       expect(i.obj).toBeInstanceOf(Object);
       expect(Array.isArray(i.obj)).toBeFalsy();
     });

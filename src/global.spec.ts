@@ -33,7 +33,7 @@ describe("Global tests", () => {
               field1: "toto",
             },
           },
-        }),
+        } as object),
       ]),
     ).rejects.toThrow(ValidationError);
 
@@ -48,7 +48,7 @@ describe("Global tests", () => {
               },
             },
           },
-        }),
+        } as object),
       ]),
     ).rejects.toThrow(ValidationError);
 
@@ -63,7 +63,7 @@ describe("Global tests", () => {
               },
             },
           },
-        }),
+        } as object),
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -86,8 +86,8 @@ describe("Global tests", () => {
       model.validate([
         model.fromDoc({
           slug,
-          definition: { validators: ["required"] } as object,
-        }),
+          definition: { validators: ["required"] },
+        } as object),
       ]),
     ).rejects.toThrow(ValidationError);
 

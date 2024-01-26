@@ -10,7 +10,8 @@ import type Sockethook from "@/models/Sockethook";
 import type MergeRequestTypes from "@/enums/merge-request-types";
 import type MergeRequestEventTypes from "@/enums/merge-request-event-types";
 import type { models } from "@/.";
-import { FieldDefinition, ModelDocument, ModelObject } from "@/types/fields";
+import SerializerFormat from "@/enums/serializer-format";
+import { FieldDefinition, ModelDocument, InferModelDef } from "@/types/fields";
 import { ValidatorDefinition } from "@/types/validators";
 export * from "./fields";
 export * from "./validators";
@@ -204,7 +205,7 @@ export type ModelInstance<
   D = undefined,
 > = (M["definition"] extends ModelDefinition ? InstanceType<typeof Model> : unknown) &
   InstanceType<M> &
-  ModelObject<M, D>;
+  InferModelDef<M, SerializerFormat.OBJECT, D>;
 
 export type HookPhase = "before" | "after";
 

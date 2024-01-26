@@ -543,8 +543,8 @@ describe("test validatorsMap", () => {
       const datamodel2 = DataModel.create({
         slug: generateRandomString(),
         definition: {
+          keyField: "title",
           fields: {
-            keyField: "title",
             title: {
               type: FieldTypes.TEXT,
               options: {
