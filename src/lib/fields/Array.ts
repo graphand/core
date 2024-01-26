@@ -1,11 +1,5 @@
 import FieldTypes from "@/enums/field-types";
-import {
-  FieldDefinition,
-  FieldOptions,
-  ModelInstance,
-  SerializerCtx,
-  SerializerFormat,
-} from "@/types";
+import { FieldDefinition, FieldOptions, FieldSerializerInput } from "@/types";
 import Field from "@/lib/Field";
 import Model from "@/lib/Model";
 import { getFieldFromDefinition, isObjectId } from "@/lib/utils";
@@ -16,13 +10,11 @@ import ModelList from "@/lib/ModelList";
 class FieldArray extends Field<FieldTypes.ARRAY> {
   nextFieldEqObject = false;
 
-  _sToRelArr = (input: {
-    options: FieldOptions<FieldTypes.RELATION>;
-    value: unknown;
-    format: SerializerFormat;
-    from: ModelInstance;
-    ctx: SerializerCtx;
-  }) => {
+  _sToRelArr = (
+    input: FieldSerializerInput & {
+      options: FieldOptions<FieldTypes.RELATION>;
+    },
+  ) => {
     const { options, value, format, from, ctx } = input;
 
     const adapter = from.model().getAdapter();
@@ -68,20 +60,27 @@ class FieldArray extends Field<FieldTypes.ARRAY> {
     return arrVal.map(id => fieldId.serialize(id, format, from, ctx));
   };
 
-  sTo: Field<FieldTypes.ARRAY>["sTo"] = ({ value, format, from, ctx }) => {
-    if (this.options.items?.type === FieldTypes.RELATION) {
-      const itemsField = this.options.items as FieldDefinition<FieldTypes.RELATION>;
-      return this._sToRelArr({ value, format, from, ctx, options: itemsField?.options });
-    }
+  serializerMap: Field<FieldTypes.ARRAY>["serializerMap"] = {
+    [Field.defaultSymbol]: (input: FieldSerializerInput) => {
+      if (this.options.items?.type === FieldTypes.RELATION) {
+        const itemsField = this.options.items as FieldDefinition<FieldTypes.RELATION>;
+        return this._sToRelArr({ ...input, options: itemsField?.options });
+      }
 
-    const adapter = from.model().getAdapter();
-    const arrVal = Array.isArray(value) ? value : [value];
+      const { value, format, from, ctx } = input;
+      const adapter = from.model().getAdapter();
+      const arrVal = Array.isArray(value) ? value : [value];
 
-    return arrVal.map((v, i) => {
-      const itemsField = getFieldFromDefinition(this.options.items, adapter, this.path + `.[${i}]`);
+      return arrVal.map((v, i) => {
+        const itemsField = getFieldFromDefinition(
+          this.options.items,
+          adapter,
+          this.path + `.[${i}]`,
+        );
 
-      return itemsField.serialize(v, format, from, ctx);
-    });
+        return itemsField.serialize(v, format, from, ctx);
+      });
+    },
   };
 }
 

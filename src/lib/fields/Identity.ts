@@ -20,7 +20,9 @@ class FieldIdentity extends Field<FieldTypes.IDENTITY> {
     return !values.some(_isInvalid);
   };
 
-  sTo: Field<FieldTypes.IDENTITY>["sTo"] = ({ value }) => String(value);
+  serializerMap: Field<FieldTypes.IDENTITY>["serializerMap"] = {
+    [Field.defaultSymbol]: ({ value }) => String(value),
+  };
 }
 
 export default FieldIdentity;

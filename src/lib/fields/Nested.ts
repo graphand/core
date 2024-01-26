@@ -1,5 +1,5 @@
 import FieldTypes from "@/enums/field-types";
-import { ModelInstance, SerializerCtx, SerializerFormat } from "@/types";
+import { FieldSerializerInput } from "@/types";
 import Field from "@/lib/Field";
 import { getFieldFromDefinition, getNestedFieldsMap } from "@/lib/utils";
 
@@ -11,17 +11,10 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     return !values.some(_isInvalid);
   };
 
-  _sStatic = (
-    input: {
-      value: unknown;
-      from: ModelInstance;
-      ctx: SerializerCtx;
-    },
-    format: SerializerFormat,
-  ) => {
+  _sStatic = (input: FieldSerializerInput) => {
     const { from, ctx } = input;
     const value = Array.isArray(input.value) ? input.value[0] : input.value;
-    const oFormat = ctx?.outputFormat || format;
+    const oFormat = ctx?.outputFormat || input.format;
 
     if (!value || typeof value !== "object") {
       if (oFormat === "validation") {
@@ -46,7 +39,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
       if (value[k] === undefined || value[k] === null) {
         json[k] = value[k];
       } else {
-        json[k] = field.serialize(value[k], format, from, ctx);
+        json[k] = field.serialize(value[k], input.format, from, ctx);
       }
     }
 
@@ -68,7 +61,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
               [this.path, k].join("."),
             );
 
-            json[k] = tmpField.serialize(value[k], format, from, ctx);
+            json[k] = tmpField.serialize(value[k], input.format, from, ctx);
           }
         });
       }
@@ -77,17 +70,10 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     return { ...value, ...json };
   };
 
-  _sProxy = (
-    input: {
-      value: unknown;
-      from: ModelInstance;
-      ctx: SerializerCtx;
-    },
-    format: SerializerFormat,
-  ) => {
+  _sProxy = (input: FieldSerializerInput) => {
     const { from, ctx } = input;
     const value = Array.isArray(input.value) ? input.value[0] : input.value;
-    const oFormat = ctx?.outputFormat || format;
+    const oFormat = ctx?.outputFormat || input.format;
 
     if (!value || typeof value !== "object") {
       if (oFormat === "validation") {
@@ -135,7 +121,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
         return value;
       }
 
-      return targetField.serialize(value, format, from, ctx);
+      return targetField.serialize(value, input.format, from, ctx);
     };
 
     return new Proxy(value, {
@@ -149,20 +135,10 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     });
   };
 
-  sJSON: Field<FieldTypes.NESTED>["sJSON"] = opts => {
-    return this._sStatic(opts, "json");
-  };
-
-  sObject: Field<FieldTypes.NESTED>["sObject"] = ({ value, from, ctx }) => {
-    return this._sProxy({ value, from, ctx }, "object");
-  };
-
-  sDocument: Field<FieldTypes.NESTED>["sDocument"] = ({ value, from, ctx }) => {
-    return this._sStatic({ value, from, ctx }, "document");
-  };
-
-  sTo: Field<FieldTypes.NESTED>["sTo"] = input => {
-    return this._sProxy(input, input.format);
+  serializerMap: Field<FieldTypes.NESTED>["serializerMap"] = {
+    json: this._sStatic,
+    document: this._sStatic,
+    [Field.defaultSymbol]: this._sProxy,
   };
 }
 

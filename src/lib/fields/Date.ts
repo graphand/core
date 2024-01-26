@@ -1,29 +1,28 @@
 import FieldTypes from "@/enums/field-types";
 import Field from "@/lib/Field";
 
+const toDate = value => {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return null;
+};
+
 class FieldDate extends Field<FieldTypes.DATE> {
-  _sToDate = value => {
-    if (value instanceof Date) {
-      return value;
-    }
-
-    if (typeof value === "string" || typeof value === "number") {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
-    }
-
-    return null;
-  };
-
-  sJSON: Field<FieldTypes.DATE>["sJSON"] = ({ value }) => {
-    const date = this._sToDate(value);
-    return date ? date.toISOString() : null;
-  };
-
-  sTo: Field<FieldTypes.DATE>["sTo"] = ({ value }) => {
-    return this._sToDate(value);
+  serializerMap: Field<FieldTypes.DATE>["serializerMap"] = {
+    json: ({ value }) => {
+      const date = toDate(value);
+      return date ? date.toISOString() : null;
+    },
+    [Field.defaultSymbol]: ({ value }) => toDate(value),
   };
 }
 

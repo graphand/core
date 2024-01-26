@@ -4,7 +4,7 @@ import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
-import { JSONTypeObject, SerializerFormat } from "..";
+import { JSONTypeObject, ModelInstance, SerializerCtx, SerializerFormat } from "..";
 
 export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.ARRAY]: {
@@ -205,3 +205,10 @@ export type InferModelDef<
   Partial<{
     [F in keyof SystemFields]: InferFieldType<SystemFields[F], S>;
   }>;
+
+export type FieldSerializerInput<S extends SerializerFormat = SerializerFormat> = {
+  value: unknown;
+  from: ModelInstance;
+  ctx: SerializerCtx;
+  format: S;
+};

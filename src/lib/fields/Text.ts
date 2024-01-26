@@ -25,19 +25,25 @@ class FieldText extends Field<FieldTypes.TEXT> {
     return !values.some(_isInvalid);
   };
 
-  sTo: Field<FieldTypes.TEXT>["sTo"] = ({ value, format }) => {
-    const res = Array.isArray(value) ? String(value[0]) : String(value);
+  serializerMap: Field<FieldTypes.TEXT>["serializerMap"] = {
+    [Field.defaultSymbol]: ({ value, format }) => {
+      const single = Array.isArray(value) ? String(value[0]) : String(value);
 
-    if (
-      this.options.options?.length &&
-      this.options.strict &&
-      !this.options.options.includes(res) &&
-      format !== "validation"
-    ) {
-      return undefined;
-    }
+      if (
+        this.options.options?.length &&
+        this.options.strict &&
+        !this.options.options.includes(single) &&
+        format !== "validation"
+      ) {
+        if (this.options.options.includes(String(value))) {
+          return String(value);
+        }
 
-    return res;
+        return undefined;
+      }
+
+      return String(single);
+    },
   };
 }
 

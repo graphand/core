@@ -356,21 +356,25 @@ describe("test fieldsMap", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy", async () => {
-        const serializeText = jest.fn(value => {
+        const serializeText = jest.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn(value => {
+        const serializeNumber = jest.fn(({ value }) => {
           return parseFloat(value);
         });
 
         const _adapter = mockAdapter({
           fieldsMap: {
             [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
-              serialize = serializeText;
+              serializerMap = {
+                [Field.defaultSymbol]: serializeText,
+              };
             },
             [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
-              serialize = serializeNumber;
+              serializerMap = {
+                [Field.defaultSymbol]: serializeNumber,
+              };
             },
           },
         });
@@ -412,21 +416,25 @@ describe("test fieldsMap", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy even in nested objects", async () => {
-        const serializeText = jest.fn(value => {
+        const serializeText = jest.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn(value => {
+        const serializeNumber = jest.fn(({ value }) => {
           return parseFloat(value);
         });
 
         const _adapter = mockAdapter({
           fieldsMap: {
             [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
-              serialize = serializeText;
+              serializerMap = {
+                [Field.defaultSymbol]: serializeText,
+              };
             },
             [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
-              serialize = serializeNumber;
+              serializerMap = {
+                [Field.defaultSymbol]: serializeNumber,
+              };
             },
           },
         });
@@ -484,21 +492,25 @@ describe("test fieldsMap", () => {
       });
 
       it("should not call other fields serializers thanks to the proxy even in nested array", async () => {
-        const serializeText = jest.fn(value => {
+        const serializeText = jest.fn(({ value }) => {
           return typeof value === "string" ? value : String(value);
         });
 
-        const serializeNumber = jest.fn(value => {
+        const serializeNumber = jest.fn(({ value }) => {
           return parseFloat(value);
         });
 
         const _adapter = mockAdapter({
           fieldsMap: {
             [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
-              serialize = serializeText;
+              serializerMap = {
+                [Field.defaultSymbol]: serializeText,
+              };
             },
             [FieldTypes.NUMBER]: class extends Field<FieldTypes.NUMBER> {
-              serialize = serializeNumber;
+              serializerMap = {
+                [Field.defaultSymbol]: serializeNumber,
+              };
             },
           },
         });
@@ -588,13 +600,13 @@ describe("test fieldsMap", () => {
         const serializedText = faker.lorem.word();
         const testSerializer = jest.fn(() => serializedText);
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
-          serialize = testSerializer;
-        }
-
         const _adapter = mockAdapter({
           fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+              serializerMap = {
+                [Field.defaultSymbol]: testSerializer,
+              };
+            },
           },
         });
 
@@ -670,7 +682,10 @@ describe("test fieldsMap", () => {
 
         class TestFieldText extends Field<FieldTypes.TEXT> {
           validate = testValidator;
-          serialize = testSerializer;
+
+          serializerMap = {
+            [Field.defaultSymbol]: testSerializer,
+          };
         }
 
         const _adapter = mockAdapter({
@@ -763,6 +778,9 @@ describe("test fieldsMap", () => {
         };
 
         const i = model.fromDoc({ obj });
+
+        console.log(i.obj.__isProxy);
+        console.log(i.obj.__isProxy);
 
         try {
           await model.validate([i]);
@@ -954,13 +972,13 @@ describe("test fieldsMap", () => {
         const serializedText = faker.lorem.word();
         const testSerializer = jest.fn(() => serializedText);
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
-          serialize = testSerializer;
-        }
-
         const _adapter = mockAdapter({
           fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+              serializerMap = {
+                [Field.defaultSymbol]: testSerializer,
+              };
+            },
           },
         });
 
@@ -991,13 +1009,13 @@ describe("test fieldsMap", () => {
         const serializedText = faker.lorem.word();
         const testSerializer = jest.fn(() => serializedText);
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
-          serialize = testSerializer;
-        }
-
         const _adapter = mockAdapter({
           fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+            [FieldTypes.TEXT]: class TestFieldText extends Field<FieldTypes.TEXT> {
+              serializerMap = {
+                [Field.defaultSymbol]: testSerializer,
+              };
+            },
           },
         });
 
@@ -1027,13 +1045,13 @@ describe("test fieldsMap", () => {
         const serializedText = faker.lorem.word();
         const testSerializer = jest.fn(() => serializedText);
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
-          serialize = testSerializer;
-        }
-
         const _adapter = mockAdapter({
           fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+            [FieldTypes.TEXT]: class extends Field<FieldTypes.TEXT> {
+              serializerMap = {
+                [Field.defaultSymbol]: testSerializer,
+              };
+            },
           },
         });
 
@@ -1070,14 +1088,14 @@ describe("test fieldsMap", () => {
       it("should use defaultField by default to validate", async () => {
         const testValidator = jest.fn(() => Promise.resolve(true));
 
-        class TestFieldText extends Field<FieldTypes.TEXT> {
-          validate = testValidator;
-          sTo = ({ value }) => value;
-        }
-
         const _adapter = mockAdapter({
           fieldsMap: {
-            [FieldTypes.TEXT]: TestFieldText,
+            [FieldTypes.TEXT]: class TestFieldText extends Field<FieldTypes.TEXT> {
+              validate = testValidator;
+              serializerMap = {
+                [Field.defaultSymbol]: ({ value }) => value,
+              };
+            },
           },
         });
 

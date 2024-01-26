@@ -6,15 +6,31 @@ import {
   ModelInstance,
   InferFieldType,
   SerializerFormat,
-  SerializerFieldsMap,
   SerializerCtx,
   TransactionCtx,
+  SerializerFieldsMap,
+  FieldSerializerInput,
 } from "@/types";
 
 class Field<T extends FieldTypes = FieldTypes> {
   #definition: FieldDefinition<T>; // The field definition
   #path: string; // The path of the field in the model
   nextFieldEqObject: boolean = true; // If false, the serializer returns a different value in NEXT_FIELD and OBJECT
+  static readonly defaultSymbol: unique symbol = Symbol("defaultSerializer");
+
+  serializerMap: Partial<{
+    [S in SerializerFormat]: (
+      input: FieldSerializerInput<S>,
+    ) => InferFieldType<FieldDefinition<T>, S>;
+  }> & {
+    [Field.defaultSymbol]?: (
+      input: FieldSerializerInput,
+    ) => T extends keyof SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<
+      FieldDefinition<T>
+    >]
+      ? SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<FieldDefinition<T>>][T]
+      : unknown;
+  };
 
   constructor(definition: FieldDefinition<T>, path: string) {
     this.#definition = definition;
@@ -43,48 +59,25 @@ class Field<T extends FieldTypes = FieldTypes> {
     ctx?: TransactionCtx;
   }) => Promise<boolean>;
 
-  sJSON?: (input: {
-    value: unknown;
-    from: ModelInstance;
-    ctx: SerializerCtx;
-  }) => InferFieldType<FieldDefinition<T>, "json">;
+  serialize = <S extends SerializerFormat>(
+    value: unknown,
+    format: S,
+    from: ModelInstance,
+    ctx: SerializerCtx,
+  ): InferFieldType<FieldDefinition<T>, S> => {
+    const s = this.serializerMap?.[format] || this.serializerMap?.[Field.defaultSymbol];
 
-  sObject?: (input: {
-    value: unknown;
-    from: ModelInstance;
-    ctx: SerializerCtx;
-  }) => InferFieldType<FieldDefinition<T>, "object">;
-
-  sDocument?: (input: {
-    value: unknown;
-    from: ModelInstance;
-    ctx: SerializerCtx;
-  }) => InferFieldType<FieldDefinition<T>, "document">;
-
-  sTo: (input: {
-    value: unknown;
-    format: SerializerFormat;
-    from: ModelInstance;
-    ctx: SerializerCtx;
-  }) => T extends keyof SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<
-    FieldDefinition<T>
-  >]
-    ? SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<FieldDefinition<T>>][T]
-    : unknown;
-
-  serialize(value: unknown, format: SerializerFormat, from: ModelInstance, ctx: SerializerCtx) {
-    const s = {
-      ["json"]: this.sJSON,
-      ["object"]: this.sObject,
-      ["document"]: this.sDocument,
-    }[format];
-
-    if (s) {
-      return s({ value, from, ctx });
+    if (!s) {
+      console.warn(`No serializer found for format ${format} on field ${this.path}`);
+      return undefined;
     }
 
-    return this.sTo?.({ value, format, from, ctx });
-  }
+    const serializer = s as (
+      input: FieldSerializerInput<S>,
+    ) => InferFieldType<FieldDefinition<T>, S>;
+
+    return serializer({ value, from, ctx, format });
+  };
 
   toJSON() {
     return {

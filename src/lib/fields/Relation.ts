@@ -1,13 +1,28 @@
 import FieldTypes from "@/enums/field-types";
 import Field from "@/lib/Field";
-import Model from "../Model";
+import Model from "@/lib/Model";
 import { isObjectId } from "@/lib/utils";
 import PromiseModel from "@/lib/PromiseModel";
+import { FieldSerializerInput } from "@/types";
 
 class FieldRelation extends Field<FieldTypes.RELATION> {
   nextFieldEqObject = false;
 
-  _sToString = value => {
+  validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
+    const _isInvalid = value => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      return !isObjectId(value);
+    };
+
+    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
+
+    return !values.some(_isInvalid);
+  };
+
+  _sString = ({ value }: FieldSerializerInput) => {
     if (!value) {
       return null;
     }
@@ -25,30 +40,14 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
     return id;
   };
 
-  validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
-    const _isInvalid = value => {
-      if (value === null || value === undefined) {
-        return false;
-      }
-
-      return !isObjectId(value);
-    };
-
-    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
-
-    return !values.some(_isInvalid);
-  };
-
-  sTo: Field<FieldTypes.RELATION>["sTo"] = ({ value }) => {
-    return this._sToString(value);
-  };
-
-  sObject: Field<FieldTypes.RELATION>["sObject"] = ({ value, from, ctx }) => {
-    const id = this._sToString(value);
+  _sObject = (input: FieldSerializerInput) => {
+    const id = this._sString(input);
 
     if (!isObjectId(id)) {
       return null;
     }
+
+    const { from, ctx } = input;
 
     const adapter = from.model().getAdapter();
 
@@ -56,6 +55,11 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
     const model = Model.getClass(this.options.ref, adapter.base);
 
     return model.get(id, ctx?.transactionCtx);
+  };
+
+  serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {
+    object: this._sObject,
+    [Field.defaultSymbol]: this._sString,
   };
 }
 
