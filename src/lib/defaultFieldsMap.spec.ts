@@ -9,7 +9,6 @@ import ValidationError from "@/lib/ValidationError";
 import PromiseModel from "@/lib/PromiseModel";
 import { DataModel, JSONType, Model, models } from "@/index";
 import PromiseModelList from "@/lib/PromiseModelList";
-import SerializerFormat from "@/enums/serializer-format";
 
 describe("test fieldsMap", () => {
   const adapter = mockAdapter({});
@@ -280,7 +279,7 @@ describe("test fieldsMap", () => {
           },
         },
       });
-      expect(i.get("definition.fields.test.options", SerializerFormat.JSON)).toBe(undefined);
+      expect(i.get("definition.fields.test.options", "json")).toBe(undefined);
     });
 
     it("should not bind default values in document format", async () => {
@@ -299,7 +298,7 @@ describe("test fieldsMap", () => {
       const i = model.fromDoc({});
 
       expect(i.get("obj")).toEqual({ test: 1 });
-      expect(i.get("obj", SerializerFormat.DOCUMENT)).toEqual(undefined);
+      expect(i.get("obj", "document")).toEqual(undefined);
     });
 
     it("should not bind default values in document format in nested fields", async () => {
@@ -327,7 +326,7 @@ describe("test fieldsMap", () => {
       });
 
       expect(i.get("obj.foo")).toEqual("bar");
-      expect(i.get("obj.foo", SerializerFormat.DOCUMENT)).toEqual(undefined);
+      expect(i.get("obj.foo", "document")).toEqual(undefined);
     });
 
     describe("Proxy", () => {
@@ -1119,8 +1118,8 @@ describe("test fieldsMap", () => {
       const _testConsistency = (model: typeof Model, obj: JSONType, f = "obj") => {
         const i = model.fromDoc({ [f]: obj });
 
-        const obj1 = i.get(f, SerializerFormat.JSON);
-        const obj2 = model.fromDoc({ [f]: obj1 }).get(f, SerializerFormat.JSON);
+        const obj1 = i.get(f, "json");
+        const obj2 = model.fromDoc({ [f]: obj1 }).get(f, "json");
 
         expect(obj1).toEqual(obj2);
       };
@@ -1469,7 +1468,7 @@ describe("test fieldsMap", () => {
       const _id = String(new ObjectId());
       const i = model.fromDoc({ rel: _id });
 
-      expect(i.get("rel", SerializerFormat.JSON)).toEqual(_id);
+      expect(i.get("rel", "json")).toEqual(_id);
     });
   });
 
@@ -1613,7 +1612,7 @@ describe("test fieldsMap", () => {
         arrRel: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
       });
 
-      const jsonArrRel = i.get("arrRel", SerializerFormat.JSON);
+      const jsonArrRel = i.get("arrRel", "json");
 
       expect(jsonArrRel).toBeInstanceOf(Array);
       expect(jsonArrRel).toEqual(["507f191e810c19729de860ea", "507f191e810c19729de860eb"]);

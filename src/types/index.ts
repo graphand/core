@@ -9,15 +9,18 @@ import type AuthMethods from "@/enums/auth-methods";
 import type Sockethook from "@/models/Sockethook";
 import type MergeRequestTypes from "@/enums/merge-request-types";
 import type MergeRequestEventTypes from "@/enums/merge-request-event-types";
-import type { models } from "@/.";
-import SerializerFormat from "@/enums/serializer-format";
-import { FieldDefinition, ModelDocument, InferModelDef } from "@/types/fields";
-import { ValidatorDefinition } from "@/types/validators";
+import type { SerializerFieldsMap, models } from "@/.";
+import type Role from "@/models/Role";
+import type { FieldDefinition, ModelDocument, InferModelDef } from "@/types/fields";
+import type { ValidatorDefinition } from "@/types/validators";
+import type { TransactionCtx } from "./ctx";
 export * from "./fields";
 export * from "./validators";
+export * from "./ctx";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OverrideModelDefinition = any;
+export type Rule = ModelInstance<typeof Role>["rules"][number];
+export type FieldsRestriction = ModelInstance<typeof Role>["fieldsRestrictions"][number];
+export type SerializerFormat = keyof SerializerFieldsMap<FieldDefinition>;
 
 export type JSONSubtype =
   | null
@@ -34,7 +37,7 @@ export type JSONTypeObject = Record<string, JSONSubtype>;
 
 export type JSONType = JSONTypeObject | JSONSubtypeArray;
 
-type Transaction<
+export type Transaction<
   M extends typeof Model = typeof Model,
   A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
   Args extends Parameters<AdapterFetcher<M>[A]>[0] = Parameters<AdapterFetcher<M>[A]>[0],
@@ -42,25 +45,8 @@ type Transaction<
   model: M;
   action: A;
   args: Args;
-};
-
-export type CoreTransactionCtx = {
-  retryToken: symbol;
-  abortToken: symbol;
-  transaction: Transaction;
-};
-
-export type CoreSerializerCtx = object;
-
-export type DefaultTransactionCtx = {
-  disableValidation?: boolean;
-  forceOperation?: boolean;
-};
-
-export type DefaultSerializerCtx = {
-  defaults?: boolean;
-  outputFormat?: string;
-  transactionCtx?: TransactionCtx;
+  retryToken?: symbol;
+  abortToken?: symbol;
 };
 
 export type SortDirection =
@@ -133,48 +119,30 @@ export type UpdateObject = {
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
-  count: (
-    args: [query: string | JSONQuery],
-    ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<number | null>;
-  get: (
-    args: [query: string | JSONQuery],
-    ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<ModelInstance<T> | null>;
-  getList: (
-    args: [query: JSONQuery],
-    ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<ModelList<T>>;
-  createOne: (
-    args: [payload: Partial<ModelDocument<T>>],
-    ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<ModelInstance<T>>;
+  count: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<number | null>;
+  get: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<ModelInstance<T> | null>;
+  getList: (args: [query: JSONQuery], ctx: TransactionCtx) => Promise<ModelList<T>>;
+  createOne: (args: [payload: ModelDocument<T>], ctx: TransactionCtx) => Promise<ModelInstance<T>>;
   createMultiple: (
-    args: [payload: Array<Partial<ModelDocument<T>>>],
-    ctx: TransactionCtx & CoreTransactionCtx,
+    args: [payload: Array<ModelDocument<T>>],
+    ctx: TransactionCtx,
   ) => Promise<Array<ModelInstance<T>>>;
   updateOne: (
     args: [query: string | JSONQuery, update: UpdateObject],
-    ctx: TransactionCtx & CoreTransactionCtx,
+    ctx: TransactionCtx,
   ) => Promise<ModelInstance<T>>;
   updateMultiple: (
     args: [query: JSONQuery, update: UpdateObject],
-    ctx: TransactionCtx & CoreTransactionCtx,
+    ctx: TransactionCtx,
   ) => Promise<Array<ModelInstance<T>>>;
-  deleteOne: (
-    args: [query: string | JSONQuery],
-    ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<boolean>;
-  deleteMultiple: (
-    args: [query: JSONQuery],
-    ctx: TransactionCtx & CoreTransactionCtx,
-  ) => Promise<string[]>;
-  initialize?: (args: never, ctx: TransactionCtx & CoreTransactionCtx) => Promise<void>;
+  deleteOne: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<boolean>;
+  deleteMultiple: (args: [query: JSONQuery], ctx: TransactionCtx) => Promise<string[]>;
+  initialize?: (args: never, ctx: TransactionCtx) => Promise<void>;
 };
 
 export type Module<T extends typeof Model = typeof Model> = (model: T) => void;
 
-export type RefModelsMap = {
+export interface RefModelsMap {
   accounts: typeof models.Account;
   authProviders: typeof models.AuthProvider;
   backups: typeof models.Backup;
@@ -194,7 +162,7 @@ export type RefModelsMap = {
   terms: typeof models.Terms;
   tokens: typeof models.Token;
   users: typeof models.User;
-};
+}
 
 export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap
   ? RefModelsMap[T]
@@ -205,7 +173,7 @@ export type ModelInstance<
   D = undefined,
 > = (M["definition"] extends ModelDefinition ? InstanceType<typeof Model> : unknown) &
   InstanceType<M> &
-  InferModelDef<M, SerializerFormat.OBJECT, D>;
+  InferModelDef<M, "object", D>;
 
 export type HookPhase = "before" | "after";
 
@@ -216,7 +184,8 @@ export type HookCallbackArgs<
 > = P extends "before"
   ? {
       args: Parameters<AdapterFetcher<T>[A]>[0];
-      ctx: TransactionCtx & CoreTransactionCtx;
+      ctx: TransactionCtx;
+      transaction: Transaction<T, A>;
       err?: Array<Error | symbol>;
     }
   : HookCallbackArgs<"before", A, T> & {

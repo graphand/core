@@ -1,7 +1,12 @@
 import FieldTypes from "@/enums/field-types";
-import { FieldDefinition, FieldOptions, ModelInstance } from "@/types";
+import {
+  FieldDefinition,
+  FieldOptions,
+  ModelInstance,
+  SerializerCtx,
+  SerializerFormat,
+} from "@/types";
 import Field from "@/lib/Field";
-import SerializerFormat from "@/enums/serializer-format";
 import Model from "@/lib/Model";
 import { getFieldFromDefinition, isObjectId } from "@/lib/utils";
 import CoreError from "@/lib/CoreError";
@@ -23,7 +28,7 @@ class FieldArray extends Field<FieldTypes.ARRAY> {
     const adapter = from.model().getAdapter();
     let arrVal = Array.isArray(value) ? value : [value];
 
-    if (format === SerializerFormat.OBJECT) {
+    if (format === "object") {
       const model = Model.getClass(options.ref, adapter.base);
 
       if (!arrVal?.every(isObjectId)) {

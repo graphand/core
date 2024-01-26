@@ -2,14 +2,11 @@ import Model from "@/lib/Model";
 import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
-import { ModelInstance } from "@/types";
+import { FieldsRestriction, ModelInstance, Rule } from "@/types";
 import RuleActions from "@/enums/rule-actions";
 import ValidatorTypes from "@/enums/validator-types";
 import Patterns from "@/enums/patterns";
 import { ModelDefinition } from "@/types";
-
-type Rule = ModelInstance<typeof Role>["rules"][number];
-type FieldRestriction = ModelInstance<typeof Role>["fieldsRestrictions"][number];
 
 @modelDecorator()
 class Role extends Model {
@@ -131,7 +128,7 @@ class Role extends Model {
     return rules;
   }
 
-  async getFieldsRestrictionsInherited(): Promise<Array<FieldRestriction>> {
+  async getFieldsRestrictionsInherited(): Promise<Array<FieldsRestriction>> {
     const i = this as ModelInstance<typeof Role>;
     let fieldsRestrictions = i.fieldsRestrictions || [];
 

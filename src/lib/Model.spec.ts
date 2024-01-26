@@ -11,7 +11,6 @@ import ErrorCodes from "@/enums/error-codes";
 import Media from "@/models/Media";
 import { ModelDefinition, ModelInstance } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
-import SerializerFormat from "@/enums/serializer-format";
 import Data from "@/lib/Data";
 import PromiseModel from "@/lib/PromiseModel";
 import { faker } from "@faker-js/faker";
@@ -1276,7 +1275,7 @@ describe("Test Model", () => {
       const r = created.set(field, v);
       expect(r).toEqual(value);
 
-      const v2 = created.get(field, SerializerFormat.DOCUMENT);
+      const v2 = created.get(field, "document");
       expect(v2).toEqual(value);
     };
 
@@ -1736,8 +1735,8 @@ describe("Test Model", () => {
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
       const beforeCreateFn1 = jest.fn();
-      const beforeCreateFn2 = jest.fn(({ ctx }) => {
-        throw ctx.abortToken;
+      const beforeCreateFn2 = jest.fn(({ transaction }) => {
+        throw transaction.abortToken;
       });
       const afterCreateFn = jest.fn();
 
@@ -1759,8 +1758,8 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
-      const beforeCreateFn1 = jest.fn(({ ctx }) => {
-        throw ctx.abortToken;
+      const beforeCreateFn1 = jest.fn(({ transaction }) => {
+        throw transaction.abortToken;
       });
       const beforeCreateFn2 = jest.fn();
       const afterCreateFn = jest.fn();
@@ -1783,8 +1782,8 @@ describe("Test Model", () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
       const beforeCreateFn = jest.fn();
-      const afterCreateFn1 = jest.fn(({ ctx }) => {
-        throw ctx.abortToken;
+      const afterCreateFn1 = jest.fn(({ transaction }) => {
+        throw transaction.abortToken;
       });
       const afterCreateFn2 = jest.fn();
 

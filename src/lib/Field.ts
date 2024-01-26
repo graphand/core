@@ -1,14 +1,15 @@
 import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
 import {
-  CoreSerializerCtx,
   FieldDefinition,
   FieldOptions,
   ModelInstance,
-  FieldTypeMap,
   InferFieldType,
+  SerializerFormat,
+  SerializerFieldsMap,
+  SerializerCtx,
+  TransactionCtx,
 } from "@/types";
-import SerializerFormat from "@/enums/serializer-format";
 
 class Field<T extends FieldTypes = FieldTypes> {
   #definition: FieldDefinition<T>; // The field definition
@@ -45,38 +46,37 @@ class Field<T extends FieldTypes = FieldTypes> {
   sJSON?: (input: {
     value: unknown;
     from: ModelInstance;
-    ctx: SerializerCtx & CoreSerializerCtx;
-  }) => InferFieldType<FieldDefinition<T>, SerializerFormat.JSON>;
+    ctx: SerializerCtx;
+  }) => InferFieldType<FieldDefinition<T>, "json">;
 
   sObject?: (input: {
     value: unknown;
     from: ModelInstance;
-    ctx: SerializerCtx & CoreSerializerCtx;
-  }) => InferFieldType<FieldDefinition<T>, SerializerFormat.OBJECT>;
+    ctx: SerializerCtx;
+  }) => InferFieldType<FieldDefinition<T>, "object">;
 
   sDocument?: (input: {
     value: unknown;
     from: ModelInstance;
-    ctx: SerializerCtx & CoreSerializerCtx;
-  }) => InferFieldType<FieldDefinition<T>, SerializerFormat.DOCUMENT>;
+    ctx: SerializerCtx;
+  }) => InferFieldType<FieldDefinition<T>, "document">;
 
   sTo: (input: {
     value: unknown;
     format: SerializerFormat;
     from: ModelInstance;
-    ctx: SerializerCtx & CoreSerializerCtx;
-  }) => FieldTypeMap<FieldDefinition<T>>[T][keyof FieldTypeMap<FieldDefinition<T>>[T]] | unknown;
+    ctx: SerializerCtx;
+  }) => T extends keyof SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<
+    FieldDefinition<T>
+  >]
+    ? SerializerFieldsMap<FieldDefinition<T>>[keyof SerializerFieldsMap<FieldDefinition<T>>][T]
+    : unknown;
 
-  serialize(
-    value: unknown,
-    format: SerializerFormat,
-    from: ModelInstance,
-    ctx: SerializerCtx & CoreSerializerCtx,
-  ) {
+  serialize(value: unknown, format: SerializerFormat, from: ModelInstance, ctx: SerializerCtx) {
     const s = {
-      [SerializerFormat.JSON]: this.sJSON,
-      [SerializerFormat.OBJECT]: this.sObject,
-      [SerializerFormat.DOCUMENT]: this.sDocument,
+      ["json"]: this.sJSON,
+      ["object"]: this.sObject,
+      ["document"]: this.sDocument,
     }[format];
 
     if (s) {

@@ -1,5 +1,4 @@
 import FieldTypes from "@/enums/field-types";
-import SerializerFormat from "@/enums/serializer-format";
 import Field from "@/lib/Field";
 import { isObjectId } from "@/lib/utils";
 
@@ -21,7 +20,7 @@ class FieldText extends Field<FieldTypes.TEXT> {
       return false;
     };
 
-    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
+    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
 
     return !values.some(_isInvalid);
   };
@@ -33,7 +32,7 @@ class FieldText extends Field<FieldTypes.TEXT> {
       this.options.options?.length &&
       this.options.strict &&
       !this.options.options.includes(res) &&
-      format !== SerializerFormat.VALIDATION
+      format !== "validation"
     ) {
       return undefined;
     }

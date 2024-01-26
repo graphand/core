@@ -51,146 +51,139 @@ type SystemFields = {
   _updatedBy: { type: FieldTypes.IDENTITY };
 };
 
-export type FieldTypeMap<F extends FieldDefinition<FieldTypes>> = {
-  [FieldTypes.ID]: {
-    [SerializerFormat.JSON]: string;
-    [SerializerFormat.OBJECT]: IdType;
-    [SerializerFormat.DOCUMENT]: IdType;
-  };
-  [FieldTypes.IDENTITY]: {
-    [SerializerFormat.JSON]: string;
-    [SerializerFormat.OBJECT]: string;
-    [SerializerFormat.DOCUMENT]: string;
-  };
-  [FieldTypes.BOOLEAN]: {
-    [SerializerFormat.JSON]: boolean;
-    [SerializerFormat.OBJECT]: boolean;
-    [SerializerFormat.DOCUMENT]: boolean;
-  };
-  [FieldTypes.NUMBER]: {
-    [SerializerFormat.JSON]: number;
-    [SerializerFormat.OBJECT]: number;
-    [SerializerFormat.DOCUMENT]: number;
-  };
-  [FieldTypes.DATE]: {
-    [SerializerFormat.JSON]: string;
-    [SerializerFormat.OBJECT]: Date;
-    [SerializerFormat.DOCUMENT]: Date;
-  };
-  [FieldTypes.TEXT]: {
-    [SerializerFormat.JSON]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
+export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
+  json: {
+    [FieldTypes.ID]: string;
+    [FieldTypes.IDENTITY]: string;
+    [FieldTypes.BOOLEAN]: boolean;
+    [FieldTypes.NUMBER]: number;
+    [FieldTypes.DATE]: string;
+    [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
       ? F["options"]["options"] extends Array<string>
         ? F["options"]["strict"] extends true
           ? F["options"]["options"][number]
           : F["options"]["options"][number] | string
         : string
       : string;
-    [SerializerFormat.OBJECT]: FieldTypeMap<F>[FieldTypes.TEXT][SerializerFormat.JSON];
-    [SerializerFormat.DOCUMENT]: FieldTypeMap<F>[FieldTypes.TEXT][SerializerFormat.JSON];
-  };
-  [FieldTypes.NESTED]: {
-    [SerializerFormat.JSON]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
+    [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
       ? (F["options"]["fields"] extends Record<string, FieldDefinition>
           ? Partial<{
               [K in keyof F["options"]["fields"]]: InferFieldType<
                 F["options"]["fields"][K],
-                SerializerFormat.JSON
+                "json"
               >;
             }>
           : unknown) &
           (F["options"]["defaultField"] extends FieldDefinition
             ? {
-                [x: string]: InferFieldType<F["options"]["defaultField"], SerializerFormat.JSON>;
+                [x: string]: InferFieldType<F["options"]["defaultField"], "json">;
               }
             : unknown) &
           JSONTypeObject
       : JSONTypeObject;
-    [SerializerFormat.OBJECT]: (F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
+    [FieldTypes.RELATION]: string;
+    [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
+      ? Array<InferFieldType<F["options"]["items"], "json">>
+      : Array<unknown>;
+  };
+  object: {
+    [FieldTypes.ID]: IdType;
+    [FieldTypes.IDENTITY]: string;
+    [FieldTypes.BOOLEAN]: boolean;
+    [FieldTypes.NUMBER]: number;
+    [FieldTypes.DATE]: Date;
+    [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
+      ? F["options"]["options"] extends Array<string>
+        ? F["options"]["strict"] extends true
+          ? F["options"]["options"][number]
+          : F["options"]["options"][number] | string
+        : string
+      : string;
+    [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
       ? (F["options"]["fields"] extends Record<string, FieldDefinition>
           ? Partial<{
               [K in keyof F["options"]["fields"]]: InferFieldType<
                 F["options"]["fields"][K],
-                SerializerFormat.OBJECT
+                "object"
               >;
             }>
           : unknown) &
           (F["options"]["defaultField"] extends FieldDefinition
             ? {
-                [x: string]: InferFieldType<F["options"]["defaultField"], SerializerFormat.OBJECT>;
-              }
-            : unknown) &
-          JSONTypeObject
-      : JSONTypeObject) & {
-      __isProxy: boolean;
-    };
-    [SerializerFormat.DOCUMENT]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
-      ? (F["options"]["fields"] extends Record<string, FieldDefinition>
-          ? Partial<{
-              [K in keyof F["options"]["fields"]]: InferFieldType<
-                F["options"]["fields"][K],
-                SerializerFormat.DOCUMENT
-              >;
-            }>
-          : unknown) &
-          (F["options"]["defaultField"] extends FieldDefinition
-            ? {
-                [x: string]: InferFieldType<
-                  F["options"]["defaultField"],
-                  SerializerFormat.DOCUMENT
-                >;
+                [x: string]: InferFieldType<F["options"]["defaultField"], "object">;
               }
             : unknown) &
           JSONTypeObject
       : JSONTypeObject;
-  };
-  [FieldTypes.RELATION]: {
-    [SerializerFormat.JSON]: string;
-    [SerializerFormat.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.RELATION]
+    [FieldTypes.RELATION]: F["options"] extends FieldOptionsMap[FieldTypes.RELATION]
       ? F["options"]["ref"] extends string
         ? PromiseModel<DecodeRefModel<F["options"]["ref"]>>
         : PromiseModel<typeof Model>
       : PromiseModel<typeof Model>;
-    [SerializerFormat.DOCUMENT]: IdType;
-  };
-  [FieldTypes.ARRAY]: {
-    [SerializerFormat.JSON]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
-      ? Array<InferFieldType<F["options"]["items"], SerializerFormat.JSON>>
-      : Array<unknown>;
-    [SerializerFormat.OBJECT]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
+    [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
       ? F["options"]["items"]["type"] extends FieldTypes.RELATION
         ? F["options"]["items"]["options"] extends FieldOptionsMap[FieldTypes.RELATION]
           ? PromiseModelList<DecodeRefModel<F["options"]["items"]["options"]["ref"]>>
           : PromiseModelList<typeof Model>
-        : Array<InferFieldType<F["options"]["items"], SerializerFormat.OBJECT>>
-      : Array<unknown>;
-    [SerializerFormat.DOCUMENT]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
-      ? F["options"]["items"]["type"] extends FieldTypes.RELATION
-        ? Array<IdType>
-        : Array<InferFieldType<F["options"]["items"], SerializerFormat.DOCUMENT>>
+        : Array<InferFieldType<F["options"]["items"], "object">>
       : Array<unknown>;
   };
-};
+  document: {
+    [FieldTypes.ID]: IdType;
+    [FieldTypes.IDENTITY]: string;
+    [FieldTypes.BOOLEAN]: boolean;
+    [FieldTypes.NUMBER]: number;
+    [FieldTypes.DATE]: Date;
+    [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
+      ? F["options"]["options"] extends Array<string>
+        ? F["options"]["strict"] extends true
+          ? F["options"]["options"][number]
+          : F["options"]["options"][number] | string
+        : string
+      : string;
+    [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
+      ? (F["options"]["fields"] extends Record<string, FieldDefinition>
+          ? Partial<{
+              [K in keyof F["options"]["fields"]]: InferFieldType<
+                F["options"]["fields"][K],
+                "document"
+              >;
+            }>
+          : unknown) &
+          (F["options"]["defaultField"] extends FieldDefinition
+            ? {
+                [x: string]: InferFieldType<F["options"]["defaultField"], "document">;
+              }
+            : unknown) &
+          JSONTypeObject
+      : JSONTypeObject;
+    [FieldTypes.RELATION]: IdType;
+    [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
+      ? F["options"]["items"]["type"] extends FieldTypes.RELATION
+        ? Array<IdType>
+        : Array<InferFieldType<F["options"]["items"], "document">>
+      : Array<unknown>;
+  };
+  validation: {};
+  nextField: {};
+}
 
 export type GenericModelDocument = Partial<Record<string, JSONSubtype>>;
 
 export type InferFieldType<
   D extends FieldDefinition,
   F extends SerializerFormat,
-> = D extends FieldDefinition
-  ? F extends keyof FieldTypeMap<D>[D["type"]]
-    ? FieldTypeMap<D>[D["type"]][F]
+> = F extends keyof SerializerFieldsMap<D>
+  ? D["type"] extends keyof SerializerFieldsMap<D>[F]
+    ? SerializerFieldsMap<D>[F][D["type"]]
     : unknown
   : unknown;
 
-export type ModelDocument<M extends typeof Model, D = undefined> = InferModelDef<
-  M,
-  SerializerFormat.DOCUMENT,
-  D
->;
+export type ModelDocument<M extends typeof Model, D = undefined> = InferModelDef<M, "document", D>;
 
 export type InferModelDef<
   M extends typeof Model,
-  S extends SerializerFormat = SerializerFormat.OBJECT,
+  S extends SerializerFormat = "object",
   D = undefined,
 > = (D extends ModelDefinition
   ? Partial<{

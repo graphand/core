@@ -4,7 +4,6 @@ import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
 import {
   AdapterFetcher,
-  CoreTransactionCtx,
   FieldsPathItem,
   Hook,
   HookCallbackArgs,
@@ -20,8 +19,11 @@ import {
   RefModelsMap,
   InferModelDef,
   JSONTypeObject,
+  SerializerFormat,
+  TransactionCtx,
+  SerializerCtx,
+  Transaction,
 } from "@/types";
-import SerializerFormat from "@/enums/serializer-format";
 import Adapter from "@/lib/Adapter";
 import Validator from "@/lib/Validator";
 import {
@@ -101,9 +103,9 @@ class Model {
 
   static fromDoc<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
-    doc: Partial<ModelDocument<T, D>> = {},
+    doc?: ModelDocument<T, D>,
   ): ModelInstance<T, D> {
-    return new this(doc as GenericModelDocument) as ModelInstance<T, D>;
+    return new this((doc ?? {}) as GenericModelDocument) as ModelInstance<T, D>;
   }
 
   /**
@@ -388,11 +390,11 @@ class Model {
   get<T extends ModelInstance>(
     this: T,
     path: string,
-    format: SerializerFormat = SerializerFormat.OBJECT,
-    bindCtx: Partial<SerializerCtx> = {},
+    format: SerializerFormat = "object",
+    ctx: SerializerCtx = {},
     value?: JSONSubtype,
   ) {
-    const ctx: SerializerCtx = { ...bindCtx, outputFormat: format };
+    ctx.outputFormat ??= format;
     const model = this.model();
     let fieldsPaths: Array<FieldsPathItem>;
 
@@ -416,7 +418,7 @@ class Model {
     const firstField = fieldsPaths[0].field;
     value ??= this.__doc[firstField.path] as JSONSubtype;
 
-    const defaults = ctx?.defaults ?? format !== SerializerFormat.DOCUMENT;
+    const defaults = ctx?.defaults ?? format !== "document";
     if (defaults && value === undefined && "default" in firstField.options) {
       value = firstField.options.default as typeof value;
     }
@@ -433,7 +435,7 @@ class Model {
 
     const noFieldSymbol = Symbol("noField");
 
-    const _value = firstField.serialize(value, SerializerFormat.NEXT_FIELD, from, ctx);
+    const _value = firstField.serialize(value, "nextField", from, ctx);
 
     const res = _getter({
       value: _value,
@@ -455,7 +457,7 @@ class Model {
    * model.set("field", "value");
    * console.log(model.get("field")); // value
    */
-  set<T extends ModelInstance>(this: T, path: string, value: JSONSubtype, ctx?: TransactionCtx) {
+  set<T extends ModelInstance>(this: T, path: string, value: JSONSubtype) {
     const _path = path as string;
     let fieldsPaths;
     const _throw = () => {
@@ -485,7 +487,6 @@ class Model {
       _value: value,
       _fieldsPaths: fieldsPaths,
       _throw,
-      ctx,
       from: this,
     });
   }
@@ -497,7 +498,7 @@ class Model {
    * @param clean - if true, the result object will be cleaned from undefined values
    * @param fieldsKeys - an array of fields to serialize. If not provided, all fields will be serialized
    * @example
-   * console.log(instance.serialize(SerializerFormat.JSON)); // equivalent to instance.toJSON()
+   * console.log(instance.serialize("json")); // equivalent to instance.toJSON()
    */
   serialize<T extends ModelInstance, S extends SerializerFormat>(
     this: T,
@@ -526,19 +527,19 @@ class Model {
   /**
    * Get the document representation of the current instance as JSON
    * @example
-   * console.log(instance.toJSON()); // equivalent to instance.to(SerializerFormat.JSON)
+   * console.log(instance.toJSON()); // equivalent to instance.to("json")
    */
   toJSON<T extends ModelInstance>(this: T) {
-    return this.serialize(SerializerFormat.JSON);
+    return this.serialize("json");
   }
 
   /**
    * Get the document representation of the current instance as an object
    * @example
-   * console.log(instance.toObject()); // equivalent to instance.to(SerializerFormat.OBJECT)
+   * console.log(instance.toObject()); // equivalent to instance.to("object")
    */
   toObject<T extends ModelInstance>(this: T) {
-    return this.serialize(SerializerFormat.OBJECT);
+    return this.serialize("object");
   }
 
   /**
@@ -546,10 +547,10 @@ class Model {
    * The document format is about the same as the JSON format but with some differences:
    * - default values of the fields are not included
    * @example
-   * console.log(instance.toDocument()); // equivalent to instance.to(SerializerFormat.DOCUMENT)
+   * console.log(instance.toDocument()); // equivalent to instance.to("document")
    */
   toDocument<T extends ModelInstance>(this: T) {
-    return this.serialize(SerializerFormat.DOCUMENT);
+    return this.serialize("document");
   }
 
   /**
@@ -654,7 +655,7 @@ class Model {
    */
   static async create<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
-    payload: Partial<ModelDocument<T, D>>,
+    payload: ModelDocument<T, D>,
     ctx?: TransactionCtx,
   ): Promise<ModelInstance<T, D>> {
     if (Array.isArray(payload)) {
@@ -686,7 +687,7 @@ class Model {
    */
   static async createMultiple<D = undefined, T extends typeof Model = typeof Model>(
     this: T,
-    payload: Array<Partial<ModelDocument<T, D>>>,
+    payload: Array<ModelDocument<T, D>>,
     ctx?: TransactionCtx,
   ): Promise<Array<ModelInstance<T, D>>> {
     await this.initialize();
@@ -768,7 +769,7 @@ class Model {
   async delete<T extends ModelInstance>(this: T, ctx?: TransactionCtx): Promise<T> {
     await this.model().initialize();
 
-    await this.model().execute("deleteOne", [this.get("_id", SerializerFormat.JSON)], ctx);
+    await this.model().execute("deleteOne", [this.get("_id", "json")], ctx);
 
     return this;
   }
@@ -858,7 +859,7 @@ class Model {
    */
   static async validate<T extends typeof Model = typeof Model>(
     this: T,
-    list: Array<ModelInstance<T> | Partial<ModelDocument<T>>>,
+    list: Array<ModelInstance<T> | ModelDocument<T>>,
     ctx?: TransactionCtx,
   ): Promise<boolean> {
     return await validateModel(this, list, ctx);
@@ -921,7 +922,7 @@ class Model {
     phase: P,
     action: A,
     payload: HookCallbackArgs<P, A, M>,
-    abortToken?: symbol,
+    transaction: Transaction<M, A>,
   ): Promise<void> {
     await getRecursiveHooksFromModel(this, action, phase).reduce(async (p, hook) => {
       await p;
@@ -929,7 +930,7 @@ class Model {
       try {
         await hook.fn.call(this, payload);
       } catch (err) {
-        if (abortToken === err) {
+        if (transaction.abortToken === err) {
           throw new CoreError({
             code: ErrorCodes.EXECUTION_ABORTED,
             message: `execution on model ${this.__name} has been aborted`,
@@ -950,9 +951,9 @@ class Model {
     this: M,
     action: A,
     args: Args,
-    bindCtx: TransactionCtx = {},
+    ctx: TransactionCtx = {},
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
-    if (!bindCtx?.forceOperation) {
+    if (!ctx?.forceOperation) {
       if (
         this.isSingle() &&
         [
@@ -981,42 +982,44 @@ class Model {
       }
     }
 
-    const retryToken = Symbol();
-    const abortToken = Symbol();
-    const transaction = {
+    const transaction: Transaction<M, A, Args> = {
       model: this,
       action,
       args,
-    };
-
-    const ctx: TransactionCtx & CoreTransactionCtx = {
-      ...bindCtx,
-      retryToken,
-      abortToken,
-      transaction,
+      retryToken: Symbol("retry"),
+      abortToken: Symbol("abort"),
     };
 
     const payloadBefore: HookCallbackArgs<"before", A, M> = {
       args,
       ctx,
+      transaction,
       err: undefined,
     };
 
     let res;
-    await this.executeHooks("before", action, payloadBefore, abortToken);
+    await this.executeHooks("before", action, payloadBefore, transaction);
 
     if (!payloadBefore.err?.length) {
       try {
         const fn = this.getAdapter().fetcher[action];
-        res = await fn.apply(fn, [payloadBefore.args, ctx]);
+
+        if (!fn) {
+          throw new CoreError({
+            code: ErrorCodes.INVALID_OPERATION,
+            message: `Invalid operation ${action} on model ${this.slug}. Action not found in adapter fetcher`,
+          });
+        }
+
+        res = await fn.apply(fn, [payloadBefore.args, ctx, transaction]);
       } catch (e) {
         payloadBefore.err ??= [];
         payloadBefore.err.push(e);
       }
     }
 
-    if (payloadBefore.err?.includes(retryToken)) {
-      return await this.execute(action, args, bindCtx);
+    if (payloadBefore.err?.includes(transaction.retryToken)) {
+      return await this.execute(action, args, ctx);
     }
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
@@ -1024,11 +1027,11 @@ class Model {
       res,
     };
 
-    await this.executeHooks("after", action, payloadAfter, abortToken);
+    await this.executeHooks("after", action, payloadAfter, transaction);
 
     if (payloadAfter.err?.length) {
-      if (payloadAfter.err.includes(retryToken)) {
-        return await this.execute(action, args, bindCtx);
+      if (payloadAfter.err.includes(transaction.retryToken)) {
+        return await this.execute(action, args, ctx);
       }
 
       throw payloadAfter.err[0];

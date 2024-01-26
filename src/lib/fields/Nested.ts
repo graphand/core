@@ -1,6 +1,5 @@
 import FieldTypes from "@/enums/field-types";
-import SerializerFormat from "@/enums/serializer-format";
-import { CoreSerializerCtx, ModelInstance } from "@/index";
+import { ModelInstance, SerializerCtx, SerializerFormat } from "@/types";
 import Field from "@/lib/Field";
 import { getFieldFromDefinition, getNestedFieldsMap } from "@/lib/utils";
 
@@ -8,7 +7,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
   validate: Field<FieldTypes.NESTED>["validate"] = async ({ list }) => {
     const _isInvalid = value => value !== null && value !== undefined && typeof value !== "object";
 
-    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
+    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
     return !values.some(_isInvalid);
   };
 
@@ -16,7 +15,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     input: {
       value: unknown;
       from: ModelInstance;
-      ctx: SerializerCtx & CoreSerializerCtx;
+      ctx: SerializerCtx;
     },
     format: SerializerFormat,
   ) => {
@@ -25,7 +24,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     const oFormat = ctx?.outputFormat || format;
 
     if (!value || typeof value !== "object") {
-      if (oFormat === SerializerFormat.VALIDATION) {
+      if (oFormat === "validation") {
         return value;
       }
 
@@ -82,7 +81,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     input: {
       value: unknown;
       from: ModelInstance;
-      ctx: SerializerCtx & CoreSerializerCtx;
+      ctx: SerializerCtx;
     },
     format: SerializerFormat,
   ) => {
@@ -91,7 +90,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     const oFormat = ctx?.outputFormat || format;
 
     if (!value || typeof value !== "object") {
-      if (oFormat === SerializerFormat.VALIDATION) {
+      if (oFormat === "validation") {
         return value;
       }
 
@@ -127,7 +126,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
         );
       }
 
-      const defaults = ctx?.defaults ?? oFormat !== SerializerFormat.DOCUMENT;
+      const defaults = ctx?.defaults ?? oFormat !== "document";
       if (defaults && value === undefined && "default" in targetField.options) {
         value = targetField.options.default as typeof value;
       }
@@ -151,15 +150,15 @@ class FieldNested extends Field<FieldTypes.NESTED> {
   };
 
   sJSON: Field<FieldTypes.NESTED>["sJSON"] = opts => {
-    return this._sStatic(opts, SerializerFormat.JSON);
+    return this._sStatic(opts, "json");
   };
 
   sObject: Field<FieldTypes.NESTED>["sObject"] = ({ value, from, ctx }) => {
-    return this._sProxy({ value, from, ctx }, SerializerFormat.OBJECT);
+    return this._sProxy({ value, from, ctx }, "object");
   };
 
   sDocument: Field<FieldTypes.NESTED>["sDocument"] = ({ value, from, ctx }) => {
-    return this._sStatic({ value, from, ctx }, SerializerFormat.DOCUMENT);
+    return this._sStatic({ value, from, ctx }, "document");
   };
 
   sTo: Field<FieldTypes.NESTED>["sTo"] = input => {

@@ -14,6 +14,9 @@ import {
   ValidatorHook,
   ValidatorOptions,
   FieldOptions,
+  SerializerFormat,
+  SerializerCtx,
+  TransactionCtx,
 } from "@/types";
 import FieldTypes from "@/enums/field-types";
 import defaultFieldsMap from "@/lib/defaultFieldsMap";
@@ -23,7 +26,6 @@ import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
 import Validator from "@/lib/Validator";
 import Adapter from "@/lib/Adapter";
 import ValidationValidatorError from "@/lib/ValidationValidatorError";
-import SerializerFormat from "@/enums/serializer-format";
 import ValidationFieldError from "@/lib/ValidationFieldError";
 import ValidationError from "@/lib/ValidationError";
 import type DataModel from "@/models/DataModel";
@@ -599,7 +601,7 @@ export const _getter = (opts: {
 
     const { key, field } = fieldsPath;
 
-    const defaults = ctx?.defaults ?? format !== SerializerFormat.DOCUMENT;
+    const defaults = ctx?.defaults ?? format !== "document";
     if (defaults && value === undefined && "default" in field.options) {
       value = field.options.default as typeof value;
     }
@@ -675,11 +677,11 @@ export const _getter = (opts: {
     if (field === lastField) {
       value = n;
     } else {
-      value = field.serialize(n, SerializerFormat.NEXT_FIELD, from, ctx);
+      value = field.serialize(n, "nextField", from, ctx);
     }
   }
 
-  if (!lastField || (lastField?.nextFieldEqObject && format === SerializerFormat.OBJECT)) {
+  if (!lastField || (lastField?.nextFieldEqObject && format === "object")) {
     return value;
   }
 
@@ -709,10 +711,9 @@ export const _setter = <T extends typeof Model>(opts: {
   _value: JSONSubtype;
   _fieldsPaths: Array<{ key: string | number; field: Field }>;
   _throw: () => void;
-  ctx: TransactionCtx;
   from: ModelInstance<T>;
 }) => {
-  const { _assignTo, _fieldsPaths, _throw, _value, ctx, from } = opts;
+  const { _assignTo, _fieldsPaths, _throw, _value, from } = opts;
 
   let assignTo = _assignTo;
   let assignPath = _fieldsPaths.shift();
@@ -746,9 +747,9 @@ export const _setter = <T extends typeof Model>(opts: {
   if (assignPath?.field && assignTo && typeof assignTo === "object") {
     assignTo[assignPath.key] = assignPath.field.serialize(
       _value,
-      SerializerFormat.DOCUMENT,
+      "document",
       from as ModelInstance,
-      ctx,
+      {},
     );
 
     return assignTo[assignPath.key];
@@ -805,7 +806,7 @@ async function validateFields<T extends typeof Model>(opts: {
 
       if (type === FieldTypes.NESTED) {
         const values = on
-          .map(i => i.get(path, SerializerFormat.VALIDATION))
+          .map(i => i.get(path, "validation"))
           .flat(Infinity)
           .filter(Boolean);
 
@@ -853,7 +854,7 @@ async function validateFields<T extends typeof Model>(opts: {
                   >();
 
                   on.forEach(i => {
-                    const value = i.get(path, SerializerFormat.VALIDATION);
+                    const value = i.get(path, "validation");
                     if (value && !(Array.isArray(value) && value.length === 0)) {
                       const str = JSON.stringify({ value });
                       let entry = valuesMap.get(str);
@@ -900,9 +901,7 @@ async function validateFields<T extends typeof Model>(opts: {
 
       if (type === FieldTypes.ARRAY) {
         const _field = field as Field<FieldTypes.ARRAY>;
-        const entries = on
-          .map(i => [i, i.get(path, SerializerFormat.VALIDATION)])
-          .filter(e => Boolean(e[1]));
+        const entries = on.map(i => [i, i.get(path, "validation")]).filter(e => Boolean(e[1]));
         const values = entries
           .map(e => e[1])
           .flat(Infinity)
@@ -994,7 +993,7 @@ async function validateValidators<T extends typeof Model>({
  */
 export const validateModel = async <T extends typeof Model>(
   model: T,
-  list: Array<ModelInstance<T> | Partial<ModelDocument<T>>>,
+  list: Array<ModelInstance<T> | ModelDocument<T>>,
   ctx?: TransactionCtx,
 ) => {
   const errorsFieldsSet = new Set<ValidationFieldError>();

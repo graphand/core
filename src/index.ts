@@ -27,7 +27,6 @@ import FieldTypes from "@/enums/field-types";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
 import Data from "@/lib/Data";
-import SerializerFormat from "@/enums/serializer-format";
 import RuleActions from "@/enums/rule-actions";
 import Adapter from "@/lib/Adapter";
 import Field from "@/lib/Field";
@@ -117,7 +116,6 @@ export {
   FieldTypes,
   PromiseModel,
   PromiseModelList,
-  SerializerFormat,
   RuleActions,
   Field,
   Validator,

@@ -1,6 +1,5 @@
 import FieldTypes from "@/enums/field-types";
 import IdentityTypes from "@/enums/identity-types";
-import SerializerFormat from "@/enums/serializer-format";
 import Field from "@/lib/Field";
 import { isObjectId } from "@/lib/utils";
 
@@ -16,7 +15,7 @@ class FieldIdentity extends Field<FieldTypes.IDENTITY> {
       return !Object.values(IdentityTypes).includes(type as IdentityTypes) || !isObjectId(id);
     };
 
-    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
+    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
 
     return !values.some(_isInvalid);
   };

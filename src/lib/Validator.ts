@@ -1,5 +1,11 @@
 import ValidatorTypes from "@/enums/validator-types";
-import { ModelInstance, ValidatorDefinition, ValidatorHook, ValidatorOptions } from "@/types";
+import {
+  ModelInstance,
+  TransactionCtx,
+  ValidatorDefinition,
+  ValidatorHook,
+  ValidatorOptions,
+} from "@/types";
 import Model from "@/lib/Model";
 import { getDefaultValidatorOptions } from "@/lib/utils";
 

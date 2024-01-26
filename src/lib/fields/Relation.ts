@@ -1,7 +1,6 @@
 import FieldTypes from "@/enums/field-types";
 import Field from "@/lib/Field";
 import Model from "../Model";
-import SerializerFormat from "@/enums/serializer-format";
 import { isObjectId } from "@/lib/utils";
 import PromiseModel from "@/lib/PromiseModel";
 
@@ -35,7 +34,7 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
       return !isObjectId(value);
     };
 
-    const values = list.map(i => i.get(this.path, SerializerFormat.VALIDATION)).flat(Infinity);
+    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
 
     return !values.some(_isInvalid);
   };
