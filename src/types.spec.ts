@@ -1,6 +1,6 @@
 import Model from "@/lib/Model";
 import FieldTypes from "./enums/field-types";
-import { ModelDefinition } from "@/types";
+import { JSONSubtype, ModelDefinition } from "@/types";
 import PromiseModel from "./lib/PromiseModel";
 import Account from "./models/Account";
 import Role from "./models/Role";
@@ -42,7 +42,7 @@ describe("test types", () => {
         } satisfies ModelDefinition;
       }
 
-      const i = CustomModel.fromDoc();
+      const i = CustomModel.hydrate();
 
       simulateTypeCheck<string>(i.title); // Check title found as a string
       simulateTypeCheck<string>(i._id); // Check _id found as a string
@@ -63,7 +63,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<string>(i.field); // Check the field is a string
         });
@@ -83,7 +83,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<"a" | "b" | "c">(i.field); // Check the field is a literal enum
         });
@@ -103,7 +103,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<string>(i.field); // Check the field is a string
         });
@@ -128,9 +128,55 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<string>(i.field?.title); // Check the field is a string
+          simulateTypeCheck<JSONSubtype>(i.field?.unknown);
+        });
+
+        it("should respect options.strict", () => {
+          class CustomModel extends Model {
+            static definition = {
+              fields: {
+                field: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      title: {
+                        type: FieldTypes.TEXT,
+                      },
+                    },
+                    strict: true,
+                  },
+                },
+              },
+            } satisfies ModelDefinition;
+          }
+
+          const i = CustomModel.hydrate();
+
+          simulateTypeCheck<string>(i.field?.title); // Check the field is a string
+          simulateTypeCheck<NoProperty<typeof i.field, "unknown">>(i.field);
+        });
+
+        it("should respect _ts type", () => {
+          class CustomModel extends Model {
+            static definition = {
+              fields: {
+                field: {
+                  type: FieldTypes.NESTED,
+                  _ts: undefined as {
+                    subfield: string;
+                  },
+                },
+              },
+            } satisfies ModelDefinition;
+          }
+
+          const i = CustomModel.hydrate();
+
+          simulateTypeCheck<string>(i.field?.subfield); // Check the field is a string
+          simulateTypeCheck<NoProperty<typeof i.field, "unknown">>(i.field); // Check subtitle is not found in json
         });
       });
 
@@ -149,7 +195,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<PromiseModel<typeof Account>>(i.field); // Check the field is a PromiseModel
         });
@@ -167,75 +213,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
-
-          simulateTypeCheck<Date>(i.field); // Check the field is a Date
-        });
-      });
-    });
-
-    describe("test document", () => {
-      describe("relation field", () => {
-        class CustomModel extends Model {
-          static definition = {
-            fields: {
-              title: {
-                type: FieldTypes.TEXT,
-              },
-              field: {
-                type: FieldTypes.RELATION,
-                options: {
-                  ref: "accounts" as const,
-                },
-              },
-            },
-          } satisfies ModelDefinition;
-        }
-
-        CustomModel.fromDoc({
-          title: "ok",
-          field: "blabla",
-        });
-      });
-
-      describe("array field", () => {
-        it("should validate array of relation", () => {
-          class CustomModel extends Model {
-            static definition = {
-              fields: {
-                field: {
-                  type: FieldTypes.ARRAY,
-                  options: {
-                    items: { type: FieldTypes.TEXT },
-                  },
-                },
-              },
-            } satisfies ModelDefinition;
-          }
-
-          const i = CustomModel.fromDoc({
-            field: ["id1"],
-          });
-
-          simulateTypeCheck<string[]>(i.field); // Check the field is a string[]
-        });
-      });
-
-      describe("date field", () => {
-        it("should validate date field", () => {
-          class CustomModel extends Model {
-            static definition = {
-              fields: {
-                field: {
-                  type: FieldTypes.DATE,
-                },
-              },
-            } satisfies ModelDefinition;
-          }
-
-          const i = CustomModel.fromDoc({
-            field: new Date(),
-          });
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<Date>(i.field); // Check the field is a Date
         });
@@ -255,7 +233,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<Date>(i.field); // Check the field is a string
 
@@ -281,7 +259,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<PromiseModel<typeof Account>>(i.field);
 
@@ -306,7 +284,7 @@ describe("test types", () => {
             } satisfies ModelDefinition;
           }
 
-          const i = CustomModel.fromDoc();
+          const i = CustomModel.hydrate();
 
           simulateTypeCheck<string[]>(i.field); // Check the field is a string[]
 
@@ -319,21 +297,25 @@ describe("test types", () => {
     });
   });
 
-  describe("inline model", () => {
+  describe("generic model", () => {
     it("should validate relation field", () => {
-      const i = Model.fromDoc<{
-        fields: {
-          title: {
-            type: FieldTypes.TEXT;
-          };
-          field: {
-            type: FieldTypes.RELATION;
-            options: {
-              ref: "accounts";
+      const i = (
+        Model as typeof Model & {
+          definition: {
+            fields: {
+              title: {
+                type: FieldTypes.TEXT;
+              };
+              field: {
+                type: FieldTypes.RELATION;
+                options: {
+                  ref: "accounts";
+                };
+              };
             };
           };
-        };
-      }>({
+        }
+      ).hydrate({
         title: "ok",
         field: "blabla",
       });
@@ -349,7 +331,7 @@ describe("test types", () => {
   });
 
   it("should ...", () => {
-    const i = Role.fromDoc();
+    const i = Role.hydrate();
 
     simulateTypeCheck<string>(i.slug); // Check the field is a string
     simulateTypeCheck<Function>(i.getRulesInherited); // Check the field is a string
@@ -360,15 +342,19 @@ describe("test types", () => {
   });
 
   it("should ...", () => {
-    const model = Model.getClass<typeof Model>("test");
-
-    const i = model.fromDoc<{
-      fields: {
-        field: {
-          type: FieldTypes.TEXT;
+    const model = Model.getClass<
+      typeof Model & {
+        definition: {
+          fields: {
+            field: {
+              type: FieldTypes.TEXT;
+            };
+          };
         };
-      };
-    }>();
+      }
+    >("test");
+
+    const i = model.hydrate();
 
     simulateTypeCheck<string>(i.field); // Check the field is a string
   });
@@ -377,5 +363,31 @@ describe("test types", () => {
     const ModelFromSlug = Model.getClass("customModel");
 
     simulateTypeCheck<CustomModel>(ModelFromSlug);
+  });
+
+  it("should ...", () => {
+    const i = (
+      Model as typeof Model & {
+        definition: {
+          fields: {
+            field1: {
+              type: FieldTypes.TEXT;
+            };
+            field2: {
+              type: FieldTypes.NUMBER;
+            };
+            rel: {
+              type: FieldTypes.RELATION;
+              options: {
+                ref: "accounts";
+              };
+            };
+          };
+        };
+      }
+    ).hydrate();
+
+    simulateTypeCheck<string>(i.get("field1", "json")); // Check the field is a string
+    simulateTypeCheck<number>(i.get("field2", "json")); // Check the field is a string
   });
 });

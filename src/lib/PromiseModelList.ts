@@ -7,12 +7,12 @@ import Thenable from "@/lib/Thenable";
  * PromiseModelList is a class that extends the native Promise class.
  * It is used to return a promise that resolves to a ModelList instance.
  */
-class PromiseModelList<T extends typeof Model, D = undefined> extends Thenable<ModelList<T, D>> {
+class PromiseModelList<T extends typeof Model> extends Thenable<ModelList<T>> {
   #model: typeof Model;
   #query: JSONQuery;
 
   constructor(
-    params: ConstructorParameters<typeof Promise<ModelList<T, D>>>,
+    params: ConstructorParameters<typeof Promise<ModelList<T>>>,
     model: typeof Model,
     query: JSONQuery,
   ) {

@@ -30,7 +30,6 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     }
 
     const model = from.model();
-    const adapter = model.getAdapter();
     const fieldsMap = getNestedFieldsMap(model, this);
 
     const json = {};
@@ -57,7 +56,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
           } else {
             const tmpField = getFieldFromDefinition(
               this.options.defaultField,
-              adapter,
+              model.getAdapter(false),
               [this.path, k].join("."),
             );
 
@@ -137,7 +136,6 @@ class FieldNested extends Field<FieldTypes.NESTED> {
 
   serializerMap: Field<FieldTypes.NESTED>["serializerMap"] = {
     json: this._sStatic,
-    document: this._sStatic,
     [Field.defaultSymbol]: this._sProxy,
   };
 }

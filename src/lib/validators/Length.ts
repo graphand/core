@@ -14,7 +14,7 @@ class ValidatorLength extends Validator<ValidatorTypes.LENGTH> {
     const { min, max } = this.options;
 
     return !values.some(v => {
-      let length = v?.length ?? 0;
+      let length = (v as string)?.length ?? 0;
 
       if (typeof v === "number") {
         length = String(v).length;

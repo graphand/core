@@ -14,7 +14,7 @@ class ValidatorBoundaries extends Validator<ValidatorTypes.BOUNDARIES> {
     const { min, max } = this.options;
 
     return !values.some(v => {
-      const num = parseFloat(v);
+      const num = parseFloat(v as string);
 
       return num < min || num > max;
     });

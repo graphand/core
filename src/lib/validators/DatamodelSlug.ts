@@ -1,4 +1,6 @@
 import ValidatorTypes from "@/enums/validator-types";
+import { ModelInstance } from "@/types";
+import type DataModel from "@/models/DataModel";
 import Validator from "@/lib/Validator";
 
 const systemModels = [
@@ -24,7 +26,8 @@ const systemModels = [
 
 class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
   validate: Validator<ValidatorTypes.DATAMODEL_SLUG>["validate"] = async ({ list }) => {
-    const values = list.map(i => i.get("slug")).filter(v => ![null, undefined].includes(v));
+    const _list = list as Array<ModelInstance<typeof DataModel>>;
+    const values = _list.map(i => i.get("slug")).filter(v => ![null, undefined].includes(v));
 
     if (!values?.length) return true;
 

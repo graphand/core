@@ -38,8 +38,6 @@ import ValidationError from "@/lib/ValidationError";
 import controllersMap from "@/lib/controllersMap";
 import ValidationFieldError from "@/lib/ValidationFieldError";
 import ValidationValidatorError from "@/lib/ValidationValidatorError";
-import defaultFieldsMap from "@/lib/defaultFieldsMap";
-import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
 import AuthProviders from "@/enums/auth-providers";
 import AuthMethods from "@/enums/auth-methods";
 import IdentityTypes from "@/enums/identity-types";
@@ -62,6 +60,23 @@ import {
 } from "@/lib/utils";
 import { modelDecorator } from "@/lib/modelDecorator";
 export * from "@/types";
+import FieldId from "@/lib/fields/Id";
+import FieldNumber from "@/lib/fields/Number";
+import FieldBoolean from "@/lib/fields/Boolean";
+import FieldDate from "@/lib/fields/Date";
+import FieldText from "@/lib/fields/Text";
+import FieldRelation from "@/lib/fields/Relation";
+import FieldNested from "@/lib/fields/Nested";
+import FieldIdentity from "@/lib/fields/Identity";
+import FieldArray from "@/lib/fields/Array";
+import ValidatorUnique from "@/lib/validators/Unique";
+import ValidatorRegex from "@/lib/validators/Regex";
+import ValidatorKeyField from "@/lib/validators/KeyField";
+import ValidatorDatamodelSlug from "@/lib/validators/DatamodelSlug";
+import ValidatorDatamodelDefinition from "@/lib/validators/DatamodelDefinition";
+import ValidatorLength from "@/lib/validators/Length";
+import ValidatorBoundaries from "@/lib/validators/Boundaries";
+import ValidatorRequired from "@/lib/validators/Required";
 
 const models = {
   Account,
@@ -136,8 +151,6 @@ export {
   ValidationValidatorError,
   controllersMap,
   ErrorCodes,
-  defaultFieldsMap,
-  defaultValidatorsMap,
   getFieldsPathsFromPath,
   getNestedFieldsMap,
   defineFieldsProperties,
@@ -147,4 +160,21 @@ export {
   getArrayItemsFieldsMap,
   modelDecorator,
   crossFields,
+  FieldId,
+  FieldNumber,
+  FieldBoolean,
+  FieldDate,
+  FieldText,
+  FieldRelation,
+  FieldNested,
+  FieldIdentity,
+  FieldArray,
+  ValidatorUnique,
+  ValidatorRegex,
+  ValidatorKeyField,
+  ValidatorDatamodelSlug,
+  ValidatorDatamodelDefinition,
+  ValidatorLength,
+  ValidatorBoundaries,
+  ValidatorRequired,
 };

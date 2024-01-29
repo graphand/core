@@ -1,10 +1,4 @@
-import {
-  JSONSubtype,
-  DecodeRefModel,
-  ModelDefinition,
-  FieldsDefinition,
-  ValidatorsDefinition,
-} from "@/types";
+import { DecodeRefModel, ModelDefinition, FieldsDefinition, ValidatorsDefinition } from "@/types";
 import { ValidatorDefinitionOmitField } from "@/types/validators";
 import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
@@ -46,16 +40,19 @@ export type FieldOptions<T extends FieldTypes = FieldTypes> = T extends keyof Fi
 
 export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
   type: T;
-  options?: T extends keyof FieldOptionsMap ? FieldOptionsMap[T] : never;
+  options?: FieldOptions<T>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _ts?: any;
 };
 
-type SystemFields = {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface SystemFields<M extends typeof Model> {
   _id: { type: FieldTypes.ID };
   _createdAt: { type: FieldTypes.DATE };
   _createdBy: { type: FieldTypes.IDENTITY };
   _updatedAt: { type: FieldTypes.DATE };
   _updatedBy: { type: FieldTypes.IDENTITY };
-};
+}
 
 export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
   json: {
@@ -79,13 +76,13 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
                 "json"
               >;
             }>
-          : unknown) &
+          : {}) &
           (F["options"]["defaultField"] extends FieldDefinition
             ? {
                 [x: string]: InferFieldType<F["options"]["defaultField"], "json">;
               }
-            : unknown) &
-          JSONTypeObject
+            : {}) &
+          (F["options"]["strict"] extends true ? {} : JSONTypeObject)
       : JSONTypeObject;
     [FieldTypes.RELATION]: string;
     [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
@@ -113,13 +110,13 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
                 "object"
               >;
             }>
-          : unknown) &
+          : {}) &
           (F["options"]["defaultField"] extends FieldDefinition
             ? {
                 [x: string]: InferFieldType<F["options"]["defaultField"], "object">;
               }
-            : unknown) &
-          JSONTypeObject
+            : {}) &
+          (F["options"]["strict"] extends true ? {} : JSONTypeObject)
       : JSONTypeObject;
     [FieldTypes.RELATION]: F["options"] extends FieldOptionsMap[FieldTypes.RELATION]
       ? F["options"]["ref"] extends string
@@ -134,83 +131,39 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
         : Array<InferFieldType<F["options"]["items"], "object">>
       : Array<unknown>;
   };
-  document: {
-    [FieldTypes.ID]: IdDocType;
-    [FieldTypes.IDENTITY]: string;
-    [FieldTypes.BOOLEAN]: boolean;
-    [FieldTypes.NUMBER]: number;
-    [FieldTypes.DATE]: Date;
-    [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
-      ? F["options"]["options"] extends Array<string>
-        ? F["options"]["strict"] extends true
-          ? F["options"]["options"][number]
-          : F["options"]["options"][number] | string
-        : string
-      : string;
-    [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
-      ? (F["options"]["fields"] extends FieldsDefinition
-          ? Partial<{
-              [K in keyof F["options"]["fields"]]: InferFieldType<
-                F["options"]["fields"][K],
-                "document"
-              >;
-            }>
-          : unknown) &
-          (F["options"]["defaultField"] extends FieldDefinition
-            ? {
-                [x: string]: InferFieldType<F["options"]["defaultField"], "document">;
-              }
-            : unknown) &
-          JSONTypeObject
-      : JSONTypeObject;
-    [FieldTypes.RELATION]: IdDocType;
-    [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]
-      ? F["options"]["items"]["type"] extends FieldTypes.RELATION
-        ? Array<IdDocType>
-        : Array<InferFieldType<F["options"]["items"], "document">>
-      : Array<unknown>;
-  };
   validation: {};
   nextField: {};
 }
 
-export type GenericModelDocument = Partial<Record<string, JSONSubtype>>;
-
 export type InferFieldType<
   D extends FieldDefinition,
   F extends SerializerFormat,
-> = F extends keyof SerializerFieldsMap<D>
+> = "_ts" extends keyof D
+  ? D["_ts"]
+  : F extends keyof SerializerFieldsMap<D>
   ? D["type"] extends keyof SerializerFieldsMap<D>[F]
     ? SerializerFieldsMap<D>[F][D["type"]]
     : unknown
   : unknown;
 
-export type ModelDocument<M extends typeof Model = typeof Model, D = undefined> = InferModelDef<
-  M,
-  "document",
-  D
->;
-
 export type InferModelDef<
   M extends typeof Model,
   S extends SerializerFormat = "object",
-  D = undefined,
-> = (D extends ModelDefinition
-  ? Partial<{
-      [F in keyof D["fields"]]: InferFieldType<D["fields"][F], S>;
-    }>
+> = (M extends { definition: { fields: infer R } }
+  ? R extends ModelDefinition["fields"]
+    ? Partial<{
+        [F in keyof R]: InferFieldType<R[F], S>;
+      }> &
+        unknown
+    : unknown
   : unknown) &
-  (M extends { definition: { fields: infer R } }
-    ? R extends ModelDefinition["fields"]
-      ? Partial<{
-          [F in keyof R]: InferFieldType<R[F], S>;
-        }> &
-          unknown
-      : unknown
-    : unknown) &
   Partial<{
-    [F in keyof SystemFields]: InferFieldType<SystemFields[F], S>;
+    [F in keyof SystemFields<M>]: InferFieldType<SystemFields<M>[F], S>;
   }>;
+
+export type ModelObject<M extends typeof Model = typeof Model> = InferModelDef<M, "object">;
+
+export type ModelJSON<M extends typeof Model = typeof Model> = InferModelDef<M, "json">;
 
 export type FieldSerializerInput<S extends SerializerFormat = SerializerFormat> = {
   value: unknown;

@@ -8,7 +8,6 @@ import {
   HookPhase,
   JSONSubtype,
   ModelDefinition,
-  ModelDocument,
   ModelInstance,
   ValidatorDefinition,
   ValidatorHook,
@@ -20,10 +19,8 @@ import {
   FieldsDefinition,
 } from "@/types";
 import FieldTypes from "@/enums/field-types";
-import defaultFieldsMap from "@/lib/defaultFieldsMap";
 import Field from "@/lib/Field";
 import ValidatorTypes from "@/enums/validator-types";
-import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
 import Validator from "@/lib/Validator";
 import Adapter from "@/lib/Adapter";
 import ValidationValidatorError from "@/lib/ValidationValidatorError";
@@ -31,7 +28,6 @@ import ValidationFieldError from "@/lib/ValidationFieldError";
 import ValidationError from "@/lib/ValidationError";
 import type DataModel from "@/models/DataModel";
 import Patterns from "@/enums/patterns";
-import systemFields from "./systemFields";
 
 export const crossModelTree = (_model: typeof Model, cb: (model: typeof Model) => void) => {
   let model = _model;
@@ -185,7 +181,7 @@ export const getRecursiveHooksFromModel = <
  * @returns The function `getNestedFieldsMap` returns a `Map` object.
  */
 export const getNestedFieldsMap = (model: typeof Model, nestedField: Field<FieldTypes.NESTED>) => {
-  const adapter = model.getAdapter();
+  const adapter = model.getAdapter(false);
   const map = new Map<string, Field>();
 
   Object.entries(nestedField.options.fields ?? {}).forEach(([slug, def]) => {
@@ -212,7 +208,7 @@ export const getNestedValidatorsArray = (
   model: typeof Model,
   nestedField: Field<FieldTypes.NESTED>,
 ) => {
-  const adapter = model.getAdapter();
+  const adapter = model.getAdapter(false);
   const validators = [];
 
   nestedField.options.validators?.forEach(def => {
@@ -324,7 +320,7 @@ export const createFieldsMap = (model: typeof Model): Map<string, Field> => {
   const fields: FieldsDefinition = Object.assign({}, definition?.fields);
 
   if (model.systemFields) {
-    Object.assign(fields, systemFields);
+    Object.assign(fields, model.systemFields);
   }
 
   fields._id = { type: FieldTypes.ID };
@@ -392,10 +388,10 @@ export const getFieldClass = <T extends FieldTypes>(
   type: T,
   adapter?: Adapter,
 ): typeof Field<T> => {
-  let FieldClass: typeof Field<T> = adapter?.fieldsMap?.[type];
+  let FieldClass: typeof Field<T> = adapter?.base?.fieldsMap?.[type];
 
   if (!FieldClass) {
-    FieldClass = defaultFieldsMap[type];
+    FieldClass = Adapter.fieldsMap[type];
   }
 
   if (!FieldClass) {
@@ -411,7 +407,7 @@ export const getFieldClass = <T extends FieldTypes>(
  * and adapter.
  * @param {ValidatorTypes} type - The `type` parameter is a string that represents the type of
  * validator class to retrieve. It is used to determine which validator class to return from the
- * `validatorsMap` or `defaultValidatorsMap` objects.
+ * `validatorsMap` object.
  * @param {Adapter} [adapter] - The `adapter` parameter is an optional object that contains a
  * `validatorsMap` property. This `validatorsMap` property is an object that maps `ValidatorTypes` to
  * their corresponding validator classes.
@@ -422,10 +418,10 @@ export const getValidatorClass = <T extends ValidatorTypes>(
   type: T,
   adapter?: Adapter,
 ): typeof Validator<T> => {
-  let ValidatorClass: typeof Validator<T> = adapter?.validatorsMap?.[type];
+  let ValidatorClass: typeof Validator<T> = adapter?.base.validatorsMap?.[type];
 
   if (!ValidatorClass) {
-    ValidatorClass = defaultValidatorsMap[type];
+    ValidatorClass = Adapter.validatorsMap[type];
   }
 
   if (!ValidatorClass) {
@@ -602,7 +598,7 @@ export const _getter = (opts: {
 
     const { key, field } = fieldsPath;
 
-    const defaults = ctx?.defaults ?? format !== "document";
+    const defaults = ctx?.defaults ?? true;
     if (defaults && value === undefined && "default" in field.options) {
       value = field.options.default as typeof value;
     }
@@ -748,7 +744,7 @@ export const _setter = <T extends typeof Model>(opts: {
   if (assignPath?.field && assignTo && typeof assignTo === "object") {
     assignTo[assignPath.key] = assignPath.field.serialize(
       _value,
-      "document",
+      "json",
       from as ModelInstance,
       {},
     );
@@ -902,7 +898,9 @@ async function validateFields<T extends typeof Model>(opts: {
 
       if (type === FieldTypes.ARRAY) {
         const _field = field as Field<FieldTypes.ARRAY>;
-        const entries = on.map(i => [i, i.get(path, "validation")]).filter(e => Boolean(e[1]));
+        const entries = on
+          .map(i => [i, i.get(path, "validation")])
+          .filter(e => Boolean(e[1])) as Array<[ModelInstance<T>, unknown]>;
         const values = entries
           .map(e => e[1])
           .flat(Infinity)
@@ -953,7 +951,7 @@ async function validateValidators<T extends typeof Model>({
   ctx,
   errorsValidatorsSet,
 }: {
-  validators: Array<[Validator, Array<ModelInstance>]>;
+  validators: Array<[Validator, Array<ModelInstance<T>>]>;
   model: T;
   ctx?: TransactionCtx;
   errorsValidatorsSet: Set<ValidationValidatorError>;
@@ -985,7 +983,7 @@ async function validateValidators<T extends typeof Model>({
  * against their defined fields and validators, throwing a `ValidationError` if any errors are found.
  * @param {T} model - The `model` parameter is the type of the model that you want to validate. It
  * should be a subclass of the `Model` class.
- * @param list - The `list` parameter is an array of either `ModelInstance<T>` or `ModelDocument<T>`.
+ * @param list - The `list` parameter is an array of either `ModelInstance<T>` or `ModelData<T>`.
  * @param {TransactionCtx} [ctx] - The `ctx` parameter is an optional parameter of type
  * `TransactionCtx`. It is used to pass a transaction context to the validation process. This allows
  * the validation to be performed within a transaction, ensuring that any changes made during the
@@ -994,17 +992,17 @@ async function validateValidators<T extends typeof Model>({
  */
 export const validateModel = async <T extends typeof Model>(
   model: T,
-  list: Array<ModelInstance<T> | ModelDocument<T>>,
+  list: Array<ModelData<T> | ModelInstance<T>>,
   ctx?: TransactionCtx,
 ) => {
   const errorsFieldsSet = new Set<ValidationFieldError>();
   const errorsValidatorsSet = new Set<ValidationValidatorError>();
   const fieldsValidatorsKeys = new Set<string>();
-  const fieldsValidators: Array<[Validator, Array<ModelInstance>]> = [];
+  const fieldsValidators: Array<[Validator, Array<ModelInstance<T>>]> = [];
 
-  const instances = list.map(i =>
-    i instanceof Model ? i : model.fromDoc(i),
-  ) as Array<ModelInstance>;
+  const instances = list.map(i => (i instanceof Model ? i : model.hydrate(i))) as Array<
+    ModelInstance<T>
+  >;
 
   const promises: Array<Promise<void>> = [
     validateFields({
@@ -1102,7 +1100,7 @@ export const assignDatamodel = async <T extends typeof Model>(
 
   const baseClass = model.getBaseClass();
 
-  const definition = datamodel?.getDoc()?.definition;
+  const definition = datamodel?.getData()?.definition;
   const baseDefinition = (baseClass.definition ?? {}) as ModelDefinition;
 
   const fields = {};

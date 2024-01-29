@@ -29,6 +29,6 @@
       }
     ]
   },
-  "include": ["src", "__jest__", "global.d.ts"],
+  "include": ["src", "__jest__"],
   "exclude": ["node_modules", "**/node_modules/*"]
 }

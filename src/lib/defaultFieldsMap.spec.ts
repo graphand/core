@@ -29,7 +29,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({});
+      const i = model.hydrate({});
       expect(i.title).toEqual(defaultText);
     });
 
@@ -45,7 +45,7 @@ describe("test fieldsMap", () => {
 
       const title = faker.lorem.word();
 
-      const i = model.fromDoc({ title });
+      const i = model.hydrate({ title });
       expect(i.title).toEqual(title);
     });
 
@@ -61,7 +61,7 @@ describe("test fieldsMap", () => {
 
       const titleArray = [faker.lorem.word(), faker.lorem.word()];
 
-      const i = model.fromDoc({ title: titleArray } as object);
+      const i = model.hydrate({ title: titleArray } as object);
       expect(typeof i.title).toBe("string");
     });
 
@@ -75,9 +75,9 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({ title: String(new ObjectId()) });
+      const i = model.hydrate({ title: String(new ObjectId()) });
 
-      await expect(model.validate([i])).rejects.toThrow(ValidationError);
+      await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
     });
 
     describe("options.options", () => {
@@ -98,7 +98,7 @@ describe("test fieldsMap", () => {
 
         const title = options[0];
 
-        const i = model.fromDoc({ title });
+        const i = model.hydrate({ title });
         expect(i.title).toEqual(title);
       });
 
@@ -119,7 +119,7 @@ describe("test fieldsMap", () => {
 
         const title = "notInOptions";
 
-        const i = model.fromDoc({ title });
+        const i = model.hydrate({ title });
         expect(i.title).toEqual(title);
       });
 
@@ -141,7 +141,7 @@ describe("test fieldsMap", () => {
 
         const title = options[0];
 
-        const i = model.fromDoc({ title });
+        const i = model.hydrate({ title });
         expect(i.title).toEqual(title);
       });
 
@@ -163,7 +163,7 @@ describe("test fieldsMap", () => {
 
         const title = "notInOptions";
 
-        const i = model.fromDoc({ title });
+        const i = model.hydrate({ title });
         expect(i.title).toEqual(undefined);
       });
 
@@ -185,8 +185,8 @@ describe("test fieldsMap", () => {
 
         const title = options[0];
 
-        const i = model.fromDoc({ title });
-        await expect(model.validate([i])).resolves.toBeTruthy();
+        const i = model.hydrate({ title });
+        await expect(model.validate([i.getData()])).resolves.toBeTruthy();
       });
 
       it("should throw error if value not in options and strict mode is enabled", async () => {
@@ -207,8 +207,8 @@ describe("test fieldsMap", () => {
 
         const title = "notInOptions";
 
-        const i = model.fromDoc({ title });
-        await expect(model.validate([i])).rejects.toThrow(ValidationError);
+        const i = model.hydrate({ title });
+        await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
       });
     });
   });
@@ -229,7 +229,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({});
+      const i = model.hydrate({});
       expect(i.obj).toEqual(defaultJSON);
     });
 
@@ -245,7 +245,7 @@ describe("test fieldsMap", () => {
 
       const obj = { title: faker.lorem.word() };
 
-      const i = model.fromDoc({ obj });
+      const i = model.hydrate({ obj });
       expect(i.obj).toBeInstanceOf(Object);
     });
 
@@ -261,7 +261,7 @@ describe("test fieldsMap", () => {
 
       const obj = [{ title: faker.lorem.word() }, { title: faker.lorem.word() }];
 
-      const i = model.fromDoc({ obj } as object);
+      const i = model.hydrate({ obj } as object);
       expect(i.obj).toBeInstanceOf(Object);
       expect(Array.isArray(i.obj)).toBeFalsy();
     });
@@ -282,7 +282,7 @@ describe("test fieldsMap", () => {
       expect(i.get("definition.fields.test.options", "json")).toBe(undefined);
     });
 
-    it("should not bind default values in document format", async () => {
+    it("should not bind default values with defaults=false", async () => {
       const model = mockModel({
         fields: {
           obj: {
@@ -295,13 +295,13 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({});
+      const i = model.hydrate({});
 
       expect(i.get("obj")).toEqual({ test: 1 });
-      expect(i.get("obj", "document")).toEqual(undefined);
+      expect(i.get("obj", undefined, { defaults: false })).toEqual(undefined);
     });
 
-    it("should not bind default values in document format in nested fields", async () => {
+    it("should not bind default values with defaults=false in nested fields", async () => {
       const model = mockModel({
         fields: {
           obj: {
@@ -321,12 +321,12 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         obj: {},
       });
 
       expect(i.get("obj.foo")).toEqual("bar");
-      expect(i.get("obj.foo", "document")).toEqual(undefined);
+      expect(i.get("obj.foo", undefined, { defaults: false })).toEqual(undefined);
     });
 
     describe("Proxy", () => {
@@ -347,7 +347,7 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const i = model.fromDoc({
+        const i = model.hydrate({
           obj: {},
         });
 
@@ -401,7 +401,7 @@ describe("test fieldsMap", () => {
         expect(serializeText).not.toHaveBeenCalled();
         expect(serializeNumber).not.toHaveBeenCalled();
 
-        const i = model.fromDoc({
+        const i = model.hydrate({
           obj: {
             title: "test",
             value: 123,
@@ -471,7 +471,7 @@ describe("test fieldsMap", () => {
         expect(serializeText).not.toHaveBeenCalled();
         expect(serializeNumber).not.toHaveBeenCalled();
 
-        const i = model.fromDoc({
+        const i = model.hydrate({
           obj: {
             subObj: {
               title: "test",
@@ -542,7 +542,7 @@ describe("test fieldsMap", () => {
         expect(serializeText).not.toHaveBeenCalled();
         expect(serializeNumber).not.toHaveBeenCalled();
 
-        const i = model.fromDoc({
+        const i = model.hydrate({
           arr: [
             {
               title: "test",
@@ -584,7 +584,7 @@ describe("test fieldsMap", () => {
           fieldNotDefined: faker.lorem.word(),
         };
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const _obj = i.obj as any;
@@ -630,7 +630,7 @@ describe("test fieldsMap", () => {
           title: faker.lorem.word(),
         };
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
         expect(i.obj).toBeInstanceOf(Object);
         expect(i.obj.title).toEqual(serializedText);
       });
@@ -666,11 +666,11 @@ describe("test fieldsMap", () => {
 
         const obj = { title: faker.lorem.word() };
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
 
         expect(testValidator).toBeCalledTimes(0);
 
-        await model.validate([i]);
+        await model.validate([i.getData()]);
 
         expect(testValidator).toBeCalledTimes(1);
       });
@@ -723,14 +723,14 @@ describe("test fieldsMap", () => {
           },
         };
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
         expect(i.obj).toBeInstanceOf(Object);
         expect(i.obj.nested).toBeInstanceOf(Object);
         expect(i.obj.nested.title).toEqual(serializedText);
 
         expect(testValidator).toBeCalledTimes(0);
 
-        await model.validate([i]);
+        await model.validate([i.getData()]);
 
         expect(testValidator).toBeCalledTimes(1);
       });
@@ -777,10 +777,10 @@ describe("test fieldsMap", () => {
           },
         };
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
 
         try {
-          await model.validate([i]);
+          await model.validate([i.getData()]);
         } catch (e) {
           expect(e).toBeInstanceOf(ValidationError);
           expect(e.fieldsPaths.includes("obj.nested.title")).toBeTruthy();
@@ -820,11 +820,11 @@ describe("test fieldsMap", () => {
 
         const obj = {};
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
 
         expect(testValidate).toBeCalledTimes(0);
 
-        await model.validate([i]);
+        await model.validate([i.getData()]);
 
         expect(testValidate).toBeCalledTimes(1);
       });
@@ -858,12 +858,12 @@ describe("test fieldsMap", () => {
         await model.initialize();
 
         const obj = {};
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
 
         expect.assertions(1);
 
         try {
-          await model.validate([i]);
+          await model.validate([i.getData()]);
         } catch (e) {
           expect(e).toBeDefined();
         }
@@ -907,11 +907,11 @@ describe("test fieldsMap", () => {
 
         const obj = {};
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
 
         expect(testValidate).toBeCalledTimes(0);
 
-        await model.validate([i]);
+        await model.validate([i.getData()]);
 
         expect(testValidate).toBeCalledTimes(0);
       });
@@ -954,11 +954,11 @@ describe("test fieldsMap", () => {
 
         const obj = { nested: {} };
 
-        const i = model.fromDoc({ obj });
+        const i = model.hydrate({ obj });
 
         expect(testValidate).toBeCalledTimes(0);
 
-        await model.validate([i]);
+        await model.validate([i.getData()]);
 
         expect(testValidate).toBeCalledTimes(1);
       });
@@ -993,7 +993,7 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const i = model.fromDoc({ obj: { title: "test" } });
+        const i = model.hydrate({ obj: { title: "test" } });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj = i.obj as any;
@@ -1030,7 +1030,7 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: _adapter });
         await model.initialize();
 
-        const i = model.fromDoc({ obj: { title: "test" } });
+        const i = model.hydrate({ obj: { title: "test" } });
 
         const json = i.toJSON();
 
@@ -1072,7 +1072,7 @@ describe("test fieldsMap", () => {
         await model.initialize();
 
         const fakerNumber = parseFloat(faker.random.numeric());
-        const i = model.fromDoc({ obj: { title: "test", test: fakerNumber } } as object);
+        const i = model.hydrate({ obj: { title: "test", test: fakerNumber } } as object);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj = i.obj as any;
@@ -1116,14 +1116,14 @@ describe("test fieldsMap", () => {
         await model.initialize();
 
         const fakeNumber = faker.random.numeric();
-        const i = model.fromDoc({
+        const i = model.hydrate({
           obj: { title: "test", title2: "test2", test: fakeNumber },
         } as object);
 
         expect(i.obj).toBeInstanceOf(Object);
         expect(testValidator).toBeCalledTimes(0);
 
-        await model.validate([i]);
+        await model.validate([i.getData()]);
 
         expect(testValidator).toBeCalledTimes(2);
       });
@@ -1131,10 +1131,10 @@ describe("test fieldsMap", () => {
 
     describe("consistency", () => {
       const _testConsistency = (model: typeof Model, obj: JSONType, f = "obj") => {
-        const i = model.fromDoc({ [f]: obj });
+        const i = model.hydrate({ [f]: obj });
 
         const obj1 = i.get(f, "json");
-        const obj2 = model.fromDoc({ [f]: obj1 }).get(f, "json");
+        const obj2 = model.hydrate({ [f]: obj1 }).get(f, "json");
 
         expect(obj1).toEqual(obj2);
       };
@@ -1424,7 +1424,7 @@ describe("test fieldsMap", () => {
       await model.initialize();
 
       const _id = String(new ObjectId());
-      const i = model.fromDoc({ rel: _id });
+      const i = model.hydrate({ rel: _id });
 
       expect(i.rel).toBeInstanceOf(PromiseModel);
       expect(i.rel.model?.getBaseClass()).toBe(models.Account);
@@ -1444,7 +1444,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({ rel: null });
+      const i = model.hydrate({ rel: null });
 
       expect(i.rel).toBe(null);
     });
@@ -1462,7 +1462,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({ rel: "invalid" });
+      const i = model.hydrate({ rel: "invalid" });
 
       expect(i.rel).toBe(null);
     });
@@ -1481,7 +1481,7 @@ describe("test fieldsMap", () => {
       await model.initialize();
 
       const _id = String(new ObjectId());
-      const i = model.fromDoc({ rel: _id });
+      const i = model.hydrate({ rel: _id });
 
       expect(i.get("rel", "json")).toEqual(_id);
     });
@@ -1567,7 +1567,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         arrTextWithOpts: ["invalid1", options[1], "invalid2"],
         arrNumbers: ["1", "2", "3"],
       } as object);
@@ -1594,7 +1594,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         arrRel: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
       });
 
@@ -1623,7 +1623,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         arrRel: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
       });
 
@@ -1648,7 +1648,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         arrJson: [{ test: "test" }, { test2: "test2" }],
       });
 
@@ -1671,7 +1671,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         arrJson: { test: "test" },
       } as object);
 
@@ -1702,7 +1702,7 @@ describe("test fieldsMap", () => {
       }).extend({ adapterClass: adapter });
       await model.initialize();
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         arrJson: [
           { title: 1, test: "1" },
           { title: 2, test: "2" },
@@ -1745,24 +1745,34 @@ describe("test fieldsMap", () => {
 
       const ids = Array.from({ length: 3 }, () => new ObjectId().toString());
 
-      const i = model.fromDoc({
+      const i = model.hydrate({
         arrRel: ids,
       });
 
       expect(i.get("arrRel")).toBeInstanceOf(PromiseModelList);
-      expect(i.get("arrRel.[]")).toBeInstanceOf(Array);
-      expect(i.get("arrRel.[]").every(i => i instanceof PromiseModel)).toBeTruthy();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const arr = i.get("arrRel.[]") as any;
+      expect(arr).toBeInstanceOf(Array);
+      expect(arr.every(i => i instanceof PromiseModel)).toBeTruthy();
 
-      expect(i.get("arrRel.[0]")).toBeInstanceOf(PromiseModel);
-      expect(i.get("arrRel.[0]").query).toEqual(ids[0]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const first = i.get("arrRel.[0]") as any;
+      expect(first).toBeInstanceOf(PromiseModel);
+      expect(first.query).toEqual(ids[0]);
 
-      expect(i.get("arrRel.[1]")).toBeInstanceOf(PromiseModel);
-      expect(i.get("arrRel.[1]").query).toEqual(ids[1]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const second = i.get("arrRel.[1]") as any;
+      expect(second).toBeInstanceOf(PromiseModel);
+      expect(second.query).toEqual(ids[1]);
 
-      expect(i.get("arrRel.[2]")).toBeInstanceOf(PromiseModel);
-      expect(i.get("arrRel.[2]").query).toEqual(ids[2]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const third = i.get("arrRel.[2]") as any;
+      expect(third).toBeInstanceOf(PromiseModel);
+      expect(third.query).toEqual(ids[2]);
 
-      expect(i.get("arrRel.[3]")).toBe(undefined);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fourth = i.get("arrRel.[3]") as any;
+      expect(fourth).toBe(undefined);
     });
   });
 });

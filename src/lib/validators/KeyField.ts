@@ -1,18 +1,18 @@
 import ValidatorTypes from "@/enums/validator-types";
 import Validator from "@/lib/Validator";
-import defaultValidatorsMap from "../defaultValidatorsMap";
 import Patterns from "@/enums/patterns";
+import { getValidatorClass } from "../utils";
 
 class ValidatorKeyField extends Validator<ValidatorTypes.KEY_FIELD> {
   validate: Validator<ValidatorTypes.KEY_FIELD>["validate"] = async opts => {
     const { model } = opts;
     const adapter = model?.getAdapter();
-    const validatorsMap = adapter?.validatorsMap ?? {};
+    const validatorsMap = adapter?.base.validatorsMap ?? {};
 
     const _getValidator = <T extends ValidatorTypes>(type: T): typeof Validator<T> => {
-      let v = validatorsMap[type];
+      let v: typeof Validator<T> = validatorsMap[type];
       if (v === undefined) {
-        v = defaultValidatorsMap[type];
+        v = getValidatorClass(type, adapter);
       }
 
       return v || Validator;

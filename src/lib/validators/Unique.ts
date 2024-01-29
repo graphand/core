@@ -7,7 +7,7 @@ class ValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
     const values = list
       .map(i => i.get(path))
       .flat(Infinity)
-      .filter(v => ![null, undefined, ""].includes(v));
+      .filter(v => ![null, undefined, ""].includes(v as string));
 
     if (!values?.length) {
       return true;

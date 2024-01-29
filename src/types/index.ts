@@ -9,9 +9,14 @@ import type AuthMethods from "@/enums/auth-methods";
 import type Sockethook from "@/models/Sockethook";
 import type MergeRequestTypes from "@/enums/merge-request-types";
 import type MergeRequestEventTypes from "@/enums/merge-request-event-types";
-import type { SerializerFieldsMap, models } from "@/.";
+import type { models } from "@/.";
 import type Role from "@/models/Role";
-import type { FieldDefinition, ModelDocument, InferModelDef } from "@/types/fields";
+import type {
+  FieldDefinition,
+  InferModelDef,
+  ModelJSON,
+  SerializerFieldsMap,
+} from "@/types/fields";
 import type { ValidatorDefinition } from "@/types/validators";
 import type { TransactionCtx } from "./ctx";
 export * from "./fields";
@@ -88,7 +93,7 @@ export type PopulateOption = {
 
 export type PopulatePath = string | PopulateOption;
 
-export type Populate = PopulatePath | PopulatePath[] | JSON;
+export type Populate = PopulatePath | PopulatePath[];
 
 export type JSONQuery = {
   filter?: Filter;
@@ -103,30 +108,30 @@ export type JSONQuery = {
 };
 
 export type UpdateObject = {
-  $currentDate?: JSONType;
-  $inc?: JSONType;
-  $min?: JSONType;
-  $max?: JSONType;
-  $mul?: JSONType;
-  $rename?: JSONType;
-  $set?: JSONType;
-  $setOnInsert?: JSONType;
-  $unset?: JSONType;
-  $addToSet?: JSONType;
-  $pop?: JSONType;
-  $pull?: JSONType;
-  $push?: JSONType;
-  $pullAll?: JSONType;
-  $bit?: JSONType;
+  $currentDate?: JSONTypeObject;
+  $inc?: JSONTypeObject;
+  $min?: JSONTypeObject;
+  $max?: JSONTypeObject;
+  $mul?: JSONTypeObject;
+  $rename?: JSONTypeObject;
+  $set?: JSONTypeObject;
+  $setOnInsert?: JSONTypeObject;
+  $unset?: JSONTypeObject;
+  $addToSet?: JSONTypeObject;
+  $pop?: JSONTypeObject;
+  $pull?: JSONTypeObject;
+  $push?: JSONTypeObject;
+  $pullAll?: JSONTypeObject;
+  $bit?: JSONTypeObject;
 };
 
 export type AdapterFetcher<T extends typeof Model = typeof Model> = {
   count: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<number | null>;
   get: (args: [query: string | JSONQuery], ctx: TransactionCtx) => Promise<ModelInstance<T> | null>;
   getList: (args: [query: JSONQuery], ctx: TransactionCtx) => Promise<ModelList<T>>;
-  createOne: (args: [payload: ModelDocument<T>], ctx: TransactionCtx) => Promise<ModelInstance<T>>;
+  createOne: (args: [payload: ModelJSON<T>], ctx: TransactionCtx) => Promise<ModelInstance<T>>;
   createMultiple: (
-    args: [payload: Array<ModelDocument<T>>],
+    args: [payload: Array<ModelJSON<T>>],
     ctx: TransactionCtx,
   ) => Promise<Array<ModelInstance<T>>>;
   updateOne: (
@@ -170,12 +175,10 @@ export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap
   ? RefModelsMap[T]
   : typeof Model;
 
-export type ModelInstance<
-  M extends typeof Model = typeof Model,
-  D = undefined,
-> = (M["definition"] extends ModelDefinition ? InstanceType<typeof Model> : unknown) &
-  InstanceType<M> &
-  InferModelDef<M, "object", D>;
+export type ModelInstance<M extends typeof Model = typeof Model> =
+  (M["definition"] extends ModelDefinition ? InstanceType<typeof Model> : unknown) &
+    InstanceType<M> &
+    InferModelDef<M, "object">;
 
 export type HookPhase = "before" | "after";
 
@@ -256,7 +259,7 @@ export type SockethookEvent<
   T extends typeof Model,
 > = {
   operation: string;
-  hook: ModelDocument<typeof Sockethook> & {
+  hook: ModelJSON<typeof Sockethook> & {
     phase: P;
     action: A;
     on: T["slug"];
@@ -365,11 +368,10 @@ export type AccountAuthConfigurationMap = {
   };
 };
 
-export type AccountAuthConfiguration<
-  T extends AuthProviders = keyof AccountAuthConfigurationMap | AuthProviders,
-> = T extends keyof AccountAuthConfigurationMap
-  ? AccountAuthConfigurationMap[T]
-  : Record<string, never>;
+export type AccountAuthConfiguration<T extends AuthProviders = AuthProviders> =
+  T extends keyof AccountAuthConfigurationMap
+    ? AccountAuthConfigurationMap[T]
+    : Record<string, never>;
 
 export type AuthProviderCredentialsMap = {
   [AuthProviders.PASSWORD]: {

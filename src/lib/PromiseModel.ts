@@ -7,12 +7,12 @@ import { isObjectId } from "@/lib/utils";
  * PromiseModel is a class that extends the native Promise class.
  * It is used to return a promise that resolves to a Model instance.
  */
-class PromiseModel<T extends typeof Model, D = undefined> extends Thenable<ModelInstance<T, D>> {
+class PromiseModel<T extends typeof Model> extends Thenable<ModelInstance<T>> {
   #model: typeof Model;
   #query: string | JSONQuery;
 
   constructor(
-    params: ConstructorParameters<typeof Promise<ModelInstance<T, D>>>,
+    params: ConstructorParameters<typeof Promise<ModelInstance<T>>>,
     model: typeof Model,
     query: string | JSONQuery,
   ) {

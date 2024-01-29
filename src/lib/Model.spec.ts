@@ -186,7 +186,7 @@ describe("Test Model", () => {
 
       const model2 = model.extend({
         initOptions: {
-          datamodel: new DataModel({
+          datamodel: DataModel.hydrate({
             definition: {
               keyField: "test",
             },
@@ -364,20 +364,24 @@ describe("Test Model", () => {
       });
       const model = _model.extend({ adapterClass: adapter });
 
-      const created = await model.create<{
-        fields: {
-          test: {
-            type: FieldTypes.NESTED;
-            options: {
-              fields: {
-                nested: {
-                  type: FieldTypes.TEXT;
+      const created = await model.create<
+        typeof Model & {
+          definition: {
+            fields: {
+              test: {
+                type: FieldTypes.NESTED;
+                options: {
+                  fields: {
+                    nested: {
+                      type: FieldTypes.TEXT;
+                    };
+                  };
                 };
               };
             };
           };
-        };
-      }>({
+        }
+      >({
         test: {
           nested: 123 as unknown as string,
         },
@@ -811,11 +815,13 @@ describe("Test Model", () => {
 
       expect(created.get("arr")).toBeInstanceOf(Array);
 
-      const rels = created.get("arr.rel");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rels = created.get("arr.rel") as any;
       expect(rels).toBeInstanceOf(Array);
       expect(rels.every(r => r instanceof PromiseModel)).toBeTruthy();
 
-      const arrRels = created.get("arr.arrRel");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const arrRels = created.get("arr.arrRel") as any;
       expect(arrRels).toBeInstanceOf(Array);
       expect(arrRels.every(r => r instanceof PromiseModelList)).toBeTruthy();
     });
@@ -960,7 +966,7 @@ describe("Test Model", () => {
       const created = await model.create({});
 
       created.set("test", 123);
-      expect(created.getDoc().test).toEqual("123");
+      expect(created.getData().test).toEqual("123");
     });
 
     it("should set nested json field", async () => {
@@ -1399,10 +1405,10 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = TestModel.fromDoc({});
+      const i = TestModel.hydrate({});
       expect(testValidate).toHaveBeenCalledTimes(0);
 
-      await TestModel.validate([i]);
+      await TestModel.validate([i.getData()]);
 
       expect(testValidate).toHaveBeenCalledTimes(1);
     });
@@ -1422,12 +1428,12 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = TestModel.fromDoc({});
+      const i = TestModel.hydrate({});
 
       expect.assertions(1);
 
       try {
-        await TestModel.validate([i]);
+        await TestModel.validate([i.getData()]);
       } catch (e) {
         expect(e).toBeDefined();
       }
@@ -1448,10 +1454,10 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = TestModel.fromDoc({});
+      const i = TestModel.hydrate({});
       expect(testValidate).toHaveBeenCalledTimes(0);
 
-      await TestModel.validate([i]);
+      await TestModel.validate([i.getData()]);
 
       expect(testValidate).toHaveBeenCalledTimes(1);
     });
@@ -1471,12 +1477,12 @@ describe("Test Model", () => {
 
       const TestModel = BaseModel.extend({ adapterClass: _adapter });
       await TestModel.initialize();
-      const i = TestModel.fromDoc({});
+      const i = TestModel.hydrate({});
 
       expect.assertions(1);
 
       try {
-        await TestModel.validate([i]);
+        await TestModel.validate([i.getData()]);
       } catch (e) {
         expect(e).toBeDefined();
       }
@@ -2080,7 +2086,7 @@ describe("Test Model", () => {
     it("getClass should return model with the instance adapter", async () => {
       const adapter = mockAdapter();
       const DM = DataModel.extend({ adapterClass: adapter });
-      const datamodel = new DM({ slug: faker.animal.type() });
+      const datamodel = DM.hydrate({ slug: faker.animal.type() });
 
       const modelFromDM = Model.getClass(datamodel);
 
@@ -2091,7 +2097,7 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const slug = generateRandomString();
 
-      const datamodel = new DataModel({ slug });
+      const datamodel = DataModel.hydrate({ slug });
 
       const modelFromDM = Model.getClass(datamodel, adapter);
       const modelFromSlug = Model.getClass(slug, adapter);
@@ -2103,7 +2109,7 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const slug = generateRandomString();
 
-      const datamodel = new DataModel({ slug });
+      const datamodel = DataModel.hydrate({ slug });
 
       const modelFromDM = Model.getClass(datamodel);
       const modelFromSlug = Model.getClass(slug, adapter);
@@ -2201,11 +2207,15 @@ describe("Test Model", () => {
 
       i1._id = new ObjectId().toString();
 
-      const i2 = await Model.getClass(slug2, adapter).create<{
-        fields: {
-          rel: { type: FieldTypes.RELATION };
-        };
-      }>({ rel: i1._id });
+      const i2 = await Model.getClass<
+        typeof Model & {
+          definition: {
+            fields: {
+              rel: { type: FieldTypes.RELATION };
+            };
+          };
+        }
+      >(slug2, adapter).create({ rel: i1._id });
 
       expect(i2.rel.model).toHaveProperty("slug", slug1);
 
@@ -2213,11 +2223,15 @@ describe("Test Model", () => {
         static slug = slug1;
       }.extend({ adapterClass: adapter, force: true });
 
-      const i3 = await Model.getClass(slug2, adapter).create<{
-        fields: {
-          rel: { type: FieldTypes.RELATION };
-        };
-      }>({ rel: i1._id });
+      const i3 = await Model.getClass<
+        typeof Model & {
+          definition: {
+            fields: {
+              rel: { type: FieldTypes.RELATION };
+            };
+          };
+        }
+      >(slug2, adapter).create({ rel: i1._id });
 
       expect(i3.rel.model).toBe(Model1);
     });
@@ -2260,16 +2274,20 @@ describe("Test Model", () => {
 
       i1._id = new ObjectId().toString();
 
-      const i2 = await Model.getClass(slug2, adapter).create<{
-        fields: {
-          rel: {
-            type: FieldTypes.ARRAY;
-            options: {
-              items: { type: FieldTypes.RELATION };
+      const i2 = await Model.getClass<
+        typeof Model & {
+          definition: {
+            fields: {
+              rel: {
+                type: FieldTypes.ARRAY;
+                options: {
+                  items: { type: FieldTypes.RELATION };
+                };
+              };
             };
           };
-        };
-      }>({ rel: [i1._id] });
+        }
+      >(slug2, adapter).create({ rel: [i1._id] });
 
       expect(i2.rel.model).toBe(Model1);
     });
@@ -2460,7 +2478,7 @@ describe("Test Model", () => {
     });
 
     it("should be able to extend medias class fields", async () => {
-      const cache = new Set<ModelInstance>();
+      const cache = new Set<ModelInstance<typeof Model>>();
       const adapter = mockAdapter({ privateCache: cache });
 
       await DataModel.extend({ adapterClass: adapter })
@@ -2490,7 +2508,7 @@ describe("Test Model", () => {
     });
 
     it("should be able to extend multiple medias classes", async () => {
-      const cache = new Set<ModelInstance>();
+      const cache = new Set<ModelInstance<typeof Model>>();
 
       const adapter1 = mockAdapter({ privateCache: cache });
       const adapter2 = mockAdapter({ privateCache: cache });

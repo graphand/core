@@ -47,6 +47,16 @@ class Job extends Model {
         options: {
           items: {
             type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                message: {
+                  type: FieldTypes.TEXT,
+                },
+                log: {
+                  type: FieldTypes.NESTED,
+                },
+              },
+            },
           },
         },
       },

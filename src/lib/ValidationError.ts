@@ -67,7 +67,8 @@ class ValidationError extends CoreError {
     }
 
     if (this.fieldsPaths?.length) {
-      message += ` on path${this.fieldsPaths.length > 1 ? "s" : ""} ${this.fieldsPaths.join(", ")}`;
+      const paths = Array.from(new Set(this.fieldsPaths));
+      message += ` on path${paths.length > 1 ? "s" : ""} ${paths.join(", ")}`;
     }
 
     return message;

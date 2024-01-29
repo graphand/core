@@ -7,13 +7,13 @@ class ValidatorRegex extends Validator<ValidatorTypes.REGEX> {
     const values = list
       .map(i => i.get(path))
       .flat(Infinity)
-      .filter(v => ![null, undefined, ""].includes(v));
+      .filter(v => ![null, undefined, ""].includes(v as string));
 
     if (!values?.length) return true;
 
     const regex = new RegExp(this.options.pattern, this.options.options?.join(""));
 
-    return !values.some(v => !regex.test(v));
+    return !values.some(v => !regex.test(v as string));
   };
 }
 

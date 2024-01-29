@@ -17,6 +17,7 @@ class Media extends Model {
       _mimetype: { type: FieldTypes.TEXT },
       _originalname: { type: FieldTypes.TEXT },
       _size: { type: FieldTypes.NUMBER },
+      // file: { type: FieldTypes.FILE },
     },
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "_mimetype" } },
@@ -28,8 +29,6 @@ class Media extends Model {
   static searchable = true;
   static extensible = true;
   static scope = ModelEnvScopes.PROJECT;
-
-  file;
 }
 
 export default Media;

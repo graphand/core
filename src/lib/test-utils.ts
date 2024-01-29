@@ -3,31 +3,31 @@ import { AdapterFetcher, ModelDefinition, ModelInstance } from "@/types";
 import ModelList from "@/lib/ModelList";
 import Model from "@/lib/Model";
 import ValidatorTypes from "@/enums/validator-types";
-import defaultFieldsMap from "@/lib/defaultFieldsMap";
-import defaultValidatorsMap from "@/lib/defaultValidatorsMap";
 import { defineFieldsProperties } from "@/lib/utils";
 import Validator from "@/lib/Validator";
+import { ObjectId } from "bson";
 
-const cache: Map<typeof Model, Set<ModelInstance>> = new Map();
+const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();
 
 export const mockAdapter = ({
-  fieldsMap = defaultFieldsMap,
+  fieldsMap = {},
   validatorsMap = {
-    ...defaultValidatorsMap,
     [ValidatorTypes.SAMPLE]: class ValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
       validate = () => Promise.resolve(true);
     },
   },
   privateCache,
 }: {
-  fieldsMap?: Adapter["fieldsMap"];
-  validatorsMap?: Adapter["validatorsMap"];
-  privateCache?: Set<ModelInstance>;
+  fieldsMap?: typeof Adapter["fieldsMap"];
+  validatorsMap?: typeof Adapter["validatorsMap"];
+  privateCache?: Set<ModelInstance<typeof Model>>;
 } = {}) => {
   class MockAdapter extends Adapter {
-    runValidators = true;
+    static runValidators = true;
+    static fieldsMap = fieldsMap;
+    static validatorsMap = validatorsMap;
 
-    get thisCache(): Set<ModelInstance> {
+    get thisCache(): Set<ModelInstance<typeof Model>> {
       if (privateCache) {
         return privateCache;
       }
@@ -39,8 +39,8 @@ export const mockAdapter = ({
         cacheModel = new Set(
           Array(5)
             .fill(null)
-            .map(() => this.model.fromDoc()),
-        );
+            .map(() => this.model.hydrate({})),
+        ) as Set<ModelInstance<typeof Model>>;
 
         cache.set(cacheKey, cacheModel);
       }
@@ -74,13 +74,17 @@ export const mockAdapter = ({
         return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
       }),
       createOne: jest.fn(async ([payload]) => {
-        const i = this.model.fromDoc(payload);
-        this.thisCache.add(i);
+        payload._id ??= String(new ObjectId());
+        const i = this.model.hydrate(payload);
+        this.thisCache.add(i as ModelInstance<typeof Model>);
         return Promise.resolve(i);
       }),
       createMultiple: jest.fn(([payload]) => {
-        const created = payload.map(p => this.model.fromDoc(p));
-        created.forEach(i => this.thisCache.add(i));
+        const created = payload.map(p => this.model.hydrate(p));
+        created.forEach(i => {
+          i._id ??= String(new ObjectId());
+          this.thisCache.add(i as ModelInstance<typeof Model>);
+        });
         return Promise.resolve(created);
       }),
       updateOne: jest.fn(([query, update]) => {
@@ -100,7 +104,7 @@ export const mockAdapter = ({
           if (query.filter) {
             const filterEntries = Object.entries(query.filter);
             found = cache.find(r =>
-              filterEntries.every(([key, value]) => r.getDoc()[key] === value),
+              filterEntries.every(([key, value]) => r.getData()[key] === value),
             );
           }
         }
@@ -110,12 +114,12 @@ export const mockAdapter = ({
         }
 
         if (update.$set) {
-          Object.assign(found.getDoc(), update.$set);
+          Object.assign(found.getData(), update.$set);
         }
 
         if (update.$unset) {
           Object.keys(update.$unset).forEach(key => {
-            delete found.getDoc()[key];
+            delete found.getData()[key];
           });
         }
 
@@ -129,13 +133,13 @@ export const mockAdapter = ({
         const list = Array.from(this.thisCache);
 
         if (update.$set) {
-          list.forEach(i => Object.assign(i.getDoc(), update.$set));
+          list.forEach(i => Object.assign(i.getData(), update.$set));
         }
 
         if (update.$unset) {
           list.forEach(i => {
             Object.keys(update.$unset).forEach(key => {
-              delete i.getDoc()[key];
+              delete i.getData()[key];
             });
           });
         }
@@ -161,9 +165,6 @@ export const mockAdapter = ({
         return Promise.resolve(ids);
       }),
     };
-
-    fieldsMap = fieldsMap;
-    validatorsMap = validatorsMap;
   }
 
   return MockAdapter;

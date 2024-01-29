@@ -17,29 +17,29 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           slug,
           definition: { fields: "toto" as unknown as ModelDefinition["fields"] },
-        }),
+        },
       ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           slug,
           definition: {
             fields: {
               field1: "toto",
             },
           },
-        } as object),
+        } as object,
       ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           slug,
           definition: {
             fields: {
@@ -48,13 +48,13 @@ describe("Global tests", () => {
               },
             },
           },
-        } as object),
+        } as object,
       ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           slug,
           definition: {
             fields: {
@@ -63,7 +63,7 @@ describe("Global tests", () => {
               },
             },
           },
-        } as object),
+        } as object,
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -75,25 +75,25 @@ describe("Global tests", () => {
     const model = DataModel.extend({ adapterClass: adapter });
 
     await expect(
-      model.validate([model.fromDoc({ slug, definition: { validators: "toto" } } as object)]),
+      model.validate([{ slug, definition: { validators: "toto" } } as object]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      model.validate([model.fromDoc({ slug, definition: { validators: {} } } as object)]),
+      model.validate([{ slug, definition: { validators: {} } } as object]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           slug,
           definition: { validators: ["required"] },
-        } as object),
+        } as object,
       ]),
     ).rejects.toThrow(ValidationError);
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           slug,
           definition: {
             validators: [
@@ -102,7 +102,7 @@ describe("Global tests", () => {
               },
             ],
           },
-        } as object),
+        } as object,
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -115,7 +115,7 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           slug,
           definition: {
             fields: {
@@ -195,7 +195,7 @@ describe("Global tests", () => {
               },
             },
           },
-        }),
+        },
       ]),
     ).resolves.toBeTruthy();
   });
@@ -236,31 +236,31 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           obj: {
             a: { title: "test" },
           },
-        }),
-        model.fromDoc({
+        },
+        {
           obj: {
             b: { title: "test" },
           },
-        }),
+        },
       ]),
     ).resolves.toBeTruthy();
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           obj: {
             a: { title: "test" },
           },
-        }),
-        model.fromDoc({
+        },
+        {
           obj: {
             b: { noTitle: true },
           },
-        }),
+        },
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -308,31 +308,31 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           obj: {
             arr: [{ title: "1" }, { title: "2" }],
           },
-        }),
-        model.fromDoc({
+        },
+        {
           obj: {
             arr: [{ title: "3" }, { title: "4" }],
           },
-        }),
+        },
       ]),
     ).resolves.toBeTruthy();
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           obj: {
             arr: [{ title: "1" }, { noTitle: true }],
           },
-        }),
-        model.fromDoc({
+        },
+        {
           obj: {
             arr: [{ title: "3" }, { title: "4" }],
           },
-        }),
+        },
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -402,7 +402,7 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           obj: {
             arr: [
               {
@@ -431,8 +431,8 @@ describe("Global tests", () => {
               },
             ],
           },
-        }),
-        model.fromDoc({
+        },
+        {
           obj: {
             arr: [
               {
@@ -461,13 +461,13 @@ describe("Global tests", () => {
               },
             ],
           },
-        }),
+        },
       ]),
     ).resolves.toBeTruthy();
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           obj: {
             arr: [
               {
@@ -496,8 +496,8 @@ describe("Global tests", () => {
               },
             ],
           },
-        }),
-        model.fromDoc({
+        },
+        {
           obj: {
             arr: [
               {
@@ -526,7 +526,7 @@ describe("Global tests", () => {
               },
             ],
           },
-        }),
+        },
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -591,7 +591,7 @@ describe("Global tests", () => {
 
     await expect(
       model.validate([
-        model.fromDoc({
+        {
           obj: {
             arr: [
               {
@@ -604,8 +604,8 @@ describe("Global tests", () => {
               },
             ],
           },
-        }),
-        model.fromDoc({
+        },
+        {
           obj: {
             arr: [
               {
@@ -618,7 +618,7 @@ describe("Global tests", () => {
               },
             ],
           },
-        }),
+        },
       ]),
     ).rejects.toThrow(ValidationError);
   });
@@ -716,7 +716,7 @@ describe("Global tests", () => {
 
   //   await expect(
   //     model.validate([
-  //       model.fromDoc({
+  //       ({
   //         obj: {
   //           arr: [
   //             {
@@ -730,7 +730,7 @@ describe("Global tests", () => {
   //           ],
   //         },
   //       }),
-  //       model.fromDoc({
+  //       ({
   //         obj: {
   //           arr: [
   //             {
@@ -910,17 +910,21 @@ describe("Global tests", () => {
       },
     });
 
-    const model = Model.getClass(dm);
-    const i = await model.create<{
-      fields: {
-        title: {
-          type: FieldTypes.TEXT;
-          options: {
-            default: string;
+    const model = Model.getClass<
+      typeof Model & {
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT;
+              options: {
+                default: string;
+              };
+            };
           };
         };
-      };
-    }>({
+      }
+    >(dm);
+    const i = await model.create({
       title: undefined,
     });
 

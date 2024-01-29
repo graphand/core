@@ -42,9 +42,9 @@ class Validator<T extends ValidatorTypes = ValidatorTypes> {
     return this.getFullPath() + this.type;
   }
 
-  validate?: (input: {
-    list: Array<ModelInstance>;
-    model: typeof Model;
+  validate?: <T extends typeof Model>(input: {
+    list: Array<ModelInstance<T>>;
+    model: T;
     ctx?: TransactionCtx;
   }) => Promise<boolean>;
 

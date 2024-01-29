@@ -20,7 +20,7 @@ class FieldDate extends Field<FieldTypes.DATE> {
   serializerMap: Field<FieldTypes.DATE>["serializerMap"] = {
     json: ({ value }) => {
       const date = toDate(value);
-      return date ? date.toISOString() : null;
+      return date ? date.toJSON() : null;
     },
     [Field.defaultSymbol]: ({ value }) => toDate(value),
   };

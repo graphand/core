@@ -8,7 +8,7 @@ class ValidatorRequired extends Validator<ValidatorTypes.REQUIRED> {
 
     if (!values?.length) return true;
 
-    return !values.some(v => [null, undefined, ""].includes(v));
+    return !values.some(v => [null, undefined, ""].includes(v as string));
   };
 }
 

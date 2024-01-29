@@ -17,7 +17,7 @@ class Environment extends Model {
       name: {
         type: FieldTypes.TEXT,
       },
-      _base: {
+      base: {
         type: FieldTypes.RELATION,
         options: {
           ref: Environment.slug,

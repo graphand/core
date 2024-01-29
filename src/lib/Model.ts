@@ -11,8 +11,6 @@ import {
   JSONQuery,
   ModelDefinition,
   Module,
-  ModelDocument,
-  GenericModelDocument,
   ModelInstance,
   UpdateObject,
   JSONSubtype,
@@ -23,6 +21,7 @@ import {
   TransactionCtx,
   SerializerCtx,
   Transaction,
+  FieldsDefinition,
 } from "@/types";
 import Adapter from "@/lib/Adapter";
 import Validator from "@/lib/Validator";
@@ -41,12 +40,12 @@ import CoreError from "@/lib/CoreError";
 import ErrorCodes from "@/enums/error-codes";
 import type DataModel from "@/models/DataModel";
 import ModelList from "./ModelList";
+import FieldTypes from "@/enums/field-types";
 
 class Model {
   static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
   static searchable: boolean = false; // Whether the model is usable as a search config source
   static exposed: boolean = true; // Whether the model is exposed in the API or not
-  static systemFields: boolean = true; // Include system field (_id, _createdAt, _createdBy, _updatedAt, _updatedBy) in the model fields
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
   static slug: string; // The slug of the model used to identify it
   static scope: ModelEnvScopes; // The scope of the model (global/project). Project scope could be global on project (project) or specific to an environment (env)
@@ -69,18 +68,28 @@ class Model {
     fieldsKeys?: string[];
     fieldsProperties?: PropertyDescriptorMap;
   };
+  static systemFields: FieldsDefinition = {
+    _id: { type: FieldTypes.ID },
+    _createdAt: { type: FieldTypes.DATE },
+    _createdBy: { type: FieldTypes.IDENTITY },
+    _updatedAt: { type: FieldTypes.DATE },
+    _updatedBy: { type: FieldTypes.IDENTITY },
+  };
 
-  __doc: GenericModelDocument; // The document
+  __data: ModelData; // The document
 
-  constructor(doc: GenericModelDocument = {}) {
-    if (!doc || typeof doc !== "object") {
+  constructor(data: ModelData = {}) {
+    if (!data || typeof data !== "object") {
       throw new CoreError({
-        message: `Invalid document: ${doc}`,
+        message: `Invalid document: ${data}`,
       });
     }
 
-    this.__doc = doc;
-    this.__doc._id ??= String(Date.now());
+    this.__data = data;
+
+    // if (fallbackId) {
+    //   this.__data._id ??= String(Date.now());
+    // }
   }
 
   /**
@@ -101,21 +110,31 @@ class Model {
     return definition?.keyField ?? definition?.keyField ?? "_id";
   }
 
-  static fromDoc<D = undefined, T extends typeof Model = typeof Model>(
+  static hydrate<T extends typeof Model = typeof Model>(
     this: T,
-    doc?: ModelDocument<T, D>,
-  ): ModelInstance<T, D> {
-    return new this((doc ?? {}) as GenericModelDocument) as ModelInstance<T, D>;
+    data?: ModelData<T>,
+  ): ModelInstance<T> {
+    return new this((data ?? {}) as ModelData) as ModelInstance<T>;
+  }
+
+  static serialize<S extends SerializerFormat, T extends typeof Model = typeof Model>(
+    this: T,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data?: InferModelDef<T, any>,
+    format: S = "json" as S,
+  ): InferModelDef<T, S> {
+    const i = new this((data ?? {}) as ModelData) as ModelInstance<T>;
+    return i.serialize(format, {}, true) as InferModelDef<T, typeof format>;
   }
 
   /**
    * Returns the current instance doc (raw data)
    */
-  getDoc<T extends ModelInstance<typeof Model>>(this: T) {
-    return this.__doc as T extends ModelInstance<infer M> ? ModelDocument<M> : GenericModelDocument;
+  getData<T extends ModelInstance<typeof Model>>(this: T) {
+    return this.__data as T extends ModelInstance<infer M> ? ModelData<M> : ModelData;
   }
 
-  getKey<T extends ModelInstance<typeof Model>>(this: T, format?: SerializerFormat) {
+  getKey<T extends ModelInstance<typeof Model>>(this: T, format?: SerializerFormat): string {
     const model = this.model();
     const keyField = model.getKeyField();
 
@@ -125,7 +144,7 @@ class Model {
       });
     }
 
-    return this.get(model.getKeyField(), format);
+    return this.get(model.getKeyField(), format) as string;
   }
 
   getId(format?: SerializerFormat) {
@@ -133,11 +152,11 @@ class Model {
   }
 
   /**
-   * Set the current instance doc (raw data)
-   * @param doc
+   * Set the current instance data
+   * @param data
    */
-  setDoc(doc: GenericModelDocument) {
-    this.__doc = doc;
+  setData(data: ModelData) {
+    this.__data = data;
   }
 
   /**
@@ -148,9 +167,8 @@ class Model {
    * console.log(account === clonedAccount); // false
    */
   clone<T extends ModelInstance>(this: T): T {
-    const clonedDoc = JSON.parse(JSON.stringify(this.__doc));
-    const model = this.model();
-    return model.fromDoc(clonedDoc) as T;
+    const clonedData = JSON.parse(JSON.stringify(this.__data));
+    return this.model().hydrate(clonedData) as T;
   }
 
   /**
@@ -316,7 +334,11 @@ class Model {
 
   static getClass<
     M extends typeof Model = undefined,
-    T extends string | keyof RefModelsMap | ModelInstance<typeof DataModel> | typeof Model = string,
+    T extends string | keyof RefModelsMap | ModelInstance<typeof DataModel> | typeof Model =
+      | string
+      | keyof RefModelsMap
+      | ModelInstance<typeof DataModel>
+      | typeof Model,
   >(
     input: T, // a slug (core model slug/datamodel slug), a model class or a datamodel instance
     adapterClass?: typeof Adapter,
@@ -401,13 +423,17 @@ class Model {
    * console.log(model.get("field.subfield.arr.nested"));
    * console.log(model.get("field.subfield.arr.[1].nested"));
    */
-  get<T extends ModelInstance>(
+  get<T extends ModelInstance, P extends string, S extends SerializerFormat = "object">(
     this: T,
-    path: string,
-    format: SerializerFormat = "object",
+    path: P,
+    format: S = "object" as S,
     ctx: SerializerCtx = {},
-    value?: JSONSubtype,
-  ) {
+    value?: unknown,
+  ): T extends ModelInstance<infer R>
+    ? P extends keyof InferModelDef<R, S>
+      ? InferModelDef<R, S>[P]
+      : unknown
+    : unknown {
     ctx.outputFormat ??= format;
     const model = this.model();
     let fieldsPaths: Array<FieldsPathItem>;
@@ -421,24 +447,27 @@ class Model {
       }
     }
 
+    const doc = (this.__data || {}) as ReturnType<T["getData"]>;
+
     if (!fieldsPaths?.length) {
       if (model.freeMode) {
-        return this.__doc[path];
+        // @ts-expect-error Accept any path
+        return doc[path];
       }
 
       return undefined;
     }
 
     const firstField = fieldsPaths[0].field;
-    value ??= this.__doc[firstField.path] as JSONSubtype;
+    value ??= doc[firstField.path] as JSONSubtype;
 
-    const defaults = ctx?.defaults ?? format !== "document";
+    const defaults = ctx?.defaults ?? true;
     if (defaults && value === undefined && "default" in firstField.options) {
       value = firstField.options.default as typeof value;
     }
 
     if (value === undefined || value === null) {
-      return value;
+      return value as null | undefined;
     }
 
     const from = this as unknown as ModelInstance;
@@ -497,7 +526,7 @@ class Model {
     }
 
     return _setter({
-      _assignTo: this.__doc,
+      _assignTo: this.__data,
       _value: value,
       _fieldsPaths: fieldsPaths,
       _throw,
@@ -517,25 +546,21 @@ class Model {
   serialize<T extends ModelInstance, S extends SerializerFormat>(
     this: T,
     format: S,
-    bindCtx: Partial<SerializerCtx> = {},
+    bindCtx: SerializerCtx = {},
     clean = false,
     fieldsKeys?: Array<string>,
-  ): T extends ModelInstance<infer M, infer D> ? InferModelDef<M, S, D> : JSONTypeObject {
+  ): T extends ModelInstance<infer M> ? InferModelDef<M, S> : JSONTypeObject {
     const keys = fieldsKeys ?? this.model().fieldsKeys;
     const res = {};
 
     keys.forEach(slug => {
       const v = this.get(slug, format, bindCtx);
-      if (clean && v === undefined) {
-        return;
+      if (!clean || v !== undefined) {
+        res[slug] = v;
       }
-
-      res[slug] = v;
     });
 
-    return res as T extends ModelInstance<infer M, infer D>
-      ? InferModelDef<M, S, D>
-      : JSONTypeObject;
+    return res as T extends ModelInstance<infer M> ? InferModelDef<M, S> : JSONTypeObject;
   }
 
   /**
@@ -554,17 +579,6 @@ class Model {
    */
   toObject<T extends ModelInstance>(this: T) {
     return this.serialize("object");
-  }
-
-  /**
-   * Get the document representation of the current instance as a document
-   * The document format is about the same as the JSON format but with some differences:
-   * - default values of the fields are not included
-   * @example
-   * console.log(instance.toDocument()); // equivalent to instance.to("document")
-   */
-  toDocument<T extends ModelInstance>(this: T) {
-    return this.serialize("document");
   }
 
   /**
@@ -602,19 +616,19 @@ class Model {
    * const instance = await Model.get({ filter: { title: { "$regex": "a" } } });
    * console.log(instance.title); // "apple"
    */
-  static get<D = undefined, T extends typeof Model = typeof Model>(
+  static get<T extends typeof Model = typeof Model>(
     this: T,
     query: string | JSONQuery = {},
     ctx?: TransactionCtx,
-  ): PromiseModel<T, D> {
-    return new PromiseModel<T, D>(
+  ): PromiseModel<T> {
+    return new PromiseModel<T>(
       [
         async (resolve, reject) => {
           try {
             await this.initialize();
 
             const i = await this.execute("get", [query], ctx);
-            resolve(i as ModelInstance<T, D>);
+            resolve(i as ModelInstance<T>);
           } catch (e) {
             reject(e);
           }
@@ -636,19 +650,19 @@ class Model {
    * console.log(list[0].title); // "apple"
    * console.log(list[1].title); // "banana"
    */
-  static getList<D = undefined, T extends typeof Model = typeof Model>(
+  static getList<T extends typeof Model = typeof Model>(
     this: T,
     query: JSONQuery = {},
     ctx?: TransactionCtx,
-  ): PromiseModelList<T, D> {
-    return new PromiseModelList<T, D>(
+  ): PromiseModelList<T> {
+    return new PromiseModelList<T>(
       [
         async (resolve, reject) => {
           try {
             await this.initialize();
 
             const list = await this.execute("getList", [query], ctx);
-            resolve(list as ModelList<T, D>);
+            resolve(list as ModelList<T>);
           } catch (e) {
             reject(e);
           }
@@ -667,11 +681,11 @@ class Model {
    * console.log(instance._id); // ...
    * console.log(instance.title); // "apple"
    */
-  static async create<D = undefined, T extends typeof Model = typeof Model>(
+  static async create<T extends typeof Model = typeof Model>(
     this: T,
-    payload: ModelDocument<T, D>,
+    payload: InferModelDef<T, "json">,
     ctx?: TransactionCtx,
-  ): Promise<ModelInstance<T, D>> {
+  ): Promise<ModelInstance<T>> {
     if (Array.isArray(payload)) {
       throw new CoreError({
         code: ErrorCodes.INVALID_PARAMS,
@@ -682,7 +696,7 @@ class Model {
     await this.initialize();
 
     const i = await this.execute("createOne", [payload], ctx);
-    return i as ModelInstance<T, D>;
+    return i as ModelInstance<T>;
   }
 
   /**
@@ -699,15 +713,15 @@ class Model {
    * console.log(instances[0].title); // "apple"
    * console.log(instances[1].title); // "banana"
    */
-  static async createMultiple<D = undefined, T extends typeof Model = typeof Model>(
+  static async createMultiple<T extends typeof Model = typeof Model>(
     this: T,
-    payload: Array<ModelDocument<T, D>>,
+    payload: Array<InferModelDef<T, "json">>,
     ctx?: TransactionCtx,
-  ): Promise<Array<ModelInstance<T, D>>> {
+  ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
     const list = await this.execute("createMultiple", [payload], ctx);
-    return list as Array<ModelInstance<T, D>>;
+    return list as Array<ModelInstance<T>>;
   }
 
   /**
@@ -729,13 +743,13 @@ class Model {
 
     const res = await this.model().execute("updateOne", [String(this.get("_id")), update], ctx);
 
-    if (!res?.getDoc?.()) {
+    if (!res?.getData?.()) {
       throw new CoreError({
         message: `Unable to update model: ${res instanceof Model}`,
       });
     }
 
-    this.__doc = res.__doc;
+    this.__data = res.__data;
 
     return this;
   }
@@ -756,22 +770,20 @@ class Model {
    * console.log(list[0].title); // "pear"
    * console.log(list[1].title); // "pear"
    */
-  static async update<D = undefined, T extends typeof Model = typeof Model>(
+  static async update<T extends typeof Model = typeof Model>(
     this: T,
     query: string | JSONQuery = {},
     update: UpdateObject,
     ctx?: TransactionCtx,
-  ): Promise<Array<ModelInstance<T, D>>> {
+  ): Promise<Array<ModelInstance<T>>> {
     await this.initialize();
 
     if (typeof query === "string") {
       const updated = await this.execute("updateOne", [query, update], ctx);
-      return [updated] as Array<ModelInstance<T, D>>;
+      return [updated] as Array<ModelInstance<T>>;
     }
 
-    return (await this.execute("updateMultiple", [query, update], ctx)) as Array<
-      ModelInstance<T, D>
-    >;
+    return (await this.execute("updateMultiple", [query, update], ctx)) as Array<ModelInstance<T>>;
   }
 
   /**
@@ -873,7 +885,7 @@ class Model {
    */
   static async validate<T extends typeof Model = typeof Model>(
     this: T,
-    list: Array<ModelInstance<T> | ModelDocument<T>>,
+    list: Array<ModelData<T> | ModelInstance<T>>,
     ctx?: TransactionCtx,
   ): Promise<boolean> {
     return await validateModel(this, list, ctx);
@@ -889,8 +901,8 @@ class Model {
    * error will be thrown. If `required` is set to `false` and no adapter is found, `null
    * @returns the adapter object.
    */
-  static getAdapter<T extends typeof Model = typeof Model>(this: T, required = true) {
-    let adapter;
+  static getAdapter<T extends typeof Model = typeof Model>(this: T, required = true): Adapter {
+    let adapter: Adapter;
     const baseClass = this.getBaseClass();
     const adapterClass = baseClass?.adapterClass;
 
@@ -1025,7 +1037,7 @@ class Model {
           });
         }
 
-        res = await fn.apply(fn, [payloadBefore.args, ctx, transaction]);
+        res = await fn.apply(fn, [payloadBefore.args, ctx]);
       } catch (e) {
         payloadBefore.err ??= [];
         payloadBefore.err.push(e);

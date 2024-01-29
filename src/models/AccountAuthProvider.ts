@@ -9,7 +9,6 @@ import { ModelDefinition } from "@/types";
 
 @modelDecorator()
 class AccountAuthProvider extends Model {
-  // class AccountAuthProvider<T extends AuthProviders = AuthProviders> extends Model {
   static __name = "AccountAuthProvider";
   static slug = "accounts_authProviders" as const;
   static definition = {
@@ -37,7 +36,7 @@ class AccountAuthProvider extends Model {
   } satisfies ModelDefinition;
 
   static exposed = false;
-  static systemFields = false;
+  static systemFields = null;
   static scope = ModelEnvScopes.ENV;
 
   // @fieldDecorator(FieldTypes.RELATION, { ref: AuthProvider.slug })
