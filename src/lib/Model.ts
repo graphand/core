@@ -460,35 +460,39 @@ class Model {
       return undefined;
     }
 
-    const firstField = fieldsPaths[0].field;
-    value ??= doc[firstField.path] as JSONSubtype;
+    // if (ctx) {
+    //   ctx.defaults ??= true;
+    // }
 
-    const defaults = ctx?.defaults ?? true;
-    if (defaults && value === undefined && "default" in firstField.options) {
-      value = firstField.options.default as typeof value;
-    }
+    // const firstField = fieldsPaths[0].field;
+    // value ??= doc[firstField.path] as JSONSubtype;
 
-    if (value === undefined || value === null) {
-      return value as null | undefined;
-    }
+    // const defaults = ctx?.defaults ?? true;
+    // if (defaults && value === undefined && "default" in firstField.options) {
+    //   value = firstField.options.default as typeof value;
+    // }
 
-    const from = this as unknown as ModelInstance;
+    // if (value === undefined || value === null) {
+    //   return value as null | undefined;
+    // }
 
-    if (fieldsPaths.length === 1) {
-      return firstField.serialize(value, format, from, ctx);
-    }
+    // const from = this as unknown as ModelInstance;
+
+    // if (fieldsPaths.length === 1) {
+    //   return firstField.serialize(value, format, from, ctx);
+    // }
 
     const noFieldSymbol = Symbol("noField");
 
-    const _value = firstField.serialize(value, "nextField", from, ctx);
+    // const _value = firstField.serialize(value, format, from, ctx);
 
     const res = _getter({
-      value: _value,
-      fieldsPaths: fieldsPaths.splice(1),
+      value: value ?? doc,
+      fieldsPaths,
       format,
       ctx,
       noFieldSymbol,
-      from,
+      from: this,
     });
 
     return res === noFieldSymbol ? undefined : res;
@@ -528,9 +532,9 @@ class Model {
     }
 
     return _setter({
-      _assignTo: this.__data,
-      _value: value,
-      _fieldsPaths: fieldsPaths,
+      assignTo: this.__data,
+      value,
+      fieldsPaths,
       _throw,
       from: this,
     });

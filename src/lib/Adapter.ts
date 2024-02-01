@@ -51,6 +51,8 @@ class Adapter {
   fetcher: AdapterFetcher; // The adapter configuration = how the adapter should process
   model: typeof Model; // The model of the current adapter instance
 
+  cacheFieldsMap: Map<string, Field<FieldTypes>>; // Cache the fields of the current model
+
   constructor(model: typeof Model) {
     this.model = model;
   }

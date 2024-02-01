@@ -17,6 +17,7 @@ import {
   SerializerCtx,
   TransactionCtx,
   FieldsDefinition,
+  JSONType,
 } from "@/types";
 import FieldTypes from "@/enums/field-types";
 import Field from "@/lib/Field";
@@ -456,7 +457,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
   // if (adapter) {
   //   adapter.cacheFieldsMap ??= new Map();
   //   if (adapter?.cacheFieldsMap?.has(cacheKey)) {
-  //     return adapter.cacheFieldsMap.get(cacheKey) as unknown as Field<T>;
+  //     return adapter.cacheFieldsMap.get(cacheKey) as Field<T>;
   //   }
   // }
 
@@ -466,7 +467,7 @@ export const getFieldFromDefinition = <T extends keyof FieldOptionsMap | FieldTy
 
   // if (adapter) {
   //   adapter.cacheFieldsMap ??= new Map();
-  //   adapter.cacheFieldsMap.set(cacheKey, field as unknown as Field);
+  //   adapter.cacheFieldsMap.set(cacheKey, field);
   // }
 
   return field;
@@ -588,7 +589,7 @@ export const _getter = (opts: {
 }) => {
   let { value } = opts;
   const { fieldsPaths, noFieldSymbol, format, from, ctx } = opts;
-  const lastField = fieldsPaths[fieldsPaths.length - 1]?.field ?? opts.lastField;
+  // const lastField = fieldsPaths[fieldsPaths.length - 1]?.field ?? opts.lastField;
 
   for (let i = 0; i < fieldsPaths.length; i++) {
     const fieldsPath = fieldsPaths[i];
@@ -598,26 +599,15 @@ export const _getter = (opts: {
 
     const { key, field } = fieldsPath;
 
-    const defaults = ctx?.defaults ?? true;
-    if (defaults && value === undefined && "default" in field.options) {
-      value = field.options.default as typeof value;
-    }
-
-    if (value === undefined || value === null) {
-      return value;
-    }
-
     const restPaths = fieldsPaths.slice(i + 1);
     const matchIndex = key.match(/\[(\d+)?\]/);
     if (matchIndex) {
-      if (!Array.isArray(value)) {
-        return noFieldSymbol;
-      }
+      const arrVal = Array.from(value as Iterable<unknown>);
 
       if (matchIndex[1] === undefined) {
         const adapter = from.model().getAdapter();
 
-        return value.map((v, fi) => {
+        return arrVal.map((v, fi) => {
           const thisPath = field.path.replace(/\[\]$/, `[${fi}]`);
           const _restPaths = restPaths.map(p => {
             if (!p) {
@@ -638,7 +628,6 @@ export const _getter = (opts: {
             ...opts,
             value: v,
             fieldsPaths: _restPaths,
-            lastField: lastField,
           });
 
           return res === noFieldSymbol ? undefined : res;
@@ -647,15 +636,14 @@ export const _getter = (opts: {
 
       const index = parseInt(matchIndex[1]);
 
-      if (value.length <= index) {
+      if (arrVal.length <= index) {
         return noFieldSymbol;
       }
 
       const res = _getter({
         ...opts,
-        value: value[index],
+        value: arrVal[index],
         fieldsPaths: restPaths,
-        lastField: lastField,
       });
 
       return res === noFieldSymbol ? undefined : res;
@@ -665,24 +653,33 @@ export const _getter = (opts: {
       break;
     }
 
-    const n = value[key];
+    let n;
+
+    // @ts-expect-error __raw exists in the proxy returned by nested field
+    if (value.__raw) {
+      // @ts-expect-error __raw exists in the proxy returned by nested field
+      n = value.__raw[key];
+    } else {
+      n = value[key];
+    }
+
+    const defaults = ctx?.defaults ?? true;
+    if (defaults && n === undefined && "default" in field.options) {
+      n = field.options.default as typeof n;
+    }
 
     if (n === undefined || n === null) {
       return n;
     }
 
-    if (field === lastField) {
-      value = n;
-    } else {
-      value = field.serialize(n, "nextField", from, ctx);
-    }
+    value = field.serialize(n, format, from, ctx);
   }
 
-  if (!lastField || (lastField?.nextFieldEqObject && format === "object")) {
+  if (value === undefined || value === null) {
     return value;
   }
 
-  return lastField.serialize(value, format, from, ctx);
+  return value;
 };
 
 /**
@@ -704,19 +701,19 @@ export const _getter = (opts: {
  * `assignPath.field.serialize()`.
  */
 export const _setter = <T extends typeof Model>(opts: {
-  _assignTo: object | Array<object>;
-  _value: JSONSubtype;
-  _fieldsPaths: Array<{ key: string | number; field: Field }>;
+  assignTo: JSONType;
+  value: JSONSubtype;
+  fieldsPaths: Array<{ key: string | number; field: Field }>;
   _throw: () => void;
   from: ModelInstance<T>;
 }) => {
-  const { _assignTo, _fieldsPaths, _throw, _value, from } = opts;
+  const { fieldsPaths, _throw, value, from } = opts;
+  let { assignTo } = opts;
 
-  let assignTo = _assignTo;
-  let assignPath = _fieldsPaths.shift();
+  let assignPath = fieldsPaths.shift();
 
-  for (let i = 0; i < _fieldsPaths.length; i++) {
-    const _fieldsPath = _fieldsPaths[i];
+  for (let i = 0; i < fieldsPaths.length; i++) {
+    const _fieldsPath = fieldsPaths[i];
     if (!_fieldsPath) {
       _throw();
     }
@@ -727,12 +724,12 @@ export const _setter = <T extends typeof Model>(opts: {
 
     if (assignPath.key === "[]") {
       if (Array.isArray(assignTo) && assignTo.length) {
-        const restPaths = _fieldsPaths.slice(i + 1);
+        const restPaths = fieldsPaths.slice(i + 1);
         assignTo = assignTo.map((_, index) => {
           return _setter({
             ...opts,
-            _assignTo: assignTo,
-            _fieldsPaths: [{ key: index, field: assignPath.field }, ...restPaths],
+            assignTo,
+            fieldsPaths: [{ key: index, field: assignPath.field }, ...restPaths],
           });
         });
       }
@@ -742,12 +739,7 @@ export const _setter = <T extends typeof Model>(opts: {
   }
 
   if (assignPath?.field && assignTo && typeof assignTo === "object") {
-    assignTo[assignPath.key] = assignPath.field.serialize(
-      _value,
-      "json",
-      from as ModelInstance,
-      {},
-    );
+    assignTo[assignPath.key] = assignPath.field.serialize(value, "json", from as ModelInstance, {});
 
     return assignTo[assignPath.key];
   }

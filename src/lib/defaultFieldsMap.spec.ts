@@ -1796,4 +1796,76 @@ describe("test fieldsMap", () => {
       expect(fourth).toBe(undefined);
     });
   });
+
+  // it.only("should ...", async () => {
+  //   const fn = jest.fn(() => "test");
+  //   class CustomFieldArray extends FieldArray {
+  //     _sToTest = () => ["test"];
+
+  //     serializerMap: FieldArray["serializerMap"] = {
+  //       // @ts-expect-error test
+  //       test: this._sToTest,
+  //       [Field.defaultSymbol]: this._sDefault,
+  //     };
+  //   }
+
+  //   const _adapter = mockAdapter({
+  //     fieldsMap: {
+  //       [FieldTypes.ARRAY]: CustomFieldArray,
+  //     },
+  //   });
+
+  //   const model = mockModel({
+  //     fields: {
+  //       nested: {
+  //         type: FieldTypes.NESTED,
+  //         options: {
+  //           fields: {
+  //             arr: {
+  //               type: FieldTypes.ARRAY,
+  //               options: {
+  //                 items: {
+  //                   type: FieldTypes.TEXT,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   }).extend({ adapterClass: _adapter });
+
+  //   const arrField = getFieldFromDefinition(
+  //     {
+  //       type: FieldTypes.ARRAY,
+  //       options: {
+  //         items: {
+  //           type: FieldTypes.TEXT,
+  //         },
+  //       },
+  //     },
+  //     model.getAdapter(),
+  //     "nested.arr",
+  //   );
+
+  //   console.log(arrField);
+
+  //   console.log(model.getAdapter().cacheFieldsMap);
+
+  //   arrField._sToTest = () => null;
+
+  //   const spy = jest.spyOn(arrField, "_sToTest");
+
+  //   const i = model.hydrate({
+  //     nested: {
+  //       arr: [],
+  //     },
+  //   });
+
+  //   expect(spy).toHaveBeenCalledTimes(0);
+
+  //   expect(i.get("nested.arr", "test")).toEqual(["test"]);
+
+  //   expect(spy).toHaveBeenCalledTimes(1);
+  // });
 });

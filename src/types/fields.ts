@@ -135,7 +135,7 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
       : Array<unknown>;
   };
   validation: {};
-  nextField: {};
+  // nextField: {};
 }
 
 export type InferFieldType<

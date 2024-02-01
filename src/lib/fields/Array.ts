@@ -8,16 +8,25 @@ import PromiseModelList from "@/lib/PromiseModelList";
 import ModelList from "@/lib/ModelList";
 
 class FieldArray extends Field<FieldTypes.ARRAY> {
-  nextFieldEqObject = false;
-
   _sToRelArr = (input: FieldSerializerInput) => {
     const options = this.options.items?.options as FieldOptions<FieldTypes.RELATION>;
     const { value, format, from, ctx } = input;
 
     const adapter = from.model().getAdapter();
-    let arrVal = Array.isArray(value) ? value : [value];
+    let arrVal;
+
+    if (value instanceof PromiseModelList) {
+      arrVal = value.getIds();
+    } else if (value instanceof ModelList) {
+      arrVal = value.getIds();
+    } else {
+      arrVal = Array.isArray(value) ? value : [value];
+    }
 
     if (format === "object") {
+      if (value instanceof ModelList) {
+      }
+
       const model = Model.getClass(options.ref, adapter.base);
 
       if (!arrVal?.every(isObjectId)) {
@@ -40,7 +49,7 @@ class FieldArray extends Field<FieldTypes.ARRAY> {
         });
       } else {
         const ids = arrVal.map(String);
-        res = model.getList({ ids }, ctx?.transactionCtx);
+        res = model.getList({ ids }, Object.assign({}, ctx?.transactionCtx));
       }
 
       return res;
@@ -78,6 +87,8 @@ class FieldArray extends Field<FieldTypes.ARRAY> {
   };
 
   serializerMap: Field<FieldTypes.ARRAY>["serializerMap"] = {
+    validation: ({ value }) => value,
+    // nextField: this._sStatic,
     [Field.defaultSymbol]: this._sDefault,
   };
 }

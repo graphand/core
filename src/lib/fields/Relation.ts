@@ -6,8 +6,6 @@ import PromiseModel from "@/lib/PromiseModel";
 import { FieldSerializerInput } from "@/types";
 
 class FieldRelation extends Field<FieldTypes.RELATION> {
-  nextFieldEqObject = false;
-
   validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
     const _isInvalid = value => {
       if (value === null || value === undefined) {
@@ -37,7 +35,7 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
       id = String(value);
     }
 
-    if (!isObjectId(id) && format !== "validation") {
+    if (!isObjectId(id) && !["validation", "nextField"].includes(format)) {
       return undefined;
     }
 
@@ -58,7 +56,7 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
     // get the referenced model with the same adapter as from parameter
     const model = Model.getClass(this.options.ref, adapter.base);
 
-    return model.get(id, ctx?.transactionCtx);
+    return model.get(id, Object.assign({}, ctx?.transactionCtx));
   };
 
   serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {

@@ -111,7 +111,7 @@ class FieldNested extends Field<FieldTypes.NESTED> {
         );
       }
 
-      const defaults = ctx?.defaults ?? oFormat !== "document";
+      const defaults = ctx?.defaults ?? true;
       if (defaults && value === undefined && "default" in targetField.options) {
         value = targetField.options.default as typeof value;
       }
@@ -127,6 +127,10 @@ class FieldNested extends Field<FieldTypes.NESTED> {
       get(target, prop: string) {
         if (prop === "__isProxy") {
           return true;
+        }
+
+        if (prop === "__raw") {
+          return target;
         }
 
         return _getter(target, prop);

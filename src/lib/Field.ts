@@ -15,7 +15,6 @@ import {
 class Field<T extends FieldTypes = FieldTypes> {
   #definition: FieldDefinition<T>; // The field definition
   #path: string; // The path of the field in the model
-  nextFieldEqObject: boolean = true; // If false, the serializer returns a different value in NEXT_FIELD and OBJECT
   static readonly defaultSymbol: unique symbol = Symbol("defaultSerializer");
 
   serializerMap: Partial<{
