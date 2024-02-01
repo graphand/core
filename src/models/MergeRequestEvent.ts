@@ -28,65 +28,14 @@ class MergeRequestEvent extends Model {
         type: FieldTypes.NESTED,
         options: {
           fields: {
-            fields: {
-              type: FieldTypes.NESTED,
-              options: {
-                defaultField: {
-                  type: FieldTypes.NESTED,
-                  options: {
-                    fields: {
-                      type: {
-                        type: FieldTypes.TEXT,
-                        options: {
-                          options: Object.values(FieldTypes),
-                          strict: true,
-                        },
-                      },
-                      options: {
-                        type: FieldTypes.NESTED,
-                      },
-                    },
-                    validators: [
-                      {
-                        type: ValidatorTypes.REQUIRED,
-                        options: {
-                          field: "type",
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
+            close: {
+              type: FieldTypes.BOOLEAN,
             },
-            validators: {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.NESTED,
-                  options: {
-                    fields: {
-                      type: {
-                        type: FieldTypes.TEXT,
-                        options: {
-                          options: Object.values(FieldTypes),
-                          strict: true,
-                        },
-                      },
-                      options: {
-                        type: FieldTypes.NESTED,
-                      },
-                    },
-                    validators: [
-                      {
-                        type: ValidatorTypes.REQUIRED,
-                        options: {
-                          field: "type",
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
+            comment: {
+              type: FieldTypes.TEXT,
+            },
+            apply: {
+              type: FieldTypes.NESTED,
             },
           },
         },

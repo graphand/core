@@ -87,9 +87,9 @@ class Model {
 
     this.__data = data;
 
-    // if (fallbackId) {
-    //   this.__data._id ??= String(Date.now());
-    // }
+    Object.defineProperty(this, "__data", {
+      enumerable: false,
+    });
   }
 
   /**
@@ -122,9 +122,11 @@ class Model {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: InferModelDef<T, any>,
     format: S = "json" as S,
+    ctx: SerializerCtx = {},
+    clean = false,
   ): InferModelDef<T, S> {
     const i = new this((data ?? {}) as ModelData) as ModelInstance<T>;
-    return i.serialize(format, {}, true) as InferModelDef<T, typeof format>;
+    return i.serialize(format, ctx, clean) as InferModelDef<T, typeof format>;
   }
 
   /**

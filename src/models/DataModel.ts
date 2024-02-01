@@ -89,6 +89,7 @@ class DataModel extends Model {
             },
           },
         },
+        _ts: undefined as ModelDefinition,
       },
       _doc: { type: FieldTypes.NESTED },
     } as const,

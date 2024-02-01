@@ -1,4 +1,5 @@
 import FieldTypes from "@/enums/field-types";
+import { FieldSerializerInput } from "@/index";
 import Field from "@/lib/Field";
 import { isObjectId } from "@/lib/utils";
 
@@ -25,25 +26,19 @@ class FieldText extends Field<FieldTypes.TEXT> {
     return !values.some(_isInvalid);
   };
 
+  _sDefault = ({ value }: FieldSerializerInput) => {
+    const single = Array.isArray(value) ? String(value[0]) : String(value);
+
+    if (this.options.options?.length && this.options.strict) {
+      return this.options.options.includes(single) ? single : undefined;
+    }
+
+    return single;
+  };
+
   serializerMap: Field<FieldTypes.TEXT>["serializerMap"] = {
-    [Field.defaultSymbol]: ({ value, format }) => {
-      const single = Array.isArray(value) ? String(value[0]) : String(value);
-
-      if (
-        this.options.options?.length &&
-        this.options.strict &&
-        !this.options.options.includes(single) &&
-        format !== "validation"
-      ) {
-        if (this.options.options.includes(String(value))) {
-          return String(value);
-        }
-
-        return undefined;
-      }
-
-      return String(single);
-    },
+    validation: ({ value }) => String(value),
+    [Field.defaultSymbol]: this._sDefault,
   };
 }
 

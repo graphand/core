@@ -6,7 +6,7 @@ import DataModel from "@/models/DataModel";
 import Environment from "@/models/Environment";
 import Media from "@/models/Media";
 import Model from "@/lib/Model";
-import { ModelDefinition, models } from ".";
+import { Field, FieldNested, ModelDefinition, models } from ".";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -967,5 +967,48 @@ describe("Global tests", () => {
     const _DataModel = DataModel.extend({ adapterClass: adapter });
 
     await expect(_DataModel.create({ slug: "a" })).resolves.toBeTruthy();
+  });
+
+  it("should be able to extend a field type", async () => {
+    const adapter = mockAdapter();
+
+    class CustomFieldNested extends FieldNested {
+      serializerMap: Field<FieldTypes.NESTED>["serializerMap"] = {
+        json: this._sStatic,
+        [Field.defaultSymbol]: this._sProxy,
+        // @ts-expect-error test is not defined globally
+        test: () => "test",
+      };
+    }
+
+    adapter.fieldsMap = { ...adapter.fieldsMap, [FieldTypes.NESTED]: CustomFieldNested };
+
+    const CustomModel = class extends Model {
+      static slug = generateRandomString();
+      static definition = {
+        fields: {
+          title: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                a: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        },
+      };
+    }.extend({ adapterClass: adapter });
+
+    const i = CustomModel.hydrate({
+      title: {
+        a: "test",
+      },
+    });
+
+    expect(i.get("title")).toEqual({ a: "test" });
+    // @ts-expect-error test is not defined globally
+    expect(i.get("title", "test")).toBe("test");
   });
 });

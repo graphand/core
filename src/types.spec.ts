@@ -1,6 +1,6 @@
 import Model from "@/lib/Model";
 import FieldTypes from "./enums/field-types";
-import { JSONSubtype, ModelDefinition } from "@/types";
+import { JSONSubtype, ModelDefinition, ModelJSON } from "@/types";
 import PromiseModel from "./lib/PromiseModel";
 import Account from "./models/Account";
 import Role from "./models/Role";
@@ -265,7 +265,7 @@ describe("test types", () => {
 
           const json = i.toJSON();
 
-          simulateTypeCheck<string>(json.field);
+          simulateTypeCheck<string | ModelJSON<typeof Account>>(json.field);
         });
       });
 
@@ -325,7 +325,7 @@ describe("test types", () => {
 
       const json = i.toJSON();
 
-      simulateTypeCheck<string>(json.field); // Check the field is a string
+      simulateTypeCheck<string | ModelJSON<typeof Account>>(json.field); // Check the field is a string
       simulateTypeCheck<NoProperty<typeof json, "subtitle">>(json); // Check subtitle is not found in json
     });
   });
@@ -389,5 +389,42 @@ describe("test types", () => {
 
     simulateTypeCheck<string>(i.get("field1", "json")); // Check the field is a string
     simulateTypeCheck<number>(i.get("field2", "json")); // Check the field is a string
+  });
+
+  it("should ...", () => {
+    class CustomModel extends Model {
+      static slug = "custom" as const;
+      static definition = {
+        fields: {
+          field: {
+            type: FieldTypes.NUMBER,
+          },
+        },
+      } satisfies ModelDefinition;
+    }
+
+    const i = (
+      Model as typeof Model & {
+        definition: {
+          fields: {
+            field1: {
+              type: FieldTypes.TEXT;
+            };
+            field2: {
+              type: FieldTypes.NUMBER;
+            };
+            rel: {
+              type: FieldTypes.RELATION;
+              options: {
+                ref: "custom";
+              };
+              _tsModel: typeof CustomModel;
+            };
+          };
+        };
+      }
+    ).hydrate();
+
+    simulateTypeCheck<PromiseModel<typeof CustomModel>>(i.rel);
   });
 });

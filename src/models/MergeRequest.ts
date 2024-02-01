@@ -24,7 +24,22 @@ class MergeRequest extends Model {
           default: MergeRequestTypes.STATIC,
         },
       },
-      options: { type: FieldTypes.NESTED },
+      options: {
+        type: FieldTypes.NESTED,
+        options: {
+          fields: {
+            source: {
+              type: FieldTypes.TEXT,
+            },
+            query: {
+              type: FieldTypes.NESTED,
+            },
+            gdx: {
+              type: FieldTypes.NESTED,
+            },
+          },
+        },
+      },
       target: { type: FieldTypes.TEXT },
       _closed: {
         type: FieldTypes.BOOLEAN,

@@ -44,8 +44,8 @@ class ValidationError extends CoreError {
     const reasons = [];
     if (this.fields.length) {
       reasons.push(
-        `${this.fields.length} field${this.fields.length > 1 ? "s" : ""} validation (${this.fields
-          .map(v => v.slug)
+        `${this.fields.length} field${this.fields.length > 1 ? "s" : ""} validators (${this.fields
+          .map(v => v.field.type)
           .join(", ")})`,
       );
     }

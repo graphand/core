@@ -15,12 +15,12 @@ class AuthProvider extends Model {
     fields: {
       type: { type: FieldTypes.TEXT },
       options: { type: FieldTypes.NESTED },
-      enabled: { type: FieldTypes.BOOLEAN },
+      enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
       register: {
         type: FieldTypes.NESTED,
         options: {
           fields: {
-            enabled: { type: FieldTypes.BOOLEAN },
+            enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
             role: {
               type: FieldTypes.RELATION,
               options: {

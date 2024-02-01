@@ -43,6 +43,7 @@ export type FieldDefinition<T extends FieldTypes = FieldTypes> = {
   options?: FieldOptions<T>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _ts?: any;
+  _tsModel?: typeof Model;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -120,7 +121,9 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
       : JSONTypeObject;
     [FieldTypes.RELATION]: F["options"] extends FieldOptionsMap[FieldTypes.RELATION]
       ? F["options"]["ref"] extends string
-        ? PromiseModel<DecodeRefModel<F["options"]["ref"]>>
+        ? PromiseModel<
+            F["_tsModel"] extends typeof Model ? F["_tsModel"] : DecodeRefModel<F["options"]["ref"]>
+          >
         : PromiseModel<typeof Model>
       : PromiseModel<typeof Model>;
     [FieldTypes.ARRAY]: F["options"] extends FieldOptionsMap[FieldTypes.ARRAY]

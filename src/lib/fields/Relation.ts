@@ -22,7 +22,7 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
     return !values.some(_isInvalid);
   };
 
-  _sString = ({ value }: FieldSerializerInput) => {
+  _sString = ({ value, format }: FieldSerializerInput) => {
     if (!value) {
       return null;
     }
@@ -35,6 +35,10 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
       id = value.query;
     } else {
       id = String(value);
+    }
+
+    if (!isObjectId(id) && format !== "validation") {
+      return undefined;
     }
 
     return id;

@@ -1067,8 +1067,10 @@ export const crossFields = (
   const { model } = opts;
   const fieldsMap = opts.fieldsMap || opts.model.fieldsMap;
 
+  const results = [];
+
   fieldsMap.forEach(field => {
-    cb(field);
+    results.push(cb(field));
 
     if (field.type === FieldTypes.ARRAY) {
       crossFields(
@@ -1089,7 +1091,7 @@ export const crossFields = (
     }
   });
 
-  return crossFields;
+  return results;
 };
 
 export const assignDatamodel = async <T extends typeof Model>(

@@ -13,7 +13,7 @@ import PromiseModelList from "@/lib/PromiseModelList";
 describe("test fieldsMap", () => {
   const adapter = mockAdapter({});
 
-  describe("TEXT field", () => {
+  describe("Text field", () => {
     it("should return default value if undefined", async () => {
       const defaultText = faker.lorem.word();
 
@@ -209,6 +209,27 @@ describe("test fieldsMap", () => {
 
         const i = model.hydrate({ title });
         await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
+      });
+
+      it("should throw error if value not in options and strict mode is enabled on create", async () => {
+        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+
+        const model = mockModel({
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                options,
+                strict: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+        await model.initialize();
+
+        const title = "notInOptions";
+
+        await expect(model.create({ title })).rejects.toThrow(ValidationError);
       });
     });
   });
