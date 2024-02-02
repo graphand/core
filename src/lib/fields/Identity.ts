@@ -21,6 +21,7 @@ class FieldIdentity extends Field<FieldTypes.IDENTITY> {
   };
 
   serializerMap: Field<FieldTypes.IDENTITY>["serializerMap"] = {
+    validation: ({ value }) => value,
     [Field.defaultSymbol]: ({ value }) => String(value),
   };
 }

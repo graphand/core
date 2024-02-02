@@ -88,7 +88,6 @@ class FieldArray extends Field<FieldTypes.ARRAY> {
 
   serializerMap: Field<FieldTypes.ARRAY>["serializerMap"] = {
     validation: ({ value }) => value,
-    // nextField: this._sStatic,
     [Field.defaultSymbol]: this._sDefault,
   };
 }

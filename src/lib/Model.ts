@@ -117,6 +117,16 @@ class Model {
     return new this((data ?? {}) as ModelData) as ModelInstance<T>;
   }
 
+  /**
+   * Serializes the model data into a specified format.
+   * @param data - The data to be serialized.
+   * @param format - The format to serialize the data into. Default is 'json'.
+   * @param ctx - The serialization context.
+   * @param clean - A boolean indicating whether to clean the data before serialization.
+   * @returns The serialized data.
+   * @example
+   * const serializedData = Model.serialize(myData, 'json');
+   */
   static serialize<S extends SerializerFormat, T extends typeof Model = typeof Model>(
     this: T,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,7 +135,10 @@ class Model {
     ctx: SerializerCtx = {},
     clean = false,
   ): InferModelDef<T, S> {
+    // Create a new instance of the model with the provided data
     const i = new this((data ?? {}) as ModelData) as ModelInstance<T>;
+
+    // Serialize the model instance into the specified format
     return i.serialize(format, ctx, clean) as InferModelDef<T, typeof format>;
   }
 

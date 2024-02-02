@@ -37,7 +37,7 @@ class FieldText extends Field<FieldTypes.TEXT> {
   };
 
   serializerMap: Field<FieldTypes.TEXT>["serializerMap"] = {
-    validation: ({ value }) => String(value),
+    validation: ({ value }) => value,
     [Field.defaultSymbol]: this._sDefault,
   };
 }

@@ -22,6 +22,7 @@ class FieldDate extends Field<FieldTypes.DATE> {
       const date = toDate(value);
       return date ? date.toJSON() : null;
     },
+    validation: ({ value }) => value,
     [Field.defaultSymbol]: ({ value }) => toDate(value),
   };
 }

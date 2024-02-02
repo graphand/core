@@ -61,6 +61,7 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
 
   serializerMap: Field<FieldTypes.RELATION>["serializerMap"] = {
     object: this._sObject,
+    validation: ({ value }) => value,
     [Field.defaultSymbol]: this._sString,
   };
 }
