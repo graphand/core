@@ -2568,24 +2568,19 @@ describe("Test Model", () => {
       const cache = new Set<ModelInstance<typeof Model>>();
       const adapter = mockAdapter({ privateCache: cache });
 
-      await DataModel.extend({ adapterClass: adapter })
-        .create({
-          slug: "medias",
-          definition: {
-            fields: {
-              title: {
-                type: FieldTypes.TEXT,
-                options: {
-                  default: "1",
-                },
+      await DataModel.extend({ adapterClass: adapter }).create({
+        slug: "medias",
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              options: {
+                default: "1",
               },
             },
           },
-        })
-        .catch(e => {
-          console.log(e.stack);
-          throw e;
-        });
+        },
+      });
 
       const model = Model.getClass("medias", adapter);
 
