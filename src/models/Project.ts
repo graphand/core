@@ -9,6 +9,8 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Project extends Model {
   static __name = "Project";
+  static scope = ModelEnvScopes.GLOBAL;
+  static allowMultipleOperations = false;
   static slug = "projects" as const;
   static definition = {
     keyField: "slug",
@@ -58,38 +60,6 @@ class Project extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "organization" } },
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.GLOBAL;
-  static allowMultipleOperations = false;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // name: FieldDefinitionText;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // slug: FieldDefinitionText;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: Organization.slug })
-  // organization: FieldDefinitionRelation<Organization>;
-
-  // @fieldDecorator(FieldTypes.NUMBER, { default: 86400 })
-  // accessTokenLifetime: FieldDefinitionNumber;
-
-  // @fieldDecorator(FieldTypes.NUMBER, { default: 2592000 })
-  // refreshTokenLifetime: FieldDefinitionNumber;
-
-  // @fieldDecorator(FieldTypes.NESTED, {
-  //   fields: {
-  //     enabled: { type: FieldTypes.BOOLEAN, options: { default: false } },
-  //     cronExpression: { type: FieldTypes.TEXT },
-  //   },
-  // })
-  // backupSchedule: FieldDefinitionNested<{
-  //   enabled: FieldDefinitionBoolean;
-  //   cronExpression: FieldDefinitionText;
-  // }>;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // version: FieldDefinitionText;
 }
 
 export default Project;

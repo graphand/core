@@ -10,6 +10,9 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class AccountAuthProvider extends Model {
   static __name = "AccountAuthProvider";
+  static exposed = false;
+  static systemFields = null;
+  static scope = ModelEnvScopes.ENV;
   static slug = "accounts_authProviders" as const;
   static definition = {
     fields: {
@@ -34,16 +37,6 @@ class AccountAuthProvider extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "provider" } },
     ],
   } satisfies ModelDefinition;
-
-  static exposed = false;
-  static systemFields = null;
-  static scope = ModelEnvScopes.ENV;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: AuthProvider.slug })
-  // provider: FieldDefinitionRelation<AuthProvider<T>>;
-
-  // @fieldDecorator(FieldTypes.NESTED)
-  // configuration: FieldDefinitionNested<AccountAuthConfiguration<T>>;
 }
 
 export default AccountAuthProvider;

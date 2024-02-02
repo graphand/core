@@ -54,6 +54,7 @@ export type Transaction<
   args: Args;
   retryToken?: symbol;
   abortToken?: symbol;
+  retries: number;
 };
 
 export type SortDirection =

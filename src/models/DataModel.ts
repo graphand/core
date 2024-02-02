@@ -8,6 +8,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class DataModel extends Model {
   static __name = "DataModel";
+  static scope = ModelEnvScopes.ENV;
   static slug = "datamodels" as const;
   static definition = {
     keyField: "slug",
@@ -98,8 +99,6 @@ class DataModel extends Model {
       { type: ValidatorTypes.DATAMODEL_DEFINITION },
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.ENV;
 }
 
 export default DataModel;

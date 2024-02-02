@@ -10,6 +10,9 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Backup extends Model {
   static __name = "Backup";
+  static scope = ModelEnvScopes.GLOBAL;
+  static controllersScope: typeof Model["controllersScope"] = "project";
+  static allowMultipleOperations = false;
   static slug = "backups" as const;
   static definition = {
     fields: {
@@ -34,10 +37,6 @@ class Backup extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "_expireAt" } }, // TODO: remove from core -> server only
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.GLOBAL;
-  static controllersScope: typeof Model["controllersScope"] = "project";
-  static allowMultipleOperations = false;
 }
 
 export default Backup;

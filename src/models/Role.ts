@@ -11,6 +11,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Role extends Model {
   static __name = "Role";
+  static scope = ModelEnvScopes.ENV;
   static slug = "roles" as const;
   static definition = {
     keyField: "slug",
@@ -110,8 +111,6 @@ class Role extends Model {
       },
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.ENV;
 
   async getRulesInherited(): Promise<Array<Rule>> {
     const i = this as ModelInstance<typeof Role>;

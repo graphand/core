@@ -9,6 +9,8 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class User extends Model {
   static __name = "User";
+  static scope = ModelEnvScopes.GLOBAL;
+  static slug = "users" as const;
   static definition = {
     fields: {
       firstname: { type: FieldTypes.TEXT },
@@ -26,9 +28,6 @@ class User extends Model {
       { type: ValidatorTypes.REGEX, options: { field: "email", pattern: Patterns.EMAIL } },
     ],
   } satisfies ModelDefinition;
-
-  static slug = "users" as const;
-  static scope = ModelEnvScopes.GLOBAL;
 }
 
 export default User;

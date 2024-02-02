@@ -9,6 +9,8 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class SearchConfig extends Model {
   static __name = "SearchConfig";
+  static scope = ModelEnvScopes.ENV;
+  static allowMultipleOperations = false;
   static slug = "searchConfigs" as const;
   static definition = {
     keyField: "slug",
@@ -30,9 +32,6 @@ class SearchConfig extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "properties" } },
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.ENV;
-  static allowMultipleOperations = false;
 }
 
 export default SearchConfig;

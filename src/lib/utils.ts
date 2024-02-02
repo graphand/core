@@ -594,7 +594,7 @@ export const _getter = (opts: {
   for (let i = 0; i < fieldsPaths.length; i++) {
     const fieldsPath = fieldsPaths[i];
     if (!fieldsPath) {
-      return noFieldSymbol;
+      throw noFieldSymbol;
     }
 
     const { key, field } = fieldsPath;
@@ -624,29 +624,25 @@ export const _getter = (opts: {
             };
           });
 
-          const res = _getter({
+          return _getter({
             ...opts,
             value: v,
             fieldsPaths: _restPaths,
           });
-
-          return res === noFieldSymbol ? undefined : res;
         });
       }
 
       const index = parseInt(matchIndex[1]);
 
       if (arrVal.length <= index) {
-        return noFieldSymbol;
+        throw noFieldSymbol;
       }
 
-      const res = _getter({
+      return _getter({
         ...opts,
         value: arrVal[index],
         fieldsPaths: restPaths,
       });
-
-      return res === noFieldSymbol ? undefined : res;
     }
 
     if (!value || typeof value !== "object") {

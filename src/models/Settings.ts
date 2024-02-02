@@ -7,6 +7,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Settings extends Model {
   static __name = "Settings";
+  static scope = ModelEnvScopes.ENV;
   static slug = "settings" as const;
   static definition = {
     keyField: "key",
@@ -15,8 +16,6 @@ class Settings extends Model {
       data: { type: FieldTypes.NESTED },
     },
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.ENV;
 }
 
 export default Settings;

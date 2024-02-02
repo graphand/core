@@ -9,6 +9,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Token extends Model {
   static __name = "Token";
+  static scope = ModelEnvScopes.PROJECT;
   static slug = "tokens" as const;
   static definition = {
     keyField: "name",
@@ -32,8 +33,6 @@ class Token extends Model {
     },
     validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "role" } }],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.PROJECT;
 }
 
 export default Token;

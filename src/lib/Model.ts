@@ -185,6 +185,21 @@ class Model {
     return this as T;
   }
 
+  /**
+   * Extends the current model with additional options and functionalities like an adapter or init options.
+   * @param opts - An object containing options for the extension.
+   * @param opts.adapterClass - The adapter class to be used with the model.
+   * @param opts.initOptions - Initialization options for the model.
+   * @param opts.modules - An array of modules to be applied to the model.
+   * @param opts.register - A boolean indicating whether the model should be registered.
+   * @param opts.force - A boolean indicating whether to force the extension even if the base class does not have a slug.
+   * @returns The extended model.
+   * @throws {CoreError} If the base class does not have a slug and the force option is not set.
+   * @example
+   * const ExtendedModel = Model.extend({
+   *   adapterClass: MyAdapter,
+   * });
+   */
   static extend<T extends typeof Model = typeof Model>(
     this: T,
     opts: {
@@ -195,36 +210,43 @@ class Model {
       force?: boolean;
     },
   ): T {
+    // Get the base class of the current model
     const extendedClass = this.getBaseClass();
 
+    // If the base class does not have a slug and the force option is not set, throw an error
     if (!extendedClass?.slug && !opts.force) {
       throw new CoreError({
         message: "Cannot extend a model without slug",
       });
     }
 
-    // @ts-expect-error decorator
+    // @ts-expect-error Create a new class that extends the base class
     const model = class extends extendedClass {
       static __extendedClass = extendedClass;
     };
 
+    // If initOptions are provided, set them on the model
     if (opts?.initOptions) {
       model.__initOptions = opts.initOptions;
     }
 
+    // If an adapter class is provided, instantiate it with the model and set it on the model
     if (opts?.adapterClass) {
       const AdapterClass = opts.adapterClass;
       model.__adapter = new AdapterClass(model);
     }
 
+    // If the register option is set or an adapter class is provided and the model has a slug, register the model
     if (opts?.register ?? (opts?.adapterClass && model.slug)) {
       opts?.adapterClass?.registerModel(model, opts?.force);
     }
 
+    // If modules are provided, apply each module to the model
     if (opts?.modules?.length) {
       opts.modules.forEach(module => module(model));
     }
 
+    // Return the extended model
     return model;
   }
 
@@ -334,6 +356,17 @@ class Model {
     return this.__memo.fieldsProperties;
   }
 
+  /**
+   * Retrieves the class of a model based on the provided input.
+   * @param input - A slug (core model slug/datamodel slug), a model class or a datamodel instance.
+   * @param adapterClass - The adapter class to be used with the model.
+   * @returns The class of the model.
+   * @throws {CoreError} If the input is invalid or if the model is already registered with a different class.
+   * @example
+   * const modelClass = Model.getClass('myModel');
+   * const modelClass = Model.getClass(MyModel);
+   * const modelClass = Model.getClass(datamodelInstance);
+   */
   static getClass<
     M extends typeof Model = undefined,
     T extends string | keyof RefModelsMap | ModelInstance<typeof DataModel> | typeof Model =
@@ -342,7 +375,7 @@ class Model {
       | ModelInstance<typeof DataModel>
       | typeof Model,
   >(
-    input: T, // a slug (core model slug/datamodel slug), a model class or a datamodel instance
+    input: T,
     adapterClass?: typeof Adapter,
   ): M extends undefined
     ? T extends typeof Model
@@ -351,29 +384,34 @@ class Model {
       ? RefModelsMap[T]
       : typeof Model
     : M {
+    // Throw an error if the input is not provided
     if (!input) {
       throw new CoreError({
         message: `Invalid input for getClass: ${input}`,
       });
     }
 
+    // If no adapter class is provided, get the base adapter of the current model
     adapterClass ??= this.getAdapter(false)?.base;
     let slug: string;
     let model: ReturnType<typeof Model.getClass<M, T>>;
 
-    // If input is a model class (typeof Model)
+    // If the input is a model class, get its slug and assign it to the model
     if (typeof input === "function" && "prototype" in input && input.prototype instanceof Model) {
       slug = input.slug;
       model = input as ReturnType<typeof Model.getClass<M, T>>;
     }
 
+    // If the slug is not defined, get it from the input if it's a string or a datamodel instance
     slug ??= typeof input === "string" ? input : (input as ModelInstance<typeof DataModel>).slug;
     const dm: ModelInstance<typeof DataModel> = input instanceof Model && slug ? input : undefined;
 
+    // If no adapter class is provided and the input is a datamodel instance, get its base adapter
     if (!adapterClass && dm) {
       adapterClass = dm.model().getAdapter(false)?.base;
     }
 
+    // If the adapter class has the model, return it
     if (adapterClass?.hasModel(slug)) {
       const res = adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
       if (model && res.getBaseClass() !== model.getBaseClass()) {
@@ -385,29 +423,31 @@ class Model {
       return adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
     }
 
+    // If the model is not defined, try to find it in the core models or create a new one
     if (!model) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line
       const models = require("@/index").models as Record<string, typeof Model>;
       const coreModel: M = Object.values(models).find(m => m.slug === slug) as M;
 
       if (coreModel) {
         model = coreModel as ReturnType<typeof Model.getClass<M, T>>;
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        // eslint-disable-next-line
         const _Data = require("@/lib/Data").default;
-        // @ts-expect-error decorator
         model = class extends _Data {
           static __name = `Data<${slug}>`;
 
           static slug = slug;
-        };
+        } as ReturnType<typeof Model.getClass<M, T>>;
       }
     }
 
+    // If an adapter class is provided, extend the model with it
     if (adapterClass) {
       model = model.extend({ adapterClass, initOptions: { datamodel: dm } });
     }
 
+    // If the input is a datamodel instance, assign it to the model
     if (dm) {
       assignDatamodel(model, dm);
     }
@@ -441,8 +481,7 @@ class Model {
     let fieldsPaths: Array<FieldsPathItem>;
 
     if (path.includes(".")) {
-      const pathArr = path.split(".");
-      fieldsPaths = getFieldsPathsFromPath(this.model(), pathArr);
+      fieldsPaths = getFieldsPathsFromPath(this.model(), path.split("."));
     } else {
       if (model.fieldsMap.has(path)) {
         fieldsPaths = [{ field: model.fieldsMap.get(path), key: path }];
@@ -460,42 +499,24 @@ class Model {
       return undefined;
     }
 
-    // if (ctx) {
-    //   ctx.defaults ??= true;
-    // }
-
-    // const firstField = fieldsPaths[0].field;
-    // value ??= doc[firstField.path] as JSONSubtype;
-
-    // const defaults = ctx?.defaults ?? true;
-    // if (defaults && value === undefined && "default" in firstField.options) {
-    //   value = firstField.options.default as typeof value;
-    // }
-
-    // if (value === undefined || value === null) {
-    //   return value as null | undefined;
-    // }
-
-    // const from = this as unknown as ModelInstance;
-
-    // if (fieldsPaths.length === 1) {
-    //   return firstField.serialize(value, format, from, ctx);
-    // }
-
     const noFieldSymbol = Symbol("noField");
 
-    // const _value = firstField.serialize(value, format, from, ctx);
+    try {
+      return _getter({
+        value: value ?? doc,
+        fieldsPaths,
+        format,
+        ctx,
+        noFieldSymbol,
+        from: this,
+      });
+    } catch (e) {
+      if (e === noFieldSymbol) {
+        return undefined;
+      }
 
-    const res = _getter({
-      value: value ?? doc,
-      fieldsPaths,
-      format,
-      ctx,
-      noFieldSymbol,
-      from: this,
-    });
-
-    return res === noFieldSymbol ? undefined : res;
+      throw e;
+    }
   }
 
   /**
@@ -984,6 +1005,7 @@ class Model {
     action: A,
     args: Args,
     ctx: TransactionCtx = {},
+    transaction?: Transaction<M, A, Args>,
   ): Promise<ReturnType<AdapterFetcher<M>[A]>> {
     if (!ctx?.forceOperation) {
       if (
@@ -1014,13 +1036,23 @@ class Model {
       }
     }
 
-    const transaction: Transaction<M, A, Args> = {
+    transaction ??= {
       model: this,
       action,
       args,
       retryToken: Symbol("retry"),
       abortToken: Symbol("abort"),
+      retries: -1,
     };
+
+    transaction.retries += 1;
+
+    if (transaction.retries > 2) {
+      throw new CoreError({
+        // code: ErrorCodes.TOO_MANY_RETRIES,
+        message: `Too many retries on model ${this.slug} for action ${action}`,
+      });
+    }
 
     const payloadBefore: HookCallbackArgs<"before", A, M> = {
       args,
@@ -1051,7 +1083,7 @@ class Model {
     }
 
     if (payloadBefore.err?.includes(transaction.retryToken)) {
-      return await this.execute(action, args, ctx);
+      return await this.execute(action, args, ctx, transaction);
     }
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
@@ -1063,7 +1095,7 @@ class Model {
 
     if (payloadAfter.err?.length) {
       if (payloadAfter.err.includes(transaction.retryToken)) {
-        return await this.execute(action, args, ctx);
+        return await this.execute(action, args, ctx, transaction);
       }
 
       throw payloadAfter.err[0];

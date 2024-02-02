@@ -9,8 +9,9 @@ import { ModelDefinition } from "@/types";
 
 @modelDecorator()
 class MergeRequest extends Model {
-  // class MergeRequest<T extends MergeRequestTypes = MergeRequestTypes> extends Model {
   static __name = "MergeRequest";
+  static scope = ModelEnvScopes.PROJECT;
+  static allowMultipleOperations = false;
   static slug = "mergeRequests" as const;
   static definition = {
     keyField: "slug",
@@ -59,31 +60,6 @@ class MergeRequest extends Model {
       { type: ValidatorTypes.REQUIRED, options: { field: "target" } },
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.PROJECT;
-  static allowMultipleOperations = false;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // slug: FieldDefinitionText;
-
-  // @fieldDecorator(FieldTypes.TEXT, {
-  //   options: Object.values(MergeRequestTypes),
-  //   strict: true,
-  //   default: MergeRequestTypes.STATIC,
-  // })
-  // type: T;
-
-  // @fieldDecorator(FieldTypes.NESTED)
-  // options: FieldDefinitionNested<MergeRequestOptions<T>>;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // target: FieldDefinitionText; // The target environment name
-
-  // @fieldDecorator(FieldTypes.BOOLEAN)
-  // _closed: FieldDefinitionBoolean;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
-  // _job: FieldDefinitionRelation<Job>;
 }
 
 export default MergeRequest;

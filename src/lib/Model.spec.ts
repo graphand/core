@@ -412,7 +412,7 @@ describe("Test Model", () => {
 
       expect(created.get("test")).toEqual(["123"]);
       expect(created.get("test.[]")).toEqual(["123"]);
-      expect(created.get("test.toto")).toEqual([undefined]);
+      expect(created.get("test.toto")).toEqual(undefined);
       expect(created.test).toBeInstanceOf(Array);
       expect(created.test.length).toEqual(1);
       expect(created.test[0]).toEqual("123");
@@ -532,7 +532,7 @@ describe("Test Model", () => {
         ],
       ]);
 
-      expect(created.get("test.nested")).toEqual([undefined, undefined]);
+      expect(created.get("test.nested")).toEqual(undefined);
 
       expect(created.get("test.[].nested")).toEqual([
         ["123", "456"],
@@ -544,10 +544,7 @@ describe("Test Model", () => {
         ["123", "456"],
       ]);
 
-      expect(created.get("test.[].[].nested.[]")).toEqual([
-        [undefined, undefined],
-        [undefined, undefined],
-      ]);
+      expect(created.get("test.[].[].nested.[]")).toEqual(undefined);
     });
 
     it("should serialize with nested fields in array of json", async () => {
@@ -605,7 +602,7 @@ describe("Test Model", () => {
 
       expect(created.get("test.[].nested")).toEqual(["123", "456"]);
 
-      expect(created.get("test.nested.undefined")).toEqual([undefined, undefined]);
+      expect(created.get("test.nested.undefined")).toEqual(undefined);
     });
 
     it("should serialize with complex schema fields", async () => {
@@ -733,10 +730,7 @@ describe("Test Model", () => {
         ["test2.1", "test2.2"],
       ]);
 
-      expect(created.get("field1.[].field3.[].field4.undefined")).toEqual([
-        [undefined, undefined],
-        [undefined, undefined],
-      ]);
+      expect(created.get("field1.[].field3.[].field4.undefined")).toEqual(undefined);
     });
 
     it("should serialize array of relation to PromiseModelList", async () => {
@@ -1806,6 +1800,99 @@ describe("Test Model", () => {
       expect(beforeCreateFn).toHaveBeenCalledTimes(1);
       expect(afterCreateFn1).toHaveBeenCalledTimes(1);
       expect(afterCreateFn2).toHaveBeenCalledTimes(0);
+    });
+
+    it("should retry execution when throwing retryToken in before hook", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn();
+      const beforeCreateFn2 = jest.fn(({ transaction }) => {
+        if (transaction.retries < 2) throw transaction.retryToken;
+      });
+
+      const afterCreateFn = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1);
+      TestModel.hook("before", "createOne", beforeCreateFn2);
+      TestModel.hook("after", "createOne", afterCreateFn);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(0);
+      expect(afterCreateFn).toHaveBeenCalledTimes(0);
+
+      await expect(TestModel.create({})).resolves.toBeDefined();
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(3);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(3);
+      expect(afterCreateFn).toHaveBeenCalledTimes(1);
+    });
+
+    it("should retry execution after before hooks when throwing retryToken in first before hook", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn(({ transaction }) => {
+        if (transaction.retries < 2) throw transaction.retryToken;
+      });
+      const beforeCreateFn2 = jest.fn();
+      const afterCreateFn = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1);
+      TestModel.hook("before", "createOne", beforeCreateFn2);
+      TestModel.hook("after", "createOne", afterCreateFn);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(0);
+      expect(afterCreateFn).toHaveBeenCalledTimes(0);
+
+      await expect(TestModel.create({})).resolves.toBeDefined();
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(3);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(3);
+      expect(afterCreateFn).toHaveBeenCalledTimes(1);
+    });
+
+    it("should retry execution when throwing retryToken in after hook", async () => {
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
+
+      const beforeCreateFn = jest.fn();
+      const afterCreateFn1 = jest.fn(({ transaction }) => {
+        if (transaction.retries < 2) throw transaction.retryToken;
+      });
+      const afterCreateFn2 = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn);
+      TestModel.hook("after", "createOne", afterCreateFn1);
+      TestModel.hook("after", "createOne", afterCreateFn2);
+
+      expect(beforeCreateFn).toHaveBeenCalledTimes(0);
+      expect(afterCreateFn1).toHaveBeenCalledTimes(0);
+      expect(afterCreateFn2).toHaveBeenCalledTimes(0);
+
+      await expect(TestModel.create({})).resolves.toBeDefined();
+
+      expect(beforeCreateFn).toHaveBeenCalledTimes(3);
+      expect(afterCreateFn1).toHaveBeenCalledTimes(3);
+      expect(afterCreateFn2).toHaveBeenCalledTimes(3);
+    });
+
+    it("should throw error when throwing retryToken in after hook after 3 retries", async () => {
+      const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
+
+      const beforeCreateFn = jest.fn();
+      const afterCreateFn = jest.fn(({ transaction }) => {
+        if (transaction.retries < 3) throw transaction.retryToken;
+      });
+
+      TestModel.hook("before", "createOne", beforeCreateFn);
+      TestModel.hook("after", "createOne", afterCreateFn);
+
+      expect(beforeCreateFn).toHaveBeenCalledTimes(0);
+      expect(afterCreateFn).toHaveBeenCalledTimes(0);
+
+      await expect(TestModel.create({})).rejects.toThrow("Too many retries");
+
+      expect(beforeCreateFn).toHaveBeenCalledTimes(3);
+      expect(afterCreateFn).toHaveBeenCalledTimes(3);
     });
   });
 

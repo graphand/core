@@ -11,8 +11,9 @@ import { ModelDefinition } from "@/types";
 
 @modelDecorator()
 class MergeRequestEvent extends Model {
-  // class MergeRequestEvent<T extends MergeRequestEventTypes = MergeRequestEventTypes> extends Model {
   static __name = "MergeRequestEvent";
+  static scope = ModelEnvScopes.PROJECT;
+  static allowMultipleOperations = false;
   static slug = "mergeRequestEvents" as const;
   static definition = {
     fields: {
@@ -55,25 +56,6 @@ class MergeRequestEvent extends Model {
     },
     validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "request" } }],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.PROJECT;
-  static allowMultipleOperations = false;
-
-  // @fieldDecorator(FieldTypes.TEXT, {
-  //   options: Object.values(MergeRequestEventTypes),
-  //   strict: true,
-  //   default: MergeRequestTypes.STATIC,
-  // })
-  // type: T;
-
-  // @fieldDecorator(FieldTypes.NESTED)
-  // data: FieldDefinitionNested<MergeRequestEventData<T>>;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: MergeRequest.slug })
-  // request: FieldDefinitionRelation<MergeRequest>;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
-  // _job: FieldDefinitionRelation<Job>;
 }
 
 export default MergeRequestEvent;

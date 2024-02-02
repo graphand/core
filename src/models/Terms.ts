@@ -7,6 +7,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Terms extends Model {
   static __name = "Terms";
+  static scope = ModelEnvScopes.GLOBAL;
   static slug = "terms" as const;
   static definition = {
     fields: {
@@ -18,8 +19,6 @@ class Terms extends Model {
       legal: { type: FieldTypes.TEXT }, // Legal and Additional Policies
     },
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.GLOBAL;
 }
 
 export default Terms;

@@ -10,6 +10,8 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Organization extends Model {
   static __name = "Organization";
+  static scope = ModelEnvScopes.GLOBAL;
+  static allowMultipleOperations = false;
   static slug = "organizations" as const;
   static definition = {
     keyField: "slug",
@@ -55,42 +57,6 @@ class Organization extends Model {
     },
     validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "name" } }],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.GLOBAL;
-  static allowMultipleOperations = false;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // name: FieldDefinitionText;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // slug: FieldDefinitionText;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: User.slug })
-  // owner: FieldDefinitionRelation<User>;
-
-  // @fieldDecorator(FieldTypes.ARRAY, {
-  //   items: {
-  //     type: FieldTypes.RELATION,
-  //     options: {
-  //       ref: User.slug,
-  //     },
-  //   },
-  // })
-  // _users: FieldDefinitionArray<{
-  //   type: FieldTypes.RELATION;
-  //   options: User;
-  // }>;
-
-  // @fieldDecorator(FieldTypes.NESTED, {
-  //   fields: {
-  //     terms: { type: FieldTypes.RELATION, options: { ref: Terms.slug } },
-  //     user: { type: FieldTypes.RELATION, options: { ref: User.slug } },
-  //   },
-  // })
-  // _consent: FieldDefinitionNested<{
-  //   terms: FieldDefinitionRelation<Terms>;
-  //   user: FieldDefinitionRelation<User>;
-  // }>;
 }
 
 export default Organization;

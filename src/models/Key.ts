@@ -8,6 +8,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Key extends Model {
   static __name = "Key";
+  static scope = ModelEnvScopes.PROJECT;
   static slug = "keys" as const;
   static definition = {
     keyField: "name",
@@ -17,8 +18,6 @@ class Key extends Model {
     },
     validators: [{ type: ValidatorTypes.REQUIRED, options: { field: "value" } }],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.PROJECT;
 }
 
 export default Key;

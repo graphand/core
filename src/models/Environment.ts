@@ -10,6 +10,8 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Environment extends Model {
   static __name = "Environment";
+  static scope = ModelEnvScopes.PROJECT;
+  static allowMultipleOperations = false;
   static slug = "environments" as const;
   static definition = {
     keyField: "name",
@@ -43,21 +45,6 @@ class Environment extends Model {
       },
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.PROJECT;
-  static allowMultipleOperations = false;
-
-  // @fieldDecorator(FieldTypes.TEXT)
-  // name: FieldDefinitionText;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: Environment.slug })
-  // base: FieldDefinitionRelation<Environment>;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: Job.slug })
-  // _job: FieldDefinitionRelation<Job>;
-
-  // @fieldDecorator(FieldTypes.RELATION, { ref: MergeRequest.slug })
-  // _fromRequest: FieldDefinitionRelation<MergeRequest>;
 }
 
 export default Environment;

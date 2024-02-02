@@ -8,6 +8,9 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Media extends Model {
   static __name = "Media";
+  static searchable = true;
+  static extensible = true;
+  static scope = ModelEnvScopes.PROJECT;
   static slug = "medias" as const;
   static definition = {
     keyField: "name",
@@ -17,7 +20,6 @@ class Media extends Model {
       _mimetype: { type: FieldTypes.TEXT },
       _originalname: { type: FieldTypes.TEXT },
       _size: { type: FieldTypes.NUMBER },
-      // file: { type: FieldTypes.FILE },
     },
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "_mimetype" } },
@@ -25,10 +27,6 @@ class Media extends Model {
       { type: ValidatorTypes.BOUNDARIES, options: { field: "_size", min: 1 } },
     ],
   } satisfies ModelDefinition;
-
-  static searchable = true;
-  static extensible = true;
-  static scope = ModelEnvScopes.PROJECT;
 }
 
 export default Media;

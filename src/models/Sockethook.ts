@@ -8,6 +8,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Sockethook extends Model {
   static __name = "Sockethook";
+  static scope = ModelEnvScopes.ENV;
   static slug = "sockethooks" as const;
   static definition = {
     keyField: "name",
@@ -52,8 +53,6 @@ class Sockethook extends Model {
       },
     ],
   } satisfies ModelDefinition;
-
-  static scope = ModelEnvScopes.ENV;
 }
 
 export default Sockethook;
