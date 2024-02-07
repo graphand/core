@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import ValidatorTypes from "@/enums/validator-types";
@@ -10,8 +9,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Backup extends Model {
   static __name = "Backup";
-  static scope = ModelEnvScopes.GLOBAL;
-  static controllersScope: typeof Model["controllersScope"] = "project";
+  static isSystem = true;
   static allowMultipleOperations = false;
   static slug = "backups" as const;
   static definition = {

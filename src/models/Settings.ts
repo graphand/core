@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import { ModelDefinition } from "@/types";
@@ -7,7 +6,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Settings extends Model {
   static __name = "Settings";
-  static scope = ModelEnvScopes.ENV;
+  static isEnvironmentScoped = true;
   static slug = "settings" as const;
   static definition = {
     keyField: "key",

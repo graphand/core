@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import Organization from "@/models/Organization";
@@ -9,7 +8,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Project extends Model {
   static __name = "Project";
-  static scope = ModelEnvScopes.GLOBAL;
+  static isSystem = true;
   static allowMultipleOperations = false;
   static slug = "projects" as const;
   static definition = {

@@ -3,7 +3,7 @@ import { ModelInstance } from "@/types";
 import type DataModel from "@/models/DataModel";
 import Validator from "@/lib/Validator";
 
-const systemModels = [
+const coreModels = [
   "accounts_authProviders",
   "authProviders",
   "backups",
@@ -18,7 +18,6 @@ const systemModels = [
   "sockethooks",
   "terms",
   "tokens",
-  "users",
   "mergeRequests",
   "mergeRequestEvents",
   "settings",
@@ -32,7 +31,7 @@ class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {
     if (!values?.length) return true;
 
     const _isInvalid = (slug: string) => {
-      return systemModels.includes(slug);
+      return coreModels.includes(slug);
     };
 
     return !values.some(_isInvalid);

@@ -1,6 +1,7 @@
 import ValidatorTypes from "@/enums/validator-types";
 
 export type ValidatorOptionsMap = {
+  [ValidatorTypes.EXISTS]: { field: string };
   [ValidatorTypes.REQUIRED]: { field: string };
   [ValidatorTypes.UNIQUE]: { field: string };
   [ValidatorTypes.KEY_FIELD]: { field: string };

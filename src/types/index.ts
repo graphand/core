@@ -169,7 +169,6 @@ export interface RefModelsMap {
   sockethooks: typeof models.Sockethook;
   terms: typeof models.Terms;
   tokens: typeof models.Token;
-  users: typeof models.User;
 }
 
 export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap
@@ -336,36 +335,15 @@ export type MergeRequestEventData<
   T extends MergeRequestEventTypes = keyof MergeRequestEventDataMap | MergeRequestEventTypes,
 > = T extends keyof MergeRequestEventDataMap ? MergeRequestEventDataMap[T] : Record<string, never>;
 
-export type AuthProviderOptionsMap = {
-  [AuthProviders.FACEBOOK]: {
-    clientId: string;
-    clientSecret: string;
-    fieldsMap?: Record<string, string>;
-  };
-};
-
-export type AuthProviderOptions<
-  T extends AuthProviders = keyof AuthProviderOptionsMap | AuthProviders,
-> = T extends keyof AuthProviderOptionsMap ? AuthProviderOptionsMap[T] : Record<string, never>;
-
-export type AuthProviderRegisterOptionsMap = {
-  [AuthProviders.PASSWORD]: {
-    confirmEmail?: boolean;
-  };
-};
-
-export type AuthProviderRegisterOptions<
-  T extends AuthProviders = keyof AuthProviderRegisterOptionsMap | AuthProviders,
-> = T extends keyof AuthProviderRegisterOptionsMap
-  ? AuthProviderRegisterOptionsMap[T]
-  : Record<string, never>;
-
 export type AccountAuthConfigurationMap = {
-  [AuthProviders.PASSWORD]: {
+  [AuthProviders.LOCAL]: {
     password: string;
   };
   [AuthProviders.FACEBOOK]: {
     userId: string;
+  };
+  [AuthProviders.GRAPHAND]: {
+    graphandAccount: string;
   };
 };
 
@@ -375,12 +353,12 @@ export type AccountAuthConfiguration<T extends AuthProviders = AuthProviders> =
     : Record<string, never>;
 
 export type AuthProviderCredentialsMap = {
-  [AuthProviders.PASSWORD]: {
+  [AuthProviders.LOCAL]: {
     email: string;
     password: string;
   };
   [AuthProviders.GRAPHAND]: {
-    accountToken?: string; // a jwt token containing the identity of the account to link to user
+    accountToken?: string; // jwt token containing the identity of the project account to link to the graphand account. Only used to link. Not used for login.
   };
 };
 
@@ -400,11 +378,11 @@ export type AuthMethodOptions<T extends AuthMethods = keyof AuthMethodOptionsMap
   T extends keyof AuthMethodOptionsMap ? AuthMethodOptionsMap[T] : Record<string, never>;
 
 export type AuthProviderConfigurePayloadMap = {
-  [AuthProviders.PASSWORD]:
-    | {
-        password: string;
-      }
-    | string;
+  [AuthProviders.LOCAL]: {
+    email?: string;
+    password?: string;
+    token?: string;
+  };
 };
 
 export type AuthProviderConfigurePayload<

@@ -1,6 +1,5 @@
 import Model from "@/lib/Model";
 import { modelDecorator } from "@/lib/modelDecorator";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 
 /**
  * The Data class is a specific that is the base class for all data models.
@@ -10,7 +9,7 @@ import ModelEnvScopes from "@/enums/model-env-scopes";
 class Data extends Model {
   static searchable = true;
   static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
-  static scope = ModelEnvScopes.ENV;
+  static isEnvironmentScoped = true;
 }
 
 export default Data;

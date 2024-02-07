@@ -1,4 +1,3 @@
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import Field from "@/lib/Field";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
@@ -48,11 +47,11 @@ class Model {
   static exposed: boolean = true; // Whether the model is exposed in the API or not
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
   static slug: string; // The slug of the model used to identify it
-  static scope: ModelEnvScopes; // The scope of the model (global/project). Project scope could be global on project (project) or specific to an environment (env)
-  static controllersScope: "global" | "project"; // The scope for CRUD controllers. Default calculated from model.scope
   static freeMode: boolean = false; // Whether the model is free
   static definition: object; // The definition of the model (use satisfies ModelDefinition)
   static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
+  static isEnvironmentScoped: boolean = false; // Whether the model is environment scoped or whole project scoped
+  static isSystem: boolean = false; // Whether the model is a system model
   static cacheAdapter = true;
 
   static __name: string = "Model";

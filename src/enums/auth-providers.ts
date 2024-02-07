@@ -1,5 +1,5 @@
 enum AuthProviders {
-  PASSWORD = "password",
+  LOCAL = "local",
   FACEBOOK = "facebook",
   GRAPHAND = "graphand",
 }

@@ -3,12 +3,10 @@ import "@/modules/validators";
 import Model from "@/lib/Model";
 import DataModel from "@/models/DataModel";
 import Account from "@/models/Account";
-import AccountAuthProvider from "@/models/AccountAuthProvider";
 import AuthProvider from "@/models/AuthProvider";
 import Backup from "@/models/Backup";
 import Job from "@/models/Job";
 import Project from "@/models/Project";
-import User from "@/models/User";
 import Role from "@/models/Role";
 import SearchConfig from "@/models/SearchConfig";
 import Key from "@/models/Key";
@@ -19,10 +17,10 @@ import MergeRequestEvent from "@/models/MergeRequestEvent";
 import Sockethook from "@/models/Sockethook";
 import Token from "@/models/Token";
 import Terms from "@/models/Terms";
+import Invitation from "@/models/Invitation";
 import Environment from "@/models/Environment";
 import Settings from "@/models/Settings";
 import ModelList from "@/lib/ModelList";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import FieldTypes from "@/enums/field-types";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
@@ -80,11 +78,11 @@ import ValidatorRequired from "@/lib/validators/Required";
 
 const models = {
   Account,
-  AccountAuthProvider,
   AuthProvider,
   Backup,
   DataModel,
   Environment,
+  Invitation,
   Job,
   Key,
   Media,
@@ -98,7 +96,6 @@ const models = {
   Sockethook,
   Terms,
   Token,
-  User,
 };
 
 export {
@@ -106,11 +103,11 @@ export {
   ModelList,
   Adapter,
   Account,
-  AccountAuthProvider,
   AuthProvider,
   Backup,
   DataModel,
   Environment,
+  Invitation,
   Job,
   Key,
   Media,
@@ -124,10 +121,8 @@ export {
   Sockethook,
   Terms,
   Token,
-  User,
   models,
   Data,
-  ModelEnvScopes,
   FieldTypes,
   PromiseModel,
   PromiseModelList,

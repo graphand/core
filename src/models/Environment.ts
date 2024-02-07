@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import ValidatorTypes from "@/enums/validator-types";
@@ -10,7 +9,6 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Environment extends Model {
   static __name = "Environment";
-  static scope = ModelEnvScopes.PROJECT;
   static allowMultipleOperations = false;
   static slug = "environments" as const;
   static definition = {

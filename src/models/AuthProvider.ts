@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import Role from "@/models/Role";
@@ -8,13 +7,41 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class AuthProvider extends Model {
   static __name = "AuthProvider";
-  static scope = ModelEnvScopes.ENV;
   static slug = "authProviders" as const;
+  static isEnvironmentScoped = true;
   static definition = {
     keyField: "type",
     fields: {
       type: { type: FieldTypes.TEXT },
-      options: { type: FieldTypes.NESTED },
+      options: {
+        type: FieldTypes.NESTED,
+        options: {
+          fields: {
+            local: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  confirmEmail: { type: FieldTypes.BOOLEAN, options: { default: false } },
+                  confirmTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 86400 } },
+                },
+              },
+            },
+            facebook: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  clientId: { type: FieldTypes.TEXT },
+                  clientSecret: { type: FieldTypes.TEXT },
+                  fieldsMap: {
+                    type: FieldTypes.ARRAY,
+                    options: { items: { type: FieldTypes.TEXT } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       enabled: { type: FieldTypes.BOOLEAN, options: { default: true } },
       register: {
         type: FieldTypes.NESTED,
@@ -27,7 +54,10 @@ class AuthProvider extends Model {
                 ref: Role.slug,
               },
             },
-            options: { type: FieldTypes.NESTED },
+            authorizedFields: {
+              type: FieldTypes.ARRAY,
+              options: { items: { type: FieldTypes.TEXT } },
+            },
           },
         },
       },
