@@ -76,28 +76,6 @@ import ValidatorLength from "@/lib/validators/Length";
 import ValidatorBoundaries from "@/lib/validators/Boundaries";
 import ValidatorRequired from "@/lib/validators/Required";
 
-// const models = {
-//   Account,
-//   AuthProvider,
-//   Backup,
-//   DataModel,
-//   Environment,
-//   Invitation,
-//   Job,
-//   Key,
-//   Media,
-//   MergeRequest,
-//   MergeRequestEvent,
-//   Organization,
-//   Project,
-//   Role,
-//   SearchConfig,
-//   Settings,
-//   Sockethook,
-//   Terms,
-//   Token,
-// };
-
 export {
   Model,
   ModelList,
@@ -121,7 +99,6 @@ export {
   Sockethook,
   Terms,
   Token,
-  // models,
   FieldTypes,
   PromiseModel,
   PromiseModelList,
