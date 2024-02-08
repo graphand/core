@@ -54,6 +54,7 @@ class Model {
   static isEnvironmentScoped: boolean = false; // Whether the model is environment scoped or whole project scoped
   static isSystem: boolean = false; // Whether the model is a system model
   static cacheAdapter = true;
+  static isDynamic = false; // True if the model is created dynamically from just a slug
 
   static __name: string = "Model";
   static __hooks: Set<Hook<HookPhase, keyof AdapterFetcher, typeof Model>>;
@@ -425,15 +426,17 @@ class Model {
     }
 
     // If the adapter class has the model, return it
-    const adapterModel = adapterClass?.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
+    const adapterModel = adapterClass?.getClosestModel(slug) as ReturnType<
+      typeof Model.getClass<M, T>
+    >;
     if (adapterModel) {
-      if (model && adapterModel.getBaseClass() !== model.getBaseClass()) {
-        throw new CoreError({
-          message: `Model ${slug} is already registered with a different class`,
-        });
-      }
-
       if (adapterModel.getAdapter(false)?.base === adapterClass) {
+        if (model && adapterModel.getBaseClass() !== model.getBaseClass()) {
+          throw new CoreError({
+            message: `Model ${slug} is already registered with a different class`,
+          });
+        }
+
         return adapterModel;
       }
 
@@ -447,6 +450,7 @@ class Model {
       static searchable = true;
       static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
       static isEnvironmentScoped = true;
+      static isDynamic = true;
 
       constructor(data) {
         super(data);

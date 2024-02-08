@@ -2563,8 +2563,8 @@ describe("Test Model", () => {
 
       const TestModel2 = TestModel.extend({ adapterClass: adapter, register: false });
 
-      expect(adapter.getModel(TestModel.slug)).toBe(TestModel);
-      expect(adapter.getModel(TestModel.slug)).not.toBe(TestModel2);
+      expect(adapter.getClosestModel(TestModel.slug)).toBe(TestModel);
+      expect(adapter.getClosestModel(TestModel.slug)).not.toBe(TestModel2);
     });
 
     it("should not throw error if model is extended with same adapter and force: true and override adapter model", async () => {
@@ -2576,8 +2576,8 @@ describe("Test Model", () => {
 
       const TestModel2 = TestModel.extend({ adapterClass: adapter, force: true });
 
-      expect(adapter.getModel(TestModel.slug)).not.toBe(TestModel);
-      expect(adapter.getModel(TestModel.slug)).toBe(TestModel2);
+      expect(adapter.getClosestModel(TestModel.slug)).not.toBe(TestModel);
+      expect(adapter.getClosestModel(TestModel.slug)).toBe(TestModel2);
     });
 
     it("should be able to extend medias class fields", async () => {

@@ -57,7 +57,32 @@ class Adapter {
     this.model = model;
   }
 
-  static getModel(slug: string) {
+  static getRecursiveModelsMap() {
+    const modelsMap = new Map<string, typeof Model>();
+
+    if (!this._modelsRegistry) {
+      return modelsMap;
+    }
+
+    this._modelsRegistry?.forEach(model => {
+      modelsMap.set(model.slug, model);
+    });
+
+    // @ts-expect-error __proto__
+    const parent = this.__proto__ as typeof Adapter;
+
+    if (parent?._modelsRegistry) {
+      parent.getRecursiveModelsMap().forEach((model, slug) => {
+        if (!modelsMap.has(slug)) {
+          modelsMap.set(slug, model);
+        }
+      });
+    }
+
+    return modelsMap;
+  }
+
+  static getClosestModel(slug: string) {
     if (this.hasModel(slug)) {
       return this._modelsRegistry?.get(slug);
     }
@@ -69,7 +94,7 @@ class Adapter {
       return;
     }
 
-    return parent.getModel(slug);
+    return parent.getClosestModel(slug);
   }
 
   static hasModel(slug: string) {

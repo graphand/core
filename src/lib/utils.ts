@@ -1144,6 +1144,17 @@ export const getModelInitPromise = (
   });
 };
 
+export const isValidFieldDefinition = (def: FieldDefinition) => {
+  if (def.type === FieldTypes.RELATION) {
+    const _def = def as FieldDefinition<FieldTypes.RELATION>;
+    if (!_def.options?.ref) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 export const isValidDefinition = (
   definition: ModelDefinition | ModelInstance<typeof DataModel>["definition"],
 ) => {
@@ -1158,6 +1169,12 @@ export const isValidDefinition = (
         return false;
       }
     }
+
+    Object.values(fields).forEach(def => {
+      if (!isValidFieldDefinition(def)) {
+        return false;
+      }
+    });
   }
 
   const keyField = definition?.keyField;
