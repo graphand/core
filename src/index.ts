@@ -1,4 +1,5 @@
 import "@/modules/validators";
+import "@/modules/register-models";
 
 import Model from "@/lib/Model";
 import DataModel from "@/models/DataModel";
@@ -24,7 +25,6 @@ import ModelList from "@/lib/ModelList";
 import FieldTypes from "@/enums/field-types";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
-import Data from "@/lib/Data";
 import RuleActions from "@/enums/rule-actions";
 import Adapter from "@/lib/Adapter";
 import Field from "@/lib/Field";
@@ -76,27 +76,27 @@ import ValidatorLength from "@/lib/validators/Length";
 import ValidatorBoundaries from "@/lib/validators/Boundaries";
 import ValidatorRequired from "@/lib/validators/Required";
 
-const models = {
-  Account,
-  AuthProvider,
-  Backup,
-  DataModel,
-  Environment,
-  Invitation,
-  Job,
-  Key,
-  Media,
-  MergeRequest,
-  MergeRequestEvent,
-  Organization,
-  Project,
-  Role,
-  SearchConfig,
-  Settings,
-  Sockethook,
-  Terms,
-  Token,
-};
+// const models = {
+//   Account,
+//   AuthProvider,
+//   Backup,
+//   DataModel,
+//   Environment,
+//   Invitation,
+//   Job,
+//   Key,
+//   Media,
+//   MergeRequest,
+//   MergeRequestEvent,
+//   Organization,
+//   Project,
+//   Role,
+//   SearchConfig,
+//   Settings,
+//   Sockethook,
+//   Terms,
+//   Token,
+// };
 
 export {
   Model,
@@ -121,8 +121,7 @@ export {
   Sockethook,
   Terms,
   Token,
-  models,
-  Data,
+  // models,
   FieldTypes,
   PromiseModel,
   PromiseModelList,

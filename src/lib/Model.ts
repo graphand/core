@@ -34,6 +34,7 @@ import {
   validateModel,
   assignDatamodel,
   getModelInitPromise,
+  defineFieldsProperties,
 } from "@/lib/utils";
 import CoreError from "@/lib/CoreError";
 import ErrorCodes from "@/enums/error-codes";
@@ -424,35 +425,35 @@ class Model {
     }
 
     // If the adapter class has the model, return it
-    if (adapterClass?.hasModel(slug)) {
-      const res = adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
-      if (model && res.getBaseClass() !== model.getBaseClass()) {
+    const adapterModel = adapterClass?.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
+    if (adapterModel) {
+      if (model && adapterModel.getBaseClass() !== model.getBaseClass()) {
         throw new CoreError({
           message: `Model ${slug} is already registered with a different class`,
         });
       }
 
-      return adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
-    }
-
-    // If the model is not defined, try to find it in the core models or create a new one
-    if (!model) {
-      // eslint-disable-next-line
-      const models = require("@/index").models as Record<string, typeof Model>;
-      const coreModel: M = Object.values(models).find(m => m.slug === slug) as M;
-
-      if (coreModel) {
-        model = coreModel as ReturnType<typeof Model.getClass<M, T>>;
-      } else {
-        // eslint-disable-next-line
-        const _Data = require("@/lib/Data").default;
-        model = class extends _Data {
-          static __name = `Data<${slug}>`;
-
-          static slug = slug;
-        } as ReturnType<typeof Model.getClass<M, T>>;
+      if (adapterModel.getAdapter(false)?.base === adapterClass) {
+        return adapterModel;
       }
+
+      model = adapterModel;
     }
+
+    // If the model is not fount yet, we deduce it to be a generic model extended with a datamodel instance (extensible and environment scoped)
+    model ??= class extends Model {
+      static __name = `Data<${slug}>`;
+      static slug = slug;
+      static searchable = true;
+      static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
+      static isEnvironmentScoped = true;
+
+      constructor(data) {
+        super(data);
+
+        defineFieldsProperties(this);
+      }
+    } as ReturnType<typeof Model.getClass<M, T>>;
 
     // If an adapter class is provided, extend the model with it
     if (adapterClass) {

@@ -11,7 +11,6 @@ import ErrorCodes from "@/enums/error-codes";
 import Media from "@/models/Media";
 import { ModelDefinition, ModelInstance } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
-import Data from "@/lib/Data";
 import PromiseModel from "@/lib/PromiseModel";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
@@ -261,8 +260,11 @@ describe("Test Model", () => {
       const adapter = mockAdapter();
       const slug1 = generateRandomString();
       const slug2 = generateRandomString();
-      const model = class extends Data {
+      const model = class extends Model {
         static slug = slug1;
+        static searchable = true;
+        static extensible = true;
+        static isEnvironmentScoped = true;
         static definition: ModelDefinition = {
           keyField: "test",
         };
@@ -282,6 +284,9 @@ describe("Test Model", () => {
 
       const model2 = class extends model {
         static slug = slug2;
+        static searchable = true;
+        static extensible = true;
+        static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter });
 
       await model2.initialize();
@@ -2239,8 +2244,11 @@ describe("Test Model", () => {
         },
       ]);
 
-      const Model1 = class extends Data {
+      const Model1 = class extends Model {
         static slug = slug1;
+        static searchable = true;
+        static extensible = true;
+        static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter });
 
       const i1 = await Model.getClass(slug1, adapter).create({});
@@ -2306,8 +2314,11 @@ describe("Test Model", () => {
 
       expect(i2.rel.model).toHaveProperty("slug", slug1);
 
-      const Model1 = class extends Data {
+      const Model1 = class extends Model {
         static slug = slug1;
+        static searchable = true;
+        static extensible = true;
+        static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter, force: true });
 
       const i3 = await Model.getClass<
@@ -2353,8 +2364,11 @@ describe("Test Model", () => {
         },
       ]);
 
-      const Model1 = class extends Data {
+      const Model1 = class extends Model {
         static slug = slug1;
+        static searchable = true;
+        static extensible = true;
+        static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter });
 
       const i1 = await Model.getClass(slug1, adapter).create({});
@@ -2492,7 +2506,9 @@ describe("Test Model", () => {
 
       const model = Model.getClass(dm, adapter);
 
-      expect(model.prototype).toBeInstanceOf(Data);
+      expect(model.prototype).toBeInstanceOf(Model);
+      expect(model.extensible).toBeTruthy();
+      expect(model.isEnvironmentScoped).toBeTruthy();
       expect(Model.getClass(model, adapter)).toBe(model);
 
       class CustomModel extends Model {
@@ -2611,6 +2627,8 @@ describe("Test Model", () => {
 
       const medias1 = Model.getClass("medias", adapter1);
       const medias2 = Model.getClass("medias", adapter2);
+
+      expect(medias1).not.toBe(medias2);
 
       await medias1.initialize();
       await medias2.initialize();

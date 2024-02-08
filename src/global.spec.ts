@@ -6,7 +6,7 @@ import DataModel from "@/models/DataModel";
 import Environment from "@/models/Environment";
 import Media from "@/models/Media";
 import Model from "@/lib/Model";
-import { Field, FieldNested, ModelDefinition, models } from ".";
+import { Adapter, Field, FieldNested, ModelDefinition } from ".";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -845,11 +845,13 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     const DM = DataModel.extend({ adapterClass: adapter });
 
-    const extensibleModels = Object.values(models)
+    const registeredModels = Array.from(Adapter._modelsRegistry.values());
+
+    const extensibleModels = registeredModels
       .filter(model => model.extensible)
       .map(model => model.slug);
 
-    const nonExtendableModels = Object.values(models)
+    const nonExtendableModels = registeredModels
       .filter(model => !model.extensible)
       .map(model => model.slug);
 

@@ -6,11 +6,8 @@ import type Validator from "@/lib/Validator";
 import type ValidationError from "@/lib/ValidationError";
 import type AuthProviders from "@/enums/auth-providers";
 import type AuthMethods from "@/enums/auth-methods";
-import type Sockethook from "@/models/Sockethook";
 import type MergeRequestTypes from "@/enums/merge-request-types";
 import type MergeRequestEventTypes from "@/enums/merge-request-event-types";
-import type { models } from "@/.";
-import type Role from "@/models/Role";
 import type {
   FieldDefinition,
   InferModelDef,
@@ -19,6 +16,24 @@ import type {
 } from "@/types/fields";
 import type { ValidatorDefinition } from "@/types/validators";
 import type { TransactionCtx } from "./ctx";
+import type Account from "@/models/Account";
+import type AuthProvider from "@/models/AuthProvider";
+import type Backup from "@/models/Backup";
+import type DataModel from "@/models/DataModel";
+import type Environment from "@/models/Environment";
+import type Job from "@/models/Job";
+import type Key from "@/models/Key";
+import type Media from "@/models/Media";
+import type MergeRequest from "@/models/MergeRequest";
+import type MergeRequestEvent from "@/models/MergeRequestEvent";
+import type Organization from "@/models/Organization";
+import type Project from "@/models/Project";
+import type Role from "@/models/Role";
+import type SearchConfig from "@/models/SearchConfig";
+import type Settings from "@/models/Settings";
+import type Sockethook from "@/models/Sockethook";
+import type Terms from "@/models/Terms";
+import type Token from "@/models/Token";
 export * from "./fields";
 export * from "./validators";
 export * from "./ctx";
@@ -151,24 +166,24 @@ export type AdapterFetcher<T extends typeof Model = typeof Model> = {
 export type Module<T extends typeof Model = typeof Model> = (model: T) => void;
 
 export interface RefModelsMap {
-  accounts: typeof models.Account;
-  authProviders: typeof models.AuthProvider;
-  backups: typeof models.Backup;
-  datamodels: typeof models.DataModel;
-  environments: typeof models.Environment;
-  jobs: typeof models.Job;
-  keys: typeof models.Key;
-  medias: typeof models.Media;
-  mergeRequests: typeof models.MergeRequest;
-  mergeRequestEvents: typeof models.MergeRequestEvent;
-  organizations: typeof models.Organization;
-  projects: typeof models.Project;
-  roles: typeof models.Role;
-  searchConfigs: typeof models.SearchConfig;
-  settings: typeof models.Settings;
-  sockethooks: typeof models.Sockethook;
-  terms: typeof models.Terms;
-  tokens: typeof models.Token;
+  accounts: typeof Account;
+  authProviders: typeof AuthProvider;
+  backups: typeof Backup;
+  datamodels: typeof DataModel;
+  environments: typeof Environment;
+  jobs: typeof Job;
+  keys: typeof Key;
+  medias: typeof Media;
+  mergeRequests: typeof MergeRequest;
+  mergeRequestEvents: typeof MergeRequestEvent;
+  organizations: typeof Organization;
+  projects: typeof Project;
+  roles: typeof Role;
+  searchConfigs: typeof SearchConfig;
+  settings: typeof Settings;
+  sockethooks: typeof Sockethook;
+  terms: typeof Terms;
+  tokens: typeof Token;
 }
 
 export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap
@@ -335,30 +350,10 @@ export type MergeRequestEventData<
   T extends MergeRequestEventTypes = keyof MergeRequestEventDataMap | MergeRequestEventTypes,
 > = T extends keyof MergeRequestEventDataMap ? MergeRequestEventDataMap[T] : Record<string, never>;
 
-export type AccountAuthConfigurationMap = {
-  [AuthProviders.LOCAL]: {
-    password: string;
-  };
-  [AuthProviders.FACEBOOK]: {
-    userId: string;
-  };
-  [AuthProviders.GRAPHAND]: {
-    graphandAccount: string;
-  };
-};
-
-export type AccountAuthConfiguration<T extends AuthProviders = AuthProviders> =
-  T extends keyof AccountAuthConfigurationMap
-    ? AccountAuthConfigurationMap[T]
-    : Record<string, never>;
-
 export type AuthProviderCredentialsMap = {
   [AuthProviders.LOCAL]: {
     email: string;
     password: string;
-  };
-  [AuthProviders.GRAPHAND]: {
-    accountToken?: string; // jwt token containing the identity of the project account to link to the graphand account. Only used to link. Not used for login.
   };
 };
 
@@ -381,7 +376,13 @@ export type AuthProviderConfigurePayloadMap = {
   [AuthProviders.LOCAL]: {
     email?: string;
     password?: string;
-    token?: string;
+    confirmEmailToken?: string;
+    resetPasswordToken?: string;
+    resetPassword?: true;
+  };
+  [AuthProviders.GRAPHAND]: {
+    graphandToken?: string;
+    unlink?: true;
   };
 };
 

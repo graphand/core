@@ -21,6 +21,7 @@ const coreModels = [
   "mergeRequests",
   "mergeRequestEvents",
   "settings",
+  "invitations",
 ];
 
 class ValidatorDatamodelSlug extends Validator<ValidatorTypes.DATAMODEL_SLUG> {

@@ -36,7 +36,7 @@ export const crossModelTree = (_model: typeof Model, cb: (model: typeof Model) =
   do {
     cb(model);
 
-    // @ts-expect-error __proto__ exists
+    // @ts-expect-error __proto__
     model = model.__proto__;
   } while (model && model !== Model);
 
@@ -152,21 +152,6 @@ export const getRecursiveHooksFromModel = <
         Array.prototype.push.apply(_hooks, _modelHooks);
       }
     }
-
-    // if (m.hasOwnProperty("__validatorsArray") && m.__validatorsArray) {
-    //   const _validatorsHooks = m.__validatorsArray
-    //     .map((validator) => {
-    //       return validator.hooks
-    //         ?.filter((hook) => hook[1] === action && hook[0] === phase)
-    //         .map((hook) => parseValidatorHook(hook, validator));
-    //     })
-    //     .flat()
-    //     .filter(Boolean);
-
-    //   if (_validatorsHooks?.length) {
-    //     Array.prototype.push.apply(_hooks, _validatorsHooks);
-    //   }
-    // }
   });
 
   return _hooks.sort((a, b) => a.order - b.order);

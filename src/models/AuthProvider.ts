@@ -16,13 +16,15 @@ class AuthProvider extends Model {
       options: {
         type: FieldTypes.NESTED,
         options: {
+          default: {},
           fields: {
             local: {
               type: FieldTypes.NESTED,
               options: {
                 fields: {
                   confirmEmail: { type: FieldTypes.BOOLEAN, options: { default: false } },
-                  confirmTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 86400 } },
+                  confirmTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
+                  resetTokenLifetime: { type: FieldTypes.NUMBER, options: { default: 3600 } },
                 },
               },
             },
@@ -36,6 +38,15 @@ class AuthProvider extends Model {
                     type: FieldTypes.ARRAY,
                     options: { items: { type: FieldTypes.TEXT } },
                   },
+                },
+              },
+            },
+            graphand: {
+              type: FieldTypes.NESTED,
+              options: {
+                default: {},
+                fields: {
+                  autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },
                 },
               },
             },

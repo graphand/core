@@ -7,7 +7,7 @@ import Validator from "@/lib/Validator";
 import ValidatorTypes from "@/enums/validator-types";
 import ValidationError from "@/lib/ValidationError";
 import PromiseModel from "@/lib/PromiseModel";
-import { DataModel, JSONType, Model, models } from "@/index";
+import { Account, DataModel, JSONType, Model } from "@/index";
 import PromiseModelList from "@/lib/PromiseModelList";
 
 describe("test fieldsMap", () => {
@@ -1448,7 +1448,7 @@ describe("test fieldsMap", () => {
       const i = model.hydrate({ rel: _id });
 
       expect(i.rel).toBeInstanceOf(PromiseModel);
-      expect(i.rel.model?.getBaseClass()).toBe(models.Account);
+      expect(i.rel.model?.getBaseClass()).toBe(Account);
       expect(i.rel.query).toEqual(_id);
     });
 
@@ -1620,7 +1620,7 @@ describe("test fieldsMap", () => {
       });
 
       expect(i.arrRel).toBeInstanceOf(PromiseModelList);
-      expect(i.arrRel.model?.getBaseClass()).toBe(models.Account);
+      expect(i.arrRel.model?.getBaseClass()).toBe(Account);
       expect(i.arrRel.query).toEqual({
         ids: ["507f191e810c19729de860ea", "507f191e810c19729de860eb"],
       });

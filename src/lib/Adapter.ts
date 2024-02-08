@@ -57,17 +57,32 @@ class Adapter {
     this.model = model;
   }
 
-  static hasModel(slug: string) {
-    return Boolean(this._modelsRegistry?.has(slug));
+  static getModel(slug: string) {
+    if (this.hasModel(slug)) {
+      return this._modelsRegistry?.get(slug);
+    }
+
+    // @ts-expect-error __proto__
+    const parent = this.__proto__ as typeof Adapter;
+
+    if (!parent?._modelsRegistry) {
+      return;
+    }
+
+    return parent.getModel(slug);
   }
 
-  static getModel(slug: string) {
-    return this._modelsRegistry?.get(slug);
+  static hasModel(slug: string) {
+    return Boolean(this._modelsRegistry?.has(slug));
   }
 
   static registerModel(model: typeof Model, force = false) {
     if (!model.cacheAdapter) {
       return;
+    }
+
+    if (!this.hasOwnProperty("_modelsRegistry") || !this._modelsRegistry) {
+      this._modelsRegistry = new Map();
     }
 
     if (!force && this.hasModel(model.slug)) {
@@ -76,7 +91,6 @@ class Adapter {
       });
     }
 
-    this._modelsRegistry ??= new Map();
     this._modelsRegistry.set(model.slug, model);
   }
 
