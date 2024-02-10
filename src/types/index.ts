@@ -18,7 +18,6 @@ import type { ValidatorDefinition } from "@/types/validators";
 import type { TransactionCtx } from "./ctx";
 import type Account from "@/models/Account";
 import type AuthProvider from "@/models/AuthProvider";
-import type Backup from "@/models/Backup";
 import type DataModel from "@/models/DataModel";
 import type Environment from "@/models/Environment";
 import type Job from "@/models/Job";
@@ -168,7 +167,6 @@ export type Module<T extends typeof Model = typeof Model> = (model: T) => void;
 export interface RefModelsMap {
   accounts: typeof Account;
   authProviders: typeof AuthProvider;
-  backups: typeof Backup;
   datamodels: typeof DataModel;
   environments: typeof Environment;
   jobs: typeof Job;
@@ -248,7 +246,6 @@ export type ValidationValidatorErrorDefinition = {
 export type ControllerDefinition = {
   path: string;
   methods: Array<"get" | "post" | "put" | "delete" | "patch" | "options">;
-  scope: "global" | "project" | ((args: { model: string }) => "global" | "project");
   secured: boolean;
 };
 

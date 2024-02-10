@@ -1,4 +1,4 @@
-import { ControllerDefinition } from "@/types";
+import { ControllerDefinition } from "..";
 
 const controllersMap = {
   modelCount: {
@@ -61,8 +61,8 @@ const controllersMap = {
     methods: ["post"],
     secured: true,
   },
-  openapiCurrent: {
-    path: "/oas/current",
+  openapi: {
+    path: "/oas",
     methods: ["get"],
     secured: false,
   },
@@ -85,11 +85,6 @@ const controllersMap = {
     path: "/keys/gen-key-pair",
     methods: ["post"],
     secured: true,
-  },
-  oauth: {
-    path: "/auth/oauth",
-    methods: ["get", "post"],
-    secured: false,
   },
   registerAccount: {
     path: "/auth/register",
@@ -126,11 +121,6 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-  subscriptionsWebhook: {
-    path: "/subscriptions/stripe-webhook",
-    methods: ["post"],
-    secured: false,
-  },
   subscriptionsUpgrade: {
     path: "/subscriptions/upgrade",
     methods: ["post"],
@@ -146,27 +136,6 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-  organizationInvite: {
-    path: "/organizations/:id/invite",
-    methods: ["post"],
-    secured: true,
-  },
-  organizationJoin: {
-    path: "/organizations/:id/join",
-    methods: ["post"],
-    secured: false,
-  },
-  organizationConsent: {
-    path: "/organizations/:id/consent",
-    methods: ["post"],
-    secured: true,
-  },
-  // termsLatest: {
-  //   path: "/terms/latest",
-  //   methods: ["get"],
-  //   scope: "global",
-  //   secured: false,
-  // },
   jobLogs: {
     path: "/jobs/:id/logs",
     methods: ["get"],
@@ -197,6 +166,6 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-};
+} satisfies Record<string, ControllerDefinition>;
 
-export default controllersMap as Record<keyof typeof controllersMap, ControllerDefinition>;
+export default controllersMap;

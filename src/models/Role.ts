@@ -18,6 +18,7 @@ class Role extends Model {
       slug: { type: FieldTypes.TEXT },
       _admin: {
         type: FieldTypes.BOOLEAN,
+        options: { default: false },
       },
       inherits: {
         type: FieldTypes.ARRAY,
@@ -37,6 +38,7 @@ class Role extends Model {
           items: {
             type: FieldTypes.NESTED,
             options: {
+              strict: true,
               fields: {
                 ref: {
                   type: FieldTypes.TEXT,
@@ -70,6 +72,7 @@ class Role extends Model {
           items: {
             type: FieldTypes.NESTED,
             options: {
+              strict: true,
               fields: {
                 ref: {
                   type: FieldTypes.TEXT,

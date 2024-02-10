@@ -2,7 +2,6 @@ import Adapter from "@/lib/Adapter";
 import DataModel from "@/models/DataModel";
 import Account from "@/models/Account";
 import AuthProvider from "@/models/AuthProvider";
-import Backup from "@/models/Backup";
 import Job from "@/models/Job";
 import Project from "@/models/Project";
 import Role from "@/models/Role";
@@ -21,7 +20,6 @@ import Settings from "@/models/Settings";
 
 Adapter.registerModel(Account);
 Adapter.registerModel(AuthProvider);
-Adapter.registerModel(Backup);
 Adapter.registerModel(DataModel);
 Adapter.registerModel(Environment);
 Adapter.registerModel(Invitation);

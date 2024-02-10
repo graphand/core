@@ -5,7 +5,6 @@ import Model from "@/lib/Model";
 import DataModel from "@/models/DataModel";
 import Account from "@/models/Account";
 import AuthProvider from "@/models/AuthProvider";
-import Backup from "@/models/Backup";
 import Job from "@/models/Job";
 import Project from "@/models/Project";
 import Role from "@/models/Role";
@@ -82,7 +81,6 @@ export {
   Adapter,
   Account,
   AuthProvider,
-  Backup,
   DataModel,
   Environment,
   Invitation,

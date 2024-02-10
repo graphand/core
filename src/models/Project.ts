@@ -22,18 +22,6 @@ class Project extends Model {
           ref: Organization.slug,
         },
       },
-      accessTokenLifetime: {
-        type: FieldTypes.NUMBER,
-        options: {
-          default: 86400,
-        },
-      },
-      refreshTokenLifetime: {
-        type: FieldTypes.NUMBER,
-        options: {
-          default: 2592000,
-        },
-      },
       backupSchedule: {
         type: FieldTypes.NESTED,
         options: {

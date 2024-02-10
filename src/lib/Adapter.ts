@@ -82,7 +82,7 @@ class Adapter {
     return modelsMap;
   }
 
-  static getClosestModel(slug: string) {
+  static getClosestModel(slug: string): typeof Model {
     if (this.hasModel(slug)) {
       return this._modelsRegistry?.get(slug);
     }
