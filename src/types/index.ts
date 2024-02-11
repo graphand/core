@@ -25,13 +25,10 @@ import type Key from "@/models/Key";
 import type Media from "@/models/Media";
 import type MergeRequest from "@/models/MergeRequest";
 import type MergeRequestEvent from "@/models/MergeRequestEvent";
-import type Organization from "@/models/Organization";
-import type Project from "@/models/Project";
 import type Role from "@/models/Role";
 import type SearchConfig from "@/models/SearchConfig";
 import type Settings from "@/models/Settings";
 import type Sockethook from "@/models/Sockethook";
-import type Terms from "@/models/Terms";
 import type Token from "@/models/Token";
 export * from "./fields";
 export * from "./validators";
@@ -174,13 +171,10 @@ export interface RefModelsMap {
   medias: typeof Media;
   mergeRequests: typeof MergeRequest;
   mergeRequestEvents: typeof MergeRequestEvent;
-  organizations: typeof Organization;
-  projects: typeof Project;
   roles: typeof Role;
   searchConfigs: typeof SearchConfig;
   settings: typeof Settings;
   sockethooks: typeof Sockethook;
-  terms: typeof Terms;
   tokens: typeof Token;
 }
 

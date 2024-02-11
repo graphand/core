@@ -12,7 +12,10 @@ class Settings extends Model {
     keyField: "key",
     fields: {
       key: { type: FieldTypes.TEXT },
-      data: { type: FieldTypes.NESTED },
+      data: {
+        type: FieldTypes.NESTED,
+        options: { default: {} },
+      },
     },
   } satisfies ModelDefinition;
 }

@@ -6,17 +6,14 @@ import DataModel from "@/models/DataModel";
 import Account from "@/models/Account";
 import AuthProvider from "@/models/AuthProvider";
 import Job from "@/models/Job";
-import Project from "@/models/Project";
 import Role from "@/models/Role";
 import SearchConfig from "@/models/SearchConfig";
 import Key from "@/models/Key";
-import Organization from "@/models/Organization";
 import Media from "@/models/Media";
 import MergeRequest from "@/models/MergeRequest";
 import MergeRequestEvent from "@/models/MergeRequestEvent";
 import Sockethook from "@/models/Sockethook";
 import Token from "@/models/Token";
-import Terms from "@/models/Terms";
 import Invitation from "@/models/Invitation";
 import Environment from "@/models/Environment";
 import Settings from "@/models/Settings";
@@ -89,13 +86,10 @@ export {
   Media,
   MergeRequest,
   MergeRequestEvent,
-  Organization,
-  Project,
   Role,
   SearchConfig,
   Settings,
   Sockethook,
-  Terms,
   Token,
   FieldTypes,
   PromiseModel,
