@@ -1,4 +1,3 @@
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import Field from "@/lib/Field";
 import PromiseModel from "@/lib/PromiseModel";
 import PromiseModelList from "@/lib/PromiseModelList";
@@ -35,6 +34,7 @@ import {
   validateModel,
   assignDatamodel,
   getModelInitPromise,
+  defineFieldsProperties,
 } from "@/lib/utils";
 import CoreError from "@/lib/CoreError";
 import ErrorCodes from "@/enums/error-codes";
@@ -48,12 +48,13 @@ class Model {
   static exposed: boolean = true; // Whether the model is exposed in the API or not
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
   static slug: string; // The slug of the model used to identify it
-  static scope: ModelEnvScopes; // The scope of the model (global/project). Project scope could be global on project (project) or specific to an environment (env)
-  static controllersScope: "global" | "project"; // The scope for CRUD controllers. Default calculated from model.scope
   static freeMode: boolean = false; // Whether the model is free
   static definition: object; // The definition of the model (use satisfies ModelDefinition)
   static adapterClass: typeof Adapter; // The adapter class to use with the model and inherited models
+  static isEnvironmentScoped: boolean = false; // Whether the model is environment scoped or whole project scoped
+  static isSystem: boolean = false; // Whether the model is a system model
   static cacheAdapter = true;
+  static isDynamic = false; // True if the model is created dynamically from just a slug
 
   static __name: string = "Model";
   static __hooks: Set<Hook<HookPhase, keyof AdapterFetcher, typeof Model>>;
@@ -425,35 +426,38 @@ class Model {
     }
 
     // If the adapter class has the model, return it
-    if (adapterClass?.hasModel(slug)) {
-      const res = adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
-      if (model && res.getBaseClass() !== model.getBaseClass()) {
-        throw new CoreError({
-          message: `Model ${slug} is already registered with a different class`,
-        });
+    const adapterModel = adapterClass?.getClosestModel(slug) as ReturnType<
+      typeof Model.getClass<M, T>
+    >;
+    if (adapterModel) {
+      if (adapterModel.getAdapter(false)?.base === adapterClass) {
+        if (model && adapterModel.getBaseClass() !== model.getBaseClass()) {
+          throw new CoreError({
+            message: `Model ${slug} is already registered with a different class`,
+          });
+        }
+
+        return adapterModel;
       }
 
-      return adapterClass.getModel(slug) as ReturnType<typeof Model.getClass<M, T>>;
+      model = adapterModel;
     }
 
-    // If the model is not defined, try to find it in the core models or create a new one
-    if (!model) {
-      // eslint-disable-next-line
-      const models = require("@/index").models as Record<string, typeof Model>;
-      const coreModel: M = Object.values(models).find(m => m.slug === slug) as M;
+    // If the model is not fount yet, we deduce it to be a generic model extended with a datamodel instance (extensible and environment scoped)
+    model ??= class extends Model {
+      static __name = `Data<${slug}>`;
+      static slug = slug;
+      static searchable = true;
+      static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
+      static isEnvironmentScoped = true;
+      static isDynamic = true;
 
-      if (coreModel) {
-        model = coreModel as ReturnType<typeof Model.getClass<M, T>>;
-      } else {
-        // eslint-disable-next-line
-        const _Data = require("@/lib/Data").default;
-        model = class extends _Data {
-          static __name = `Data<${slug}>`;
+      constructor(data) {
+        super(data);
 
-          static slug = slug;
-        } as ReturnType<typeof Model.getClass<M, T>>;
+        defineFieldsProperties(this);
       }
-    }
+    } as ReturnType<typeof Model.getClass<M, T>>;
 
     // If an adapter class is provided, extend the model with it
     if (adapterClass) {

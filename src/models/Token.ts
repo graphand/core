@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import Role from "@/models/Role";
@@ -9,7 +8,6 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Token extends Model {
   static __name = "Token";
-  static scope = ModelEnvScopes.PROJECT;
   static slug = "tokens" as const;
   static definition = {
     keyField: "name",

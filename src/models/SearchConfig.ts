@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import ValidatorTypes from "@/enums/validator-types";
@@ -9,7 +8,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class SearchConfig extends Model {
   static __name = "SearchConfig";
-  static scope = ModelEnvScopes.ENV;
+  static isEnvironmentScoped = true;
   static allowMultipleOperations = false;
   static slug = "searchConfigs" as const;
   static definition = {

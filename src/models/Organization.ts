@@ -1,16 +1,15 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
-import User from "@/models/User";
 import ValidatorTypes from "@/enums/validator-types";
 import Terms from "@/models/Terms";
 import { ModelDefinition } from "@/types";
+import Account from "./Account";
 
 @modelDecorator()
 class Organization extends Model {
   static __name = "Organization";
-  static scope = ModelEnvScopes.GLOBAL;
+  static isSystem = true;
   static allowMultipleOperations = false;
   static slug = "organizations" as const;
   static definition = {
@@ -21,16 +20,16 @@ class Organization extends Model {
       owner: {
         type: FieldTypes.RELATION,
         options: {
-          ref: User.slug,
+          ref: Account.slug,
         },
       },
-      _users: {
+      _accounts: {
         type: FieldTypes.ARRAY,
         options: {
           items: {
             type: FieldTypes.RELATION,
             options: {
-              ref: User.slug,
+              ref: Account.slug,
             },
           },
         },
@@ -45,10 +44,10 @@ class Organization extends Model {
                 ref: Terms.slug,
               },
             },
-            user: {
+            account: {
               type: FieldTypes.RELATION,
               options: {
-                ref: User.slug,
+                ref: Account.slug,
               },
             },
           },

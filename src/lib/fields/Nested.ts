@@ -111,6 +111,10 @@ class FieldNested extends Field<FieldTypes.NESTED> {
         );
       }
 
+      if (!targetField) {
+        return undefined;
+      }
+
       const defaults = ctx?.defaults ?? true;
       if (defaults && value === undefined && "default" in targetField.options) {
         value = targetField.options.default as typeof value;

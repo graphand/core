@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import { FieldsRestriction, ModelInstance, Rule } from "@/types";
@@ -11,7 +10,7 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Role extends Model {
   static __name = "Role";
-  static scope = ModelEnvScopes.ENV;
+  static isEnvironmentScoped = true;
   static slug = "roles" as const;
   static definition = {
     keyField: "slug",
@@ -19,6 +18,7 @@ class Role extends Model {
       slug: { type: FieldTypes.TEXT },
       _admin: {
         type: FieldTypes.BOOLEAN,
+        options: { default: false },
       },
       inherits: {
         type: FieldTypes.ARRAY,
@@ -38,6 +38,7 @@ class Role extends Model {
           items: {
             type: FieldTypes.NESTED,
             options: {
+              strict: true,
               fields: {
                 ref: {
                   type: FieldTypes.TEXT,
@@ -71,6 +72,7 @@ class Role extends Model {
           items: {
             type: FieldTypes.NESTED,
             options: {
+              strict: true,
               fields: {
                 ref: {
                   type: FieldTypes.TEXT,

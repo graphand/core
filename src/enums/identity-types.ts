@@ -1,5 +1,4 @@
 enum IdentityTypes {
-  USER = "user",
   ACCOUNT = "account",
   REFRESH = "refresh",
   TOKEN = "token",

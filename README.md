@@ -162,7 +162,7 @@ Model.hook("after", "get", function () {
   // sera appelé après l'appel de la méthode get du fetcher
 });
 
-const AdaptedModel = Model.extend({ adapterClass: MyAdapter }); // nécessaire pour que les actions de crud fonctionnent dans le contexte (= client.getModel(Model) sur le client et context.getModel(Model) sur le serveur)
+const AdaptedModel = Model.extend({ adapterClass: MyAdapter }); // nécessaire pour que les actions de crud fonctionnent dans le contexte (= client.getClosestModel(Model) sur le client et context.getClosestModel(Model) sur le serveur)
 
 AdaptedModel.get("..."); // exécute la methode get du fetcher de "MyAdapter" ainsi que les hooks du modèle
 ```

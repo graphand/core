@@ -36,7 +36,7 @@ export const crossModelTree = (_model: typeof Model, cb: (model: typeof Model) =
   do {
     cb(model);
 
-    // @ts-expect-error __proto__ exists
+    // @ts-expect-error __proto__
     model = model.__proto__;
   } while (model && model !== Model);
 
@@ -152,21 +152,6 @@ export const getRecursiveHooksFromModel = <
         Array.prototype.push.apply(_hooks, _modelHooks);
       }
     }
-
-    // if (m.hasOwnProperty("__validatorsArray") && m.__validatorsArray) {
-    //   const _validatorsHooks = m.__validatorsArray
-    //     .map((validator) => {
-    //       return validator.hooks
-    //         ?.filter((hook) => hook[1] === action && hook[0] === phase)
-    //         .map((hook) => parseValidatorHook(hook, validator));
-    //     })
-    //     .flat()
-    //     .filter(Boolean);
-
-    //   if (_validatorsHooks?.length) {
-    //     Array.prototype.push.apply(_hooks, _validatorsHooks);
-    //   }
-    // }
   });
 
   return _hooks.sort((a, b) => a.order - b.order);
@@ -1159,6 +1144,17 @@ export const getModelInitPromise = (
   });
 };
 
+export const isValidFieldDefinition = (def: FieldDefinition) => {
+  if (def.type === FieldTypes.RELATION) {
+    const _def = def as FieldDefinition<FieldTypes.RELATION>;
+    if (!_def.options?.ref) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 export const isValidDefinition = (
   definition: ModelDefinition | ModelInstance<typeof DataModel>["definition"],
 ) => {
@@ -1173,6 +1169,12 @@ export const isValidDefinition = (
         return false;
       }
     }
+
+    Object.values(fields).forEach(def => {
+      if (!isValidFieldDefinition(def)) {
+        return false;
+      }
+    });
   }
 
   const keyField = definition?.keyField;

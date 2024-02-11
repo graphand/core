@@ -6,7 +6,7 @@ import DataModel from "@/models/DataModel";
 import Environment from "@/models/Environment";
 import Media from "@/models/Media";
 import Model from "@/lib/Model";
-import { Field, FieldNested, ModelDefinition, models } from ".";
+import { Adapter, Field, FieldNested, ModelDefinition } from ".";
 
 describe("Global tests", () => {
   it("should not be able to create datamodel with invalid fields", async () => {
@@ -845,11 +845,13 @@ describe("Global tests", () => {
     const adapter = mockAdapter();
     const DM = DataModel.extend({ adapterClass: adapter });
 
-    const extensibleModels = Object.values(models)
+    const registeredModels = Array.from(Adapter._modelsRegistry.values());
+
+    const extensibleModels = registeredModels
       .filter(model => model.extensible)
       .map(model => model.slug);
 
-    const nonExtendableModels = Object.values(models)
+    const nonExtensible = registeredModels
       .filter(model => !model.extensible)
       .map(model => model.slug);
 
@@ -857,9 +859,25 @@ describe("Global tests", () => {
       await expect(DM.validate([{ slug }])).resolves.toBeTruthy();
     }
 
-    for (const slug of nonExtendableModels) {
+    for (const slug of nonExtensible) {
       await expect(DM.validate([{ slug }])).rejects.toThrow(ValidationError);
     }
+  });
+
+  it("should load core models from adapter", async () => {
+    const adapter = mockAdapter();
+    const DM = DataModel.extend({ adapterClass: adapter });
+
+    class CoreModel extends Model {
+      static slug = "sampleCoreModel";
+      static extensible = false; // That means it's a core model and creating a datamodel with this slug is not allowed
+    }
+
+    await expect(DM.validate([{ slug: "sampleCoreModel" }])).resolves.toBeTruthy(); // CoreModel is not registered in the adapter yet
+
+    adapter.registerModel(CoreModel);
+
+    await expect(DM.validate([{ slug: "sampleCoreModel" }])).rejects.toThrow(ValidationError); // CoreModel is registered in the adapter now so it should not be allowed to create a datamodel with this slug
   });
 
   it("should not be able to create datamodel with invalid field name", async () => {

@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import JobTypes from "@/enums/job-types";
@@ -10,7 +9,6 @@ import { ModelDefinition } from "@/types";
 class Job extends Model {
   static __name = "Job";
   static slug = "jobs" as const;
-  static scope = ModelEnvScopes.PROJECT;
   static definition = {
     fields: {
       _type: {

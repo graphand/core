@@ -6,7 +6,7 @@ import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
 import Validator from "@/lib/Validator";
 import { ValidatorOptions } from "@/types";
-import { models } from "@/index";
+import { DataModel } from "..";
 
 describe("test validatorsMap", () => {
   const adapter = mockAdapter();
@@ -481,10 +481,10 @@ describe("test validatorsMap", () => {
   });
 
   describe("datamodelKeyField validator", () => {
-    const DataModel = models.DataModel.extend({ adapterClass: adapter });
+    const DataModel_ = DataModel.extend({ adapterClass: adapter });
 
     it("datamodel without keyField should not throw error", async () => {
-      const datamodel = DataModel.create({
+      const datamodel = DataModel_.create({
         slug: generateRandomString(),
         definition: {
           fields: {
@@ -499,7 +499,7 @@ describe("test validatorsMap", () => {
     });
 
     it("datamodel with keyField and valid keyField field should not throw error", async () => {
-      const datamodel = DataModel.create({
+      const datamodel = DataModel_.create({
         slug: generateRandomString(),
         definition: {
           keyField: "title",
@@ -515,7 +515,7 @@ describe("test validatorsMap", () => {
     });
 
     it("datamodel with keyField and not existing field should throw error", async () => {
-      const datamodel = DataModel.create({
+      const datamodel = DataModel_.create({
         slug: generateRandomString(),
         definition: {
           keyField: "title",
@@ -526,7 +526,7 @@ describe("test validatorsMap", () => {
     });
 
     it("datamodel with keyField and invalid keyField field should throw error", async () => {
-      const datamodel1 = DataModel.create({
+      const datamodel1 = DataModel_.create({
         slug: generateRandomString(),
         definition: {
           keyField: "test",
@@ -540,7 +540,7 @@ describe("test validatorsMap", () => {
 
       await expect(datamodel1).rejects.toBeInstanceOf(ValidationError);
 
-      const datamodel2 = DataModel.create({
+      const datamodel2 = DataModel_.create({
         slug: generateRandomString(),
         definition: {
           keyField: "title",
@@ -557,7 +557,7 @@ describe("test validatorsMap", () => {
 
       await expect(datamodel2).rejects.toBeInstanceOf(ValidationError);
 
-      const datamodel3 = DataModel.create({
+      const datamodel3 = DataModel_.create({
         slug: generateRandomString(),
         definition: {
           keyField: "title",

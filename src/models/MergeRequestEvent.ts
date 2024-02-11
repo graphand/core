@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import Job from "@/models/Job";
@@ -12,7 +11,6 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class MergeRequestEvent extends Model {
   static __name = "MergeRequestEvent";
-  static scope = ModelEnvScopes.PROJECT;
   static allowMultipleOperations = false;
   static slug = "mergeRequestEvents" as const;
   static definition = {

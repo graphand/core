@@ -8,6 +8,7 @@ enum ValidatorTypes {
   KEY_FIELD = "keyField",
   DATAMODEL_SLUG = "datamodelSlug",
   DATAMODEL_DEFINITION = "datamodelDefinition",
+  EXISTS = "exists",
 }
 
 export default ValidatorTypes;

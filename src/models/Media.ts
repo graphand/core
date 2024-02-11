@@ -1,5 +1,4 @@
 import Model from "@/lib/Model";
-import ModelEnvScopes from "@/enums/model-env-scopes";
 import { modelDecorator } from "@/lib/modelDecorator";
 import ValidatorTypes from "@/enums/validator-types";
 import FieldTypes from "@/enums/field-types";
@@ -10,7 +9,6 @@ class Media extends Model {
   static __name = "Media";
   static searchable = true;
   static extensible = true;
-  static scope = ModelEnvScopes.PROJECT;
   static slug = "medias" as const;
   static definition = {
     keyField: "name",
