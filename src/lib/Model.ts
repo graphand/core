@@ -788,7 +788,7 @@ class Model {
 
     if (!res?.getData?.()) {
       throw new CoreError({
-        message: `Unable to update model: ${res instanceof Model}`,
+        message: `Unable to update instance on model ${this.model().slug}`,
       });
     }
 
@@ -798,8 +798,43 @@ class Model {
   }
 
   /**
+   * Update one document that match the given query.
+   * This method is just a shortcut for Model.get with query then instance.update on result
+   * @param query
+   * @param update
+   * @example
+   * await Model.createMultiple([
+   * { title: "apple" },
+   * { title: "banana" },
+   * ]);
+   * const updated = await Model.updateOne({ filter: { title: { "$regex": "a" } } }, { $set: { title: "pear" } });
+   * console.log(updated.title); // "pear"
+   */
+  static async updateOne<T extends typeof Model = typeof Model>(
+    this: T,
+    query: string | JSONQuery = {},
+    update: UpdateObject,
+    ctx?: TransactionCtx,
+  ): Promise<ModelInstance<T>> {
+    await this.initialize();
+
+    const i = await this.get(query);
+
+    if (!i) {
+      throw new CoreError({
+        code: ErrorCodes.NOT_FOUND,
+        message: `Unable to updateOne on model ${this.slug}: instance not found`,
+      });
+    }
+
+    await i.update(update, ctx);
+
+    return i;
+  }
+
+  /**
    * Update one or multiple documents that match the given query with a mongodb update object.
-   * That method returns an array of updated instances (not a ModelList).
+   * This method returns an array of updated instances (not a ModelList).
    * Use this instead of calling Model.prototype.update multiple times.
    * @param query - a JSONQuery object (or a string) that contains the filter to apply and other settings
    * @param update - The mongodb update object to apply (Contains only update operators expressions - https://www.mongodb.com/docs/manual/reference/operator/update/#update-operators-1)
