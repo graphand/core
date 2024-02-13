@@ -211,7 +211,7 @@ export type Hook<
 > = {
   phase: P;
   action: A;
-  fn: (args: HookCallbackArgs<P, A, T>) => void;
+  fn: (this: T, args: HookCallbackArgs<P, A, T>) => void;
   order?: number;
 };
 
