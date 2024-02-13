@@ -1,6 +1,5 @@
 import Model from "@/lib/Model";
 import { modelDecorator } from "@/lib/modelDecorator";
-import ValidatorTypes from "@/enums/validator-types";
 import FieldTypes from "@/enums/field-types";
 import { ModelDefinition } from "@/types";
 
@@ -19,11 +18,6 @@ class Media extends Model {
       _originalname: { type: FieldTypes.TEXT },
       _size: { type: FieldTypes.NUMBER },
     },
-    validators: [
-      { type: ValidatorTypes.REQUIRED, options: { field: "_mimetype" } },
-      { type: ValidatorTypes.REQUIRED, options: { field: "_originalname" } },
-      { type: ValidatorTypes.BOUNDARIES, options: { field: "_size", min: 1 } },
-    ],
   } satisfies ModelDefinition;
 }
 

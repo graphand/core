@@ -250,10 +250,9 @@ export type ModelCrudEvent = {
   data?: Array<JSONType>;
 };
 
-export type FormProcessEvent = {
-  type?: "start" | "end" | "progress";
-  key: string;
-  files: Array<string>;
+export type UploadEvent = {
+  type?: "start" | "end" | "progress" | "error";
+  uploadId: string;
   percentage?: number;
   contentLength?: number;
   receivedLength: number;
