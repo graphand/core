@@ -460,7 +460,11 @@ class Model {
 
     // If an adapter class is provided, extend the model with it
     if (adapterClass) {
-      model = model.extend({ adapterClass, initOptions: { datamodel: dm } });
+      model = model.extend({
+        adapterClass,
+        initOptions: { datamodel: dm },
+        register: !adapterClass.hasModel(slug) || model.getAdapter(false)?.base !== adapterClass,
+      });
     }
 
     // If the input is a datamodel instance, assign it to the model
@@ -939,15 +943,13 @@ class Model {
       );
     }
 
-    const baseClass = this.getBaseClass();
-
-    if (!baseClass.hasOwnProperty("__hooks") || !baseClass.__hooks) {
-      baseClass.__hooks = new Set();
+    if (!this.hasOwnProperty("__hooks") || !this.__hooks) {
+      this.__hooks = new Set();
     }
 
     const hook: Hook<P, A, T> = { phase, action, fn, order };
 
-    baseClass.__hooks.add(hook);
+    this.__hooks.add(hook);
   }
 
   /**

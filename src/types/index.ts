@@ -28,7 +28,6 @@ import type MergeRequestEvent from "@/models/MergeRequestEvent";
 import type Role from "@/models/Role";
 import type SearchConfig from "@/models/SearchConfig";
 import type Settings from "@/models/Settings";
-import type Sockethook from "@/models/Sockethook";
 import type Token from "@/models/Token";
 export * from "./fields";
 export * from "./validators";
@@ -174,7 +173,6 @@ export interface RefModelsMap {
   roles: typeof Role;
   searchConfigs: typeof SearchConfig;
   settings: typeof Settings;
-  sockethooks: typeof Sockethook;
   tokens: typeof Token;
 }
 
@@ -251,54 +249,11 @@ export type ModelCrudEvent = {
 };
 
 export type UploadEvent = {
-  type?: "start" | "end" | "progress" | "error";
+  type?: "progress" | "end" | "error" | "abort";
   uploadId: string;
   percentage?: number;
   contentLength?: number;
   receivedLength: number;
-};
-
-export type SockethookEvent<
-  P extends HookPhase,
-  A extends keyof AdapterFetcher<T>,
-  T extends typeof Model,
-> = {
-  operation: string;
-  hook: ModelJSON<typeof Sockethook> & {
-    phase: P;
-    action: A;
-    on: T["slug"];
-  };
-  data: HookCallbackArgs<P, A, T>;
-};
-
-export type SockethookResponse<
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  P extends HookPhase,
-  A extends keyof AdapterFetcher<T>,
-  T extends typeof Model,
-> = {
-  operation: string;
-  args?: Parameters<AdapterFetcher<T>[A]>[0];
-  err?: Array<{
-    message: string;
-  }>;
-};
-
-export type SockethookHandler<
-  P extends HookPhase,
-  A extends keyof AdapterFetcher<T>,
-  T extends typeof Model,
-> = (
-  data: SockethookEvent<P, A, T>["data"],
-) =>
-  | void
-  | Omit<SockethookResponse<P, A, T>, "operation">
-  | Promise<void | Omit<SockethookResponse<P, A, T>, "operation">>;
-
-export type SockethookJoinOne = {
-  name: string;
-  signature?: string;
 };
 
 export type IdentityString = string;
@@ -381,28 +336,6 @@ export type AuthProviderConfigurePayload<
 > = T extends keyof AuthProviderConfigurePayloadMap
   ? AuthProviderConfigurePayloadMap[T]
   : Record<string, never>;
-
-export type SockethookStatus = {
-  status: "OK" | "KO";
-  target: {
-    _id: string;
-    name: string;
-  };
-  responseTime?: number;
-  sockets: {
-    selected: {
-      id: string;
-      hostname: string;
-    } | null;
-    connected: {
-      list: Array<{
-        id: string;
-        hostname: string;
-      }>;
-      count: number;
-    };
-  };
-};
 
 export type ModelDefinition = Readonly<{
   keyField?: Readonly<string>;

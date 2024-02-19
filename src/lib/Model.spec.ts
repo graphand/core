@@ -14,6 +14,7 @@ import PromiseModelList from "@/lib/PromiseModelList";
 import PromiseModel from "@/lib/PromiseModel";
 import { faker } from "@faker-js/faker";
 import { ObjectId } from "bson";
+import { Adapter } from "..";
 
 describe("Test Model", () => {
   const BaseModel = mockModel({
@@ -1633,6 +1634,107 @@ describe("Test Model", () => {
       expect(beforeCreateFn).toHaveBeenCalledTimes(1);
       expect(afterCreateFn).toHaveBeenCalledTimes(1);
     });
+
+    it("should be able to add a hook for a specific adapter only with global adapter register", async () => {
+      const adapter1 = mockAdapter();
+      const adapter2 = mockAdapter();
+
+      const fn1 = jest.fn();
+      const fn2 = jest.fn();
+
+      const TestModel = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      Adapter.registerModel(TestModel);
+
+      Model.getClass(TestModel, adapter1).hook("before", "createOne", fn1);
+      Model.getClass(TestModel, adapter2).hook("before", "createOne", fn2);
+
+      expect(fn1).toHaveBeenCalledTimes(0);
+      expect(fn2).toHaveBeenCalledTimes(0);
+
+      await Model.getClass(TestModel, adapter1).create({});
+
+      expect(fn1).toHaveBeenCalledTimes(1);
+      expect(fn2).toHaveBeenCalledTimes(0);
+
+      await Model.getClass(TestModel, adapter2).create({});
+
+      expect(fn1).toHaveBeenCalledTimes(1);
+      expect(fn2).toHaveBeenCalledTimes(1);
+    });
+
+    it("should be able to add a hook for a specific adapter only with local adapter register", async () => {
+      const adapter1 = mockAdapter();
+      const adapter2 = mockAdapter();
+
+      const fn1 = jest.fn();
+      const fn2 = jest.fn();
+
+      const TestModel = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      adapter1.registerModel(TestModel.extend({ adapterClass: adapter1, register: false }));
+      adapter2.registerModel(TestModel.extend({ adapterClass: adapter2, register: false }));
+
+      Model.getClass(TestModel, adapter1).hook("before", "createOne", fn1);
+      Model.getClass(TestModel, adapter2).hook("before", "createOne", fn2);
+
+      expect(fn1).toHaveBeenCalledTimes(0);
+      expect(fn2).toHaveBeenCalledTimes(0);
+
+      await Model.getClass(TestModel, adapter1).create({});
+
+      expect(fn1).toHaveBeenCalledTimes(1);
+      expect(fn2).toHaveBeenCalledTimes(0);
+
+      await Model.getClass(TestModel, adapter2).create({});
+
+      expect(fn1).toHaveBeenCalledTimes(1);
+      expect(fn2).toHaveBeenCalledTimes(1);
+    });
+
+    it("should be able to add a hook for a specific adapter only with auto adapter register (extend)", async () => {
+      const adapter1 = mockAdapter();
+      const adapter2 = mockAdapter();
+
+      const fn1 = jest.fn();
+      const fn2 = jest.fn();
+
+      const TestModel = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      });
+
+      TestModel.extend({ adapterClass: adapter1 }).hook("before", "createOne", fn1);
+      TestModel.extend({ adapterClass: adapter2 }).hook("before", "createOne", fn2);
+
+      expect(fn1).toHaveBeenCalledTimes(0);
+      expect(fn2).toHaveBeenCalledTimes(0);
+
+      await Model.getClass(TestModel, adapter1).create({});
+
+      expect(fn1).toHaveBeenCalledTimes(1);
+      expect(fn2).toHaveBeenCalledTimes(0);
+
+      await Model.getClass(TestModel, adapter2).create({});
+
+      expect(fn1).toHaveBeenCalledTimes(1);
+      expect(fn2).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("Model utils", () => {
@@ -2638,7 +2740,7 @@ describe("Test Model", () => {
     });
   });
 
-  it("should ...", async () => {
+  it("should reloadModel only if needed", async () => {
     const slug = generateRandomString();
     const adapter = mockAdapter();
 
@@ -2692,6 +2794,11 @@ describe("Test Model", () => {
       },
     });
 
-    // console.log(model1.fieldsMap);
+    expect(model2.fieldsMap.has("title")).toBeTruthy();
+
+    await model2.reloadModel();
+
+    expect(model2.fieldsMap.has("subtitle")).toBeTruthy();
+    expect(model2.fieldsMap.has("title")).toBeFalsy();
   });
 });

@@ -116,11 +116,6 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-  statusSockethook: {
-    path: "/sockethooks/:id/status",
-    methods: ["get"],
-    secured: true,
-  },
   subscriptionsUpgrade: {
     path: "/subscriptions/upgrade",
     methods: ["post"],
@@ -156,11 +151,11 @@ const controllersMap = {
     methods: ["post"],
     secured: true,
   },
-  backupRestore: {
-    path: "/backups/:id/restore",
-    methods: ["post"],
-    secured: true,
-  },
+  // backupRestore: {
+  //   path: "/backups/:id/restore",
+  //   methods: ["post"],
+  //   secured: true,
+  // },
   mrGDX: {
     path: "/merge-requests/:id/gdx",
     methods: ["get"],

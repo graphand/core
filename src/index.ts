@@ -12,7 +12,6 @@ import Key from "@/models/Key";
 import Media from "@/models/Media";
 import MergeRequest from "@/models/MergeRequest";
 import MergeRequestEvent from "@/models/MergeRequestEvent";
-import Sockethook from "@/models/Sockethook";
 import Token from "@/models/Token";
 import Invitation from "@/models/Invitation";
 import Environment from "@/models/Environment";
@@ -89,7 +88,6 @@ export {
   Role,
   SearchConfig,
   Settings,
-  Sockethook,
   Token,
   FieldTypes,
   PromiseModel,

@@ -24,6 +24,8 @@ import ValidatorBoundaries from "./validators/Boundaries";
 import ValidatorRequired from "./validators/Required";
 
 class Adapter {
+  static __name = "Adapter";
+
   static fieldsMap: { [T in FieldTypes]?: typeof Field<T> } = {
     [FieldTypes.ID]: FieldId,
     [FieldTypes.NUMBER]: FieldNumber,
@@ -97,8 +99,16 @@ class Adapter {
     return parent.getClosestModel(slug);
   }
 
+  static getModelsRegistry() {
+    if (!this.hasOwnProperty("_modelsRegistry") || !this._modelsRegistry) {
+      this._modelsRegistry = new Map();
+    }
+
+    return this._modelsRegistry;
+  }
+
   static hasModel(slug: string) {
-    return Boolean(this._modelsRegistry?.has(slug));
+    return Boolean(this.getModelsRegistry().has(slug));
   }
 
   static registerModel(model: typeof Model, force = false) {
@@ -106,21 +116,17 @@ class Adapter {
       return;
     }
 
-    if (!this.hasOwnProperty("_modelsRegistry") || !this._modelsRegistry) {
-      this._modelsRegistry = new Map();
-    }
-
     if (!force && this.hasModel(model.slug)) {
       throw new CoreError({
-        message: `Model ${model.slug} already registered`,
+        message: `Model ${model.slug} already registered on adapter ${this.__name}`,
       });
     }
 
-    this._modelsRegistry.set(model.slug, model);
+    this.getModelsRegistry().set(model.slug, model);
   }
 
   static clearModels() {
-    this._modelsRegistry?.clear();
+    this.getModelsRegistry().clear();
   }
 
   /**

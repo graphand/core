@@ -10,6 +10,7 @@ import { ObjectId } from "bson";
 const cache: Map<typeof Model, Set<ModelInstance<typeof Model>>> = new Map();
 
 export const mockAdapter = ({
+  name = "MockAdapter",
   fieldsMap = {},
   validatorsMap = {
     [ValidatorTypes.SAMPLE]: class ValidatorSample extends Validator<ValidatorTypes.SAMPLE> {
@@ -18,11 +19,13 @@ export const mockAdapter = ({
   },
   privateCache,
 }: {
+  name?: string;
   fieldsMap?: typeof Adapter["fieldsMap"];
   validatorsMap?: typeof Adapter["validatorsMap"];
   privateCache?: Set<ModelInstance<typeof Model>>;
 } = {}) => {
   class MockAdapter extends Adapter {
+    static __name = name;
     static runValidators = true;
     static fieldsMap = fieldsMap;
     static validatorsMap = validatorsMap;
@@ -182,64 +185,6 @@ export const mockModel = <D extends ModelDefinition>(def?: D): typeof Model & { 
     }
   };
 };
-
-// export const mockModel = <D extends ModelDefinition>(
-//   opts: {
-//     slug?: string;
-//     extendsModel?: typeof Model;
-//     scope?: ModelEnvScopes;
-//     allowMultipleOperations?: boolean;
-//     extensible?: boolean;
-//     fields?: D["fields"];
-//     validators?: D["validators"];
-//     single?: D["single"];
-//   } = {},
-// ): typeof Model & { definition: D } => {
-//   const {
-//     extendsModel = Model,
-//     scope = ModelEnvScopes.ENV,
-//     allowMultipleOperations = true,
-//     extensible = false,
-//     single = false,
-//     fields = {
-//       title: {
-//         type: FieldTypes.TEXT,
-//         options: { default: "test" },
-//       },
-//     },
-//     validators = [
-//       {
-//         type: ValidatorTypes.SAMPLE,
-//         options: {
-//           field: "title",
-//         },
-//       },
-//     ],
-//   } = opts;
-//   let { slug } = opts;
-//   slug ??= "a" + Math.random().toString(36).substring(7);
-
-//   class Test extends extendsModel {
-//     static extensible = extensible;
-//     static slug = slug;
-//     static scope = scope;
-//     static allowMultipleOperations = allowMultipleOperations;
-//     static definition = {
-//       single,
-//       keyField: undefined,
-//       fields,
-//       validators,
-//     };
-
-//     constructor(doc) {
-//       super(doc);
-
-//       defineFieldsProperties(this);
-//     }
-//   }
-
-//   return Test as typeof Model & { definition: D };
-// };
 
 export const generateRandomString = () => {
   return "a" + Math.random().toString(36).substring(7);
