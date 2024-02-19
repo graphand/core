@@ -238,18 +238,18 @@ Les validateurs `DATAMODEL_SLUG` et `DATAMODEL_DEFINITION_` sont des validateurs
 utilisés seulement par le modèle `DataModel` pour vérifier que les champs `slug` et `definition`
 sont valides.
 
-### `Adapter.prototype.runValidators`
+### `Adapter.prototype.runWriteValidators`
 
-`runValidators` permet d'activer ou de désactiver les validateurs sur les actions de crud dans le
-contexte. Même si les validateurs sont désactivés via cette variable, ils peuvent toujours être
+`runWriteValidators` permet d'activer ou de désactiver les validateurs sur les actions de crud dans
+le contexte. Même si les validateurs sont désactivés via cette variable, ils peuvent toujours être
 exécutés via la méthode `Model.validate`.
 
 ### Exemple
 
 Ici, le serveur exécue systématiquement les validateurs lorsqu'un élément est ajouté ou modifié
-(D'où `ServerAdapter.prototype.runValidators = true`). En revanche, le client n'exécute pas les
+(D'où `ServerAdapter.prototype.runWriteValidators = true`). En revanche, le client n'exécute pas les
 validateurs car c'est le serveur qui gère cette partie
-(`ClientAdapter.prototype.runValidators = false`). Le client peut tout de même exécuter les
+(`ClientAdapter.prototype.runWriteValidators = false`). Le client peut tout de même exécuter les
 validateurs si besoin (avant l'envoi d'un formulaire par exemple) avec la méthode `Model.validate`.
 
 ## Controleurs
@@ -265,15 +265,3 @@ les attributs suivants :
   l'instance globale de graphand. Si `project`, l'endpoint est accessible seulement sur une instance
   de projet. Si `scope` est une fonction, celle-ci sera appelée avec le modèle de la requête en
   paramètre et doit retourner `global` ou `project` en fonction du scope du modèle.
-
-## Types
-
-TODO ...
-
-```js
-// tsconfig.json
-
-{
-  "include": ["src", "node_modules/@graphand/core/definitions.d.ts"]
-}
-```

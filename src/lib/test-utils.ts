@@ -26,7 +26,7 @@ export const mockAdapter = ({
 } = {}) => {
   class MockAdapter extends Adapter {
     static __name = name;
-    static runValidators = true;
+    static runWriteValidators = true;
     static fieldsMap = fieldsMap;
     static validatorsMap = validatorsMap;
 

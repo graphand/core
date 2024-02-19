@@ -47,7 +47,7 @@ class Adapter {
     [ValidatorTypes.LENGTH]: ValidatorLength,
     [ValidatorTypes.BOUNDARIES]: ValidatorBoundaries,
   };
-  static runValidators: boolean; // If the adapter should run validators after a model create/update
+  static runWriteValidators: boolean; // If the adapter should run validators after a model create/update
   static _modelsRegistry: Map<string, typeof Model>;
 
   fetcher: AdapterFetcher; // The adapter configuration = how the adapter should process

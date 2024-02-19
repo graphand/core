@@ -8,7 +8,7 @@ Model.hook(
   "after",
   "createOne",
   async function (payload) {
-    if (this.getAdapter(false)?.base.runValidators && !payload.ctx.disableValidation) {
+    if (this.getAdapter(false)?.base.runWriteValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {
@@ -23,7 +23,7 @@ Model.hook(
   "after",
   "createMultiple",
   async function (payload) {
-    if (this.getAdapter(false)?.base.runValidators && !payload.ctx.disableValidation) {
+    if (this.getAdapter(false)?.base.runWriteValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {
@@ -38,7 +38,7 @@ Model.hook(
   "after",
   "updateOne",
   async function (payload) {
-    if (this.getAdapter(false)?.base.runValidators && !payload.ctx.disableValidation) {
+    if (this.getAdapter(false)?.base.runWriteValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {
@@ -53,7 +53,7 @@ Model.hook(
   "after",
   "updateMultiple",
   async function (payload) {
-    if (this.getAdapter(false)?.base.runValidators && !payload.ctx.disableValidation) {
+    if (this.getAdapter(false)?.base.runWriteValidators && !payload.ctx.disableValidation) {
       const res = await payload.res;
 
       if (res) {
