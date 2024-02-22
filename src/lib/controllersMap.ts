@@ -131,11 +131,6 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-  jobLogs: {
-    path: "/jobs/:id/logs",
-    methods: ["get"],
-    secured: true,
-  },
   searchQuery: {
     path: "/search/:id/query",
     methods: ["post"],
@@ -151,16 +146,21 @@ const controllersMap = {
     methods: ["post"],
     secured: true,
   },
-  // backupRestore: {
-  //   path: "/backups/:id/restore",
-  //   methods: ["post"],
-  //   secured: true,
-  // },
   mrGDX: {
     path: "/merge-requests/:id/gdx",
     methods: ["get"],
     secured: true,
   },
+  // backupRestore: {
+  //   path: "/backups/:id/restore",
+  //   methods: ["post"],
+  //   secured: true,
+  // },
+  // jobLogs: {
+  //   path: "/jobs/:id/logs",
+  //   methods: ["get"],
+  //   secured: true,
+  // },
 } satisfies Record<string, ControllerDefinition>;
 
 export default controllersMap;

@@ -98,7 +98,7 @@ class ModelList<T extends typeof Model> extends Array<ModelInstance<T>> {
    * Returns a native array with the items of the list.
    * This method is useful to break the reference to the list (list.filter() will return an instance of ModelList but list.toArray().filter() will return an array).
    */
-  toArray() {
+  toArray(): Array<ModelInstance<T>> {
     const arr = [];
     for (const item of this) {
       arr.push(item);
