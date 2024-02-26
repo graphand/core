@@ -210,7 +210,8 @@ export type Hook<
   phase: P;
   action: A;
   fn: (this: T, args: HookCallbackArgs<P, A, T>) => void;
-  order?: number;
+  order: number;
+  handleErrors?: boolean;
 };
 
 export type ValidatorHook<

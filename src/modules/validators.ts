@@ -16,7 +16,7 @@ Model.hook(
       }
     }
   },
-  -1,
+  { order: -1 },
 );
 
 Model.hook(
@@ -31,7 +31,7 @@ Model.hook(
       }
     }
   },
-  -1,
+  { order: -1 },
 );
 
 Model.hook(
@@ -46,7 +46,7 @@ Model.hook(
       }
     }
   },
-  -1,
+  { order: -1 },
 );
 
 Model.hook(
@@ -61,5 +61,5 @@ Model.hook(
       }
     }
   },
-  -1,
+  { order: -1 },
 );

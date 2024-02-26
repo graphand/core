@@ -36,12 +36,12 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-  infosProject: {
+  entry: {
     path: "/",
     methods: ["get"],
     secured: false,
   },
-  loginAccount: {
+  login: {
     path: "/auth/login",
     methods: ["post"],
     secured: false,
@@ -66,7 +66,7 @@ const controllersMap = {
     methods: ["get"],
     secured: false,
   },
-  refreshTokenAccount: {
+  refreshToken: {
     path: "/auth/refresh",
     methods: ["post"],
     secured: false,
@@ -86,7 +86,7 @@ const controllersMap = {
     methods: ["post"],
     secured: true,
   },
-  registerAccount: {
+  register: {
     path: "/auth/register",
     methods: ["post"],
     secured: false,

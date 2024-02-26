@@ -1837,6 +1837,91 @@ describe("Test Model", () => {
   });
 
   describe("Model execution", () => {
+    it("should stop hooks execution when first hook throwing", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn(() => {
+        throw new Error();
+      });
+      const beforeCreateFn2 = jest.fn();
+      const afterCreateFn = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
+      TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1 });
+      TestModel.hook("after", "createOne", afterCreateFn);
+
+      await TestModel.create({}).catch(() => null);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(1);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(0);
+      expect(afterCreateFn).toHaveBeenCalledTimes(0);
+    });
+
+    it("should still execute hooks with handleErrors = true", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn(() => {
+        throw new Error();
+      });
+      const beforeCreateFn2 = jest.fn();
+      const afterCreateFn = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
+      TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
+      TestModel.hook("after", "createOne", afterCreateFn);
+
+      await TestModel.create({}).catch(() => null);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(1);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(1);
+      expect(afterCreateFn).toHaveBeenCalledTimes(0);
+    });
+
+    it("should execute hooks with handleErrors = true only once", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn(() => {
+        throw new Error();
+      });
+      const beforeCreateFn2 = jest.fn();
+      const beforeCreateFn3 = jest.fn(() => {
+        throw new Error();
+      });
+
+      TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0, handleErrors: true });
+      TestModel.hook("before", "createOne", beforeCreateFn2, { order: 0 });
+      TestModel.hook("before", "createOne", beforeCreateFn3, { order: 1, handleErrors: true });
+
+      await TestModel.create({}).catch(() => null);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(1);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(0);
+      expect(beforeCreateFn3).toHaveBeenCalledTimes(1);
+    });
+
+    it("should execute hooks in order", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const stack = [];
+
+      TestModel.hook("before", "createOne", () => stack.push(0), { order: 0 });
+      TestModel.hook("before", "createOne", () => stack.push(1), { order: 1 });
+      TestModel.hook("before", "createOne", () => stack.push(-1), { order: -1 });
+      TestModel.hook("before", "createOne", () => stack.push(0)); // default order is 0
+      TestModel.hook("after", "createOne", () => stack.push(0), { order: 0 });
+      TestModel.hook("after", "createOne", () => stack.push(1), { order: 1 });
+      TestModel.hook("after", "createOne", () => stack.push(-1), { order: -1 });
+      TestModel.hook("after", "createOne", () => stack.push(0)); // default order is 0
+
+      await TestModel.create({});
+
+      expect(stack).toEqual([-1, 0, 0, 1, -1, 0, 0, 1]);
+    });
+
     it("should immediately stop execution when throwing abortToken in before hook", async () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
@@ -1934,30 +2019,6 @@ describe("Test Model", () => {
       expect(afterCreateFn).toHaveBeenCalledTimes(1);
     });
 
-    it("should retry execution after before hooks when throwing retryToken in first before hook", async () => {
-      const adapter = mockAdapter();
-      const TestModel = mockModel().extend({ adapterClass: adapter });
-
-      const beforeCreateFn1 = jest.fn(({ transaction }) => {
-        if (transaction.retries < 2) throw transaction.retryToken;
-      });
-      const beforeCreateFn2 = jest.fn();
-      const afterCreateFn = jest.fn();
-
-      TestModel.hook("before", "createOne", beforeCreateFn1);
-      TestModel.hook("before", "createOne", beforeCreateFn2);
-      TestModel.hook("after", "createOne", afterCreateFn);
-
-      expect(beforeCreateFn1).toHaveBeenCalledTimes(0);
-      expect(afterCreateFn).toHaveBeenCalledTimes(0);
-
-      await expect(TestModel.create({})).resolves.toBeDefined();
-
-      expect(beforeCreateFn1).toHaveBeenCalledTimes(3);
-      expect(beforeCreateFn2).toHaveBeenCalledTimes(3);
-      expect(afterCreateFn).toHaveBeenCalledTimes(1);
-    });
-
     it("should retry execution when throwing retryToken in after hook", async () => {
       const TestModel = mockModel().extend({ adapterClass: mockAdapter() });
 
@@ -1979,7 +2040,7 @@ describe("Test Model", () => {
 
       expect(beforeCreateFn).toHaveBeenCalledTimes(3);
       expect(afterCreateFn1).toHaveBeenCalledTimes(3);
-      expect(afterCreateFn2).toHaveBeenCalledTimes(3);
+      expect(afterCreateFn2).toHaveBeenCalledTimes(1);
     });
 
     it("should throw error when throwing retryToken in after hook after 3 retries", async () => {

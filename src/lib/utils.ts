@@ -140,7 +140,7 @@ export const getRecursiveHooksFromModel = <
   action: A,
   phase: P,
 ): Array<Hook<P, A, T>> => {
-  const _hooks = [];
+  const _hooks: Array<Hook<P, A, T>> = [];
 
   crossModelTree(model, m => {
     if (m.hasOwnProperty("__hooks")) {
@@ -292,7 +292,7 @@ export const parseValidatorHook = (hook: ValidatorHook, validator: Validator): H
     }
   };
 
-  return { phase, action, fn };
+  return { phase, action, fn, order: 0, handleErrors: false };
 };
 
 /**

@@ -921,7 +921,6 @@ class Model {
    * @param phase - before | after
    * @param action - The action when the hook will be triggered. actions are keys of the adapter fetcher
    * @param fn - The hook function
-   * @param order
    * @example
    * Account.hook("before", "createOne", async (payload, ctx) => {
    *  // will be triggered every time a single account is created with Account.create()
@@ -929,10 +928,13 @@ class Model {
    */
   static hook<P extends HookPhase, A extends keyof AdapterFetcher, T extends typeof Model>(
     this: T,
-    phase: P,
-    action: A,
+    phase: Hook<P, A, T>["phase"],
+    action: Hook<P, A, T>["action"],
     fn: Hook<P, A, T>["fn"],
-    order: number = 0,
+    opts?: {
+      order?: number;
+      handleErrors?: boolean;
+    },
   ) {
     if (
       !this.allowMultipleOperations &&
@@ -947,7 +949,13 @@ class Model {
       this.__hooks = new Set();
     }
 
-    const hook: Hook<P, A, T> = { phase, action, fn, order };
+    const hook: Hook<P, A, T> = {
+      phase,
+      action,
+      fn,
+      order: opts?.order || 0,
+      handleErrors: opts?.handleErrors || false,
+    };
 
     this.__hooks.add(hook);
   }
@@ -1030,23 +1038,42 @@ class Model {
     payload: HookCallbackArgs<P, A, M>,
     transaction: Transaction<M, A>,
   ): Promise<void> {
-    await getRecursiveHooksFromModel(this, action, phase).reduce(async (p, hook) => {
-      await p;
+    const hooks = await getRecursiveHooksFromModel(this, action, phase);
+    const executed = new Set();
 
-      try {
+    try {
+      await hooks.reduce(async (p, hook) => {
+        await p;
+
+        executed.add(hook);
         await hook.fn.call(this, payload);
-      } catch (err) {
-        if (transaction.abortToken === err) {
-          throw new CoreError({
-            code: ErrorCodes.EXECUTION_ABORTED,
-            message: `execution on model ${this.__name} has been aborted`,
-          });
-        }
-
-        payload.err ??= [];
-        payload.err.push(err);
+      }, Promise.resolve());
+    } catch (e) {
+      if (transaction.abortToken === e) {
+        throw new CoreError({
+          code: ErrorCodes.EXECUTION_ABORTED,
+          message: `execution on model ${this.__name} has been aborted`,
+        });
       }
-    }, Promise.resolve());
+
+      payload.err ??= [];
+      payload.err.push(e);
+    }
+
+    if (payload.err?.length) {
+      const handleErrorsHooks = hooks.filter(h => h.handleErrors && !executed.has(h));
+
+      await handleErrorsHooks.reduce(async (p, h) => {
+        await p;
+
+        try {
+          executed.add(h);
+          await h.fn.call(this, payload);
+        } catch (e) {
+          payload.err.push(e);
+        }
+      }, Promise.resolve());
+    }
   }
 
   static async execute<
@@ -1117,26 +1144,28 @@ class Model {
     let res;
     await this.executeHooks("before", action, payloadBefore, transaction);
 
-    if (!payloadBefore.err?.length) {
-      try {
-        const fn = this.getAdapter().fetcher[action];
-
-        if (!fn) {
-          throw new CoreError({
-            code: ErrorCodes.INVALID_OPERATION,
-            message: `Invalid operation ${action} on model ${this.slug}. Action not found in adapter fetcher`,
-          });
-        }
-
-        res = await fn.apply(fn, [payloadBefore.args, ctx]);
-      } catch (e) {
-        payloadBefore.err ??= [];
-        payloadBefore.err.push(e);
+    if (payloadBefore.err?.length) {
+      if (payloadBefore.err?.includes(transaction.retryToken)) {
+        return await this.execute(action, args, ctx, transaction);
       }
+
+      throw payloadBefore.err[0];
     }
 
-    if (payloadBefore.err?.includes(transaction.retryToken)) {
-      return await this.execute(action, args, ctx, transaction);
+    try {
+      const fn = this.getAdapter().fetcher[action];
+
+      if (!fn) {
+        throw new CoreError({
+          code: ErrorCodes.INVALID_OPERATION,
+          message: `Invalid operation ${action} on model ${this.slug}. Action not found in adapter fetcher`,
+        });
+      }
+
+      res = await fn.apply(fn, [payloadBefore.args, ctx]);
+    } catch (e) {
+      payloadBefore.err ??= [];
+      payloadBefore.err.push(e);
     }
 
     const payloadAfter: HookCallbackArgs<"after", A, M> = {
