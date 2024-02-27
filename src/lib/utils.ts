@@ -140,12 +140,16 @@ export const getRecursiveHooksFromModel = <
   action: A,
   phase: P,
 ): Array<Hook<P, A, T>> => {
+  const adapter = model.getAdapter(false);
   const _hooks: Array<Hook<P, A, T>> = [];
 
   crossModelTree(model, m => {
     if (m.hasOwnProperty("__hooks")) {
       const _modelHooks = Array.from(m.__hooks || []).filter(
-        hook => hook.action === action && hook.phase === phase,
+        h =>
+          h.action === action &&
+          h.phase === phase &&
+          (!h.adapterClass || adapter instanceof h.adapterClass),
       );
 
       if (_modelHooks?.length) {

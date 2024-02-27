@@ -29,6 +29,7 @@ import type Role from "@/models/Role";
 import type SearchConfig from "@/models/SearchConfig";
 import type Settings from "@/models/Settings";
 import type Token from "@/models/Token";
+import { Adapter } from "..";
 export * from "./fields";
 export * from "./validators";
 export * from "./ctx";
@@ -212,6 +213,7 @@ export type Hook<
   fn: (this: T, args: HookCallbackArgs<P, A, T>) => void;
   order: number;
   handleErrors?: boolean;
+  adapterClass?: typeof Adapter;
 };
 
 export type ValidatorHook<

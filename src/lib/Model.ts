@@ -932,8 +932,9 @@ class Model {
     action: Hook<P, A, T>["action"],
     fn: Hook<P, A, T>["fn"],
     opts?: {
-      order?: number;
-      handleErrors?: boolean;
+      order?: Hook<P, A, T>["order"];
+      handleErrors?: Hook<P, A, T>["handleErrors"];
+      adapterClass?: Hook<P, A, T>["adapterClass"];
     },
   ) {
     if (
@@ -955,6 +956,7 @@ class Model {
       fn,
       order: opts?.order || 0,
       handleErrors: opts?.handleErrors || false,
+      adapterClass: opts?.adapterClass,
     };
 
     this.__hooks.add(hook);
