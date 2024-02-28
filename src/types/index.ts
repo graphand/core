@@ -213,7 +213,7 @@ export type Hook<
   fn: (this: T, args: HookCallbackArgs<P, A, T>) => void;
   order: number;
   handleErrors?: boolean;
-  adapterClass?: typeof Adapter;
+  adapterClass?: typeof Adapter | Array<typeof Adapter>;
 };
 
 export type ValidatorHook<
