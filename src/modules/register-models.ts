@@ -13,6 +13,7 @@ import Token from "@/models/Token";
 import Invitation from "@/models/Invitation";
 import Environment from "@/models/Environment";
 import Settings from "@/models/Settings";
+import Snapshot from "@/models/Snapshot";
 
 Adapter.registerModel(Account);
 Adapter.registerModel(AuthProvider);
@@ -27,4 +28,5 @@ Adapter.registerModel(MergeRequestEvent);
 Adapter.registerModel(Role);
 Adapter.registerModel(SearchConfig);
 Adapter.registerModel(Settings);
+Adapter.registerModel(Snapshot);
 Adapter.registerModel(Token);

@@ -151,16 +151,11 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-  // backupRestore: {
-  //   path: "/backups/:id/restore",
-  //   methods: ["post"],
-  //   secured: true,
-  // },
-  // jobLogs: {
-  //   path: "/jobs/:id/logs",
-  //   methods: ["get"],
-  //   secured: true,
-  // },
+  snapshotsRestore: {
+    path: "/snapshots/:id/restore",
+    methods: ["post"],
+    secured: true,
+  },
 } satisfies Record<string, ControllerDefinition>;
 
 export default controllersMap;

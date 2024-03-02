@@ -16,6 +16,7 @@ import Token from "@/models/Token";
 import Invitation from "@/models/Invitation";
 import Environment from "@/models/Environment";
 import Settings from "@/models/Settings";
+import Snapshot from "@/models/Snapshot";
 import ModelList from "@/lib/ModelList";
 import FieldTypes from "@/enums/field-types";
 import PromiseModel from "@/lib/PromiseModel";
@@ -88,6 +89,7 @@ export {
   Role,
   SearchConfig,
   Settings,
+  Snapshot,
   Token,
   FieldTypes,
   PromiseModel,
