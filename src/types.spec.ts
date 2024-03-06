@@ -18,7 +18,7 @@ class CustomModel extends Model {
 
 declare module "./types/index" {
   export interface RefModelsMap {
-    customModel: CustomModel;
+    customModel: typeof CustomModel;
   }
 }
 
@@ -362,7 +362,7 @@ describe("test types", () => {
   it("should ...", () => {
     const ModelFromSlug = Model.getClass("customModel");
 
-    simulateTypeCheck<CustomModel>(ModelFromSlug);
+    simulateTypeCheck<typeof CustomModel>(ModelFromSlug);
   });
 
   it("should ...", () => {

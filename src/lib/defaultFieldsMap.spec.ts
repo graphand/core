@@ -350,6 +350,83 @@ describe("test fieldsMap", () => {
       expect(i.get("obj.foo", undefined, { defaults: false })).toEqual(undefined);
     });
 
+    it("should merge default values in json by default", async () => {
+      const model = mockModel({
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                field1: {
+                  type: FieldTypes.TEXT,
+                  options: {
+                    default: "foo",
+                  },
+                },
+                field2: {
+                  type: FieldTypes.TEXT,
+                  options: {
+                    default: "bar",
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({
+        obj: {
+          field1: "test",
+        },
+      });
+
+      expect(i.get("obj")).toEqual({ field1: "test" });
+      expect(i.get("obj", "json")).toEqual({
+        field1: "test",
+        field2: "bar",
+      });
+    });
+
+    it("should not merge default values in json with defaults=false", async () => {
+      const model = mockModel({
+        fields: {
+          obj: {
+            type: FieldTypes.NESTED,
+            options: {
+              fields: {
+                field1: {
+                  type: FieldTypes.TEXT,
+                  options: {
+                    default: "foo",
+                  },
+                },
+                field2: {
+                  type: FieldTypes.TEXT,
+                  options: {
+                    default: "bar",
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+      await model.initialize();
+
+      const i = model.hydrate({
+        obj: {
+          field1: "test",
+        },
+      });
+
+      expect(i.get("obj")).toEqual({ field1: "test" });
+      expect(i.get("obj", "json", { defaults: false })).toEqual({
+        field1: "test",
+      });
+    });
+
     describe("Proxy", () => {
       it("should return an object proxy", async () => {
         const model = mockModel({
@@ -1796,76 +1873,4 @@ describe("test fieldsMap", () => {
       expect(fourth).toBe(undefined);
     });
   });
-
-  // it.only("should ...", async () => {
-  //   const fn = jest.fn(() => "test");
-  //   class CustomFieldArray extends FieldArray {
-  //     _sToTest = () => ["test"];
-
-  //     serializerMap: FieldArray["serializerMap"] = {
-  //       // @ts-expect-error test
-  //       test: this._sToTest,
-  //       [Field.defaultSymbol]: this._sDefault,
-  //     };
-  //   }
-
-  //   const _adapter = mockAdapter({
-  //     fieldsMap: {
-  //       [FieldTypes.ARRAY]: CustomFieldArray,
-  //     },
-  //   });
-
-  //   const model = mockModel({
-  //     fields: {
-  //       nested: {
-  //         type: FieldTypes.NESTED,
-  //         options: {
-  //           fields: {
-  //             arr: {
-  //               type: FieldTypes.ARRAY,
-  //               options: {
-  //                 items: {
-  //                   type: FieldTypes.TEXT,
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   }).extend({ adapterClass: _adapter });
-
-  //   const arrField = getFieldFromDefinition(
-  //     {
-  //       type: FieldTypes.ARRAY,
-  //       options: {
-  //         items: {
-  //           type: FieldTypes.TEXT,
-  //         },
-  //       },
-  //     },
-  //     model.getAdapter(),
-  //     "nested.arr",
-  //   );
-
-  //   console.log(arrField);
-
-  //   console.log(model.getAdapter().cacheFieldsMap);
-
-  //   arrField._sToTest = () => null;
-
-  //   const spy = jest.spyOn(arrField, "_sToTest");
-
-  //   const i = model.hydrate({
-  //     nested: {
-  //       arr: [],
-  //     },
-  //   });
-
-  //   expect(spy).toHaveBeenCalledTimes(0);
-
-  //   expect(i.get("nested.arr", "test")).toEqual(["test"]);
-
-  //   expect(spy).toHaveBeenCalledTimes(1);
-  // });
 });

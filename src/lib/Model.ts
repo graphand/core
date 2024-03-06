@@ -407,12 +407,12 @@ class Model {
     // If no adapter class is provided, get the base adapter of the current model
     adapterClass ??= this.getAdapter(false)?.base;
     let slug: string;
-    let model: ReturnType<typeof Model.getClass<M, T>>;
+    let model: typeof Model;
 
     // If the input is a model class, get its slug and assign it to the model
     if (typeof input === "function" && "prototype" in input && input.prototype instanceof Model) {
       slug = input.slug;
-      model = input as ReturnType<typeof Model.getClass<M, T>>;
+      model = input;
     }
 
     // If the slug is not defined, get it from the input if it's a string or a datamodel instance

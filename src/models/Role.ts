@@ -31,7 +31,6 @@ class Role extends Model {
           },
         },
       },
-      systemNotifications: { type: FieldTypes.BOOLEAN },
       rules: {
         type: FieldTypes.ARRAY,
         options: {

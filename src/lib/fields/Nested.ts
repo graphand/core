@@ -31,11 +31,14 @@ class FieldNested extends Field<FieldTypes.NESTED> {
 
     const model = from.model();
     const fieldsMap = getNestedFieldsMap(model, this);
+    const defaults = ctx?.defaults ?? true;
 
     const json = {};
 
     for (const [k, field] of fieldsMap) {
-      if (value[k] === undefined || value[k] === null) {
+      if (value[k] === undefined && defaults && "default" in field.options) {
+        json[k] = field.serialize(field.options.default, input.format, from, ctx);
+      } else if (value[k] === undefined || value[k] === null) {
         json[k] = value[k];
       } else {
         json[k] = field.serialize(value[k], input.format, from, ctx);
