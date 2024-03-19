@@ -7,6 +7,10 @@ enum JobTypes {
   PATCH_MERGE_REQUEST = "patchMergeRequest",
   SANDBOX_MERGE_REQUEST = "sandboxMergeRequest",
   RESTORE_SNAPSHOT = "restoreSnapshot",
+  INIT_PROJECT = "initProject",
+  UPGRADE_PROJECT = "upgradeProject",
+  MIGRATE_PROJECT = "migrateProject",
+  REMOVE_PROJECT = "removeProject",
 }
 
 export default JobTypes;
