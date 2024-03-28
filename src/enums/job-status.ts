@@ -1,7 +1,7 @@
 enum JobStatus {
   QUEUED = "queued",
   RUNNING = "running",
-  COMPLETED = "completed",
+  SUCCESS = "success",
   FAILED = "failed",
 }
 

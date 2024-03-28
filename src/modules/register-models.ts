@@ -14,6 +14,7 @@ import Invitation from "@/models/Invitation";
 import Environment from "@/models/Environment";
 import Settings from "@/models/Settings";
 import Snapshot from "@/models/Snapshot";
+import Function from "@/models/Function";
 
 Adapter.registerModel(Account);
 Adapter.registerModel(AuthProvider);
@@ -30,3 +31,4 @@ Adapter.registerModel(SearchConfig);
 Adapter.registerModel(Settings);
 Adapter.registerModel(Snapshot);
 Adapter.registerModel(Token);
+Adapter.registerModel(Function);

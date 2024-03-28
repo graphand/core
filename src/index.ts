@@ -10,6 +10,7 @@ import Role from "@/models/Role";
 import SearchConfig from "@/models/SearchConfig";
 import Key from "@/models/Key";
 import Media from "@/models/Media";
+import Function from "@/models/Function";
 import MergeRequest from "@/models/MergeRequest";
 import MergeRequestEvent from "@/models/MergeRequestEvent";
 import Token from "@/models/Token";
@@ -80,6 +81,7 @@ export {
   AuthProvider,
   DataModel,
   Environment,
+  Function,
   Invitation,
   Job,
   Key,

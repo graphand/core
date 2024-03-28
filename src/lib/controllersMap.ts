@@ -156,6 +156,16 @@ const controllersMap = {
     methods: ["post"],
     secured: true,
   },
+  functionLogs: {
+    path: "/functions/:id/logs",
+    methods: ["get"],
+    secured: true,
+  },
+  functionRun: {
+    path: "/functions/:id/run",
+    methods: ["get", "post", "put", "delete", "patch", "options"],
+    secured: true,
+  },
 } satisfies Record<string, ControllerDefinition>;
 
 export default controllersMap;

@@ -3,6 +3,7 @@ import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import ValidatorTypes from "@/enums/validator-types";
 import { ModelDefinition } from "@/types";
+import Function from "./Function";
 
 @modelDecorator()
 class DataModel extends Model {
@@ -90,6 +91,145 @@ class DataModel extends Model {
           },
         },
         _ts: undefined as ModelDefinition,
+      },
+      hooks: {
+        type: FieldTypes.NESTED,
+        options: {
+          fields: {
+            "before.createOne": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "after.createOne": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "before.createMultiple": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "after.createMultiple": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "before.updateOne": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "after.updateOne": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "before.updateMultiple": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "after.updateMultiple": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "before.deleteOne": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "after.deleteOne": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "before.deleteMultiple": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+            "after.deleteMultiple": {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: Function.slug,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       _doc: { type: FieldTypes.NESTED },
     } as const,
