@@ -29,6 +29,7 @@ import type Role from "@/models/Role";
 import type SearchConfig from "@/models/SearchConfig";
 import type Settings from "@/models/Settings";
 import type Token from "@/models/Token";
+import type Function from "@/models/Function";
 import { Adapter } from "..";
 export * from "./fields";
 export * from "./validators";
@@ -60,7 +61,7 @@ export type Transaction<
   A extends keyof AdapterFetcher<M> = keyof AdapterFetcher<M>,
   Args extends Parameters<AdapterFetcher<M>[A]>[0] = Parameters<AdapterFetcher<M>[A]>[0],
 > = {
-  model: M;
+  model: M["slug"];
   action: A;
   args: Args;
   retryToken?: symbol;
@@ -175,6 +176,7 @@ export interface RefModelsMap {
   searchConfigs: typeof SearchConfig;
   settings: typeof Settings;
   tokens: typeof Token;
+  functions: typeof Function;
 }
 
 export type DecodeRefModel<T extends string> = T extends keyof RefModelsMap

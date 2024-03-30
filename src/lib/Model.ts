@@ -1119,7 +1119,7 @@ class Model {
     }
 
     transaction ??= {
-      model: this,
+      model: this.slug,
       action,
       args,
       retryToken: Symbol("retry"),
