@@ -1,13 +1,11 @@
 enum RuleActions {
-  CREATE = "create", // generic
-  READ = "read", // generic
-  UPDATE = "update", // generic
-  DELETE = "delete", // generic
-  COUNT = "count", // generic
-  LOGIN = "login", // auth
-  REGISTER = "register", // auth
-  EXECUTE = "execute", // aggregations / elasticsearch
-  ALL = "all", // generic
+  CREATE = "create",
+  READ = "read",
+  UPDATE = "update",
+  DELETE = "delete",
+  COUNT = "count",
+  ALL = "all",
+  RUN = "run", // for functions and aggregations
 }
 
 export default RuleActions;

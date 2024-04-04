@@ -4,6 +4,7 @@ enum IdentityTypes {
   TOKEN = "token",
   ROLE = "role",
   PROJECT = "project",
+  FUNCTION = "function",
 }
 
 export default IdentityTypes;

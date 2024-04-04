@@ -582,6 +582,16 @@ class Model {
   }
 
   /**
+   * The `refreshData` function asynchronously retrieves new data from a model and updates the current
+   * data with it.
+   * @param {TransactionCtx} [ctx] - The transaction context.
+   */
+  async refreshData(ctx?: TransactionCtx) {
+    const newData = await this.model().execute("get", [this.get("_id", "json")], ctx);
+    this.setData(newData.getData());
+  }
+
+  /**
    * Get the document representation of the current instance with the given format
    * @param format
    * @param ctx
