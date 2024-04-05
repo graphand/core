@@ -5,6 +5,18 @@ import ValidatorTypes from "@/enums/validator-types";
 import { ModelDefinition } from "@/types";
 import Function from "./Function";
 
+const functionRelationField = {
+  type: FieldTypes.ARRAY,
+  options: {
+    items: {
+      type: FieldTypes.RELATION,
+      options: {
+        ref: Function.slug,
+      },
+    },
+  },
+} as const;
+
 @modelDecorator()
 class DataModel extends Model {
   static __name = "DataModel";
@@ -96,138 +108,30 @@ class DataModel extends Model {
         type: FieldTypes.NESTED,
         options: {
           fields: {
-            "before.createOne": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "after.createOne": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "before.createMultiple": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "after.createMultiple": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "before.updateOne": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "after.updateOne": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "before.updateMultiple": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "after.updateMultiple": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "before.deleteOne": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "after.deleteOne": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "before.deleteMultiple": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
-            "after.deleteMultiple": {
-              type: FieldTypes.ARRAY,
-              options: {
-                items: {
-                  type: FieldTypes.RELATION,
-                  options: {
-                    ref: Function.slug,
-                  },
-                },
-              },
-            },
+            "before.createOne": functionRelationField,
+            "before.createOne.error": functionRelationField,
+            "after.createOne": functionRelationField,
+            "after.createOne.error": functionRelationField,
+            "before.createMultiple": functionRelationField,
+            "before.createMultiple.error": functionRelationField,
+            "after.createMultiple": functionRelationField,
+            "after.createMultiple.error": functionRelationField,
+            "before.updateOne": functionRelationField,
+            "before.updateOne.error": functionRelationField,
+            "after.updateOne": functionRelationField,
+            "after.updateOne.error": functionRelationField,
+            "before.updateMultiple": functionRelationField,
+            "before.updateMultiple.error": functionRelationField,
+            "after.updateMultiple": functionRelationField,
+            "after.updateMultiple.error": functionRelationField,
+            "before.deleteOne": functionRelationField,
+            "before.deleteOne.error": functionRelationField,
+            "after.deleteOne": functionRelationField,
+            "after.deleteOne.error": functionRelationField,
+            "before.deleteMultiple": functionRelationField,
+            "before.deleteMultiple.error": functionRelationField,
+            "after.deleteMultiple": functionRelationField,
+            "after.deleteMultiple.error": functionRelationField,
           },
         },
       },

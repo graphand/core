@@ -1057,6 +1057,10 @@ class Model {
       await hooks.reduce(async (p, hook) => {
         await p;
 
+        if (payload.err?.length) {
+          return;
+        }
+
         executed.add(hook);
         await hook.fn.call(this, payload);
       }, Promise.resolve());
@@ -1161,7 +1165,7 @@ class Model {
         return await this.execute(action, args, ctx, transaction);
       }
 
-      throw payloadBefore.err[0];
+      throw payloadBefore.err.at(-1);
     }
 
     try {
@@ -1192,7 +1196,7 @@ class Model {
         return await this.execute(action, args, ctx, transaction);
       }
 
-      throw payloadAfter.err[0];
+      throw payloadAfter.err.at(-1);
     }
 
     return payloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;

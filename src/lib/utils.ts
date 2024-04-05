@@ -64,7 +64,7 @@ export const getFieldsPathsFromPath = (
 
   return pathArr.reduce(
     (fieldsPaths: Array<FieldsPathItem>, key: string) => {
-      const prevField = fieldsPaths[fieldsPaths.length - 1]?.field;
+      const prevField = fieldsPaths.at(-1)?.field;
       const pathStr = fieldsPaths.map(item => item?.key).join(".");
 
       if (prevField?.type === FieldTypes.ARRAY) {

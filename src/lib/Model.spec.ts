@@ -1879,6 +1879,46 @@ describe("Test Model", () => {
       expect(afterCreateFn).toHaveBeenCalledTimes(0);
     });
 
+    it("should override the error if handleErrors hook is throwing", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn(() => {
+        throw new Error("a");
+      });
+      const beforeCreateFn2 = jest.fn(() => {
+        throw new Error("b");
+      });
+      const beforeCreateFn3 = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
+      TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
+      TestModel.hook("before", "createOne", beforeCreateFn3, { order: 2 });
+
+      await expect(TestModel.create({}))?.rejects.toThrow("b");
+    });
+
+    it("should not execute hooks withoiut handleErrors if an error has been emitted", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn(() => {
+        throw new Error();
+      });
+      const beforeCreateFn2 = jest.fn();
+      const beforeCreateFn3 = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
+      TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
+      TestModel.hook("before", "createOne", beforeCreateFn3, { order: 2 });
+
+      await TestModel.create({}).catch(() => null);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(1);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(1);
+      expect(beforeCreateFn3).toHaveBeenCalledTimes(0);
+    });
+
     it("should execute hooks with handleErrors = true only once", async () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
