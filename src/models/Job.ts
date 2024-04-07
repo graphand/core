@@ -14,14 +14,14 @@ class Job extends Model {
       _type: {
         type: FieldTypes.TEXT,
         options: {
-          options: Object.values(JobTypes),
+          enum: Object.values(JobTypes),
           strict: true,
         },
       },
       _status: {
         type: FieldTypes.TEXT,
         options: {
-          options: Object.values(JobStatus),
+          enum: Object.values(JobStatus),
           strict: true,
           default: JobStatus.QUEUED,
         },

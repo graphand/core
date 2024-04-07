@@ -80,58 +80,56 @@ describe("test fieldsMap", () => {
       await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
     });
 
-    describe("options.options", () => {
-      it("should return value within options", async () => {
-        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+    describe("options.enum", () => {
+      it("should return value within enum", async () => {
+        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                options,
+                enum: _enum,
               },
             },
           },
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const title = options[0];
+        const title = _enum[0];
 
         const i = model.hydrate({ title });
         expect(i.title).toEqual(title);
       });
 
-      it("should return value not in options if strict mode is not enabled", async () => {
-        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
+      it("should return value not in enum if strict mode is not enabled", async () => {
         const model = mockModel({
           fields: {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                options,
+                enum: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
               },
             },
           },
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const title = "notInOptions";
+        const title = "notInEnum";
 
         const i = model.hydrate({ title });
         expect(i.title).toEqual(title);
       });
 
-      it("should return value within options if value is valid & strict mode is enabled", async () => {
-        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+      it("should return value within enum if value is valid & strict mode is enabled", async () => {
+        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                options,
+                enum: _enum,
                 strict: true,
               },
             },
@@ -139,21 +137,21 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const title = options[0];
+        const title = _enum[0];
 
         const i = model.hydrate({ title });
         expect(i.title).toEqual(title);
       });
 
-      it("should return null if value not in options and strict mode is enabled", async () => {
-        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+      it("should return null if value not in enum and strict mode is enabled", async () => {
+        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                options,
+                enum: _enum,
                 strict: true,
               },
             },
@@ -161,21 +159,21 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const title = "notInOptions";
+        const title = "notInEnum";
 
         const i = model.hydrate({ title });
         expect(i.title).toEqual(undefined);
       });
 
-      it("should not throw error if value is in options and strict mode is enabled", async () => {
-        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+      it("should not throw error if value is in _enum and strict mode is enabled", async () => {
+        const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
         const model = mockModel({
           fields: {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                options,
+                enum: _enum,
                 strict: true,
               },
             },
@@ -183,21 +181,19 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const title = options[0];
+        const title = _enum[0];
 
         const i = model.hydrate({ title });
         await expect(model.validate([i.getData()])).resolves.toBeTruthy();
       });
 
-      it("should throw error if value not in options and strict mode is enabled", async () => {
-        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
+      it("should throw error if value not in enum and strict mode is enabled", async () => {
         const model = mockModel({
           fields: {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                options,
+                enum: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
                 strict: true,
               },
             },
@@ -205,21 +201,19 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const title = "notInOptions";
+        const title = "notInEnum";
 
         const i = model.hydrate({ title });
         await expect(model.validate([i.getData()])).rejects.toThrow(ValidationError);
       });
 
-      it("should throw error if value not in options and strict mode is enabled on create", async () => {
-        const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
-
+      it("should throw error if value not in enum and strict mode is enabled on create", async () => {
         const model = mockModel({
           fields: {
             title: {
               type: FieldTypes.TEXT,
               options: {
-                options,
+                enum: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
                 strict: true,
               },
             },
@@ -227,7 +221,7 @@ describe("test fieldsMap", () => {
         }).extend({ adapterClass: adapter });
         await model.initialize();
 
-        const title = "notInOptions";
+        const title = "notInEnum";
 
         await expect(model.create({ title })).rejects.toThrow(ValidationError);
       });
@@ -1636,8 +1630,8 @@ describe("test fieldsMap", () => {
       ).resolves.toBeInstanceOf(model);
     });
 
-    it("should return valid serialized array from items option", async () => {
-      const options = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+    it("should return valid serialized array from items enum", async () => {
+      const _enum = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
 
       const model = mockModel({
         fields: {
@@ -1647,7 +1641,7 @@ describe("test fieldsMap", () => {
               items: {
                 type: FieldTypes.TEXT,
                 options: {
-                  options,
+                  enum: _enum,
                   strict: true,
                 },
               },
@@ -1666,11 +1660,11 @@ describe("test fieldsMap", () => {
       await model.initialize();
 
       const i = model.hydrate({
-        arrTextWithOpts: ["invalid1", options[1], "invalid2"],
+        arrTextWithOpts: ["invalid1", _enum[1], "invalid2"],
         arrNumbers: ["1", "2", "3"],
       } as object);
 
-      expect(i.arrTextWithOpts).toEqual([undefined, options[1], undefined]);
+      expect(i.arrTextWithOpts).toEqual([undefined, _enum[1], undefined]);
       expect(i.arrNumbers).toEqual([1, 2, 3]);
     });
 

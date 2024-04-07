@@ -7,13 +7,16 @@ import PromiseModelList from "@/lib/PromiseModelList";
 import { JSONTypeObject, ModelInstance, SerializerCtx, SerializerFormat } from "..";
 
 export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
+  // [FieldTypes.ID]: never;
+  // [FieldTypes.DATE]: never;
+  // [FieldTypes.IDENTITY]: never;
   [FieldTypes.ARRAY]: {
     items: FieldDefinition<T>;
     validators?: Array<ValidatorDefinitionOmitField>;
   };
   [FieldTypes.TEXT]: {
     default?: string;
-    options?: string[];
+    enum?: string[];
     strict?: boolean;
   };
   [FieldTypes.RELATION]: {
@@ -63,10 +66,10 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
     [FieldTypes.NUMBER]: number;
     [FieldTypes.DATE]: string;
     [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
-      ? F["options"]["options"] extends Array<string>
+      ? F["options"]["enum"] extends Array<string>
         ? F["options"]["strict"] extends true
-          ? F["options"]["options"][number]
-          : F["options"]["options"][number] | string
+          ? F["options"]["enum"][number]
+          : F["options"]["enum"][number] | string
         : string
       : string;
     [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]
@@ -97,10 +100,10 @@ export interface SerializerFieldsMap<F extends FieldDefinition<FieldTypes>> {
     [FieldTypes.NUMBER]: number;
     [FieldTypes.DATE]: Date;
     [FieldTypes.TEXT]: F["options"] extends FieldOptionsMap[FieldTypes.TEXT]
-      ? F["options"]["options"] extends Array<string>
+      ? F["options"]["enum"] extends Array<string>
         ? F["options"]["strict"] extends true
-          ? F["options"]["options"][number]
-          : F["options"]["options"][number] | string
+          ? F["options"]["enum"][number]
+          : F["options"]["enum"][number] | string
         : string
       : string;
     [FieldTypes.NESTED]: F["options"] extends FieldOptionsMap[FieldTypes.NESTED]

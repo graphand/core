@@ -68,14 +68,14 @@ describe("test types", () => {
           simulateTypeCheck<string>(i.field); // Check the field is a string
         });
 
-        it("should validate text field with options and strict", () => {
+        it("should validate text field with enum and strict", () => {
           class CustomModel extends Model {
             static definition = {
               fields: {
                 field: {
                   type: FieldTypes.TEXT,
                   options: {
-                    options: ["a", "b", "c"] as const,
+                    enum: ["a", "b", "c"] as const,
                     strict: true,
                   },
                 },
@@ -88,14 +88,14 @@ describe("test types", () => {
           simulateTypeCheck<"a" | "b" | "c">(i.field); // Check the field is a literal enum
         });
 
-        it("should validate text field with options and not strict", () => {
+        it("should validate text field with enum and not strict", () => {
           class CustomModel extends Model {
             static definition = {
               fields: {
                 field: {
                   type: FieldTypes.TEXT,
                   options: {
-                    options: ["a", "b", "c"] as const,
+                    enum: ["a", "b", "c"] as const,
                     strict: false,
                   },
                 },

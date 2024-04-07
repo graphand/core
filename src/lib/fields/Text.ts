@@ -10,8 +10,8 @@ class FieldText extends Field<FieldTypes.TEXT> {
         return false;
       }
 
-      if (this.options.options?.length && this.options.strict) {
-        return !this.options.options.includes(String(value));
+      if (this.options.enum?.length && this.options.strict) {
+        return !this.options.enum.includes(String(value));
       }
 
       if (isObjectId(value)) {
@@ -29,8 +29,8 @@ class FieldText extends Field<FieldTypes.TEXT> {
   _sDefault = ({ value }: FieldSerializerInput) => {
     const single = Array.isArray(value) ? String(value[0]) : String(value);
 
-    if (this.options.options?.length && this.options.strict) {
-      return this.options.options.includes(single) ? single : undefined;
+    if (this.options.enum?.length && this.options.strict) {
+      return this.options.enum.includes(single) ? single : undefined;
     }
 
     return single;

@@ -18,7 +18,7 @@ class MergeRequest extends Model {
       type: {
         type: FieldTypes.TEXT,
         options: {
-          options: Object.values(MergeRequestTypes),
+          enum: Object.values(MergeRequestTypes),
           strict: true,
           default: MergeRequestTypes.STATIC,
         },

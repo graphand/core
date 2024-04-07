@@ -48,7 +48,7 @@ class Role extends Model {
                     items: {
                       type: FieldTypes.TEXT,
                       options: {
-                        options: Object.values(RuleActions),
+                        enum: Object.values(RuleActions),
                         strict: true,
                       },
                     },
@@ -82,7 +82,7 @@ class Role extends Model {
                     items: {
                       type: FieldTypes.TEXT,
                       options: {
-                        options: Object.values(RuleActions),
+                        enum: Object.values(RuleActions),
                         strict: true,
                       },
                     },

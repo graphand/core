@@ -41,7 +41,7 @@ class DataModel extends Model {
                       type: {
                         type: FieldTypes.TEXT,
                         options: {
-                          options: Object.values(FieldTypes),
+                          enum: Object.values(FieldTypes),
                           strict: true,
                         },
                       },
@@ -71,7 +71,7 @@ class DataModel extends Model {
                       type: {
                         type: FieldTypes.TEXT,
                         options: {
-                          options: Object.values(ValidatorTypes),
+                          enum: Object.values(ValidatorTypes),
                           strict: true,
                         },
                       },
