@@ -161,6 +161,16 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
+  jobLogs: {
+    path: "/jobs/:id/logs",
+    methods: ["get"],
+    secured: true,
+  },
+  searchLogs: {
+    path: "/search/:id/logs",
+    methods: ["get"],
+    secured: true,
+  },
   functionRun: {
     path: "/functions/:id/run",
     methods: ["get", "post", "put", "delete", "patch", "options"],
