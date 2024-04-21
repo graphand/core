@@ -1866,5 +1866,27 @@ describe("test fieldsMap", () => {
       const fourth = i.get("arrRel.[3]") as any;
       expect(fourth).toBe(undefined);
     });
+
+    it("should be able to set a default value", async () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              default: [],
+              items: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+
+      await model.initialize();
+
+      const i = model.hydrate({});
+
+      expect(i.arr).toBeInstanceOf(Array);
+    });
   });
 });

@@ -9,9 +9,29 @@ const functionRelationField = {
   type: FieldTypes.ARRAY,
   options: {
     items: {
-      type: FieldTypes.RELATION,
+      type: FieldTypes.NESTED,
       options: {
-        ref: Function.slug,
+        strict: true,
+        fields: {
+          function: {
+            type: FieldTypes.RELATION,
+            options: {
+              ref: Function.slug,
+            },
+          },
+          runInJob: {
+            type: FieldTypes.BOOLEAN,
+            options: {
+              default: false,
+            },
+          },
+          handleErrors: {
+            type: FieldTypes.BOOLEAN,
+            options: {
+              default: false,
+            },
+          },
+        },
       },
     },
   },
@@ -109,29 +129,17 @@ class DataModel extends Model {
         options: {
           fields: {
             "before.createOne": functionRelationField,
-            "before.createOne.error": functionRelationField,
             "after.createOne": functionRelationField,
-            "after.createOne.error": functionRelationField,
             "before.createMultiple": functionRelationField,
-            "before.createMultiple.error": functionRelationField,
             "after.createMultiple": functionRelationField,
-            "after.createMultiple.error": functionRelationField,
             "before.updateOne": functionRelationField,
-            "before.updateOne.error": functionRelationField,
             "after.updateOne": functionRelationField,
-            "after.updateOne.error": functionRelationField,
             "before.updateMultiple": functionRelationField,
-            "before.updateMultiple.error": functionRelationField,
             "after.updateMultiple": functionRelationField,
-            "after.updateMultiple.error": functionRelationField,
             "before.deleteOne": functionRelationField,
-            "before.deleteOne.error": functionRelationField,
             "after.deleteOne": functionRelationField,
-            "after.deleteOne.error": functionRelationField,
             "before.deleteMultiple": functionRelationField,
-            "before.deleteMultiple.error": functionRelationField,
             "after.deleteMultiple": functionRelationField,
-            "after.deleteMultiple.error": functionRelationField,
           },
         },
       },

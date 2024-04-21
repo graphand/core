@@ -1858,6 +1858,25 @@ describe("Test Model", () => {
       expect(afterCreateFn).toHaveBeenCalledTimes(0);
     });
 
+    it("should stop hooks execution when first hook throwing", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn();
+      const beforeCreateFn2 = jest.fn();
+      const afterCreateFn = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
+      TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
+      TestModel.hook("after", "createOne", afterCreateFn);
+
+      await TestModel.create({}).catch(() => null);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(1);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(1);
+      expect(afterCreateFn).toHaveBeenCalledTimes(1);
+    });
+
     it("should still execute hooks with handleErrors = true", async () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
@@ -1879,6 +1898,25 @@ describe("Test Model", () => {
       expect(afterCreateFn).toHaveBeenCalledTimes(0);
     });
 
+    it("should still execute hooks with handleErrors = true if there is no error", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const beforeCreateFn1 = jest.fn();
+      const beforeCreateFn2 = jest.fn();
+      const afterCreateFn = jest.fn();
+
+      TestModel.hook("before", "createOne", beforeCreateFn1, { order: 0 });
+      TestModel.hook("before", "createOne", beforeCreateFn2, { order: 1, handleErrors: true });
+      TestModel.hook("after", "createOne", afterCreateFn);
+
+      await TestModel.create({}).catch(() => null);
+
+      expect(beforeCreateFn1).toHaveBeenCalledTimes(1);
+      expect(beforeCreateFn2).toHaveBeenCalledTimes(1);
+      expect(afterCreateFn).toHaveBeenCalledTimes(1);
+    });
+
     it("should override the error if handleErrors hook is throwing", async () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
@@ -1898,7 +1936,7 @@ describe("Test Model", () => {
       await expect(TestModel.create({}))?.rejects.toThrow("b");
     });
 
-    it("should not execute hooks withoiut handleErrors if an error has been emitted", async () => {
+    it("should not execute hooks without handleErrors if an error has been emitted", async () => {
       const adapter = mockAdapter();
       const TestModel = mockModel().extend({ adapterClass: adapter });
 
@@ -1960,6 +1998,51 @@ describe("Test Model", () => {
       await TestModel.create({});
 
       expect(stack).toEqual([-1, 0, 0, 1, -1, 0, 0, 1]);
+    });
+
+    it("should execute hooks in order and respect errors handlers", async () => {
+      const adapter = mockAdapter();
+      const TestModel = mockModel().extend({ adapterClass: adapter });
+
+      const stack = [];
+
+      TestModel.hook("before", "createOne", () => stack.push(0), { order: 0 });
+      TestModel.hook("before", "createOne", () => stack.push(1), { order: 1, handleErrors: true });
+      TestModel.hook("before", "createOne", () => stack.push(2), { order: 2 });
+      TestModel.hook(
+        "before",
+        "createOne",
+        () => {
+          stack.push(3);
+          throw new Error();
+        },
+        { order: 3 },
+      );
+      TestModel.hook("before", "createOne", () => stack.push(4), { order: 4 });
+      TestModel.hook(
+        "before",
+        "createOne",
+        () => {
+          stack.push(5);
+          throw new Error();
+        },
+        { order: 5, handleErrors: true },
+      );
+      TestModel.hook("before", "createOne", () => stack.push(6), { order: 6, handleErrors: true });
+      TestModel.hook("after", "createOne", () => stack.push(7), { order: 7 });
+      TestModel.hook("after", "createOne", () => stack.push(8), { order: 8, handleErrors: true });
+
+      await expect(TestModel.create({})).rejects.toThrow();
+
+      expect(stack).toEqual([0, 1, 2, 3, 5, 6]);
+      // 0 is executed (no error)
+      // 1 is executed, wheter an error or not
+      // 2 is executed (no error)
+      // 3 is executed, throwing an error
+      // 4 is NOT executed (error before)
+      // 5 is executed (handleErrors = true), throwing an error
+      // 6 is executed
+      // 7 and 8 NOT executed because of errors in before hooks : operation has been aborted
     });
 
     it("should immediately stop execution when throwing abortToken in before hook", async () => {

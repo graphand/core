@@ -1,3 +1,4 @@
+import ValidatorTypes from "@/enums/validator-types";
 import Model from "@/lib/Model";
 import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
@@ -17,7 +18,6 @@ class Function extends Model {
     fields: {
       name: { type: FieldTypes.TEXT },
       code: { type: FieldTypes.TEXT }, // base64 encoded function code
-      runInJob: { type: FieldTypes.BOOLEAN },
       keys: {
         type: FieldTypes.ARRAY,
         options: {
@@ -35,6 +35,27 @@ class Function extends Model {
           ref: Role.slug,
         },
       },
+      schedule: {
+        type: FieldTypes.NESTED,
+        options: {
+          strict: true,
+          default: {},
+          fields: {
+            enabled: {
+              type: FieldTypes.BOOLEAN,
+              options: {
+                default: false,
+              },
+            },
+            cronExpression: {
+              type: FieldTypes.TEXT,
+              options: {
+                default: "0 0 * * *",
+              },
+            },
+          },
+        },
+      },
       _job: {
         type: FieldTypes.RELATION,
         options: {
@@ -42,6 +63,14 @@ class Function extends Model {
         },
       },
     },
+    validators: [
+      {
+        type: ValidatorTypes.REQUIRED,
+        options: {
+          field: "code",
+        },
+      },
+    ],
   } satisfies ModelDefinition;
 }
 
