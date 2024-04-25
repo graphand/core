@@ -35,27 +35,6 @@ class Function extends Model {
           ref: Role.slug,
         },
       },
-      schedule: {
-        type: FieldTypes.NESTED,
-        options: {
-          strict: true,
-          default: {},
-          fields: {
-            enabled: {
-              type: FieldTypes.BOOLEAN,
-              options: {
-                default: false,
-              },
-            },
-            cronExpression: {
-              type: FieldTypes.TEXT,
-              options: {
-                default: "0 0 * * *",
-              },
-            },
-          },
-        },
-      },
       _job: {
         type: FieldTypes.RELATION,
         options: {

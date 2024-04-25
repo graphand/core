@@ -6,7 +6,6 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Settings extends Model {
   static __name = "Settings";
-  static isEnvironmentScoped = true;
   static allowMultipleOperations = false;
   static slug = "settings" as const;
   static definition = {
