@@ -40,24 +40,6 @@ class Job extends Model {
       _completedAt: {
         type: FieldTypes.DATE,
       },
-      _alerts: {
-        type: FieldTypes.ARRAY,
-        options: {
-          items: {
-            type: FieldTypes.NESTED,
-            options: {
-              fields: {
-                message: {
-                  type: FieldTypes.TEXT,
-                },
-                log: {
-                  type: FieldTypes.NESTED,
-                },
-              },
-            },
-          },
-        },
-      },
       _result: {
         type: FieldTypes.NESTED,
       },
