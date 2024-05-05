@@ -10,7 +10,6 @@ import Role from "./Role";
 @modelDecorator()
 class Function extends Model {
   static __name = "Function";
-  static isEnvironmentScoped = true;
   static allowMultipleOperations = false;
   static slug = "functions" as const;
   static definition = {
