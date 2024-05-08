@@ -78,15 +78,6 @@ describe("Global tests", () => {
       model.validate([{ slug, definition: { validators: "toto" } } as object]),
     ).rejects.toThrow(ValidationError);
 
-    // await expect(
-    //   model.validate([
-    //     {
-    //       slug,
-    //       definition: { validators: { type: ValidatorTypes.REQUIRED, options: { field: "test" } } },
-    //     } as object,
-    //   ]),
-    // ).rejects.toThrow(ValidationError);
-
     await expect(
       model.validate([
         {
@@ -110,6 +101,47 @@ describe("Global tests", () => {
         } as object,
       ]),
     ).rejects.toThrow(ValidationError);
+  });
+
+  it("should not be able to create datamodel with more than 100 hooks for an event", async () => {
+    const slug = generateRandomString();
+    const adapter = mockAdapter();
+
+    const model = DataModel.extend({ adapterClass: adapter });
+
+    await expect(
+      model.validate([
+        {
+          slug,
+          hooks: {
+            before_createOne: Array(101).fill(() => ({})),
+          },
+        } as object,
+      ]),
+    ).rejects.toThrow(ValidationError);
+
+    await expect(
+      model.validate([
+        {
+          slug,
+          hooks: {
+            before_createOne: Array.from({ length: 100 }, () => ({})),
+          },
+        } as object,
+      ]),
+    ).resolves.toBeTruthy();
+
+    await expect(
+      model.validate([
+        {
+          slug,
+          hooks: {
+            before_createOne: Array.from({ length: 99 }, () => ({})),
+            after_createOne: Array.from({ length: 99 }, () => ({})),
+          },
+        } as object,
+      ]),
+    ).resolves.toBeTruthy();
   });
 
   it("should be able to validate complex documents", async () => {

@@ -1,7 +1,7 @@
 import FieldTypes from "@/enums/field-types";
 import IdentityTypes from "@/enums/identity-types";
 import Field from "@/lib/Field";
-import { isObjectId } from "@/lib/utils";
+import { getPathLevel, isObjectId } from "@/lib/utils";
 
 class FieldIdentity extends Field<FieldTypes.IDENTITY> {
   validate: Field<FieldTypes.IDENTITY>["validate"] = async ({ list }) => {
@@ -14,8 +14,13 @@ class FieldIdentity extends Field<FieldTypes.IDENTITY> {
 
       return !Object.values(IdentityTypes).includes(type as IdentityTypes) || !isObjectId(id);
     };
+    const level = getPathLevel(this.path);
 
-    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
+    let values: Array<unknown> = list.map(i => i.get(this.path, "validation"));
+
+    if (level) {
+      values = values.flat(level);
+    }
 
     return !values.some(_isInvalid);
   };

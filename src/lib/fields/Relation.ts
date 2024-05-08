@@ -1,7 +1,7 @@
 import FieldTypes from "@/enums/field-types";
 import Field from "@/lib/Field";
 import Model from "@/lib/Model";
-import { isObjectId } from "@/lib/utils";
+import { getPathLevel, isObjectId } from "@/lib/utils";
 import PromiseModel from "@/lib/PromiseModel";
 import { FieldSerializerInput } from "@/types";
 
@@ -14,8 +14,13 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
 
       return !isObjectId(value);
     };
+    const level = getPathLevel(this.path);
 
-    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
+    let values: Array<unknown> = list.map(i => i.get(this.path, "validation"));
+
+    if (level) {
+      values = values.flat(level);
+    }
 
     return !values.some(_isInvalid);
   };

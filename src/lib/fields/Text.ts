@@ -1,7 +1,7 @@
 import FieldTypes from "@/enums/field-types";
 import { FieldSerializerInput } from "@/index";
 import Field from "@/lib/Field";
-import { isObjectId } from "@/lib/utils";
+import { getPathLevel, isObjectId } from "@/lib/utils";
 
 class FieldText extends Field<FieldTypes.TEXT> {
   validate: Field<FieldTypes.TEXT>["validate"] = async ({ list }) => {
@@ -20,8 +20,13 @@ class FieldText extends Field<FieldTypes.TEXT> {
 
       return false;
     };
+    const level = getPathLevel(this.path);
 
-    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
+    let values: Array<unknown> = list.map(i => i.get(this.path, "validation"));
+
+    if (level) {
+      values = values.flat(level);
+    }
 
     return !values.some(_isInvalid);
   };

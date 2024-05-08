@@ -611,6 +611,94 @@ describe("test validatorsMap", () => {
       await expect(model.create({ title: faker.lorem.paragraph() })).resolves.toBeInstanceOf(model);
     });
 
+    it("should validate in nested array", async () => {
+      const _model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.ARRAY,
+                options: {
+                  items: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        nested: {
+                          type: FieldTypes.ARRAY,
+                          options: {
+                            items: {
+                              type: FieldTypes.TEXT,
+                            },
+                            validators: [
+                              {
+                                type: ValidatorTypes.LENGTH,
+                                options: {
+                                  min: 2,
+                                  max: 3,
+                                },
+                              },
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }).extend({ adapterClass: adapter });
+
+      await expect(
+        _model.create({
+          arr: [
+            [
+              {
+                nested: ["12"],
+              },
+            ],
+            [
+              {
+                nested: ["123", "123", "123", "123"],
+              },
+            ],
+          ],
+        }),
+      ).resolves.toBeInstanceOf(_model);
+
+      await expect(
+        _model.create({
+          arr: [
+            [
+              {
+                nested: ["1"],
+              },
+              {
+                nested: ["123"],
+              },
+            ],
+          ],
+        }),
+      ).rejects.toThrow(ValidationError);
+
+      await expect(
+        _model.create({
+          arr: [
+            [
+              {
+                nested: ["12"],
+              },
+              {
+                nested: ["123"],
+              },
+            ],
+          ],
+        }),
+      ).resolves.toBeInstanceOf(_model);
+    });
+
     describe("min", () => {
       let model;
 
@@ -684,6 +772,191 @@ describe("test validatorsMap", () => {
         await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(model);
 
         await expect(model.create({ title: 12345 })).resolves.toBeInstanceOf(model);
+      });
+    });
+
+    describe("on array", () => {
+      const _mockModelWithArrayField = async (
+        options: Partial<ValidatorOptions<ValidatorTypes.LENGTH>> = {},
+      ) => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+          validators: [
+            {
+              type: ValidatorTypes.LENGTH,
+              options: {
+                field: "arr",
+                ...options,
+              },
+            },
+          ],
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        return model;
+      };
+
+      it("create without validator config should not throw error", async () => {
+        const model = await _mockModelWithArrayField();
+
+        await expect(model.create({})).resolves.toBeInstanceOf(model);
+
+        await expect(model.create({ arr: [] })).resolves.toBeInstanceOf(model);
+
+        await expect(model.create({ arr: ["test"] })).resolves.toBeInstanceOf(model);
+
+        await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
+
+        await expect(model.create({ arr: ["test", "test", "test"] })).resolves.toBeInstanceOf(
+          model,
+        );
+      });
+
+      it("create with undefined should not throw error", async () => {
+        const model = await _mockModelWithArrayField({ min: 2 });
+
+        await expect(model.create({ arr: undefined })).resolves.toBeInstanceOf(model);
+
+        await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
+      });
+
+      it("create with null should not throw error", async () => {
+        const model = await _mockModelWithArrayField({ min: 2 });
+
+        await expect(model.create({ arr: null })).resolves.toBeInstanceOf(model);
+
+        await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
+      });
+
+      it("create with invalid length should throw error", async () => {
+        const model = await _mockModelWithArrayField({ min: 2 });
+
+        await expect(model.create({ arr: [] })).rejects.toThrow(ValidationError);
+
+        await expect(model.create({ arr: ["test"] })).rejects.toThrow(ValidationError);
+
+        await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
+      });
+
+      it("create with invalid length should throw error", async () => {
+        const model = await _mockModelWithArrayField({ max: 2 });
+
+        await expect(model.create({ arr: ["test", "test", "test"] })).rejects.toThrow(
+          ValidationError,
+        );
+
+        await expect(model.create({ arr: ["test", "test"] })).resolves.toBeInstanceOf(model);
+      });
+
+      it("should validate in nested array", async () => {
+        const _model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.NESTED,
+                      options: {
+                        fields: {
+                          nested: {
+                            type: FieldTypes.ARRAY,
+                            options: {
+                              items: {
+                                type: FieldTypes.TEXT,
+                              },
+                            },
+                          },
+                        },
+                        validators: [
+                          {
+                            type: ValidatorTypes.LENGTH,
+                            options: {
+                              field: "nested",
+                              min: 2,
+                              max: 3,
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await expect(
+          _model.create({
+            arr: [
+              [
+                {
+                  nested: ["test", "test"],
+                },
+              ],
+              [
+                {
+                  nested: ["test", "test", "test"],
+                },
+              ],
+            ],
+          }),
+        ).resolves.toBeInstanceOf(_model);
+
+        await expect(
+          _model.create({
+            arr: [
+              [
+                {
+                  nested: ["test", "test"],
+                },
+                {
+                  nested: ["test", "test"],
+                },
+              ],
+            ],
+          }),
+        ).resolves.toBeInstanceOf(_model);
+
+        await expect(
+          _model.create({
+            arr: [
+              [
+                {
+                  nested: ["test"],
+                },
+                {
+                  nested: ["test", "test"],
+                },
+              ],
+            ],
+          }),
+        ).rejects.toThrow(ValidationError);
+
+        await expect(
+          _model.create({
+            arr: [
+              [
+                {
+                  nested: ["1", "2", "3", "4"],
+                },
+              ],
+            ],
+          }),
+        ).rejects.toThrow(ValidationError);
       });
     });
   });
@@ -923,6 +1196,112 @@ describe("test validatorsMap", () => {
           },
         ]),
       ).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
+  describe("length and required validators", () => {
+    describe("on text field", () => {
+      const model = mockModel({
+        fields: {
+          title: {
+            type: FieldTypes.TEXT,
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.LENGTH,
+            options: {
+              field: "title",
+              min: 2,
+              max: 5,
+            },
+          },
+          {
+            type: ValidatorTypes.REQUIRED,
+            options: {
+              field: "title",
+            },
+          },
+        ],
+      }).extend({ adapterClass: adapter });
+
+      beforeAll(async () => {
+        await model.initialize();
+      });
+
+      it("no value should throw error", async () => {
+        await expect(model.create({})).rejects.toBeInstanceOf(ValidationError);
+      });
+
+      it("null value should throw error", async () => {
+        await expect(model.create({ title: null })).rejects.toBeInstanceOf(ValidationError);
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ title: "1" })).rejects.toBeInstanceOf(ValidationError);
+        await expect(model.create({ title: "123456" })).rejects.toBeInstanceOf(ValidationError);
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ title: "12" })).resolves.toBeInstanceOf(model);
+        await expect(model.create({ title: "12345" })).resolves.toBeInstanceOf(model);
+      });
+    });
+
+    describe("on array field", () => {
+      const model = mockModel({
+        fields: {
+          arr: {
+            type: FieldTypes.ARRAY,
+            options: {
+              items: {
+                type: FieldTypes.TEXT,
+              },
+            },
+          },
+        },
+        validators: [
+          {
+            type: ValidatorTypes.LENGTH,
+            options: {
+              field: "arr",
+              min: 2,
+              max: 3,
+            },
+          },
+          {
+            type: ValidatorTypes.REQUIRED,
+            options: {
+              field: "arr",
+            },
+          },
+        ],
+      }).extend({ adapterClass: adapter });
+
+      beforeAll(async () => {
+        await model.initialize();
+      });
+
+      it("no value should throw error", async () => {
+        await expect(model.create({})).rejects.toBeInstanceOf(ValidationError);
+      });
+
+      it("null value should throw error", async () => {
+        await expect(model.create({ arr: null })).rejects.toBeInstanceOf(ValidationError);
+      });
+
+      it("invalid length should throw error", async () => {
+        await expect(model.create({ arr: [] })).rejects.toBeInstanceOf(ValidationError);
+        await expect(model.create({ arr: ["1"] })).rejects.toBeInstanceOf(ValidationError);
+        await expect(model.create({ arr: ["1", "2", "3", "4"] })).rejects.toBeInstanceOf(
+          ValidationError,
+        );
+      });
+
+      it("valid length should not throw error", async () => {
+        await expect(model.create({ arr: ["1", "2"] })).resolves.toBeInstanceOf(model);
+        await expect(model.create({ arr: ["1", "2", "3"] })).resolves.toBeInstanceOf(model);
+      });
     });
   });
 });

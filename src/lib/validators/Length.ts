@@ -1,13 +1,19 @@
 import ValidatorTypes from "@/enums/validator-types";
 import Validator from "@/lib/Validator";
+import { getPathLevel } from "../utils";
 
 class ValidatorLength extends Validator<ValidatorTypes.LENGTH> {
   validate: Validator<ValidatorTypes.LENGTH>["validate"] = async ({ list }) => {
     const path = this.getFullPath();
-    const values = list
-      .map(i => i.get(path))
-      .flat(Infinity)
-      .filter(v => ![null, undefined].includes(v));
+    const level = getPathLevel(path);
+
+    let values: Array<unknown> = list.map(i => i.get(path));
+
+    if (level) {
+      values = values.flat(level);
+    }
+
+    values = values.filter(v => ![null, undefined].includes(v));
 
     if (!values?.length) return true;
 

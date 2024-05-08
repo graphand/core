@@ -1,13 +1,19 @@
 import FieldTypes from "@/enums/field-types";
 import { FieldSerializerInput } from "@/types";
 import Field from "@/lib/Field";
-import { getFieldFromDefinition, getNestedFieldsMap } from "@/lib/utils";
+import { getFieldFromDefinition, getNestedFieldsMap, getPathLevel } from "@/lib/utils";
 
 class FieldNested extends Field<FieldTypes.NESTED> {
   validate: Field<FieldTypes.NESTED>["validate"] = async ({ list }) => {
     const _isInvalid = value => value !== null && value !== undefined && typeof value !== "object";
+    const level = getPathLevel(this.path);
 
-    const values = list.map(i => i.get(this.path, "validation")).flat(Infinity);
+    let values: Array<unknown> = list.map(i => i.get(this.path, "validation"));
+
+    if (level) {
+      values = values.flat(level);
+    }
+
     return !values.some(_isInvalid);
   };
 

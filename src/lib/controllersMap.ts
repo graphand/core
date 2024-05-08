@@ -172,7 +172,7 @@ const controllersMap = {
     secured: true,
   },
   functionRun: {
-    path: "/functions/:id/run",
+    path: "/functions/:id/run/:*path?",
     methods: ["get", "post", "put", "delete", "patch", "options"],
     secured: true,
   },

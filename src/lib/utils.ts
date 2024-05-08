@@ -1222,3 +1222,7 @@ export const isValidDefinition = (
 
   return true;
 };
+
+export const getPathLevel = (path: string) => {
+  return path.split(".").filter(p => /^\[\d*?\]$/.test(p)).length;
+};
