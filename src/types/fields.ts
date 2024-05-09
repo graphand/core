@@ -13,6 +13,7 @@ export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.ARRAY]: {
     items: FieldDefinition<T>;
     validators?: Array<ValidatorDefinitionOmitField>;
+    distinct?: boolean;
   };
   [FieldTypes.TEXT]: {
     default?: string;

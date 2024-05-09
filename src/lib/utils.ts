@@ -1224,5 +1224,9 @@ export const isValidDefinition = (
 };
 
 export const getPathLevel = (path: string) => {
-  return path.split(".").filter(p => /^\[\d*?\]$/.test(p)).length;
+  let count = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    path[i] === "[" && count++;
+  }
+  return count;
 };

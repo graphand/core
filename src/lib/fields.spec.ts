@@ -1888,5 +1888,385 @@ describe("test fieldsMap", () => {
 
       expect(i.arr).toBeInstanceOf(Array);
     });
+
+    describe("options.distinct", () => {
+      it("should be able to use duplicates values by default", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(model.validate([{ arr: ["test", "test", "test2"] }])).resolves.toBeTruthy();
+      });
+
+      it("should detect duplicates values", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: ["test", "test", "test2"],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should be able to use distinct values", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: ["test", "test2"],
+            },
+          ]),
+        ).resolves.toBeTruthy();
+      });
+
+      it("should be able to use distinct values with nested array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.TEXT,
+                    },
+                    distinct: true,
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: [
+                ["test", "test2"],
+                ["test2", "test3"],
+              ],
+            },
+          ]),
+        ).resolves.toBeTruthy();
+      });
+
+      it("should be able to use distinct values with nested array in nested array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      arr: {
+                        type: FieldTypes.ARRAY,
+                        options: {
+                          items: {
+                            type: FieldTypes.TEXT,
+                          },
+                          distinct: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: [{ arr: ["test", "test2"] }, { arr: ["test2", "test3"] }],
+            },
+          ]),
+        ).resolves.toBeTruthy();
+      });
+
+      it("should detect duplicates values with nested array in nested array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      arr: {
+                        type: FieldTypes.ARRAY,
+                        options: {
+                          items: {
+                            type: FieldTypes.TEXT,
+                          },
+                          distinct: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: [{ arr: ["test", "test2"] }, { arr: ["test2", "test2"] }],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should detect duplicates values in relation array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.RELATION,
+                  options: {
+                    ref: "accounts",
+                  },
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: ["507f191e810c19729de860ea", "507f191e810c19729de860ea"],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should detect duplicates values in nested array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.ARRAY,
+                  options: {
+                    items: {
+                      type: FieldTypes.TEXT,
+                    },
+                  },
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: [
+                ["test", "test2"],
+                ["test", "test2"],
+              ],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should detect duplicates values in nested json array", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    fields: {
+                      title: {
+                        type: FieldTypes.TEXT,
+                      },
+                    },
+                  },
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: [{ title: "test" }, { title: "test" }],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should detect duplicates values with number values", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NUMBER,
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: [1, 2, 2, 3],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should detect duplicates values with boolean values", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.BOOLEAN,
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              arr: [true, false, true],
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should detect duplicates values with date values", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.DATE,
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        const date1 = new Date("2023-06-01");
+        const date2 = new Date("2023-06-02");
+
+        // @ts-expect-error dates are not json serialized
+        await expect(model.validate([{ arr: [date1, date2, date1] }])).rejects.toThrow(
+          ValidationError,
+        );
+      });
+
+      it("should detect duplicates values with mixed types", async () => {
+        const model = mockModel({
+          fields: {
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.TEXT,
+                },
+                distinct: true,
+              },
+            },
+          },
+        }).extend({ adapterClass: adapter });
+
+        await model.initialize();
+
+        // @ts-expect-error dates are not json serialized
+        await expect(model.validate([{ arr: ["test", 123, true, "test"] }])).rejects.toThrow(
+          ValidationError,
+        );
+      });
+    });
   });
 });
