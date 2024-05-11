@@ -119,7 +119,7 @@ class Role extends Model {
 
     const inheritedRoles = await i.inherits;
 
-    if (inheritedRoles) {
+    if (inheritedRoles?.length) {
       const rolesRules = await Promise.all(inheritedRoles.map(role => role.getRulesInherited()));
 
       rules = [...rules, ...rolesRules.flat()];
@@ -134,7 +134,7 @@ class Role extends Model {
 
     const inheritedRoles = await i.inherits;
 
-    if (inheritedRoles) {
+    if (inheritedRoles?.length) {
       const rolesFieldsRestrictions = await Promise.all(
         inheritedRoles.map(role => role.getFieldsRestrictionsInherited()),
       );
