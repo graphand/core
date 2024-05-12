@@ -106,6 +106,11 @@ const controllersMap = {
     methods: ["post"],
     secured: false,
   },
+  mediaTus: {
+    path: "/medias/tus/:id?",
+    methods: ["post", "patch", "delete"],
+    secured: true,
+  },
   mediaPublic: {
     path: "/medias/public/:id",
     methods: ["get"],
