@@ -181,6 +181,11 @@ const controllersMap = {
     methods: ["get", "post", "put", "delete", "patch", "options"],
     secured: true,
   },
+  aggregationRun: {
+    path: "/aggregations/:id/run",
+    methods: ["post"],
+    secured: true,
+  },
 } satisfies Record<string, ControllerDefinition>;
 
 export default controllersMap;

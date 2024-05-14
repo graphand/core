@@ -3,6 +3,7 @@ import type ModelList from "@/lib/ModelList";
 import type Field from "@/lib/Field";
 import type ErrorCodes from "@/enums/error-codes";
 import type Validator from "@/lib/Validator";
+import type Adapter from "@/lib/Adapter";
 import type ValidationError from "@/lib/ValidationError";
 import type AuthProviders from "@/enums/auth-providers";
 import type AuthMethods from "@/enums/auth-methods";
@@ -17,6 +18,7 @@ import type {
 import type { ValidatorDefinition } from "@/types/validators";
 import type { TransactionCtx } from "./ctx";
 import type Account from "@/models/Account";
+import type Aggregation from "@/models/Aggregation";
 import type AuthProvider from "@/models/AuthProvider";
 import type DataModel from "@/models/DataModel";
 import type Environment from "@/models/Environment";
@@ -30,7 +32,6 @@ import type SearchConfig from "@/models/SearchConfig";
 import type Settings from "@/models/Settings";
 import type Token from "@/models/Token";
 import type Function from "@/models/Function";
-import { Adapter } from "..";
 export * from "./fields";
 export * from "./validators";
 export * from "./ctx";
@@ -164,6 +165,7 @@ export type Module<T extends typeof Model = typeof Model> = (model: T) => void;
 
 export interface RefModelsMap {
   accounts: typeof Account;
+  aggregations: typeof Aggregation;
   authProviders: typeof AuthProvider;
   datamodels: typeof DataModel;
   environments: typeof Environment;

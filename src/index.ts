@@ -4,6 +4,7 @@ import "@/modules/register-models";
 import Model from "@/lib/Model";
 import DataModel from "@/models/DataModel";
 import Account from "@/models/Account";
+import Aggregation from "@/models/Aggregation";
 import AuthProvider from "@/models/AuthProvider";
 import Job from "@/models/Job";
 import Role from "@/models/Role";
@@ -78,6 +79,7 @@ export {
   ModelList,
   Adapter,
   Account,
+  Aggregation,
   AuthProvider,
   DataModel,
   Environment,

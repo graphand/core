@@ -7,9 +7,6 @@ import PromiseModelList from "@/lib/PromiseModelList";
 import { JSONTypeObject, ModelInstance, SerializerCtx, SerializerFormat } from "..";
 
 export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
-  // [FieldTypes.ID]: never;
-  // [FieldTypes.DATE]: never;
-  // [FieldTypes.IDENTITY]: never;
   [FieldTypes.ARRAY]: {
     items: FieldDefinition<T>;
     validators?: Array<ValidatorDefinitionOmitField>;

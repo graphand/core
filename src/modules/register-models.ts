@@ -1,6 +1,7 @@
 import Adapter from "@/lib/Adapter";
 import DataModel from "@/models/DataModel";
 import Account from "@/models/Account";
+import Aggregation from "@/models/Aggregation";
 import AuthProvider from "@/models/AuthProvider";
 import Job from "@/models/Job";
 import Role from "@/models/Role";
@@ -17,6 +18,7 @@ import Snapshot from "@/models/Snapshot";
 import Function from "@/models/Function";
 
 Adapter.registerModel(Account);
+Adapter.registerModel(Aggregation);
 Adapter.registerModel(AuthProvider);
 Adapter.registerModel(DataModel);
 Adapter.registerModel(Environment);
