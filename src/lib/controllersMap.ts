@@ -46,6 +46,16 @@ const controllersMap = {
     methods: ["post"],
     secured: false,
   },
+  loginSession: {
+    path: "/auth/login-session",
+    methods: ["post"],
+    secured: true,
+  },
+  logoutSession: {
+    path: "/auth/logout-session",
+    methods: ["post"],
+    secured: true,
+  },
   genAccountToken: {
     path: "/accounts/:id/gen-token",
     methods: ["post"],
