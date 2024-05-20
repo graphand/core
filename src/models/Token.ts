@@ -13,8 +13,8 @@ class Token extends Model {
     keyField: "name",
     fields: {
       name: { type: FieldTypes.TEXT },
-      expiration: { type: FieldTypes.DATE },
-      lifetime: { type: FieldTypes.NUMBER },
+      expiresAt: { type: FieldTypes.DATE },
+      lifetime: { type: FieldTypes.NUMBER }, // By default, the token lifetime is the accessTokenLifetime in system settings
       maxGen: { type: FieldTypes.NUMBER },
       role: {
         type: FieldTypes.RELATION,

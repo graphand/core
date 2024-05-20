@@ -11,7 +11,7 @@ class Snapshot extends Model {
   static slug = "snapshots" as const;
   static definition = {
     fields: {
-      _expireAt: {
+      _expiresAt: {
         type: FieldTypes.DATE,
       },
       _job: {
