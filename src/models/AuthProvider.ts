@@ -35,8 +35,8 @@ class AuthProvider extends Model {
                   clientId: { type: FieldTypes.TEXT },
                   clientSecret: { type: FieldTypes.TEXT },
                   fieldsMap: {
-                    type: FieldTypes.ARRAY,
-                    options: { items: { type: FieldTypes.TEXT } },
+                    type: FieldTypes.NESTED,
+                    options: { defaultField: { type: FieldTypes.TEXT } },
                   },
                 },
               },
