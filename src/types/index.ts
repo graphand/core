@@ -32,6 +32,7 @@ import type SearchConfig from "@/models/SearchConfig";
 import type Settings from "@/models/Settings";
 import type Token from "@/models/Token";
 import type Function from "@/models/Function";
+import type PromiseModelList from "@/lib/PromiseModelList";
 export * from "./fields";
 export * from "./validators";
 export * from "./ctx";
@@ -220,6 +221,24 @@ export type Hook<
   adapterClass?: typeof Adapter | Array<typeof Adapter>;
 };
 
+export type Jsonified<T> = T extends Promise<ModelInstance<infer M>>
+  ? InferModelDef<M, "json">
+  : T extends Promise<ModelInstance<infer M> | null>
+  ? InferModelDef<M, "json"> | null
+  : T extends Promise<ModelInstance<infer M>[]>
+  ? InferModelDef<M, "json">[]
+  : T extends ModelInstance<infer M>
+  ? InferModelDef<M, "json">
+  : T extends PromiseModelList<infer M>
+  ? { rows: InferModelDef<M, "json">[]; count: number }
+  : T extends Promise<ModelList<infer M>>
+  ? { rows: InferModelDef<M, "json">[]; count: number }
+  : T extends ModelList<infer M>
+  ? { rows: InferModelDef<M, "json">[]; count: number }
+  : T extends Error
+  ? { message: string; code: string }
+  : Awaited<T>;
+
 export type HookData<
   P extends HookPhase = HookPhase,
   A extends keyof AdapterFetcher<T> = keyof AdapterFetcher<typeof Model>,
@@ -231,10 +250,10 @@ export type HookData<
     environment: string;
     token: string | undefined;
   };
-  transaction: HookCallbackArgs<P, A, T>["transaction"];
-  args: HookCallbackArgs<P, A, T>["args"];
-  err: HookCallbackArgs<P, A, T>["err"];
-  res: P extends "before" ? undefined : HookCallbackArgs<"after", A, T>["res"];
+  transaction: Jsonified<HookCallbackArgs<P, A, T>["transaction"]>;
+  args: Jsonified<HookCallbackArgs<P, A, T>["args"]>;
+  err: Jsonified<HookCallbackArgs<P, A, T>["err"]>;
+  res?: P extends "before" ? undefined : Jsonified<HookCallbackArgs<"after", A, T>["res"]>;
   ctx: JSONTypeObject;
 };
 

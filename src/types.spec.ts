@@ -1,6 +1,6 @@
 import Model from "@/lib/Model";
 import FieldTypes from "./enums/field-types";
-import { JSONSubtype, ModelDefinition, ModelJSON } from "@/types";
+import { HookData, JSONSubtype, ModelDefinition, ModelJSON } from "@/types";
 import PromiseModel from "./lib/PromiseModel";
 import Account from "./models/Account";
 import Role from "./models/Role";
@@ -426,5 +426,15 @@ describe("test types", () => {
     ).hydrate();
 
     simulateTypeCheck<PromiseModel<typeof CustomModel>>(i.rel);
+  });
+
+  describe("hooks", () => {
+    it("should validate before createOne hook data", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hookData: HookData<"before", "createOne", typeof CustomModel> = {} as any;
+
+      simulateTypeCheck<ModelJSON<typeof CustomModel>>(hookData.args?.[0]);
+      simulateTypeCheck<undefined>(hookData.res);
+    });
   });
 });
