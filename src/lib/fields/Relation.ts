@@ -4,6 +4,7 @@ import Model from "@/lib/Model";
 import { getPathLevel, isObjectId } from "@/lib/utils";
 import PromiseModel from "@/lib/PromiseModel";
 import { FieldSerializerInput } from "@/types";
+import FieldNested from "./Nested";
 
 class FieldRelation extends Field<FieldTypes.RELATION> {
   validate: Field<FieldTypes.RELATION>["validate"] = async ({ list }) => {
@@ -21,6 +22,8 @@ class FieldRelation extends Field<FieldTypes.RELATION> {
     if (level) {
       values = values.flat(level);
     }
+
+    values = values.filter(v => v !== FieldNested.symbolIgnore);
 
     return !values.some(_isInvalid);
   };

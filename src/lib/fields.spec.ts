@@ -1611,6 +1611,169 @@ describe("test fieldsMap", () => {
           ]),
         ).rejects.toThrow(ValidationError);
       });
+
+      it("should ignore validators in nested ignored fields", async () => {
+        const model = mockModel({
+          fields: {
+            target: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["nested1", "nested2"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "target",
+                strict: true,
+                fields: {
+                  nested1: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        text: {
+                          type: FieldTypes.TEXT,
+                        },
+                      },
+                    },
+                  },
+                  nested2: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        number: {
+                          type: FieldTypes.NUMBER,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        const text = faker.lorem.word();
+
+        const i = model.hydrate({
+          target: "nested1",
+          obj: {
+            nested1: {
+              text,
+            },
+          },
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.nested1).toBeInstanceOf(Object);
+        expect(i.obj.nested1.text).toBe(text);
+        expect(i.obj.nested2).toBeUndefined();
+
+        await expect(
+          model.validate([
+            {
+              target: "nested1",
+              obj: {
+                nested1: {
+                  text,
+                },
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+      });
+
+      it("should still validate the fields in the dependsOn field", async () => {
+        const model = mockModel({
+          fields: {
+            target: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["nested1", "nested2"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "target",
+                strict: true,
+                fields: {
+                  nested1: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        text: {
+                          type: FieldTypes.TEXT,
+                        },
+                      },
+                    },
+                  },
+                  nested2: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      fields: {
+                        number: {
+                          type: FieldTypes.NUMBER,
+                        },
+                      },
+                    },
+                  },
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "nested1.text" },
+                  },
+                ],
+              },
+            },
+          },
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        const text = faker.lorem.word();
+
+        const i = model.hydrate({
+          target: "nested1",
+          obj: {
+            nested1: {
+              text,
+            },
+          },
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.nested1).toBeInstanceOf(Object);
+        expect(i.obj.nested1.text).toBe(text);
+        expect(i.obj.nested2).toBeUndefined();
+
+        await expect(
+          model.validate([
+            {
+              target: "nested1",
+              obj: {
+                nested1: {
+                  text,
+                },
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          model.validate([
+            {
+              target: "nested1",
+              obj: {
+                nested1: {},
+              },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
     });
 
     describe("options.defaultField", () => {

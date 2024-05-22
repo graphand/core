@@ -1,5 +1,5 @@
 import FieldTypes from "@/enums/field-types";
-import { FieldSerializerInput } from "@/index";
+import { FieldNested, FieldSerializerInput } from "@/index";
 import Field from "@/lib/Field";
 import { getPathLevel, isObjectId } from "@/lib/utils";
 
@@ -27,6 +27,8 @@ class FieldText extends Field<FieldTypes.TEXT> {
     if (level) {
       values = values.flat(level);
     }
+
+    values = values.filter(v => v !== FieldNested.symbolIgnore);
 
     return !values.some(_isInvalid);
   };

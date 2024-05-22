@@ -6,6 +6,7 @@ import { getFieldFromDefinition, getPathLevel, isObjectId } from "@/lib/utils";
 import CoreError from "@/lib/CoreError";
 import PromiseModelList from "@/lib/PromiseModelList";
 import ModelList from "@/lib/ModelList";
+import FieldNested from "./Nested";
 
 class FieldArray extends Field<FieldTypes.ARRAY> {
   validate: Field<FieldTypes.TEXT>["validate"] = async ({ list }) => {
@@ -43,6 +44,8 @@ class FieldArray extends Field<FieldTypes.ARRAY> {
     if (level) {
       values = values.flat(level);
     }
+
+    values = values.filter(v => v !== FieldNested.symbolIgnore);
 
     return !values.some(_isInvalid);
   };

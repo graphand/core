@@ -2,6 +2,7 @@ import FieldTypes from "@/enums/field-types";
 import IdentityTypes from "@/enums/identity-types";
 import Field from "@/lib/Field";
 import { getPathLevel, isObjectId } from "@/lib/utils";
+import FieldNested from "./Nested";
 
 class FieldIdentity extends Field<FieldTypes.IDENTITY> {
   validate: Field<FieldTypes.IDENTITY>["validate"] = async ({ list }) => {
@@ -21,6 +22,8 @@ class FieldIdentity extends Field<FieldTypes.IDENTITY> {
     if (level) {
       values = values.flat(level);
     }
+
+    values = values.filter(v => v !== FieldNested.symbolIgnore);
 
     return !values.some(_isInvalid);
   };

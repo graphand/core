@@ -16,6 +16,8 @@ class FieldNested extends Field<FieldTypes.NESTED> {
       values = values.flat(level);
     }
 
+    values = values.filter(v => v !== FieldNested.symbolIgnore);
+
     return !values.some(_isInvalid);
   };
 

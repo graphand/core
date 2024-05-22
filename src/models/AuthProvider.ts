@@ -3,6 +3,7 @@ import { modelDecorator } from "@/lib/modelDecorator";
 import FieldTypes from "@/enums/field-types";
 import Role from "@/models/Role";
 import { ModelDefinition } from "@/types";
+import ValidatorTypes from "@/enums/validator-types";
 
 @modelDecorator()
 class AuthProvider extends Model {
@@ -12,7 +13,13 @@ class AuthProvider extends Model {
   static definition = {
     keyField: "type",
     fields: {
-      type: { type: FieldTypes.TEXT },
+      type: {
+        type: FieldTypes.TEXT,
+        options: {
+          enum: ["local", "facebook", "google", "github", "apple", "graphand"],
+          strict: true,
+        },
+      },
       options: {
         type: FieldTypes.NESTED,
         options: {
@@ -41,6 +48,10 @@ class AuthProvider extends Model {
                     options: { defaultField: { type: FieldTypes.TEXT } },
                   },
                 },
+                validators: [
+                  { type: ValidatorTypes.REQUIRED, options: { field: "clientId" } },
+                  { type: ValidatorTypes.REQUIRED, options: { field: "clientSecret" } },
+                ],
               },
             },
             graphand: {
@@ -63,6 +74,10 @@ class AuthProvider extends Model {
                     options: { defaultField: { type: FieldTypes.TEXT } },
                   },
                 },
+                validators: [
+                  { type: ValidatorTypes.REQUIRED, options: { field: "clientId" } },
+                  { type: ValidatorTypes.REQUIRED, options: { field: "clientSecret" } },
+                ],
               },
             },
             github: {
@@ -76,6 +91,10 @@ class AuthProvider extends Model {
                     options: { defaultField: { type: FieldTypes.TEXT } },
                   },
                 },
+                validators: [
+                  { type: ValidatorTypes.REQUIRED, options: { field: "clientId" } },
+                  { type: ValidatorTypes.REQUIRED, options: { field: "clientSecret" } },
+                ],
               },
             },
             apple: {
@@ -91,6 +110,12 @@ class AuthProvider extends Model {
                     options: { defaultField: { type: FieldTypes.TEXT } },
                   },
                 },
+                validators: [
+                  { type: ValidatorTypes.REQUIRED, options: { field: "clientId" } },
+                  { type: ValidatorTypes.REQUIRED, options: { field: "teamId" } },
+                  { type: ValidatorTypes.REQUIRED, options: { field: "keyId" } },
+                  { type: ValidatorTypes.REQUIRED, options: { field: "privateKey" } },
+                ],
               },
             },
           },
