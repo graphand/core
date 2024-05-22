@@ -1201,6 +1201,14 @@ class Model {
 
     return payloadAfter.res as ReturnType<AdapterFetcher<M>[A]>;
   }
+
+  [Symbol.toPrimitive](hint: string) {
+    if (hint === "string") {
+      return JSON.stringify(this.toJSON());
+    }
+
+    return this.toJSON();
+  }
 }
 
 export default Model;

@@ -16,6 +16,7 @@ class AuthProvider extends Model {
       options: {
         type: FieldTypes.NESTED,
         options: {
+          strict: true,
           default: {},
           fields: {
             local: {
@@ -47,6 +48,47 @@ class AuthProvider extends Model {
                 default: {},
                 fields: {
                   autoRegister: { type: FieldTypes.BOOLEAN, options: { default: true } },
+                },
+              },
+            },
+            google: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  clientId: { type: FieldTypes.TEXT },
+                  clientSecret: { type: FieldTypes.TEXT },
+                  fieldsMap: {
+                    type: FieldTypes.NESTED,
+                    options: { defaultField: { type: FieldTypes.TEXT } },
+                  },
+                },
+              },
+            },
+            github: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  clientId: { type: FieldTypes.TEXT },
+                  clientSecret: { type: FieldTypes.TEXT },
+                  fieldsMap: {
+                    type: FieldTypes.NESTED,
+                    options: { defaultField: { type: FieldTypes.TEXT } },
+                  },
+                },
+              },
+            },
+            apple: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  clientId: { type: FieldTypes.TEXT },
+                  teamId: { type: FieldTypes.TEXT },
+                  keyId: { type: FieldTypes.TEXT },
+                  privateKey: { type: FieldTypes.TEXT },
+                  fieldsMap: {
+                    type: FieldTypes.NESTED,
+                    options: { defaultField: { type: FieldTypes.TEXT } },
+                  },
                 },
               },
             },

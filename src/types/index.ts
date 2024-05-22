@@ -201,10 +201,10 @@ export type HookCallbackArgs<
       args: Parameters<AdapterFetcher<T>[A]>[0];
       ctx: TransactionCtx;
       transaction: Transaction<T, A>;
-      err?: Array<Error | symbol>;
+      err: Array<Error | symbol> | undefined;
     }
   : HookCallbackArgs<"before", A, T> & {
-      res?: ReturnType<AdapterFetcher<T>[A]>;
+      res: ReturnType<AdapterFetcher<T>[A]>;
     };
 
 export type Hook<
@@ -218,6 +218,24 @@ export type Hook<
   order: number;
   handleErrors?: boolean;
   adapterClass?: typeof Adapter | Array<typeof Adapter>;
+};
+
+export type HookData<
+  P extends HookPhase = HookPhase,
+  A extends keyof AdapterFetcher<T> = keyof AdapterFetcher<typeof Model>,
+  T extends typeof Model = typeof Model,
+> = {
+  aborted?: boolean;
+  event: keyof ModelInstance<typeof DataModel>["hooks"];
+  request: {
+    environment: string;
+    token: string | undefined;
+  };
+  transaction: HookCallbackArgs<P, A, T>["transaction"];
+  args: HookCallbackArgs<P, A, T>["args"];
+  err: HookCallbackArgs<P, A, T>["err"];
+  res: P extends "before" ? undefined : HookCallbackArgs<"after", A, T>["res"];
+  ctx: JSONTypeObject;
 };
 
 export type ValidatorHook<
