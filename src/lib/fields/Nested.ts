@@ -4,6 +4,8 @@ import Field from "@/lib/Field";
 import { getFieldFromDefinition, getNestedFieldsMap, getPathLevel } from "@/lib/utils";
 
 class FieldNested extends Field<FieldTypes.NESTED> {
+  static symbolIgnore = Symbol("ignore");
+
   validate: Field<FieldTypes.NESTED>["validate"] = async ({ list }) => {
     const _isInvalid = value => value !== null && value !== undefined && typeof value !== "object";
     const level = getPathLevel(this.path);
@@ -38,10 +40,22 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     const model = from.model();
     const fieldsMap = getNestedFieldsMap(model, this);
     const defaults = ctx?.defaults ?? true;
+    let filterKey;
+
+    if (this.options.dependsOn) {
+      const dependsOn = from.get(this.options.dependsOn);
+      if (dependsOn) {
+        filterKey = dependsOn;
+      }
+    }
 
     const json = {};
 
     for (const [k, field] of fieldsMap) {
+      if (filterKey && k !== filterKey) {
+        continue;
+      }
+
       if (value[k] === undefined && defaults && "default" in field.options) {
         json[k] = field.serialize(field.options.default, input.format, from, ctx);
       } else if (value[k] === undefined || value[k] === null) {
@@ -56,7 +70,11 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     }
 
     if (this.options.defaultField) {
-      const noField = Object.keys(value).filter(k => !fieldsMap.has(k));
+      let noField = Object.keys(value).filter(k => !fieldsMap.has(k));
+
+      if (filterKey) {
+        noField = noField.filter(k => k !== filterKey);
+      }
 
       if (noField.length) {
         noField.forEach(k => {
@@ -99,6 +117,14 @@ class FieldNested extends Field<FieldTypes.NESTED> {
     const model = from.model();
     const adapter = model.getAdapter();
     const fieldsMap = getNestedFieldsMap(model, this);
+    let filterKey;
+
+    if (this.options.dependsOn) {
+      const dependsOn = from.get(this.options.dependsOn);
+      if (dependsOn) {
+        filterKey = dependsOn;
+      }
+    }
 
     const _getter = (target: object, prop: string) => {
       let targetField = fieldsMap.get(prop);
@@ -143,7 +169,17 @@ class FieldNested extends Field<FieldTypes.NESTED> {
         }
 
         if (prop === "__raw") {
-          return target;
+          return (k: string) => {
+            if (filterKey && k !== filterKey) {
+              return FieldNested.symbolIgnore;
+            }
+
+            return target[k];
+          };
+        }
+
+        if (filterKey && prop !== filterKey) {
+          return undefined;
         }
 
         return _getter(target, prop);

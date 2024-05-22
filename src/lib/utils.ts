@@ -29,6 +29,7 @@ import ValidationFieldError from "@/lib/ValidationFieldError";
 import ValidationError from "@/lib/ValidationError";
 import type DataModel from "@/models/DataModel";
 import Patterns from "@/enums/patterns";
+import FieldNested from "./fields/Nested";
 
 export const crossModelTree = (_model: typeof Model, cb: (model: typeof Model) => void) => {
   let model = _model;
@@ -656,21 +657,24 @@ export const _getter = (opts: {
     }
 
     let n;
-
     // @ts-expect-error __raw exists in the proxy returned by nested field
-    if (value.__raw) {
-      // @ts-expect-error __raw exists in the proxy returned by nested field
-      n = value.__raw[key];
+    const raw = value.__raw as (key: string) => unknown;
+
+    if (typeof raw === "function") {
+      n = raw(key);
     } else {
       n = value[key];
     }
 
-    const defaults = ctx?.defaults ?? true;
-    if (defaults && n === undefined && "default" in field.options) {
+    if (n === undefined && "default" in field.options && (ctx?.defaults ?? true)) {
       n = field.options.default as typeof n;
     }
 
-    if (n === undefined || n === null) {
+    if (n === undefined || n === null || n === FieldNested.symbolIgnore) {
+      if (n === FieldNested.symbolIgnore && format !== "validation") {
+        return undefined;
+      }
+
       return n;
     }
 
@@ -958,10 +962,11 @@ async function validateValidators<T extends typeof Model>({
           model,
           ctx,
         });
+
         if (!validated) {
           throw null;
         }
-      } catch (err) {
+      } catch (_) {
         const e = new ValidationValidatorError({
           validator,
         });

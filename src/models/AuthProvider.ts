@@ -17,6 +17,7 @@ class AuthProvider extends Model {
         type: FieldTypes.NESTED,
         options: {
           strict: true,
+          dependsOn: "type",
           default: {},
           fields: {
             local: {

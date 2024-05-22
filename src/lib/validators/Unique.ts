@@ -7,7 +7,7 @@ class ValidatorUnique extends Validator<ValidatorTypes.UNIQUE> {
     const path = this.getFullPath();
     const level = getPathLevel(path);
 
-    let values: Array<unknown> = list.map(i => i.get(path));
+    let values: Array<unknown> = list.map(i => i.get(path, "validation"));
 
     if (level) {
       values = values.flat(level);

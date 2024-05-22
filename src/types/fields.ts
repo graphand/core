@@ -26,6 +26,7 @@ export type FieldOptionsMap<T extends FieldTypes = FieldTypes> = {
   [FieldTypes.NESTED]: {
     default?: JSONTypeObject;
     defaultField?: FieldDefinition;
+    dependsOn?: string;
     fields?: FieldsDefinition;
     strict?: boolean;
     validators?: ValidatorsDefinition;

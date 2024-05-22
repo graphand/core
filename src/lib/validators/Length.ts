@@ -7,7 +7,7 @@ class ValidatorLength extends Validator<ValidatorTypes.LENGTH> {
     const path = this.getFullPath();
     const level = getPathLevel(path);
 
-    let values: Array<unknown> = list.map(i => i.get(path));
+    let values: Array<unknown> = list.map(i => i.get(path, "validation"));
 
     if (level) {
       values = values.flat(level);

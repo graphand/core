@@ -1056,6 +1056,563 @@ describe("test fieldsMap", () => {
       });
     });
 
+    // The option dependsOn allows to define another field of the model that value will be used to determine which sub field to use.
+    // This is useful when you have a field that can be of different types depending on another field value.
+    // This also filters the validators and serializers to only use the ones defined in the sub field.
+    describe("options.dependsOn", () => {
+      it("should use dependsOn to determine which field to use", async () => {
+        const _adapter = mockAdapter();
+
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "type",
+                strict: true,
+                fields: {
+                  text: {
+                    type: FieldTypes.TEXT,
+                  },
+                  number: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+              },
+            },
+          },
+        } as const).extend({ adapterClass: _adapter });
+        await model.initialize();
+
+        const text = faker.lorem.word();
+
+        const i = model.hydrate({
+          type: "text",
+          obj: {
+            text,
+            number: 123,
+          },
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.text).toBe(text);
+        expect(i.obj.number).toBeUndefined();
+      });
+
+      it("should use dependsOn to determine which field to use in json", async () => {
+        const _adapter = mockAdapter();
+
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "type",
+                strict: true,
+                fields: {
+                  text: {
+                    type: FieldTypes.TEXT,
+                  },
+                  number: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+              },
+            },
+          },
+        } as const).extend({ adapterClass: _adapter });
+        await model.initialize();
+
+        const text = faker.lorem.word();
+
+        const i = model.hydrate({
+          type: "text",
+          obj: {
+            text,
+            number: 123,
+          },
+        });
+
+        const json = i.toJSON();
+
+        expect(json.obj).toBeInstanceOf(Object);
+        expect(json.obj.text).toBe(text);
+        expect(json.obj.number).toBeUndefined();
+      });
+
+      it("should work with nested fields", async () => {
+        const _adapter = mockAdapter();
+
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  nested: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      dependsOn: "type",
+                      strict: true,
+                      fields: {
+                        text: {
+                          type: FieldTypes.TEXT,
+                        },
+                        number: {
+                          type: FieldTypes.NUMBER,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        } as const).extend({ adapterClass: _adapter });
+        await model.initialize();
+
+        const text = faker.lorem.word();
+
+        const i = model.hydrate({
+          type: "text",
+          obj: {
+            nested: {
+              text,
+              number: 123,
+            },
+          },
+        });
+
+        expect(i.obj).toBeInstanceOf(Object);
+        expect(i.obj.nested).toBeInstanceOf(Object);
+        expect(i.obj.nested.text).toBe(text);
+        expect(i.obj.nested.number).toBeUndefined();
+      });
+
+      it("should work in nested arrays", async () => {
+        const _adapter = mockAdapter();
+
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            arr: {
+              type: FieldTypes.ARRAY,
+              options: {
+                items: {
+                  type: FieldTypes.NESTED,
+                  options: {
+                    dependsOn: "type",
+                    strict: true,
+                    fields: {
+                      text: {
+                        type: FieldTypes.TEXT,
+                      },
+                      number: {
+                        type: FieldTypes.NUMBER,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        } as const).extend({ adapterClass: _adapter });
+        await model.initialize();
+
+        const i = model.hydrate({
+          type: "text",
+          arr: [
+            {
+              text: "text1",
+              number: 123,
+            },
+            {
+              text: "text2",
+              number: 123,
+            },
+          ],
+        });
+
+        expect(i.arr).toBeInstanceOf(Array);
+        expect(i.arr[0]).toBeInstanceOf(Object);
+        expect(i.arr[0].text).toBe("text1");
+        expect(i.arr[0].number).toBeUndefined();
+        expect(i.arr[1]).toBeInstanceOf(Object);
+        expect(i.arr[1].text).toBe("text2");
+        expect(i.arr[1].number).toBeUndefined();
+      });
+
+      it("should work with dependsOn as a key to a nested field", async () => {
+        const _adapter = mockAdapter();
+
+        const model = mockModel({
+          fields: {
+            obj1: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  type: {
+                    type: FieldTypes.TEXT,
+                    options: {
+                      enum: ["text", "number"],
+                      strict: true,
+                    },
+                  },
+                },
+              },
+            },
+            obj2: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  nested: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      dependsOn: "obj1.type",
+                      strict: true,
+                      fields: {
+                        text: {
+                          type: FieldTypes.TEXT,
+                        },
+                        number: {
+                          type: FieldTypes.NUMBER,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        } as const).extend({ adapterClass: _adapter });
+        await model.initialize();
+
+        const text = faker.lorem.word();
+
+        const i = model.hydrate({
+          obj1: {
+            type: "text",
+          },
+          obj2: {
+            nested: {
+              text,
+              number: 123,
+            },
+          },
+        });
+
+        expect(i.obj2).toBeInstanceOf(Object);
+        expect(i.obj2.nested).toBeInstanceOf(Object);
+        expect(i.obj2.nested.text).toBe(text);
+        expect(i.obj2.nested.number).toBeUndefined();
+      });
+
+      it("should validate only the fields defined in the dependsOn field", async () => {
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "type",
+                strict: true,
+                fields: {
+                  text: {
+                    type: FieldTypes.TEXT,
+                  },
+                  number: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
+                  },
+                ],
+              },
+            },
+          },
+          validators: [
+            {
+              type: ValidatorTypes.REQUIRED,
+              options: { field: "obj.number" }, // This validator should be ignored
+            },
+          ],
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              type: "text",
+              obj: {
+                text: faker.lorem.word(),
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          model.validate([
+            {
+              type: "number",
+              obj: {
+                text: faker.lorem.word(),
+              },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should validate only the fields defined in the dependsOn field in nested fields", async () => {
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  nested: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      dependsOn: "type",
+                      strict: true,
+                      fields: {
+                        text: {
+                          type: FieldTypes.TEXT,
+                        },
+                        number: {
+                          type: FieldTypes.NUMBER,
+                        },
+                      },
+                      validators: [
+                        {
+                          type: ValidatorTypes.REQUIRED,
+                          options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          validators: [
+            {
+              type: ValidatorTypes.REQUIRED,
+              options: { field: "obj.nested.number" }, // This validator should be ignored
+            },
+          ],
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              type: "text",
+              obj: {
+                nested: {
+                  text: faker.lorem.word(),
+                },
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          model.validate([
+            {
+              type: "number",
+              obj: {
+                nested: {
+                  text: faker.lorem.word(),
+                },
+              },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should validate only the fields defined in the dependsOn field in deeply nested structures", async () => {
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                fields: {
+                  level1: {
+                    type: FieldTypes.NESTED,
+                    options: {
+                      dependsOn: "type",
+                      strict: true,
+                      fields: {
+                        text: {
+                          type: FieldTypes.TEXT,
+                        },
+                        number: {
+                          type: FieldTypes.NUMBER,
+                        },
+                      },
+                      validators: [
+                        {
+                          type: ValidatorTypes.REQUIRED,
+                          options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          validators: [
+            {
+              type: ValidatorTypes.REQUIRED,
+              options: { field: "obj.level1.number" }, // This validator should be ignored
+            },
+          ],
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              type: "text",
+              obj: {
+                level1: {
+                  text: faker.lorem.word(),
+                },
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          model.validate([
+            {
+              type: "number",
+              obj: {
+                level1: {
+                  text: faker.lorem.word(),
+                },
+              },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+
+      it("should ignore validators when the dependsOn value does not match", async () => {
+        const model = mockModel({
+          fields: {
+            type: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["text", "number"],
+                strict: true,
+              },
+            },
+            obj: {
+              type: FieldTypes.NESTED,
+              options: {
+                dependsOn: "type",
+                strict: true,
+                fields: {
+                  text: {
+                    type: FieldTypes.TEXT,
+                  },
+                  number: {
+                    type: FieldTypes.NUMBER,
+                  },
+                },
+                validators: [
+                  {
+                    type: ValidatorTypes.REQUIRED,
+                    options: { field: "number" }, // This validator should be ignored as it is not in the dependsOn field
+                  },
+                ],
+              },
+            },
+          },
+          validators: [
+            {
+              type: ValidatorTypes.REQUIRED,
+              options: { field: "obj.number" }, // This validator should be ignored
+            },
+          ],
+        }).extend({ adapterClass: mockAdapter() });
+        await model.initialize();
+
+        await expect(
+          model.validate([
+            {
+              type: "text",
+              obj: {
+                text: faker.lorem.word(),
+              },
+            },
+          ]),
+        ).resolves.toBeTruthy();
+
+        await expect(
+          model.validate([
+            {
+              type: "number",
+              obj: {
+                text: faker.lorem.word(),
+              },
+            },
+          ]),
+        ).rejects.toThrow(ValidationError);
+      });
+    });
+
     describe("options.defaultField", () => {
       it("should use defaultField by default to serialize", async () => {
         const serializedText = faker.lorem.word();

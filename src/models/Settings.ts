@@ -14,7 +14,7 @@ class Settings extends Model {
       key: { type: FieldTypes.TEXT },
       data: {
         type: FieldTypes.NESTED,
-        options: { default: {} },
+        options: { default: {}, dependsOn: "key" },
       },
     },
   } satisfies ModelDefinition;
