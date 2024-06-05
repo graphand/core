@@ -20,6 +20,7 @@ import type { TransactionCtx } from "./ctx";
 import type Account from "@/models/Account";
 import type Aggregation from "@/models/Aggregation";
 import type AuthProvider from "@/models/AuthProvider";
+import type Connector from "@/models/Connector";
 import type DataModel from "@/models/DataModel";
 import type Environment from "@/models/Environment";
 import type Job from "@/models/Job";
@@ -168,6 +169,7 @@ export interface RefModelsMap {
   accounts: typeof Account;
   aggregations: typeof Aggregation;
   authProviders: typeof AuthProvider;
+  connectors: typeof Connector;
   datamodels: typeof DataModel;
   environments: typeof Environment;
   jobs: typeof Job;

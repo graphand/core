@@ -34,6 +34,7 @@ export { default as ValidatorUnique } from "@/lib/validators/Unique";
 export { default as Account } from "@/models/Account";
 export { default as Aggregation } from "@/models/Aggregation";
 export { default as AuthProvider } from "@/models/AuthProvider";
+export { default as Connector } from "@/models/Connector";
 export { default as DataModel } from "@/models/DataModel";
 export { default as Environment } from "@/models/Environment";
 export { default as Function } from "@/models/Function";

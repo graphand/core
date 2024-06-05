@@ -28,6 +28,20 @@ class Function extends Model {
           },
         },
       },
+      labels: {
+        type: FieldTypes.NESTED,
+        options: {
+          defaultField: {
+            type: FieldTypes.TEXT,
+          },
+        },
+      },
+      exposed: {
+        type: FieldTypes.BOOLEAN,
+        options: {
+          default: false,
+        },
+      },
       role: {
         type: FieldTypes.RELATION,
         options: {
