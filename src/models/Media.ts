@@ -6,8 +6,8 @@ import { ModelDefinition } from "@/types";
 @modelDecorator()
 class Media extends Model {
   static __name = "Media";
-  static searchable = true;
   static extensible = true;
+  static connectable = true;
   static slug = "medias" as const;
   static definition = {
     keyField: "name",

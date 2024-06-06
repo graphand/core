@@ -45,7 +45,6 @@ export { default as Media } from "@/models/Media";
 export { default as MergeRequest } from "@/models/MergeRequest";
 export { default as MergeRequestEvent } from "@/models/MergeRequestEvent";
 export { default as Role } from "@/models/Role";
-export { default as SearchConfig } from "@/models/SearchConfig";
 export { default as Settings } from "@/models/Settings";
 export { default as Snapshot } from "@/models/Snapshot";
 export { default as Token } from "@/models/Token";

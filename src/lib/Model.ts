@@ -44,7 +44,6 @@ import FieldTypes from "@/enums/field-types";
 
 class Model {
   static extensible: boolean = false; // Whether the model can be extended with a DataModel with its slug
-  static searchable: boolean = false; // Whether the model is usable as a search config source
   static connectable: boolean = false; // Whether the model is able to be used as a connector source
   static exposed: boolean = true; // Whether the model is exposed in the API or not
   static allowMultipleOperations: boolean = true; // Whether to allow multiple operations (updateMultiple, deleteMultiple) on the model. createMultiple is always allowed.
@@ -447,7 +446,6 @@ class Model {
     model ??= class extends Model {
       static __name = `Data<${slug}>`;
       static slug = slug;
-      static searchable = true;
       static connectable = true;
       static extensible = true; // A data class is extensible as it should be linked to a datamodel with the same slug
       static isEnvironmentScoped = true;

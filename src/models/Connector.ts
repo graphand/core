@@ -4,6 +4,7 @@ import FieldTypes from "@/enums/field-types";
 import { ModelDefinition } from "@/types";
 import ValidatorTypes from "@/enums/validator-types";
 import Function from "./Function";
+import Job from "./Job";
 
 @modelDecorator()
 class Connector extends Model {
@@ -27,6 +28,12 @@ class Connector extends Model {
       },
       source: { type: FieldTypes.TEXT },
       filter: { type: FieldTypes.NESTED },
+      _job: {
+        type: FieldTypes.RELATION,
+        options: {
+          ref: Job.slug,
+        },
+      },
     },
     validators: [
       { type: ValidatorTypes.REQUIRED, options: { field: "function" } },

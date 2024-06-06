@@ -263,7 +263,7 @@ describe("Test Model", () => {
       const slug2 = generateRandomString();
       const model = class extends Model {
         static slug = slug1;
-        static searchable = true;
+        static connectable = true;
         static extensible = true;
         static isEnvironmentScoped = true;
         static definition: ModelDefinition = {
@@ -285,7 +285,7 @@ describe("Test Model", () => {
 
       const model2 = class extends model {
         static slug = slug2;
-        static searchable = true;
+        static connectable = true;
         static extensible = true;
         static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter });
@@ -2532,7 +2532,7 @@ describe("Test Model", () => {
 
       const Model1 = class extends Model {
         static slug = slug1;
-        static searchable = true;
+        static connectable = true;
         static extensible = true;
         static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter });
@@ -2602,7 +2602,7 @@ describe("Test Model", () => {
 
       const Model1 = class extends Model {
         static slug = slug1;
-        static searchable = true;
+        static connectable = true;
         static extensible = true;
         static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter, force: true });
@@ -2652,7 +2652,7 @@ describe("Test Model", () => {
 
       const Model1 = class extends Model {
         static slug = slug1;
-        static searchable = true;
+        static connectable = true;
         static extensible = true;
         static isEnvironmentScoped = true;
       }.extend({ adapterClass: adapter });

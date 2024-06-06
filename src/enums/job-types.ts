@@ -1,5 +1,5 @@
 enum JobTypes {
-  SYNC_SEARCH = "syncSearch",
+  SYNC_CONNECTOR = "syncConnector",
   INIT_SNAPHSOT = "initSnapshot",
   INIT_ENVIRONMENT = "initEnvironment",
   INIT_MERGE_REQUEST = "initMergeRequest",

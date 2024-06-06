@@ -29,7 +29,6 @@ import type Media from "@/models/Media";
 import type MergeRequest from "@/models/MergeRequest";
 import type MergeRequestEvent from "@/models/MergeRequestEvent";
 import type Role from "@/models/Role";
-import type SearchConfig from "@/models/SearchConfig";
 import type Settings from "@/models/Settings";
 import type Token from "@/models/Token";
 import type Function from "@/models/Function";
@@ -178,7 +177,6 @@ export interface RefModelsMap {
   mergeRequests: typeof MergeRequest;
   mergeRequestEvents: typeof MergeRequestEvent;
   roles: typeof Role;
-  searchConfigs: typeof SearchConfig;
   settings: typeof Settings;
   tokens: typeof Token;
   functions: typeof Function;
@@ -389,3 +387,14 @@ export type ModelDefinition = Readonly<{
   fields?: Readonly<FieldsDefinition>;
   validators?: Readonly<ValidatorsDefinition>;
 }>;
+
+type ConnectorEventTypes = "up" | "down" | "reset" | "create" | "update" | "delete";
+export type ConnectorEvent<T extends ConnectorEventTypes = ConnectorEventTypes> = {
+  type: T;
+  connector: ModelJSON<typeof Connector>;
+  data: T extends "create" | "update"
+    ? Array<ModelJSON>
+    : T extends "delete"
+    ? Array<string>
+    : null;
+};

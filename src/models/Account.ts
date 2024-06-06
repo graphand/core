@@ -8,7 +8,7 @@ import FieldTypes from "@/enums/field-types";
 @modelDecorator()
 class Account extends Model {
   static __name = "Account";
-  static searchable = true;
+  static connectable = true;
   static extensible = true;
   static isEnvironmentScoped = true;
   static slug = "accounts" as const;

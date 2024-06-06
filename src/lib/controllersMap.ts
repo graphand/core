@@ -136,18 +136,13 @@ const controllersMap = {
     methods: ["get"],
     secured: true,
   },
-  searchQuery: {
-    path: "/search/:id/query",
+  connectorReset: {
+    path: "/connectors/:id/reset",
     methods: ["post"],
     secured: true,
   },
-  searchCount: {
-    path: "/search/:id/count",
-    methods: ["post"],
-    secured: true,
-  },
-  searchReset: {
-    path: "/search/:id/reset",
+  connectorSync: {
+    path: "/connectors/:id/sync",
     methods: ["post"],
     secured: true,
   },
@@ -168,11 +163,6 @@ const controllersMap = {
   },
   jobLogs: {
     path: "/jobs/:id/logs",
-    methods: ["get"],
-    secured: true,
-  },
-  searchLogs: {
-    path: "/search/:id/logs",
     methods: ["get"],
     secured: true,
   },
