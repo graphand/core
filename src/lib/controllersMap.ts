@@ -146,6 +146,11 @@ const controllersMap = {
     methods: ["post"],
     secured: true,
   },
+  connectorLogs: {
+    path: "/connectors/:id/logs",
+    methods: ["get"],
+    secured: true,
+  },
   mrGDX: {
     path: "/merge-requests/:id/gdx",
     methods: ["get"],

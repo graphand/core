@@ -389,11 +389,15 @@ export type ModelDefinition = Readonly<{
 }>;
 
 type ConnectorEventTypes = "up" | "down" | "reset" | "create" | "update" | "delete";
-export type ConnectorEvent<T extends ConnectorEventTypes = ConnectorEventTypes> = {
+export type ConnectorEvent<
+  T extends ConnectorEventTypes = ConnectorEventTypes,
+  M extends typeof Model = typeof Model,
+> = {
   type: T;
   connector: ModelJSON<typeof Connector>;
+  retries: number;
   data: T extends "create" | "update"
-    ? Array<ModelJSON>
+    ? Array<ModelJSON<M>>
     : T extends "delete"
     ? Array<string>
     : null;

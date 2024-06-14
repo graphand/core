@@ -28,6 +28,24 @@ class Connector extends Model {
       },
       source: { type: FieldTypes.TEXT },
       filter: { type: FieldTypes.NESTED },
+      retryStrategy: {
+        type: FieldTypes.NESTED,
+        options: {
+          default: {},
+          fields: {
+            maxRetries: { type: FieldTypes.NUMBER, options: { default: 3 } },
+            initialDelay: { type: FieldTypes.NUMBER, options: { default: 1000 } },
+            backoffFactor: { type: FieldTypes.NUMBER, options: { default: 2 } },
+            strategyType: {
+              type: FieldTypes.TEXT,
+              options: {
+                enum: ["fixed", "exponential", "exponentialWithJitter"],
+                default: "exponential",
+              },
+            },
+          },
+        },
+      },
       _job: {
         type: FieldTypes.RELATION,
         options: {
