@@ -99,6 +99,10 @@ class Role extends Model {
                     },
                   },
                 },
+                inverseFields: {
+                  type: FieldTypes.BOOLEAN,
+                  options: { default: false },
+                },
               },
             },
           },
