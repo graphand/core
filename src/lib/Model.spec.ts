@@ -13,8 +13,8 @@ import { ModelDefinition, ModelInstance } from "@/types";
 import PromiseModelList from "@/lib/PromiseModelList";
 import PromiseModel from "@/lib/PromiseModel";
 import { faker } from "@faker-js/faker";
+import Adapter from "@/lib/Adapter";
 import { ObjectId } from "bson";
-import { Adapter } from "..";
 
 describe("Test Model", () => {
   const BaseModel = mockModel({

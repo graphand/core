@@ -26,6 +26,17 @@ class Connector extends Model {
           ref: Function.slug,
         },
       },
+      modules: {
+        type: FieldTypes.ARRAY,
+        options: {
+          items: {
+            type: FieldTypes.TEXT,
+            options: {
+              enum: ["query"],
+            },
+          },
+        },
+      },
       source: { type: FieldTypes.TEXT },
       filter: { type: FieldTypes.NESTED },
       retryStrategy: {

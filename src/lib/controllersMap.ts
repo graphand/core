@@ -146,6 +146,11 @@ const controllersMap = {
     methods: ["post"],
     secured: true,
   },
+  connectorQuery: {
+    path: "/connectors/:id/query",
+    methods: ["post"],
+    secured: true,
+  },
   connectorLogs: {
     path: "/connectors/:id/logs",
     methods: ["get"],

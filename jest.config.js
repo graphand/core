@@ -7,7 +7,7 @@ module.exports = {
     "<rootDir>/src/modules/register-models.ts",
     "<rootDir>/src/modules/validators.ts",
   ],
-  modulePathIgnorePatterns: ["dist", ".idea", "node_modules", "__jest__"],
+  modulePathIgnorePatterns: ["dist", ".idea", "node_modules"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
