@@ -73,7 +73,17 @@ export const mockAdapter = ({
 
         return Promise.resolve(found);
       }),
-      getList: jest.fn(() => {
+      getList: jest.fn(([query]) => {
+        if (query?.ids) {
+          const arr = Array.from(this.thisCache);
+          return Promise.resolve(
+            new ModelList(
+              this.model,
+              query.ids.map(id => arr.find(r => r._id === id)).filter(Boolean),
+            ),
+          );
+        }
+
         return Promise.resolve(new ModelList(this.model, Array.from(this.thisCache)));
       }),
       createOne: jest.fn(async ([payload]) => {
