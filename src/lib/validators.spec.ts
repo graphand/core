@@ -6,10 +6,11 @@ import FieldTypes from "@/enums/field-types";
 import Model from "@/lib/Model";
 import Validator from "@/lib/Validator";
 import { ValidatorOptions } from "@/types";
-import { DataModel } from "..";
+import { DataModel, ModelDefinition } from "..";
 
 describe("test validatorsMap", () => {
   const adapter = mockAdapter();
+  const DataModel_ = DataModel.extend({ adapterClass: adapter });
 
   describe("required validator", () => {
     const model = mockModel({
@@ -481,8 +482,6 @@ describe("test validatorsMap", () => {
   });
 
   describe("datamodelKeyField validator", () => {
-    const DataModel_ = DataModel.extend({ adapterClass: adapter });
-
     it("datamodel without keyField should not throw error", async () => {
       const datamodel = DataModel_.create({
         slug: generateRandomString(),
@@ -570,6 +569,99 @@ describe("test validatorsMap", () => {
       });
 
       await expect(datamodel3).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
+  describe("datamodelDefinition validator", () => {
+    it("datamodel with invalid field name should throw error", async () => {
+      const datamodel = DataModel_.create({
+        slug: generateRandomString(),
+        definition: {
+          fields: {
+            "invalid name": {
+              type: FieldTypes.TEXT,
+            },
+          },
+        },
+      });
+
+      await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("datamodel with invalid field type should throw error", async () => {
+      const datamodel = DataModel_.create({
+        slug: generateRandomString(),
+        definition: {
+          fields: {
+            title: {
+              // @ts-expect-error invalid type
+              type: "invalid type",
+            },
+          },
+        },
+      });
+
+      await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("datamodel with invalid field options should throw error", async () => {
+      const datamodel = DataModel_.create({
+        slug: generateRandomString(),
+        definition: {
+          fields: {
+            title: {
+              type: FieldTypes.TEXT,
+              // @ts-expect-error invalid options
+              options: "invalid options",
+            },
+          },
+        },
+      });
+
+      await expect(datamodel).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("datamodel with field name as reserved keyword should throw error", async () => {
+      const _create = async (fields: ModelDefinition["fields"]) => {
+        return DataModel_.create({
+          slug: generateRandomString(),
+          definition: {
+            fields,
+          },
+        });
+      };
+
+      await expect(
+        _create({
+          _id: {
+            type: FieldTypes.TEXT,
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        _create({
+          model: {
+            type: FieldTypes.TEXT,
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        _create({
+          getData: {
+            type: FieldTypes.TEXT,
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        _create({
+          get: {
+            type: FieldTypes.TEXT,
+          },
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
     });
   });
 

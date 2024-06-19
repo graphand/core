@@ -1191,6 +1191,10 @@ export const isValidDefinition = (
 
     const regex = new RegExp(Patterns.SLUG);
     for (const key of keys) {
+      if (key in Model.prototype) {
+        return false;
+      }
+
       if (!regex.test(key)) {
         return false;
       }
