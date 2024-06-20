@@ -26,14 +26,13 @@ class Connector extends Model {
           ref: Function.slug,
         },
       },
-      modules: {
-        type: FieldTypes.ARRAY,
+      query: {
+        type: FieldTypes.NESTED,
         options: {
-          items: {
-            type: FieldTypes.TEXT,
-            options: {
-              enum: ["query"],
-            },
+          default: {},
+          fields: {
+            enabled: { type: FieldTypes.BOOLEAN, options: { default: false } },
+            cache: { type: FieldTypes.BOOLEAN, options: { default: false } },
           },
         },
       },
