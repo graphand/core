@@ -402,3 +402,10 @@ export type ConnectorEvent<
     ? Array<string>
     : null;
 };
+
+export type MediaTransformOptions = {
+  w?: number;
+  h?: number;
+  q?: number;
+  fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+};
