@@ -285,11 +285,14 @@ export type ControllerDefinition = {
   secured: boolean;
 };
 
-export type ModelCrudEvent = {
-  operation?: "create" | "update" | "delete";
-  model: string;
+export type ModelCrudEvent<
+  T extends "create" | "update" | "delete" = "create" | "update" | "delete",
+  M extends typeof Model = typeof Model,
+> = {
+  operation: T;
+  model: M["slug"];
   ids: Array<string>;
-  data?: Array<JSONType>;
+  data: T extends "create" | "update" ? Array<ModelJSON<M>> : null;
 };
 
 export type UploadEvent = {
