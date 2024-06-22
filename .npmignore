@@ -1,5 +1,3 @@
-.idea
-.lh
 src
 coverage
 jest.config.js

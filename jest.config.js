@@ -8,7 +8,7 @@ module.exports = {
     "<rootDir>/src/modules/validators.ts",
   ],
   coveragePathIgnorePatterns: ["node_modules", "<rootDir>/src/index.ts"],
-  modulePathIgnorePatterns: ["dist", ".idea", "node_modules"],
+  modulePathIgnorePatterns: ["dist", "node_modules"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },

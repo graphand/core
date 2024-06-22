@@ -806,7 +806,7 @@ class Model {
       });
     }
 
-    this.__data = res.__data;
+    this.setData(res.getData());
 
     return this;
   }
