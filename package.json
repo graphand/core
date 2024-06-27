@@ -1,10 +1,11 @@
 {
   "name": "@graphand/core",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "",
   "homepage": "https://github.com/graphand/core",
   "repository": "graphand/core",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.es.js",
