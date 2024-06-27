@@ -1,17 +1,25 @@
 {
   "name": "@graphand/core",
-  "version": "0.14.10",
+  "version": "0.15.0",
   "description": "",
   "homepage": "https://github.com/graphand/core",
   "repository": "graphand/core",
-  "main": "dist/core.min.js",
-  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.umd.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
   "author": "Pierre Cabrière",
   "license": "MIT",
   "source": "src/index.ts",
   "scripts": {
-    "build": "webpack",
-    "build:watch": "webpack --watch",
+    "build": "vite build",
+    "dev": "vite",
     "test": "jest",
     "lint": "eslint src/*.ts src/**/*.ts"
   },
@@ -27,10 +35,10 @@
     "ts-jest": "^29.0.5",
     "ts-loader": "^9.4.2",
     "ts-patch": "^3.1.2",
-    "tsconfig-paths-webpack-plugin": "^4.1.0",
     "typescript": "^5.3.3",
     "typescript-transform-paths": "^3.4.6",
-    "webpack": "^5.76.2",
-    "webpack-cli": "^5.0.1"
+    "vite": "^5.3.2",
+    "vite-plugin-dts": "^3.9.1",
+    "vite-tsconfig-paths": "^4.3.2"
   }
 }
