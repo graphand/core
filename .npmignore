@@ -10,3 +10,6 @@ wallaby.js
 .github
 dist/types/lib/test-utils.d.ts
 dist/types/global.spec.d.ts
+.vscode
+vite.config.ts
+wallaby.js
