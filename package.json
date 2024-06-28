@@ -1,6 +1,6 @@
 {
   "name": "@graphand/core",
-  "version": "0.15.2",
+  "version": "0.15.3",
   "description": "",
   "homepage": "https://github.com/graphand/core",
   "repository": "graphand/core",
@@ -12,7 +12,7 @@
       "require": "./dist/index.umd.js"
     }
   },
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
   "author": "Pierre Cabrière",
